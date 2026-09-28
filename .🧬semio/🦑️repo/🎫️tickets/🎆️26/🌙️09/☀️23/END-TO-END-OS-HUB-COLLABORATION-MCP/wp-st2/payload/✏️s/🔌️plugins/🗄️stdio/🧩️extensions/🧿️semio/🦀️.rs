@@ -9,8 +9,6 @@
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 
-extern crate semio_framework_value_derive as value_derive;
-
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;

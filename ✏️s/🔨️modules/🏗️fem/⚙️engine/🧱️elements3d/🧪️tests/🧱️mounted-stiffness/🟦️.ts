@@ -37,7 +37,6 @@ export function testFem3dMountedStiffnessOracle(): void {
       }
     }
   }
-  console.log(`[DEBUG] FEM3D mounted node/cell fixture validates three NumPy ${fixture.oracle.version} matrices and JSONPatch retires exactly three, three and five string owners`);
 }
 
 if (import.meta.main) testFem3dMountedStiffnessOracle();

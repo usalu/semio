@@ -36,7 +36,6 @@ assert.deepEqual(results,fixture.expected); console.log(JSON.stringify(results))
       results.push(JSON.parse(result.trim()));
     }
     assert.deepEqual(results[0], results[1]);
-    console.log("[DEBUG] Native Bun/Node graph revisions match after policy/code changes, both helpers and taxonomy rejection/recovery without restarting the process PASS");
     passed = true;
   } finally { controller.abort(); process.off("SIGINT", stop); process.off("SIGTERM", stop); if (passed) rmSync(root, { recursive: true, force: true }); }
 }

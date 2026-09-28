@@ -6,7 +6,7 @@ import { applyPatch } from "fast-json-patch";
 import { describe, expect, it, vi } from "vitest";
 import { ANCHORS, composeTutorialUi, createTutorialClock } from "@semio-tech/ui-react";
 import { createMemoryStoragePort, type TutorialDefinition, type TutorialUiChange, type TutorialUiSnapshot } from "@semio-tech/framework";
-import { initialShellState, shellReducer, type ShellAction, type ShellState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { createLocalInteractionStoreV1, initialShellState, shellReducer, type LocalInteractionStoreV1, type ShellAction } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, type TutorialUiBridgeContext } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import schema from "../../🧬️schema/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
@@ -24,14 +24,14 @@ const project = (snapshot: TutorialUiSnapshot) => ({
 
 const snapshot = (value: typeof fixture.snapshot | typeof fixture.mutated): TutorialUiSnapshot => structuredClone(value) as TutorialUiSnapshot;
 
-const bridge = (read: () => ShellState, dispatch: (action: ShellAction) => void): TutorialUiBridgeContext => ({
+const bridge = (interaction: LocalInteractionStoreV1): TutorialUiBridgeContext => ({
   session: null,
   restoreDialog: (dialogId) => ({ openingId: 1, dialogId, origin: {} }) as never,
   appLabelsOverlay: { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {} },
   terminology: "native",
   locale: "en",
-  interactionSelection: () => read().interaction.selection,
-  publishInteractionSelection: (selection) => dispatch({ type: "INTERACTION_STATE_OBSERVED", state: { ...read().interaction, selection } }),
+  interactionSelection: () => interaction.get().selection,
+  publishInteractionSelection: (selection) => interaction.observe({ ...interaction.get(), selection }),
 });
 
 describe("tutorial bridge parity", () => {
@@ -117,13 +117,14 @@ describe("tutorial bridge parity", () => {
     const dispatch = (action: ShellAction) => {
       state = shellReducer(state, action);
     };
-    const context = bridge(() => state, dispatch);
+    const interaction = createLocalInteractionStoreV1();
+    const context = bridge(interaction);
     applyTutorialUiSnapshotToShell(dispatch, snapshot(fixture.snapshot), context);
-    expect(project(captureTutorialUiSnapshot(state, null))).toEqual(fixture.snapshot);
+    expect(project(captureTutorialUiSnapshot(state, interaction.get(), null))).toEqual(fixture.snapshot);
     applyTutorialUiSnapshotToShell(dispatch, snapshot(fixture.mutated), context);
-    expect(project(captureTutorialUiSnapshot(state, null))).toEqual(fixture.mutated);
+    expect(project(captureTutorialUiSnapshot(state, interaction.get(), null))).toEqual(fixture.mutated);
     applyTutorialUiSnapshotToShell(dispatch, snapshot(fixture.snapshot), context);
-    expect(project(captureTutorialUiSnapshot(state, null))).toEqual(fixture.snapshot);
+    expect(project(captureTutorialUiSnapshot(state, interaction.get(), null))).toEqual(fixture.snapshot);
   });
 
   it("composes and applies sparse changes with the JSON Patch oracle", () => {
@@ -150,9 +151,10 @@ describe("tutorial bridge parity", () => {
     const dispatch = (action: ShellAction) => {
       state = shellReducer(state, action);
     };
-    const context = bridge(() => state, dispatch);
+    const interaction = createLocalInteractionStoreV1();
+    const context = bridge(interaction);
     applyTutorialUiSnapshotToShell(dispatch, snapshot(fixture.snapshot), context);
     for (const change of changes) applyTutorialUiChangeToShell(dispatch, change, context);
-    expect(project(captureTutorialUiSnapshot(state, null))).toEqual(fixture.afterDeltas);
+    expect(project(captureTutorialUiSnapshot(state, interaction.get(), null))).toEqual(fixture.afterDeltas);
   });
 });

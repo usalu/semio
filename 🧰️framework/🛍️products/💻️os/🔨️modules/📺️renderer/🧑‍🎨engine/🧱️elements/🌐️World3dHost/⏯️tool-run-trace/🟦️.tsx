@@ -12,8 +12,7 @@
 // #region 🔌️Adapters
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ViewToolRunTraceCursor } from "@semio-tech/framework";
-import { BoxGeometry, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, EdgesGeometry, InstancedBufferAttribute, InstancedMesh, LineBasicMaterial, LineDashedMaterial, LineSegments, Mesh, MeshStandardMaterial } from "three";
-import { sceneHostPort } from "@semio-tech/ui-react";
+import { sceneHostPort, BoxGeometry, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, EdgesGeometry, InstancedBufferAttribute, InstancedMesh, LineBasicMaterial, LineDashedMaterial, LineSegments, Mesh, MeshStandardMaterial } from "@semio-tech/ui-react";
 
 const { useFrame } = sceneHostPort.fiber;
 import { resolveColorHex, semanticVar, STYLING_METRICS, tokenVar } from "@semio-tech/ui-styling";

@@ -1,13 +1,15 @@
 /** 🧊️ S19 one-off live probe: opens procedural generation3d (and, with `--flow`, the flow editor) in the served `s` shell
  * from Home via the command palette, lets the seated example evaluate, and records every console line, the contributions
  * closure the host pushed (`__semioOsInstalledContributions`), the window texts and two screenshots.
- * usage: bun s19-gen3d-probe.ts <outDir> [--serve <url>] [--port <n>] [--wait <ms>] [--app generation3d|flow]
+ * With `--export` it then presses the Actions rail `exportDocument` (default format) and records the download: its size and,
+ * for glTF, the third-party-free structural witness (`asset.version`, mesh/accessor counts).
+ * usage: bun s19-gen3d-probe.ts <outDir> [--serve <url>] [--port <n>] [--wait <ms>] [--app generation3d|flow] [--export]
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts";
-import { awaitBeacon, dismissIntroduction, seatLocale } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts";
+import { awaitBeacon, click, clickUncovered, dismissIntroduction, seatLocale, unfoldActionsRail } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts";
 import { ensureDevServe } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
 import type { Page } from "playwright";
 
@@ -86,6 +88,34 @@ async function main(): Promise<void> {
       const witness = (window as unknown as { __semioOsInstalledContributions?: (instanceId?: number) => string | null }).__semioOsInstalledContributions;
       return witness ? witness() : null;
     });
+    if (process.argv.includes("--export")) {
+      const downloads: import("playwright").Download[] = [];
+      page.on("download", (download) => downloads.push(download));
+      const rowSelector = '[data-slot="window-action-pane"] [id="action.exportDocument"]';
+      const executeSelector = '[data-slot="window-action-pane"] [id$=".action.exportDocument.execute"]';
+      const unfolded = await unfoldActionsRail(page, 15_000);
+      const row = await clickUncovered(page, rowSelector);
+      await page.waitForTimeout(800);
+      if ((await page.locator(executeSelector).count()) === 0) await clickUncovered(page, rowSelector);
+      await page.waitForTimeout(800);
+      const execute = await click(page, executeSelector);
+      const deadline = Date.now() + 45_000;
+      while (downloads.length === 0 && Date.now() < deadline) await page.waitForTimeout(250);
+      const saved: Record<string, unknown>[] = [];
+      for (const download of downloads) {
+        const file = join(outDir, download.suggestedFilename());
+        await download.saveAs(file);
+        const bytes = new Uint8Array(await Bun.file(file).arrayBuffer());
+        let gltf: unknown = null;
+        if (file.endsWith(".gltf")) {
+          const parsed = JSON.parse(new TextDecoder().decode(bytes)) as { asset?: { version?: string }; meshes?: unknown[]; accessors?: unknown[] };
+          gltf = { assetVersion: parsed.asset?.version ?? null, meshes: parsed.meshes?.length ?? 0, accessors: parsed.accessors?.length ?? 0 };
+        }
+        saved.push({ file: download.suggestedFilename(), bytes: bytes.length, gltf });
+      }
+      report.export = { unfolded, row, execute, saved };
+      await page.screenshot({ path: join(outDir, "export.png") }).catch(() => undefined);
+    }
     report.windowTexts = await page.evaluate((ids) => ids.map((id) => [id, ((document.getElementById(id)?.querySelector('[data-slot="window-body"]') as HTMLElement | null)?.innerText ?? "").replace(/\s+/gu, " ").slice(0, 1_500)]), opened.opened);
   } catch (error) {
     report.fatal = String(error).slice(0, 800);

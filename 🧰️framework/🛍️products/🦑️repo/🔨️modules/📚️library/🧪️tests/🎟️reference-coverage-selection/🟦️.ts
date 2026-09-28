@@ -85,7 +85,6 @@ test("non-Rust candidates preserve duplicates and order without Rust coverage co
     const actual = select(compiler, row.path, supported, unsupported), expected = oracle(supported, unsupported);
     expect(actual.output).toEqual(expected);
     expect(actual.output.map((entry) => entry.id)).toEqual([...vector.nonRustSupported, ...vector.nonRustUnsupported]);
-    console.info("[DEBUG] Adapter-local coverage " + JSON.stringify({ compiler: compiler.id, adapter: row.adapter, coverageCalls: actual.coverageCalls }));
     counts.push(actual.coverageCalls);
   }
   expect(counts).toEqual(Array(compilers.length * vector.nonRustAdapters.length).fill(0));
@@ -99,7 +98,6 @@ test("large non-Rust token sets never perform a quadratic Rust coverage join", (
     const actual = select(compiler, "🧪️case/🔣️.json", supported, unsupported);
     expect(actual.output).toEqual(oracle(supported, unsupported));
     expect(actual.output).toHaveLength(vector.scale.supported + vector.scale.unsupported);
-    console.info("[DEBUG] Bounded coverage comparison count " + JSON.stringify({ compiler: compiler.id, supported: supported.length, unsupported: unsupported.length, comparisons: actual.coverageCalls }));
     counts.push(actual.coverageCalls);
   }
   expect(counts).toEqual(compilers.map(() => vector.scale.expectedCoverageCalls));

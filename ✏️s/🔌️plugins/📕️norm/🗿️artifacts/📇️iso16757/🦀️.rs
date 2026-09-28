@@ -1071,15 +1071,21 @@ impl Iso16757Snapshot {
         doc.catalogue.metadata.names.alternatives.push(crate::LocalizedText { locale: "de".into(), text: "Demo TGA-Katalog".into() });
         // Missing German product name while catalogue declares de
         if let Some(product) = doc.catalogue.products.get_mut(0) {
+            // Wrong-locale alternative so multilingual Fail is remediable via alternatives[0].locale.
             product.names.alternatives.clear();
-            // Drop required property on variant
+            product.names.alternatives.push(crate::LocalizedText { locale: "fr".into(), text: "CV-50".into() });
+            // Keep property_values so selection can be remedied via constraint.value;
+            // out-of-domain parameter + missing geometry still break BIM embedding.
             if let Some(variant) = product.variants.get_mut(0) {
-                variant.property_values.clear();
                 variant.geometry_id = Some("geom.missing".into());
                 variant.parameter_values.insert("dn".into(), CatalogueValue::Decimal { value: 999.0 });
             }
         }
-        // Duplicate index → selection ambiguity
+        // Unmatched selection constraint → empty selection (remedy sets value to a real target).
+        if let Some(constraint) = doc.selection.constraints.get_mut(0) {
+            constraint.value = CatalogueValue::Decimal { value: 999.0 };
+        }
+        // Duplicate index with non-product search tags
         doc.catalogue.product_indexes.push(part_1::ProductIndex {
             id: "index-cv50-dup".into(),
             product_id: "product-cv".into(),
@@ -1096,7 +1102,6 @@ impl Iso16757Snapshot {
             obj.spaces = vec![part_2::SpaceEnvelope { id: "installation".into(), kind: part_2::SpaceKind::Installation,
                 bounds: part_2::BoundingBox::from_size(0.01, 0.01, 0.01),
             }];
-            obj.ports.clear();
         }
         // Broken part-number inputs + tiny script limits
         doc.part_number_inputs.insert("dn".into(), CatalogueValue::Decimal { value: 40.0 });

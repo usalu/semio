@@ -141,7 +141,8 @@ async fn write_committed_fixture(storage: &impl WalStorage, row: &serde_json::Va
     let mut previous = None;
     for (index, segment) in row["segments"].as_array().unwrap().iter().enumerate() {
         let mut writer = SegmentWriter::begin(storage, &writer_permit, document.clone(), index as u64, previous, 0).await.unwrap();
-        for (ordinal, frame) in segment["frames"].as_array().unwrap().iter().enumerate().skip(1) {
+        let frames = segment["frames"].as_array().unwrap().iter().flat_map(|frame| std::iter::repeat_n(frame, frame["repeat"].as_u64().unwrap_or(1) as usize));
+        for (ordinal, frame) in frames.enumerate().skip(1) {
             let id = || frame["id"].as_str().unwrap().parse::<u64>().unwrap();
             let mut record = match frame["kind"].as_str().unwrap() {
                 "header" => WalRecord::SegmentHeader { document: document.clone(), segment_index: index as u64, prev_chain_hash: previous },
@@ -551,7 +552,7 @@ async fn wal_transaction_gate_matches_neutral_committed_spans() {
                         WalVerifiedFrameStep::Done => break,
                     };
                     if gate.push(&source, frame)? {
-                        let kinds: Vec<_> = gate.frames[..gate.frames_len as usize].iter().map(|frame| committed_fixture_kind(frame.unwrap().kind)).collect();
+                        let kinds: Vec<_> = gate.frames.iter().map(|frame| committed_fixture_kind(frame.kind)).collect();
                         transactions.push(serde_json::json!({ "id": gate.ready.unwrap().to_string(), "kinds": kinds }));
                         gate.release()?;
                     }
@@ -912,6 +913,47 @@ async fn wal_committed_cursor_unfinished_borrow_poison_and_cancelled_close() {
         }
         assert!(cursor.terminal_is_empty());
     }
+}
+
+/// ⚖️ C12 P1 (ticket 26/09/23 session 14): the document backbone's declared maximal batch —
+/// `DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES` commands filling `DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES` — is one
+/// transaction appended from the commands' own bytes. Staged as `WalBytes` it needed one DB I/O page per command
+/// under a single operation's credit and was refused. Recovery (`ArtifactWal::open`) reopens it — the transaction gate
+/// held 64 frames — and replay answers every command byte for byte; one record past `WAL_TRANSACTION_RECORDS_MAX` is
+/// refused before any I/O.
+#[semio_framework_async_macros::async_test]
+async fn a_declared_maximal_command_batch_is_one_transaction_replayed_exactly() {
+    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let document = doc("maximal-command-batch").await;
+    let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
+    let count = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES;
+    let each = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES / count;
+    let commands: Vec<Vec<u8>> = (0..count as u64)
+        .map(|index| {
+            let mut command = index.to_le_bytes().to_vec();
+            command.resize(each, 0xC1);
+            command
+        })
+        .collect();
+    assert_eq!(commands.iter().map(Vec::len).sum::<usize>(), protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES);
+    let receipt = wal.submit(&storage, &commands, &WalRecordBatch::new(), DurabilityClass::Fsync, 1).await.unwrap();
+    assert!(receipt.committed);
+    assert_eq!((receipt.tx_id, receipt.segment_index), (1, 0));
+    let over: Vec<Vec<u8>> = vec![vec![0xC2]; WAL_TRANSACTION_RECORDS_MAX];
+    let mut frontier = WalRecordBatch::new();
+    assert!(frontier.push(WalRecord::Frontier(sample_frontier(&document).await)).is_ok());
+    let before = segment_bytes(&storage, &document, 0).await;
+    assert!(matches!(wal.submit(&storage, &over, &frontier, DurabilityClass::Fsync, 2).await, Err(DbError::LimitExceeded("wal transaction records"))));
+    assert_eq!(segment_bytes(&storage, &document, 0).await, before, "a refused transaction writes nothing");
+    while frontier.close_step().unwrap() {}
+    wal.close().await.unwrap();
+    let (mut reopened, _) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 3).await.unwrap();
+    assert_eq!(reopened.next_tx_id, 2);
+    reopened.close().await.unwrap();
+    let summaries = replay_summaries(&storage, &document).await;
+    let replayed: Vec<&Vec<u8>> = summaries.iter().filter_map(|summary| if let ReplaySummary::Command(bytes) = summary { Some(bytes) } else { None }).collect();
+    assert_eq!(replayed, commands.iter().collect::<Vec<_>>());
+    assert!(summaries.contains(&ReplaySummary::Commit(1, count as u32)));
 }
 
 async fn capacity_submission(storage: &impl WalStorage, wal: &mut ArtifactWal, length: usize, durability: DurabilityClass) -> Result<WalAppendReceipt, DbError> {

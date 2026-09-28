@@ -35,6 +35,19 @@ pub fn content_id(prefix: &str, bytes: &[u8]) -> String {
 
 '''
 P = ROOT / "✏️s/🔌️plugins"
+SENTINELS = [
+    (STORE, "pub fn content_id(prefix: &str, bytes: &[u8]) -> String {"),
+    (STORE.parent / "🪆️child/🧬️schema/🟦️.ts", "export function contentId"),
+    (STORE.parent / "🪆️child/🧬️schema/🔣️.json", '"ContentId"'),
+    (STORE.parent / "🧪️tests/🪪️artifact-addressing/🟦️.ts", "export function testContentIdOracle"),
+    (ROOT / "📜️script.ts", "testContentIdOracle();"),
+]
+present = [marker in path.read_text(encoding="utf-8") for path, marker in SENTINELS]
+if all(present):
+    print("nothing to do (applied): content_id, TS contentId, schema ContentId, TS oracle and its runner are all present")
+    sys.exit(0)
+if any(present):
+    raise SystemExit(f"partially applied tree: {[str(path.relative_to(ROOT)) for (path, _), hit in zip(SENTINELS, present) if hit]}")
 
 
 def text_of(path):

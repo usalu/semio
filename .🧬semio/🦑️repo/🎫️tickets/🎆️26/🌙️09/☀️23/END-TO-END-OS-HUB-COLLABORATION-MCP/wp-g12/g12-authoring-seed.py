@@ -26,6 +26,7 @@ ROOT = args[args.index("--root") + 1] if "--root" in args else "/Users/ueli/Docu
 SDK = os.path.join(ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs")
 NOTE = os.path.join(ROOT, "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs")
 SCAN = [os.path.join(ROOT, "✏️s"), os.path.join(ROOT, "🧰️framework")]
+SKIPPED_DIRS = {"target", "node_modules"}
 
 SDK_EDITS = [
     (
@@ -219,11 +220,10 @@ def main():
         print("  note scope: insert")
     else:
         problems.append("note scope anchor missing")
-    literal_files = 0
+    literal_files, applied_files, seen_files = 0, 0, 0
     for base in SCAN:
-        for directory, _, files in os.walk(base):
-            if "/target" in directory or "/node_modules" in directory or "/.🧬semio" in directory:
-                continue
+        for directory, dirs, files in os.walk(base):
+            dirs[:] = [name for name in dirs if name not in SKIPPED_DIRS]
             for name in files:
                 if not name.endswith(".rs"):
                     continue
@@ -232,13 +232,22 @@ def main():
                 if "AppOperationContext {" not in text:
                     continue
                 new_text, report = patch_literals(text)
+                if not report:
+                    continue
+                seen_files += 1
                 for entry in report:
                     if entry.startswith("problem"):
                         problems.append(f"{os.path.relpath(path, ROOT)}: {entry}")
                 if new_text != text:
                     changed[path] = new_text
                     literal_files += 1
-    print(f"root {ROOT}: {len(changed)} file(s) to change ({literal_files} with literals), {len(problems)} problem(s)")
+                elif all(entry == "applied" for entry in report):
+                    applied_files += 1
+    if seen_files == 0:
+        problems.append(f"no AppOperationContext literal under {ROOT} — wrong --root or a skipped tree")
+    if literal_files + applied_files != seen_files:
+        problems.append(f"{seen_files} file(s) hold literals but only {literal_files} would change and {applied_files} are applied")
+    print(f"root {ROOT}: {len(changed)} file(s) to change ({literal_files} with literals, {applied_files} already applied, {seen_files} seen), {len(problems)} problem(s)")
     for problem in problems:
         print(f"  PROBLEM {problem}")
     if problems:

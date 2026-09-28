@@ -41,15 +41,15 @@ mod subject {
     }
 
     fn projection(snapshot: &export::XlsxSnapshot) -> Result<Json, String> {
-        let sheets = snapshot
-            .workbook
+        let workbook = snapshot.project_workbook().map_err(|error| error.to_string())?;
+        let sheets = workbook
             .sheets
             .iter()
             .map(|sheet| {
                 let cells = sheet
                     .cells
                     .iter()
-                    .filter_map(|cell| match value(&cell.value, &snapshot.workbook.shared_strings) {
+                    .filter_map(|cell| match value(&cell.value, &workbook.shared_strings) {
                         Ok(Some(value)) => Some(Ok(Json::Object(vec![("row".into(), Json::Number(cell.row as f64)), ("col".into(), Json::Number(cell.col as f64)), ("value".into(), value)]))),
                         Ok(None) => None,
                         Err(error) => Some(Err(error)),

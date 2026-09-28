@@ -1,32 +1,37 @@
 //! 🧪️ `set-snapshot` fixture — `🧮️widens-the-total-formula-to-a-third-row`.
 //!
-//! Worksheets are NAME-keyed and cells are keyed by their `(row, col)` identity pair, so the
-//! committed delta nests a `NamedTripleDiff` keyed by sheet name around a second one keyed by
-//! a two-element `[row, col]` array. `XlsxCellValue` is a weak value union, so a formula edit
-//! replaces the cell's whole value rather than sub-diffing `expr` — and the untouched empty
-//! cell beside it must not appear at all.
-//! Encoding note this fixture is deliberately built around: `XlsxCellValue` is internally
-//! tagged, so only its struct-variant `Formula` and unit-variant `Empty` arms are
-//! serde-serializable at all — `Number(f64)`/`SharedString(usize)`/`InlineString(String)`/
-//! `Boolean(bool)` are internally tagged NEWTYPE variants over non-map payloads, which serde
-//! refuses to serialize. The fixture therefore exercises the two arms that genuinely encode
-//! rather than committing JSON the type cannot produce.
+//! The snapshot's authority is one logical XML document per XML-bearing OPC part, so widening one
+//! formula is a sparse edit of exactly ONE part — the worksheet — while the workbook part, the shared
+//! strings, the relationships and the lossless OPC lane stay absent from the delta. The projected
+//! workbook shows the widened formula at its unchanged `(row, col)` identity, and the empty cell below
+//! it survives untouched.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
-//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`), every value of which was transcribed from this
-//! leaf's own `🔺️diff/🦀️.rs` oracle. The `.op.semio`/`.spr.semio`/`.dsl.semio`/
-//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
-//! asserted by the shared codec-matrix harness, not here.
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). It is never hand edited: `zzz_write_committed_quintet`
+//! below writes it from `build_minimal_xlsx` of the two declared workbooks and this leaf's own
+//! canonical diff (`cargo test -p semio-s-artifact-stdio-xlsx --lib -- --ignored zzz_write_committed_quintet`),
+//! and `committed_snapshots_are_the_declared_workbooks` holds it to that. The `.op.semio`/`.spr.semio`/
+//! `.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and
+//! are asserted by the shared codec-matrix harness, not here.
 
+use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_address, set_snapshot::SetSnapshot, XlsxMutation};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🧮️widens-the-total-formula-to-a-third-row/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🧮️widens-the-total-formula-to-a-third-row/📸️snapshot/➡️after/🔣️.json");
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🧮️widens-the-total-formula-to-a-third-row/🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🧮️widens-the-total-formula-to-a-third-row/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🧮️widens-the-total-formula-to-a-third-row/🎯️outcome/🔣️.json");
+
+/// 🧮️ The declared workbook: a total formula at `B4` over `expr`, and an empty cell at `B5` below it.
+fn declared_workbook(expr: &str) -> XlsxWorkbook {
+    XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 4, col: 1, value: XlsxCellValue::Formula { expr: expr.into(), cached: None } }, XlsxCell { row: 5, col: 1, value: XlsxCellValue::Empty }] }],
+        shared_strings: vec![],
+    }
+}
 
 fn before() -> XlsxSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
@@ -37,6 +42,21 @@ fn expected_after() -> XlsxSnapshot {
 fn mutation() -> XlsxMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
+fn workbook(snapshot: &XlsxSnapshot) -> XlsxWorkbook {
+    snapshot.project_workbook().expect("the canonical XML parts project a workbook")
+}
+fn worksheet_part(snapshot: &XlsxSnapshot) -> String {
+    xlsx_cell_address(snapshot, "Sheet1", 4, 1).expect("the total cell has an address").part_path
+}
+
+/// 🧾️ The committed snapshots are exactly `build_minimal_xlsx` of the declared workbooks — the quintet is the
+/// generator's output, not a hand-edited approximation.
+#[semio_framework_async_macros::async_test]
+async fn committed_snapshots_are_the_declared_workbooks() {
+    assert_eq!(before(), build_minimal_xlsx(declared_workbook("SUM(B1:B2)")), "set-snapshot/widens-the-total-formula-to-a-third-row: committed before-snapshot drifted from its declared workbook");
+    assert_eq!(expected_after(), build_minimal_xlsx(declared_workbook("SUM(B1:B3)")), "set-snapshot/widens-the-total-formula-to-a-third-row: committed after-snapshot drifted from its declared workbook");
+    assert_eq!(mutation(), XlsxMutation::SetSnapshot(SetSnapshot { snapshot: expected_after() }), "set-snapshot/widens-the-total-formula-to-a-third-row: the committed mutation carries the committed after-snapshot");
+}
 
 /// ▶️ `set-snapshot` carries the committed `before` XlsxSnapshot to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
@@ -45,14 +65,15 @@ async fn applies_to_committed_after() {
     let outcome = apply_xlsx_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/widens-the-total-formula-to-a-third-row: applied state differs from committed after-snapshot");
-    let cells = &snapshot.workbook.sheets[0].cells;
+    let projected = workbook(&snapshot);
+    let cells = &projected.sheets[0].cells;
     assert!(
-        matches!(&cells[0].value, crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue::Formula { expr, cached } if expr == "SUM(B1:B3)" && cached.is_none()),
+        matches!(&cells[0].value, XlsxCellValue::Formula { expr, cached } if expr == "SUM(B1:B3)" && cached.is_none()),
         "set-snapshot/widens-the-total-formula-to-a-third-row: the total cell must carry the widened formula and still have no cached value"
     );
     assert_eq!((cells[0].row, cells[0].col), (4, 1), "set-snapshot/widens-the-total-formula-to-a-third-row: a cell's (row, col) pair is its identity and is never rewritten by a value edit");
-    assert_eq!(cells[1], before().workbook.sheets[0].cells[1], "set-snapshot/widens-the-total-formula-to-a-third-row: the empty cell below is identical on both sides and must survive untouched");
-    assert!(snapshot.workbook.shared_strings.is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: the shared-string table is untouched — this workbook has none");
+    assert_eq!(cells[1], workbook(&before()).sheets[0].cells[1], "set-snapshot/widens-the-total-formula-to-a-third-row: the empty cell below is identical on both sides and must survive untouched");
+    assert!(projected.shared_strings.is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: the shared-string table is untouched — this workbook has none");
     assert_eq!(snapshot.opc, before().opc, "set-snapshot/widens-the-total-formula-to-a-third-row: the OPC package is identical on both sides");
 }
 
@@ -117,7 +138,7 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ The sparse delta this leaf produces is exactly the committed diff — the single most
 /// load-bearing assertion in the fixture: `set-snapshot` has NO whole-snapshot replacement slot
-/// in XlsxDiff, so the delta must name only the fields that actually differ.
+/// in XlsxDiff, so the delta must name only the part that actually differs.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
@@ -125,15 +146,10 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/widens-the-total-formula-to-a-third-row: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!(raised.diff().opc.is_none(), "set-snapshot/widens-the-total-formula-to-a-third-row: a workbook-level edit must never reach into the lossless OPC lane");
-    let workbook = raised.diff().workbook.as_ref().expect("set-snapshot/widens-the-total-formula-to-a-third-row: the workbook diff must be present");
-    assert!(workbook.shared_strings.is_none(), "set-snapshot/widens-the-total-formula-to-a-third-row: the SST is equal on both sides and must stay absent");
-    let sheets = workbook.sheets.as_ref().expect("set-snapshot/widens-the-total-formula-to-a-third-row: the sheets triple must be present");
-    assert!(sheets.removed.is_empty() && sheets.added.is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: the sheet is patched in place — a rename would be a remove+add pair, which this payload is not");
-    assert_eq!(sheets.modified[0].key, "Sheet1", "set-snapshot/widens-the-total-formula-to-a-third-row: XlsxSheetsDiff is keyed by sheet NAME");
-    let cells = sheets.modified[0].diff.cells.as_ref().expect("set-snapshot/widens-the-total-formula-to-a-third-row: the cells triple must be present");
-    assert_eq!(cells.modified.len(), 1, "set-snapshot/widens-the-total-formula-to-a-third-row: only the total cell is patched");
-    assert_eq!(cells.modified[0].key, (4, 1), "set-snapshot/widens-the-total-formula-to-a-third-row: XlsxCellsDiff is keyed by the (row, col) identity pair, not by a position in the sparse list");
+    assert!(raised.diff().opc.is_none(), "set-snapshot/widens-the-total-formula-to-a-third-row: a formula edit must never reach into the lossless OPC lane");
+    let parts = raised.diff().xml_parts.as_ref().expect("set-snapshot/widens-the-total-formula-to-a-third-row: the XML parts diff must be present");
+    assert!(parts.removed.is_empty() && parts.added.is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: the worksheet is patched in place — no part is added or removed");
+    assert_eq!(parts.modified.iter().map(|part| part.key.clone()).collect::<Vec<_>>(), vec![worksheet_part(&base)], "set-snapshot/widens-the-total-formula-to-a-third-row: only the worksheet part holding the total cell is patched, keyed by its OPC path");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to XlsxDiff.
@@ -144,9 +160,9 @@ async fn committed_diff_is_canonical() {
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/widens-the-total-formula-to-a-third-row: committed diff JSON is not canonical");
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/workbook/sheets/modified/0/diff/cells/modified/0/key"),
-        Some(&serde_json::json!([4, 1])),
-        "set-snapshot/widens-the-total-formula-to-a-third-row: the (u32, u32) cell key encodes as a two-element JSON array — anything else would mean the committed diff was keyed by list position instead of by cell identity"
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/xmlParts/modified/0/key"),
+        Some(&serde_json::Value::String(worksheet_part(&before()))),
+        "set-snapshot/widens-the-total-formula-to-a-third-row: the committed diff is keyed by the worksheet's OPC part path, never by a position in the part list"
     );
 }
 
@@ -157,4 +173,27 @@ async fn committed_diff_applies_to_after() {
     let decoded: XlsxDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-snapshot/widens-the-total-formula-to-a-third-row: committed diff did not carry before to after");
+}
+
+/// 🖊️ The ONLY way the committed quintet is ever refreshed: `build_minimal_xlsx` of the declared workbooks, the
+/// `SetSnapshot` carrying the after-snapshot, and this leaf's own canonical diff — never a hand edit. Run it
+/// deliberately after a codec or snapshot-shape change, then re-run the laws above.
+#[semio_framework_async_macros::async_test]
+#[ignore]
+async fn zzz_write_committed_quintet() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🧬️mutations/📸️set-snapshot/🧮️widens-the-total-formula-to-a-third-row");
+    let pretty = |compact: String| serde_json::to_string_pretty(&serde_json::from_str::<serde_json::Value>(&compact).expect("canonical JSON")).expect("pretty JSON") + "\n";
+    let before = build_minimal_xlsx(declared_workbook("SUM(B1:B2)"));
+    let after = build_minimal_xlsx(declared_workbook("SUM(B1:B3)"));
+    let mutation = XlsxMutation::SetSnapshot(SetSnapshot { snapshot: after.clone() });
+    let raised = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::diff(&mutation, &before);
+    for (path, text) in [
+        ("📸️snapshot/⬅️before/🔣️.json", pretty(dsl::json::to_json_string(&before))),
+        ("📸️snapshot/➡️after/🔣️.json", pretty(dsl::json::to_json_string(&after))),
+        ("🦠️mutation/🔣️.json", pretty(dsl::json::to_json_string(&mutation))),
+        ("🔺️diff/🔣️.json", pretty(dsl::json::to_json_string(raised.diff()))),
+        ("🎯️outcome/🔣️.json", pretty(r#"{"status":"applied"}"#.to_string())),
+    ] {
+        std::fs::write(root.join(path), text).unwrap_or_else(|error| panic!("write {path}: {error}"));
+    }
 }

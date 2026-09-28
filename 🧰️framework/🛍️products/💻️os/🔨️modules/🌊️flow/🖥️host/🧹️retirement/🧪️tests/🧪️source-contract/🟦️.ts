@@ -42,7 +42,6 @@ for (const grant of fixture.grants) {
   assert.equal(total, fixture.expected.releasedBytes);
 }
 for (const mutant of [{ ...fixture, extra: true }, { ...fixture, grants: [16384] }, { ...fixture, dag: { ...fixture.dag, minimumUtf8Bytes: 1600 } }, { ...fixture, scene: { retirementCapacity: 1025 } }, { ...fixture, expected: { ...fixture.expected, zeroGrant: "progress" } }]) assert(!validate(mutant));
-console.log("[DEBUG] Flow session-retirement source fixtures=1 hostileRejections=5 bytes=42405 dagBytes=4800 sceneCapacity=1024 sceneCommands=128 scenePathElements=1600 sceneVelloRects=256 sceneConsumers=3 grants=1,64,4096 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🔣️SessionOwnership
 
 //#region 🧹️BridgeSessionClose
@@ -56,7 +55,6 @@ for (const mutant of [
   { ...sessionClose, close: { ...sessionClose.close, retainedBeforePoll: 0 } },
   { ...sessionClose, ordering: ["session-closed", "session-released", "domain-retired"] },
 ]) assert(!validateClose(mutant));
-console.log("[DEBUG] Flow retained-session close fixture=1 hostileRejections=4 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🧹️BridgeSessionClose
 
 //#region 🧑‍🤝‍🧑️BrowserRuntimeLifetime
@@ -65,5 +63,4 @@ const validateRuntime = flowWasmContract("FlowBrowserRuntimeLifetimeV1");
 assert(validateRuntime(runtimeLifetime), "browser runtime lifetime fixture must satisfy its owned contract");
 assert.deepEqual(JSON.parse(stableStringify(runtimeLifetime)), runtimeLifetime);
 for (const mutant of [{ ...runtimeLifetime, initialSessions: 1 }, { ...runtimeLifetime, extra: true }, { ...runtimeLifetime, afterCloseA: { ...runtimeLifetime.afterCloseA, globalCloseCalls: 1 } }, { ...runtimeLifetime, receipt: { ...runtimeLifetime.receipt, completion: "control-admitted" } }, { ...runtimeLifetime, openFailure: { ...runtimeLifetime.openFailure, uncertainTransport: { ...runtimeLifetime.openFailure.uncertainTransport, terminal: false } } }]) assert(!validateRuntime(mutant));
-console.log("[DEBUG] Flow browser runtime lifetime fixture=1 hostileRejections=5 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🧑‍🤝‍🧑️BrowserRuntimeLifetime

@@ -30,7 +30,6 @@ export async function testPlaygroundInputView(workspace: string): Promise<void> 
     const expected = require("lodash/sortBy")(rows, "variant").map((entry: object) => ({ ...entry, examples: ["example"], assets: [] }));
     assert.deepEqual(JSON.parse(JSON.stringify(result)), expected);
   }
-  console.log("[DEBUG] Playground discovery shares one input view across all readers and preserves explicit snapshots; catalog rows match lodash PASS");
   const pluginSource = ts.createSourceFile("plugins.ts", readFileSync(join(registry, "🔎️discovery/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const resolver = pluginSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveRegistryPluginIdsForFilter");
   const resolverCode = ts.transpileModule(resolver.getText(pluginSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -44,5 +43,4 @@ export async function testPlaygroundInputView(workspace: string): Promise<void> 
     for (const name of ["fixture-variant", "fixture-alias"]) assert.deepEqual(Array.from(filter(name, closure.components, playgrounds)), row.expected);
   }
   assert.deepEqual(Array.from(filter("unknown-plugin", closure.components, [])), []);
-  console.log("[DEBUG] Projected plugin IDs, variants, aliases and unknown filters use the supplied catalog without any live discovery PASS");
 }

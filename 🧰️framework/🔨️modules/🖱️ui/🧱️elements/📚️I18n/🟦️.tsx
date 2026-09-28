@@ -417,6 +417,7 @@ export type UiTranslationSchema = {
       readonly focus: UiLabelValue;
       readonly unfocus: UiLabelValue;
       readonly newWindow: UiLabelValue;
+      readonly tabs: UiLabelValue;
     };
     readonly contextMenu: {
       /** 🗂️ Label of the overflow submenu `organizeContextMenu`/`organize_context_menu` folds surplus

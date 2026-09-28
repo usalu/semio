@@ -12,7 +12,7 @@ import difflib, json, os, shutil, sys
 ROOT = "/Users/ueli/Documents/semio"
 HUB = os.path.join(ROOT, ".🧬semio/🌐hub")
 OVERLAY = os.path.join(HUB, "s13-av1-overlay")
-BASE = os.path.join(HUB, "s14-av2-base")
+BASE = os.path.join(HUB, "s14b-av2-base")
 SNAPSHOT = os.path.join(HUB, "s14-av2-av1-snapshot")
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAYLOAD = os.path.join(HERE, "payload")

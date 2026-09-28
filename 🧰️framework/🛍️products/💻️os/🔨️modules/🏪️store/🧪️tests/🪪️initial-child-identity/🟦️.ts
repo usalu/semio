@@ -89,5 +89,4 @@ export function testInitialChildIdentityFixture(): void {
   assert(native.includes("scope: &DocumentScope") && native.includes("parent: &ArtifactRef") && native.includes("child: &ArtifactDialect") && native.includes("scope.document_id != parent.artifact_id"), "native initial identity must use agreeing typed document coordinates");
   assert(native.includes('b"semio.initial-child.v1\\0"') && native.includes("INITIAL_CHILD_FIELD_BYTES: usize = 256") && native.includes("INITIAL_CHILD_ORDINAL_LIMIT: u32 = 64"));
   assert(native.includes('include_str!("🧫️fixtures/🔣️.json")') && native.includes("blake3::hash(&wire)"), "native identity must consume the neutral corpus and independent hash oracle");
-  console.log(`[DEBUG] initial-child coordinate source: ${fixture.cases.length} vectors, ${denied} denials, ${fixture.fields.length} UTF-8 boundary frames; native independent BLAKE3/creation/receipt authority unverified`);
 }

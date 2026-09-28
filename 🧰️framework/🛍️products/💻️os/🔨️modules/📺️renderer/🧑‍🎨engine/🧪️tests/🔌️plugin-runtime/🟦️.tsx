@@ -178,7 +178,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         { ...base, windowId: "window-a" },
         { ...base, windowId: "window-b" },
       ]);
-      console.info("[DEBUG] two context-menu surfaces received the current shared OS locale and terminology");
     });
   });
   describe("surface render ViewModel", () => {
@@ -212,7 +211,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         { locale: "de", terminology: "reuse" },
       ]);
       expect((views[2] as { windowId?: string | null }).windowId == null).toBe(true);
-      console.info("[DEBUG] concrete render surfaces received packed locale, terminology, and per-window utility context");
     });
   });
   describe("reserved refresh sections", () => {
@@ -235,7 +233,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       for (const event of events) expect(decodePackValue((event as { payload: { viewState: Uint8Array } }).payload.viewState)).toMatchObject(viewState);
       expect(uiRefreshSectionTargets({ viewState })).toEqual([]);
       expect(uiRefreshBodyKeys(request)).toEqual([]);
-      console.info("[DEBUG] section surfaces mounted with reserved body keys and the full window/tool view state");
     });
 
     it("projects a section's chunked text carrier back into the shell's own measures map", async () => {
@@ -270,7 +267,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(response.measures).toMatchObject({ key: "measures", value: measures });
       expect(response.measures?.hash).not.toBe("");
       expect(response.tools).toBeUndefined();
-      console.info("[DEBUG] measures section projected from its retained chunk carrier into the shell refresh cache shape");
     });
 
     it("reassembles a PACKED carrier leaf — value plus every sorted dataAttributes slice — against the neutral paged-text-carrier fixture", async () => {
@@ -295,7 +291,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       const built = retainedSurfaceToBuiltNode(surface!);
       if (built === null) throw new Error("fixture surface has no root");
       expect(sectionValueFromBuiltNode(carrier.rootKey, built, "instance 7")).toEqual(JSON.parse(carrier.payload));
-      console.info(`[DEBUG] packed carrier leaf reassembled ${carrier.payloadBytes} bytes from 1 value slice and ${carrier.slices.length - 1} dataAttributes slices`);
     });
 
     it("raises a typed fault naming the reserved section and its producer when a carrier's payload is not valid JSON", async () => {
@@ -319,7 +314,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(fault.message).toContain("procedural#1 instance 7");
       expect(fault.message).toContain(String(carrier.textMaxBytes));
       expect(fault.causes?.[0]?.message ?? "").not.toBe("");
-      console.info(`[DEBUG] truncated carrier raised ${fault.code} naming ${fault.scope.bodyKey} and its producer instead of a bare SyntaxError`);
     });
   });
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
@@ -707,7 +701,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             expect(commands, row.result).toEqual([...row.sequence, "bind", "retire"]);
           });
         }
-        console.log("[DEBUG] Actual PluginRuntime bind recovery: refused=1 uncertain=2 stale-presentation=1 successors=4");
       });
   
       it("binds the actual actor document port and retires it before guest disposal", async () => {
@@ -785,7 +778,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           } finally { release(); await closing; }
           expect(deepEqual(events, fixture.disposal.bound)).toBe(true);
         }, { dispose: () => { events.push("dispose"); } });
-        console.log("[DEBUG] Actual actor disposal waits for exact Retired and closes creation admission");
       });
 
       it("awaits actual actor pending creation without opening an orphan after disposal", async () => {
@@ -830,7 +822,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             dispose: actor => { if (actor === target) events.push("dispose"); },
           });
         }
-        console.log("[DEBUG] Actual actor disposal retains activation/open flights and prevents late instance publication");
       });
 
       it("rejects a framed completion fault without swallowing its structured fields", async () => {
@@ -1077,7 +1068,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const moved = partial.windows?.find((entry) => entry.key === "moving");
         expect(moved?.hash).not.toBe(hashes.moving);
         expect(moved?.value).toMatchObject({ component: { type: "text", value: "moving-two" } });
-        console.info(`[DEBUG] refresh skip: ${JSON.stringify({ projectedFirst: 2, skippedOnEcho: 2, projectedAfterOneEdit: 1 })}`);
       });
 
       it("holds the skip predicate to exact hash equality on a rooted surface", () => {
@@ -2112,7 +2102,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           expect(closeEvents).toEqual(fixture.runtimeUiComposition.closeEvents);
           expect(equal(closeEvents, fixture.runtimeUiComposition.closeEvents)).toBe(true);
           expect(retainedWindowByActor.has(actorId)).toBe(false);
-          console.info("[DEBUG] production UI lifetime: nativePatchAcks=1 realSurface=1 renderSource=%s terminal=%s", fixture.runtimeUiComposition.renderSource, fixture.runtimeUiComposition.terminalPhase);
         } finally {
           await handle?.dispose();
           testState.sharedActivationRegistry = previous.registry;
@@ -2212,7 +2201,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           }
         }
         for (const row of census) expect(row.turns).toBe(row.pages + row.guestContinuations);
-        console.info("[DEBUG] command ingress census: %s", census.map((row) => `${row.bytes}B/${row.pages}p +${row.guestContinuations}cont → ${row.turns} worker turns`).join(" | "));
       });
 
 
@@ -2286,7 +2274,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             expect(equal(events, row.events)).toBe(true);
             await handle.destroyApp(instance);
             expect(events).toEqual(row.events);
-            console.info("[DEBUG] actual runtime final ACK retry: failure=%s witnesses=%d dispose=1", row.failure, witnesses.mock.calls.length);
           } finally {
             try { await handle?.dispose(); } finally {
               captured.mockRestore(); witnesses.mockRestore(); client.disposeAll();
@@ -2353,7 +2340,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           expect(result.status).toEqual(settlement.status);
           const invocation = invocationFromFrames([], result.effects, "action");
           expect({ output: invocation.output, requestedEffects: invocation.requestedEffects }).toEqual(settlement.invocation);
-          console.info("[DEBUG] typed-operation settlement: exact ACKs=%d retainedTerminal=1 hostEffects=%d", fixture.wire.lanes.length, invocation.requestedEffects?.length);
         });
       });
   
@@ -2388,7 +2374,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         });
         expect(crossings).toHaveLength(1);
         expect(crossings[0]).toEqual(Array.from({ length: operations }, () => "message"));
-        console.info("[DEBUG] typed-operation ack batch: %d result pages retired in %d crossing(s)", operations, crossings.length);
       });
 
       it("does not replay already acknowledged ingress publications during settlement", async () => {
@@ -2417,7 +2402,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           expect(result.status).toEqual(settlement.status);
           const invocation = invocationFromFrames([], result.effects, "action");
           expect({ output: invocation.output, requestedEffects: invocation.requestedEffects }).toEqual(settlement.invocation);
-          console.info("[DEBUG] typed-operation ingress settlement: retainedTerminal=1 replayedPublications=0 hostEffects=%d", invocation.requestedEffects?.length);
         });
       });
   
@@ -2507,7 +2491,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(observerSettled).toBe(true);
         expect(acknowledged).toEqual([typedOperationAcknowledgements(faulted)]);
         teardownPluginActor(actorId);
-        console.info("[DEBUG] typed-operation routing: observer settled=%s acknowledgedTurns=%d", observerSettled, acknowledged.length);
       });
 
       it("bounds parked typed-operation faults at a fixed capacity and surfaces the evicted oldest", async () => {
@@ -2532,7 +2515,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         owner.close();
         observer.close();
         expect(reported.length).toBe(routing.overflow + 1);
-        console.info("[DEBUG] typed-operation park capacity: parked=%d evicted=%d unattributed=1", drained.length, routing.overflow);
       });
 
       it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {
@@ -2607,7 +2589,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(settleYieldsToRefreshV1(results, 0, 60_000, false, false, true), "a run that never publishes the surface can never hold the actor for its whole length again").toBe(true);
         expect(settleYieldsToRefreshV1(results, 0, 60_000, true, false, true), "an acknowledgement still owed is never yielded over").toBe(false);
         expect(settleYieldsToRefreshV1(results, 0, 60_000, false, true, true), "and neither is a REQUIRED surface that has not published").toBe(false);
-        console.info(`[DEBUG] owed settle grace: ${PLUGIN_OPERATION_OWED_SLICE_MS} ms (one crossing wall), unowed slice ${PLUGIN_OPERATION_REFRESH_SLICE_MS} ms — was unbounded`);
       });
 
       /** 🎞️ …and the other half of the same defect: the frames that settle produced must still reach the
@@ -2626,7 +2607,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const silent: Uint8Array[][] = [];
         expect(retainedUiRefreshEffects(7, [{ tag: "notify", val: { message: "x" } } as unknown as WireVariant], (frames) => silent.push([...frames]))).toHaveLength(1);
         expect(silent, "a settle that produced no frame publishes nothing").toHaveLength(0);
-        console.info("[DEBUG] refresh settle frames: published to the channel, not decoded and discarded");
       });
 
       it("acknowledges each retained surface before requesting the next bounded publication", async () => {
@@ -2783,7 +2763,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             )).rejects.toThrow(`pending=${JSON.stringify([surface])}`);
             expect(continuationCount).toBe(PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT);
             expect(PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT).toBeLessThan(PLUGIN_UI_CONTINUATION_LIMIT);
-            console.info("[DEBUG] zero-progress settle: continuations=%d limit=%d spinLimit=%d", continuationCount, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_CONTINUATION_LIMIT);
           },
         );
       });
@@ -3292,7 +3271,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       const outcome = await drainTypedOperationTurns(PLUGIN_OPERATION_DRAIN_BUDGET, () => true, async () => ({ status: statuses[polls++], nextWake: null }), async () => {});
       expect(outcome).toEqual({ polls: 3, stopped: "idle", nextWake: null });
       expect(polls).toBe(3);
-      console.info("[DEBUG] typed-operation drain stopped at the idle settle after 3 polls");
     });
 
     it("never exceeds its poll budget when the actor never goes idle", async () => {
@@ -3342,7 +3320,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(polls).toBe(answers);
       expect(timers).toBe(0);
       expect(elapsedMs).toBeLessThan(1_000);
-      console.info(`[DEBUG] more-work pump: ${answers} answers → ${polls} polls in ${elapsedMs} ms with ${timers} timer calls`);
     });
 
     it("yields the thread to a contended peer between polls instead of sleeping on it", async () => {
@@ -3359,7 +3336,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(peerTurns).toBeGreaterThanOrEqual(result.polls);
       expect(timers).toBe(0);
       expect(elapsedMs).toBeLessThan(1_000);
-      console.info(`[DEBUG] contended more-work pump: ${result.polls} polls interleaved with ${peerTurns} peer turns in ${elapsedMs} ms, ${timers} timer calls`);
     });
   });
 
@@ -3406,7 +3382,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       unsubscribe();
       unsubscribeSecond();
       pendingTurnEffects.delete(instanceId);
-      console.info("[DEBUG] one typed-operation completion reached both subscribers once, with its own effects and its terminal output");
     });
   });
 
@@ -3418,7 +3393,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(commandIngressContinuationCeilingV1(row.pages), `${row.id} is the derivation, not a literal`).toBe(Math.max(1, row.pages) * fixture.turnsPerPage * fixture.continuationBatchSize);
     }
     expect(commandIngressContinuationCeilingV1(2), "a two-page command may never buy less than a one-page command").toBeGreaterThan(commandIngressContinuationCeilingV1(1));
-    console.info(`[DEBUG] command ingress ceiling: 1 page=${commandIngressContinuationCeilingV1(1)} 67 pages=${commandIngressContinuationCeilingV1(67)} (was a flat 1024 for both)`);
   });
 
   it("calls a command unowned on the FIRST idle turn instead of spending a whole ceiling on it", async () => {
@@ -3440,7 +3414,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       actor = "idle";
     }
     expect(asked, "an unowned command costs no further crossing at all").toBe(0);
-    console.info(`[DEBUG] unowned command ingress: 0 further crossings, ceiling ${ceiling} (was 1024 crossings then an unnamed timeout)`);
   });
 
   it("refuses a retired instance by REJECTION, never by a synchronous throw past the caller's catch", async () => {
@@ -3478,7 +3451,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(synchronous, `${what} must not throw synchronously past the caller's catch`).toBe(null);
       expect(isPluginInstanceRetiredV1(rejected), `${what} rejects with the typed retirement`).toBe(true);
     }
-    console.info("[DEBUG] retired instance: handleAction/handleCommand/contextMenu all reject, none throws synchronously");
   });
 
   it("remembers a destroyed instance across a hot swap that replaces the handle", async () => {
@@ -3514,7 +3486,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     const revived = await reviving.createApp("fixture");
     expect(revived, "the fixture mints the same id again").toBe(instance);
     expect(pluginInstanceWasRetiredV1("swap-fixture", revived), "a live instance under that id unsays the retirement").toBe(false);
-    console.info("[DEBUG] hot-swap retirement: the replacement handle answers retired for the destroyed instance and loud for a never-created one");
   });
 
   it("keeps reserved command ingress Interactive ahead of catalog Background and stamps a reply when none arrives", async () => {
@@ -3526,7 +3497,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     for (const row of fixture.stamps) {
       expect(commandIngressNeedsReplyStampV1(row.replySequences, row.seq), row.id).toBe(row.stamp);
     }
-    console.log("[DEBUG] Command ingress: reserved-interactive=4 catalog-background=1 empty-stamp=1 matched-skip=1 foreign-stamp=1 missing-seq=1");
   });
 
 
@@ -3537,7 +3507,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     const decoded = decodePackValue(packed) as { code: string; message: string };
     expect(decoded.code).toBe("extension.missing");
     expect(decoded.message).toBe("no such extension");
-    console.info("[DEBUG] completion-result.fault pack recovers code and message");
   });
 
 
@@ -3568,7 +3537,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(rounds.flat()).toEqual(surfaces.map((_, index) => index));
         for (const round of rounds) expect(new Set(round.map((index) => surfaces[index]!)).size).toBe(round.length);
       }
-      console.info("[DEBUG] intake rounds: [a,b,a] → [[0,1],[2]] — a repeated surface opens the next round, order and wire indices preserved");
     });
 
     it("names a foreign surface owner and a busy one apart, and answers whether a patch is still open", async () => {
@@ -3622,7 +3590,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       for (let count = 0; !patch.terminalIsEmpty(); count += 1) { patch.closeStep(grant); if (count > 4096) throw new Error("Fixture patch close did not complete"); }
       expect(ui.surfacePatchIsOpen(first.facade)).toBe(false);
       expect(() => ui.beginPatch(second.source, second.facade)).not.toThrow();
-      console.info("[DEBUG] beginPatch faults: identity → 'Foreign …', an open previous patch → 'Busy …'; surfacePatchIsOpen tracks the wire, page and receipt outbox");
       ui.beginClose();
       for (let count = 0; ui.closeStep(grant).kind !== "complete"; count += 1) if (count > 65536) break;
       foreign.beginClose();
@@ -3708,7 +3675,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(installs.some((entry) => entry.startsWith(`${panel}=`))).toBe(true);
         expect((panelAgain?.value as { component?: { value?: string } } | undefined)?.component?.value).toMatch(/^refresh-/);
         expect(refusals.filter((line) => line.includes("intake-rejected") || line.includes("Busy instance surface owner"))).toEqual([]);
-        console.info("[DEBUG] intake rounds e2e: page [panel@1, other@1, panel@2] installed in rounds, later refreshes still publish — 0 'Busy instance surface owner'");
         await handle.destroyApp(instance);
       } finally {
         console.error = consoleError;

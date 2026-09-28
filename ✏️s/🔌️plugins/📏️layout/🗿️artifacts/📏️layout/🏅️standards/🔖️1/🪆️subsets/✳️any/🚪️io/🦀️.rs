@@ -253,7 +253,7 @@ pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String
         IoPayload::Text(text) => text.into_bytes(),
     };
     let svg = <SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|e| format!("layout->semio/drawing->svg decode: {e:?}"))?;
-    Ok(write_svg_xml(&svg.doc))
+    write_svg_xml(&svg.doc).map_err(|e| format!("layout->semio/drawing->svg write: {e}"))
 }
 
 /// 🖍️ Maps this document's pages onto one translated `DrawNode::Group` per page (matching the

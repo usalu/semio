@@ -161,12 +161,14 @@ async fn sign_message_maps_protocol_error_by_category() {
 
 //#region 🔖️Replay
 #[semio_framework_async_macros::async_test]
-async fn replay_guard_rejects_duplicate_operation_within_window() {
+async fn replay_guard_rejects_a_recorded_operation_within_window() {
     let mut guard = ReplayGuard::new(1_000, 16);
     let a = actor("alice").await;
     let o = op("op-1").await;
-    assert!(guard.check_and_record(&a, &o, 0).is_ok());
-    let err = guard.check_and_record(&a, &o, 500).unwrap_err();
+    assert!(guard.check(&a, &o, 0).is_ok());
+    assert!(guard.check(&a, &o, 100).is_ok(), "checking alone must never make an operation a replay");
+    guard.record(&a, &o, 100);
+    let err = guard.check(&a, &o, 500).unwrap_err();
     assert!(matches!(err, DbError::Conflict(_)));
 }
 
@@ -175,27 +177,30 @@ async fn replay_guard_allows_same_operation_id_after_window_expires() {
     let mut guard = ReplayGuard::new(1_000, 16);
     let a = actor("alice").await;
     let o = op("op-1").await;
-    assert!(guard.check_and_record(&a, &o, 0).is_ok());
-    assert!(guard.check_and_record(&a, &o, 2_000).is_ok());
+    guard.record(&a, &o, 0);
+    assert!(guard.check(&a, &o, 2_000).is_ok());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replay_guard_is_isolated_per_actor() {
     let mut guard = ReplayGuard::new(1_000, 16);
     let o = op("op-1").await;
-    assert!(guard.check_and_record(&actor("alice").await, &o, 0).is_ok());
-    assert!(guard.check_and_record(&actor("bob").await, &o, 0).is_ok());
+    guard.record(&actor("alice").await, &o, 0);
+    assert!(guard.check(&actor("bob").await, &o, 0).is_ok());
+    assert!(guard.check(&actor("alice").await, &o, 0).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replay_guard_evicts_oldest_beyond_capacity_bounding_memory() {
     let mut guard = ReplayGuard::new(1_000_000, 2);
     let a = actor("alice").await;
-    assert!(guard.check_and_record(&a, &op("op-1").await, 0).is_ok());
-    assert!(guard.check_and_record(&a, &op("op-2").await, 0).is_ok());
-    assert!(guard.check_and_record(&a, &op("op-3").await, 0).is_ok());
-    assert!(guard.check_and_record(&a, &op("op-1").await, 0).is_ok(), "op-1 should have been evicted to bound memory");
-    assert!(guard.check_and_record(&a, &op("op-3").await, 0).is_err(), "op-3 is still within capacity and must still be caught");
+    for id in ["op-1", "op-2", "op-3"] {
+        guard.record(&a, &op(id).await, 0);
+    }
+    guard.record(&a, &op("op-3").await, 0);
+    assert!(guard.check(&a, &op("op-1").await, 0).is_ok(), "op-1 should have been evicted to bound memory");
+    assert!(guard.check(&a, &op("op-2").await, 0).is_err(), "re-recording op-3 must not evict op-2");
+    assert!(guard.check(&a, &op("op-3").await, 0).is_err(), "op-3 is still within capacity and must still be caught");
 }
 //#endregion 🔖️Replay
 
@@ -293,30 +298,46 @@ async fn audit_decision_emits_named_event_with_reason_on_deny() {
 
 //#region 🔖️Gate
 #[semio_framework_async_macros::async_test]
-async fn security_gate_admit_command_enforces_authz_then_budget_then_replay() {
+async fn security_gate_admit_commands_enforces_authz_then_budget_then_replay() {
     let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write]));
     let sink = std::sync::Arc::new(RecordingEmit { events: std::sync::Mutex::new(Vec::new()) });
     let gate = SecurityGate::new(policy, ReplayGuard::new(10_000, 16), BudgetRegistry::new(1, 1), sink.clone());
     let editor = principal("editor").await;
+    let (alice, op1, op2) = (actor("alice").await, op("op-1").await, op("op-2").await);
 
-    assert!(gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 0).await.is_ok());
-
-    let budget_err = gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-2").await, 0).await.unwrap_err();
-    assert!(matches!(budget_err, DbError::LimitExceeded(_)));
+    assert!(gate.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &[(&alice, &op1)], 0).await.is_ok());
+    let budget_err = gate.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &[(&alice, &op2)], 0).await.unwrap_err();
+    assert!(matches!(budget_err, DbError::Unavailable(_)), "an exhausted budget is a transient refusal");
 
     let gate2 = SecurityGate::new(RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write])), ReplayGuard::new(10_000, 16), BudgetRegistry::new(10, 1), sink);
-    assert!(gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 0).await.is_ok());
-    let replay_err = gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 100).await.unwrap_err();
+    assert!(gate2.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &[(&alice, &op1)], 0).await.is_ok());
+    assert!(gate2.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &[(&alice, &op1)], 50).await.is_ok(), "an admitted but uncommitted batch is resent, never a replay");
+    gate2.record_committed(&[(&alice, &op1)], 60);
+    let replay_err = gate2.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &[(&alice, &op1)], 100).await.unwrap_err();
     assert!(matches!(replay_err, DbError::Conflict(_)));
+    let duplicate_err = gate2.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &[(&alice, &op2), (&alice, &op2)], 100).await.unwrap_err();
+    assert!(matches!(duplicate_err, DbError::Conflict(_)), "one operation twice in one batch is a replay");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn security_gate_admit_command_rejects_cross_tenant_before_authz() {
+async fn security_gate_charges_a_whole_batch_at_once_and_never_partially() {
+    let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write]));
+    let gate = SecurityGate::new(policy, ReplayGuard::new(10_000, 16), BudgetRegistry::new(4, 1), std::sync::Arc::new(RecordingEmit { events: std::sync::Mutex::new(Vec::new()) }));
+    let editor = principal("editor").await;
+    let alice = actor("alice").await;
+    let ids: Vec<protocol::MutationId> = (1..=5).map(|index| protocol::MutationId(format!("op-{index}"))).collect();
+    let five: Vec<(&protocol::ActorId, &protocol::MutationId)> = ids.iter().map(|id| (&alice, id)).collect();
+    assert!(matches!(gate.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &five, 0).await, Err(DbError::Unavailable(_))), "a batch above the bucket capacity is refused whole");
+    assert!(gate.admit_commands(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &five[..4], 0).await.is_ok(), "the refused batch consumed nothing: a capacity-sized batch still fits the full bucket");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn security_gate_admit_commands_rejects_cross_tenant_before_authz() {
     let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "**"], &[Action::Write]));
     let sink = std::sync::Arc::new(RecordingEmit { events: std::sync::Mutex::new(Vec::new()) });
     let gate = SecurityGate::new(policy, ReplayGuard::new(10_000, 16), BudgetRegistry::new(10, 1), sink);
     let editor = principal("editor").await;
-    let err = gate.admit_command(&editor, &TenantId::from("tenant-2"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 0).await.unwrap_err();
+    let err = gate.admit_commands(&editor, &TenantId::from("tenant-2"), &doc("doc-1").await, "edit", &[(&actor("alice").await, &op("op-1").await)], 0).await.unwrap_err();
     assert!(matches!(err, DbError::Unauthorized(_)));
 }
 

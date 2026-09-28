@@ -111,10 +111,10 @@ import { LocalRelayRoutingScript } from "../../🚀️local-relay/🧭️routing
 import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
 import { SocketGrantCheckScript } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
 import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpaceArtifactCreationPath, localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
-import { issueLocalCredential, type LocalSessionBrokerV1, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, startLocalSessionBroker } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { issueLocalCredential, type LocalSessionBrokerV1, parseLocalAdminCapabilityV1, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, startLocalSessionBroker } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { ensureHubBackend, finishLocalHub, freeLoopbackPort, HUB_BINARY_SOURCES_FILE, HUB_DEV_BINARY_TARGET, hubBackendIdentity, hubBackendName, type HubBackendName, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_READINESS_STALL_BOUND_MS, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { ensureHubBackend, finishLocalHub, freeLoopbackPort, HUB_BINARY_SOURCES_FILE, HUB_DEV_BINARY_TARGET, hubBackendIdentity, hubBackendName, type HubBackendName, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_HUB_ADMINISTRATOR_PROFILE, LOCAL_HUB_ADMINISTRATOR_SUBJECT, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_READINESS_STALL_BOUND_MS, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 
 //#region 🧱️SourceGateRunners
@@ -5413,7 +5413,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   if (!/^(?:[0-9a-f]{2})+$/u.test(fixture.componentHex) || !/^(?:[0-9a-f]{2})+$/u.test(fixture.descriptorHex)) throw new Error("execution target lease corpus asset bytes are not canonical hex");
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/DocumentOpenIntentV1")(fixture.intent)) throw new Error("execution target lease corpus intent is not the owned document-open-intent contract");
   if (!hubSchemaExport(repoRoot, "schema://os.directory/DocumentSocketGrantReceiptV1")(fixture.socketGrant)) throw new Error("execution target lease corpus socket grant is not the owned document-socket-grant contract");
-  const leaseStatusKeys = ["verifying", "integrity-failed", "stale", "cancelled", "renderer-unavailable", "link-expired", "access-revoked"];
+  const leaseStatusKeys = ["verifying", "retrying", "integrity-failed", "stale", "cancelled", "renderer-unavailable", "link-expired", "access-revoked"];
   const localizedText = hubSchemaExport(repoRoot, "schema://hub.directory/LocalizedTextV1");
   const expected = fixture.expected as Record<string, any>;
   if (Object.keys(expected).sort().join(",") !== "assetBody,assetMethod,assetPaths,componentMaxBytes,descriptorMaxBytes,forbiddenStatusFragments,manifestMaxBytes,openPlanPath,progressStages,progressUnitBytes,rendererClaims,rendererState,rotation,socketGrantPath,status,statusRoles,viewerWriteRejectedLocally")
@@ -5543,12 +5543,12 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   }
   if (manifestFields < 30) throw new Error(`execution target lease corpus lost single-field substitutions: ${manifestFields}`);
   const statusCodes = Object.keys(fixture.expected.status).sort();
-  if (JSON.stringify(statusCodes) !== JSON.stringify(["access-revoked", "cancelled", "integrity-failed", "link-expired", "renderer-unavailable", "stale", "verifying"])) throw new Error("execution target lease corpus status vocabulary drifted");
+  if (JSON.stringify(statusCodes) !== JSON.stringify(leaseStatusKeys.slice().sort())) throw new Error("execution target lease corpus status vocabulary drifted");
   for (const [code, text] of Object.entries<{ en: string; de: string }>(fixture.expected.status)) {
     if (!text.en || !text.de || text.en === text.de) throw new Error(`execution target lease corpus status ${code} is not explicitly bilingual`);
     for (const fragment of fixture.expected.forbiddenStatusFragments) if (text.en.includes(fragment) || text.de.includes(fragment)) throw new Error(`execution target lease corpus status ${code} leaked ${fragment}`);
     const role = fixture.expected.statusRoles[code];
-    if (role !== (code === "verifying" ? "status" : "alert")) throw new Error(`execution target lease corpus status ${code} has the wrong live-region role`);
+    if (role !== (code === "verifying" || code === "retrying" ? "status" : "alert")) throw new Error(`execution target lease corpus status ${code} has the wrong live-region role`);
   }
   if (Object.values(fixture.expected.rendererClaims).some((claim) => claim !== false)) throw new Error("execution target lease corpus claims a renderer it does not have");
   console.log(
@@ -6814,10 +6814,10 @@ async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number>
     sqliteSource.includes("idempotency_key") &&
     sqliteSource.includes("original_command") &&
     walSource.includes("approval_undo_witness_digest") &&
-    mcpSource.includes("HubGisMapApproval") &&
+    mcpSource.includes("HubInferenceApproval(HubInferenceApprovalUndoMemberV1)") &&
     mcpSource.includes("HistoryUndoPort") &&
     !runtimeSource.includes("client_inverse") &&
-    !mcpSource.includes("HubGisMapApproval { instance:");
+    !/pub struct HubInferenceApprovalUndoMemberV1 \{[^}]*\b(?:instance|inverse)/u.test(mcpSource);
   if (!conforms(runtime, sqlite, wal, mcp)) throw new Error("durable GIS Map approval undo source boundary is incomplete");
   const hostiles = [
     [runtime.replaceAll("GisMapApprovalUndoTargetV1", "ClientSuppliedInverseV1"), sqlite, wal, mcp],
@@ -6827,7 +6827,7 @@ async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number>
     [runtime, sqlite.replaceAll("idempotency_key", "retry_key_ignored"), wal, mcp],
     [runtime, sqlite, wal.replaceAll("approval_undo_witness_digest", "raw_receipt_digest"), mcp],
     [runtime, sqlite, wal, mcp.replaceAll("HistoryUndoPort", "ArtifactChannel")],
-    [runtime, sqlite, wal, `${mcp}\nHubGisMapApproval { instance: 0 }`],
+    [runtime, sqlite, wal, mcp.replace("pub struct HubInferenceApprovalUndoMemberV1 {", "pub struct HubInferenceApprovalUndoMemberV1 {\n    pub instance: u32,")],
   ];
   hostiles.forEach(([candidateRuntime, candidateSqlite, candidateWal, candidateMcp], index) => {
     if (conforms(candidateRuntime!, candidateSqlite!, candidateWal!, candidateMcp!)) throw new Error(`GIS Map approval undo source oracle admitted ${fixture.sourceHostiles[index]}`);
@@ -7270,7 +7270,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   // 🧪️The binary's own laws live beside it in `🌎️hub/🧪️tests/**`, not inside `🏗️bootstrap/🦀️.rs`, so the law
   // names are asserted against the whole test tree — a further test-layout move cannot silently red this.
   const hubBinLaws = moduleRustSource(join(repoRoot, "🌎️hub", "🧪️tests"));
-  for (const symbol of ["HubGisMapApprovalIngressAuthorityV1", "acquire_gis_map_approval_ingress", "revalidate_gis_map_approval_delivery", "InferenceApprovalRouteContextV1", "inference_runtime.close().await", "publish_gis_map_checkpoint_change"])
+  for (const symbol of ["HubGisMapApprovalIngressAuthorityV1", "acquire_gis_map_approval_ingress", "revalidate_gis_map_approval_authority", "InferenceApprovalRouteContextV1", "inference_runtime.close().await", "publish_gis_map_checkpoint_change"])
     if (!hubBin.includes(symbol)) throw new Error(`Hub GIS Map approval ingress source is missing ${symbol}`);
   for (const law of ["gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write", "gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair"])
     if (!hubBinLaws.includes(law)) throw new Error(`Hub GIS Map approval ingress laws are missing ${law}`);
@@ -7292,8 +7292,9 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   }
   if (ingressSource.includes("SocketBindingKeyV1::DocumentWrite")) throw new Error("Hub approval ingress outer-locks DocumentWrite before the retained runtime");
   const approvalHandler = hubBin.slice(hubBin.indexOf("async fn post_inference_gis_map_job_approval"), hubBin.indexOf("fn inference_routes"));
-  if (!approvalHandler.includes("InferenceApprovalRouteContextV1 { route, ingress: ingress.clone() }") || approvalHandler.indexOf("revalidate_gis_map_approval_delivery") <= approvalHandler.indexOf("approve_gis_map_job"))
-    throw new Error("Hub approval route does not retain ingress through the lower call and freshly revalidate before delivery");
+  const acquired = approvalHandler.indexOf("acquire_gis_map_approval_ingress(");
+  if (!approvalHandler.includes("InferenceApprovalRouteContextV1 { route, ingress }") || acquired < 0 || acquired > approvalHandler.indexOf("approve_gis_map_job") || ingressSource.indexOf("revalidate_gis_map_approval_authority(") <= ingressSource.indexOf("share_bindings("))
+    throw new Error("Hub approval route does not retain ingress through the lower call or revalidate under its retained guards");
   const terminalClose = hubBin.lastIndexOf("inference_runtime.close().await");
   const artifactClose = hubBin.lastIndexOf("artifact_maintenance.shutdown().await");
   if (terminalClose < 0 || artifactClose <= terminalClose) throw new Error("Hub process teardown does not close inference before artifact/process owners");
@@ -7936,18 +7937,53 @@ function trustedBootstrapDescriptorClaims(bytes: Uint8Array): TrustedBootstrapDe
 
 /** 🧬️ Resolves one package's descriptor-attested dependencies against the selected closure. Every
  * dependency a package's own compiled manifest claims must be IN the closure at the exact compiled
- * version; nothing outside it is admitted, and no package's edges are named by this builder. */
+ * version and must be another package; nothing outside it is admitted, and no package's edges are named
+ * by this builder. The closure as a whole is held by [`trustedBootstrapResolveClosure`]. */
 function trustedBootstrapResolveDependencies(claims: TrustedBootstrapDescriptorClaimsV1, candidates: unknown): readonly TrustedBootstrapIdentityV1[] {
   const selected = trustedBootstrapDependencies(candidates);
   if (selected.length === 0) throw new Error("trusted dependency closure is empty");
   const owner = selected.find((row) => row.pluginId === claims.identity.pluginId);
   if (!owner || owner.packageId !== claims.identity.packageId || owner.version !== claims.identity.version) throw new Error("trusted descriptor dependency owner differs from its selected identity");
   const expected = claims.directDependencies.map((claimed) => {
+    if (claimed.pluginId === claims.identity.pluginId) throw new Error(`trusted descriptor dependency ${claimed.pluginId} names its own package`);
     const resolved = selected.find((row) => row.pluginId === claimed.pluginId);
     if (!resolved || claimed.version !== `=${resolved.version}`) throw new Error(`trusted descriptor dependency ${claimed.pluginId} is outside the selected closure or pinned to another version`);
     return resolved;
   });
   return Object.freeze([...expected].sort((left, right) => trustedBootstrapTupleOrder([left.pluginId, left.packageId, left.version], [right.pluginId, right.packageId, right.version])));
+}
+
+/** 🔗️ Resolves a whole selected closure the way the hub's `validate_bundle` admits it (`🔏️trusted-catalog/🦀️.rs`): each
+ * selected identity is exactly one package's own descriptor identity (a closure row naming another package id is foreign),
+ * each package's dependencies resolve by [`trustedBootstrapResolveDependencies`], and the dependency graph is acyclic. The
+ * linked profile `local-stdio-gis-open-v1` is also held to its exact edge set — GIS depends on stdio, stdio on nothing — as
+ * the hub's profile fence is, so a publication fails where the hub would refuse to load it. Answers every package's
+ * resolved dependencies by plugin id. */
+function trustedBootstrapResolveClosure(profileId: string, claims: ReadonlyMap<string, TrustedBootstrapDescriptorClaimsV1>, candidates: unknown): ReadonlyMap<string, readonly TrustedBootstrapIdentityV1[]> {
+  const selected = trustedBootstrapDependencies(candidates);
+  if (claims.size !== selected.length) throw new Error("trusted dependency closure and its package descriptors differ in count");
+  const resolved = new Map<string, readonly TrustedBootstrapIdentityV1[]>();
+  for (const identity of selected) {
+    const own = claims.get(identity.pluginId);
+    if (!own || own.identity.pluginId !== identity.pluginId || own.identity.packageId !== identity.packageId || own.identity.version !== identity.version) throw new Error(`trusted dependency closure names ${identity.pluginId} as another package than its own descriptor`);
+    resolved.set(identity.pluginId, trustedBootstrapResolveDependencies(own, selected));
+  }
+  const pending = new Map([...resolved].map(([plugin, dependencies]) => [plugin, dependencies.length]));
+  const ready = [...pending].filter(([, count]) => count === 0).map(([plugin]) => plugin);
+  let ordered = 0;
+  for (let plugin = ready.pop(); plugin !== undefined; plugin = ready.pop()) {
+    ordered += 1;
+    for (const [dependent, dependencies] of resolved) {
+      if (!dependencies.some((dependency) => dependency.pluginId === plugin)) continue;
+      const left = pending.get(dependent)! - 1;
+      pending.set(dependent, left);
+      if (left === 0) ready.push(dependent);
+    }
+  }
+  if (ordered !== resolved.size) throw new Error("trusted dependency closure contains a cycle");
+  if (profileId === "local-stdio-gis-open-v1" && (resolved.get("gis")?.map((dependency) => dependency.pluginId).join(",") !== "stdio" || resolved.get("stdio")?.length !== 0))
+    throw new Error("local stdio plus GIS profile dependency closure is not exactly gis → stdio");
+  return resolved;
 }
 
 /** 🛫️ Fails a publication in seconds, before any build or codec probe: every selected package's COMMITTED owner-root
@@ -7971,12 +8007,10 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
     }
   });
   const closure = claims.map((row) => ({ pluginId: row.spec.pluginId, packageId: row.spec.componentPackageId, version: row.claims.identity.version }));
-  for (const row of claims) {
-    try {
-      trustedBootstrapResolveDependencies(row.claims, closure);
-    } catch (error) {
-      throw new Error(`trusted catalog preflight: ${row.spec.pluginId} dependencies refused (${error instanceof Error ? error.message : String(error)})`);
-    }
+  try {
+    trustedBootstrapResolveClosure(`local-${selection.map((spec) => spec.pluginId).join("-")}-open-v1`, new Map(claims.map((row) => [row.spec.pluginId, row.claims])), closure);
+  } catch (error) {
+    throw new Error(`trusted catalog preflight: dependencies refused (${error instanceof Error ? error.message : String(error)})`);
   }
   console.log(`trusted-catalog-preflight: ${claims.length} committed descriptors carry exact, bounded dependencies inside the selected closure`);
 }
@@ -8954,7 +8988,12 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
     if (row.change === "selected-version") selected[1].version = "0.2.0";
     if (row.change === "missing-protocol") delete descriptor.executionProtocol;
     if (row.change === "unsupported-protocol") descriptor.executionProtocol.appChannelVersion = DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 + 1;
-    const operation = () => trustedBootstrapResolveDependencies(trustedBootstrapDescriptorClaims(encodePackValue(descriptor)), selected);
+    const counterpart = fixture.selectedClosure.find((identity: any) => identity.pluginId !== row.owner);
+    const counterpartDescriptor = { packageId: counterpart.packageId, manifest: { pluginId: counterpart.pluginId, version: counterpart.version, dependencies: counterpart.pluginId === "gis" ? [{ pluginId: "stdio", version: `=${counterpart.version}` }] : [] }, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } };
+    const operation = () => {
+      const claims = new Map([[row.owner, trustedBootstrapDescriptorClaims(encodePackValue(descriptor))], [counterpart.pluginId, trustedBootstrapDescriptorClaims(encodePackValue(counterpartDescriptor))]]);
+      return trustedBootstrapResolveClosure("local-stdio-gis-open-v1", claims, selected).get(row.owner)!;
+    };
     if (!row.accepted) { assert.throws(operation, row.change === "extra-field" ? /keys/ : /dependenc|descriptor|identity|version|manifest|protocol|object/); continue; }
     const actual = operation();
     assert.deepEqual(actual, row.owner === "gis" ? [fixture.selectedClosure[1]] : []);
@@ -10220,7 +10259,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
     const selectedClosure = selection
       .map((spec) => ({ pluginId: spec.pluginId, packageId: spec.componentPackageId, version: receipts.get(spec.pluginId)!.version }))
       .sort((left, right) => trustedBootstrapTupleOrder([left.pluginId, left.packageId, left.version], [right.pluginId, right.packageId, right.version]));
-    const dependencies = new Map([...descriptorClaims].map(([plugin, claims]) => [plugin, trustedBootstrapResolveDependencies(claims, selectedClosure)]));
+    const dependencies = trustedBootstrapResolveClosure(`local-${selection.map((spec) => spec.pluginId).join("-")}-open-v1`, descriptorClaims, selectedClosure);
     const packageSummary = selectedClosure.map((identity) => {
       const receipt = receipts.get(identity.pluginId)!;
       return {
@@ -12839,8 +12878,8 @@ class LocalBootstrapLaunchCheckScript extends BundleScript {
     } finally {
       rmSync(stagingRoot, { recursive: true, force: true });
     }
-    const brokerCases = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub/🚀️local-bootstrap/🧫️fixtures/🎫️session-broker-v1/🔣️.json"), "utf8")) as { readonly cases: readonly { readonly id: string; readonly def: "LocalSessionBrokerRecordV1" | "LocalSessionRequestV1" | "LocalSessionV1"; readonly value: unknown; readonly valid: boolean }[] };
-    const brokerParsers = { LocalSessionBrokerRecordV1: parseLocalSessionBrokerRecordV1, LocalSessionRequestV1: parseLocalSessionRequestV1, LocalSessionV1: parseLocalSessionV1 } as const;
+    const brokerCases = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub/🚀️local-bootstrap/🧫️fixtures/🎫️session-broker-v1/🔣️.json"), "utf8")) as { readonly cases: readonly { readonly id: string; readonly def: "LocalSessionBrokerRecordV1" | "LocalSessionRequestV1" | "LocalSessionV1" | "LocalAdminCapabilityV1"; readonly value: unknown; readonly valid: boolean }[] };
+    const brokerParsers = { LocalSessionBrokerRecordV1: parseLocalSessionBrokerRecordV1, LocalSessionRequestV1: parseLocalSessionRequestV1, LocalSessionV1: parseLocalSessionV1, LocalAdminCapabilityV1: parseLocalAdminCapabilityV1 } as const;
     for (const row of brokerCases.cases) {
       const ajv = hubSchemaExport(this.repoRoot, `schema://hub.local-bootstrap/${row.def}`)(row.value) === true;
       let parsed = true;
@@ -12960,7 +12999,7 @@ class DevScript extends BundleScript {
     process.env.OS_HUB_ADMIN_TOKEN = process.env.OS_HUB_ADMIN_TOKEN ?? "dev-local-hub-admin";
     const profiles: readonly LocalProfile[] = [
       ...LOCAL_HUB_DEVELOPMENT_PROFILES,
-      ...(secureAdmin ? [{ profileId: "administrator", subject: "local-administrator-01", displayName: "Local Administrator", allowedClientClasses: ["admin-relay"] as const }] : []),
+      ...(secureAdmin ? [LOCAL_HUB_ADMINISTRATOR_PROFILE] : []),
     ];
     const dataRoot = resolve(process.env.OS_HUB_DATA ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"));
     let trustedCatalog = trustedBootstrapCurrent(dataRoot);
@@ -12976,7 +13015,7 @@ class DevScript extends BundleScript {
     const run = await startLocalHub(this.repoRoot, this.root, profiles, {
       port: Number(process.env[OS_HUB_PORT_ENV] ?? OS_HUB_PORT),
       dataDir: dataRoot,
-      adminSubjects: secureAdmin ? ["semio.local.bootstrap/v1:local-administrator-01"] : undefined,
+      adminSubjects: secureAdmin ? [LOCAL_HUB_ADMINISTRATOR_SUBJECT] : undefined,
       binaryPath,
       capture: true,
       adminToken: process.env.OS_HUB_ADMIN_TOKEN,
@@ -13257,7 +13296,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     await proveGisMapTwoAuthorCompositionFixture(this.repoRoot);
     const describeSource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"), "utf8");
     const producerStart = describeSource.indexOf("function freshStage(");
-    const producerEnd = describeSource.indexOf("\n/** @emoji 🛂️ Shared implementation", producerStart);
+    const producerEnd = describeSource.indexOf("\n/** @emoji 🛂️ The ONE describe route", producerStart);
     const producer = describeSource.slice(producerStart, producerEnd);
     if (
       producerStart < 0 ||
@@ -13287,7 +13326,8 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     if (
       !catalogSource.includes("bundle.schema_version != 3") ||
       !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") ||
-      !catalogSource.includes("selected profile must resolve exactly one document-open target") ||
+      !catalogSource.includes("selected profile must resolve at least one document-open target") ||
+      !catalogSource.includes("selected profile resolved a different number of document-open targets than it declares") ||
       !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 29") ||
       !providerSource.includes("receipt.package_version != version") ||
       !registrySource.includes("CATALOG_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024") ||
@@ -13303,7 +13343,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       if (first < 0 || last < 0) throw new Error(`trusted stdio+GIS source boundary is missing ${start}`);
       return scriptSource.slice(first, last);
     };
-    const materializer = body("\nasync function materializeTrustedCatalogBundle", "\nfunction trustedBootstrapReadRegular");
+    const materializer = body("\nexport async function materializeTrustedCatalogBundle", "\nfunction trustedBootstrapReadRegular");
     const writer = body("\nfunction trustedBootstrapWriteNew", "\nfunction trustedBootstrapFsyncDirectory");
     const publisher = body("\nasync function publishTrustedBootstrapCurrent", "\nasync function proveTrustedStdioGisCandidatePlan");
     const stalePlan = body("\nasync function proveTrustedStdioGisStalePlanRejected", "\n/** 🟢️ Publishes current metadata");

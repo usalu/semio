@@ -121,7 +121,6 @@ test("literal predicates keep identifier tokens reachable under strict TypeScrip
       for (const row of golden.tokenNarrowing.cases) expect(probe(row.token === null ? undefined : { ...row.token, start: 0, end: row.token.text.length })).toEqual(row.expected);
     }
   }
-  console.log("[DEBUG] strict literal-token narrowing and independent runtime parity passed");
 });
 
 test("registers the physical Rust reference gate through Nx and both launch catalogs", () => {

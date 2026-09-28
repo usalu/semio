@@ -1,0 +1,224 @@
+{
+  "schema": "semio.os.execution-target-resume-fixture/v1",
+  "description": "Whether a reconnect's fresh plan lets a child that a link shortage suspended RESUME (`resumes: true`) or makes the document reopen. `current` is the suspended child's lease fields (the hub lease fixture's `manifest`); every case's `next` is `current` with the JSON merge patch (RFC 7386) `patch` applied. Only the active checkpoint and the revalidation witness may differ, and only forward; every other field must be identical.",
+  "current": {
+    "fixture": "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+    "pointer": "/manifest"
+  },
+  "cases": [
+    {
+      "case": "the same plan",
+      "patch": {},
+      "resumes": true
+    },
+    {
+      "case": "a newer directory revision (any directory event on the hub)",
+      "patch": {
+        "revalidation": {
+          "directoryRevision": 24
+        }
+      },
+      "resumes": true
+    },
+    {
+      "case": "a newer membership and session generation",
+      "patch": {
+        "revalidation": {
+          "membershipGeneration": 12,
+          "sessionGeneration": 6
+        }
+      },
+      "resumes": true
+    },
+    {
+      "case": "a newer active checkpoint",
+      "patch": {
+        "checkpoint": {
+          "checkpointId": "8888888888888888888888888888888888888888888888888888888888888888",
+          "aggregateSha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "baselineFrontier": {
+            "headEditOrdinal": 9,
+            "headEditId": "edit:9",
+            "lastCommitSeq": 9,
+            "chainHash": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          }
+        }
+      },
+      "resumes": true
+    },
+    {
+      "case": "a newer checkpoint and a newer directory revision",
+      "patch": {
+        "checkpoint": {
+          "checkpointId": "8888888888888888888888888888888888888888888888888888888888888888",
+          "aggregateSha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "baselineFrontier": {
+            "headEditOrdinal": 9,
+            "headEditId": "edit:9",
+            "lastCommitSeq": 9,
+            "chainHash": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9
+            ]
+          }
+        },
+        "revalidation": {
+          "directoryRevision": 40
+        }
+      },
+      "resumes": true
+    },
+    {
+      "case": "an older directory revision",
+      "patch": {
+        "revalidation": {
+          "directoryRevision": 22
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "an older session generation",
+      "patch": {
+        "revalidation": {
+          "sessionGeneration": 4
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "a share generation instead of a session generation",
+      "patch": {
+        "revalidation": {
+          "sessionGeneration": null,
+          "shareGeneration": 5
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "an older active checkpoint",
+      "patch": {
+        "checkpoint": {
+          "baselineFrontier": {
+            "headEditOrdinal": 3,
+            "headEditId": "edit:3",
+            "lastCommitSeq": 3
+          }
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "write access granted since",
+      "patch": {
+        "grant": {
+          "write": true
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "another component",
+      "patch": {
+        "package": {
+          "componentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "component": {
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "another catalog generation",
+      "patch": {
+        "catalog": {
+          "generationId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "another window kind",
+      "patch": {
+        "surface": {
+          "windowKindId": "gis2d-other"
+        }
+      },
+      "resumes": false
+    },
+    {
+      "case": "another package version",
+      "patch": {
+        "package": {
+          "version": "0.2.0"
+        }
+      },
+      "resumes": false
+    }
+  ]
+}

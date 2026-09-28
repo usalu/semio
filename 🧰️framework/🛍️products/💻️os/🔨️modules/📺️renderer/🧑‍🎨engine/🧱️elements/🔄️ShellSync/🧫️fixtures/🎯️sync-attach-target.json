@@ -1,0 +1,15 @@
+{
+  "schema": "semio.os.shell-sync.sync-attach-target/v1",
+  "description": "Language-agnostic law for the sync card's draft -> typed attach target (no URI round trip): (card kind, draft) -> null for an empty draft, an absolute folder, a file with its absolute folder, or a hub target host:port/space/document (a bare host:port/document names that document in the `default` space; host:port alone names the session's own document). Oracles: WHATWG URL (host + path segments) for remote drafts, node:path posix dirname for a file's folder.",
+  "cases": [
+    { "name": "an empty draft is no target", "kind": "file", "draft": "   ", "expected": null },
+    { "name": "an absolute folder stays as it is", "kind": "folder", "draft": "/work/project", "expected": { "kind": "folder", "path": "/work/project" } },
+    { "name": "a relative folder is made absolute", "kind": "folder", "draft": "work/project", "expected": { "kind": "folder", "path": "/work/project" } },
+    { "name": "a file is backed by its folder", "kind": "file", "draft": "/work/project/document.json", "expected": { "kind": "file", "path": "/work/project/document.json", "folder": "/work/project" } },
+    { "name": "a file at the root is backed by the root", "kind": "file", "draft": "document.json", "expected": { "kind": "file", "path": "/document.json", "folder": "/" } },
+    { "name": "a remote draft names host, space and document", "kind": "remote", "draft": "127.0.0.1:8787/studio-1/demo", "expected": { "kind": "remote", "hostPort": "127.0.0.1:8787", "spaceId": "studio-1", "documentId": "demo" } },
+    { "name": "a remote document id may itself contain slashes", "kind": "remote", "draft": "hub.local:7800/space-9/folder/doc", "expected": { "kind": "remote", "hostPort": "hub.local:7800", "spaceId": "space-9", "documentId": "folder/doc" } },
+    { "name": "a bare remote document lives in the default space", "kind": "remote", "draft": "127.0.0.1:8787/demo", "expected": { "kind": "remote", "hostPort": "127.0.0.1:8787", "spaceId": "default", "documentId": "demo" } },
+    { "name": "a bare remote host names the session's own document", "kind": "remote", "draft": " 127.0.0.1:8787 ", "expected": { "kind": "remote", "hostPort": "127.0.0.1:8787", "spaceId": "default", "documentId": null } }
+  ]
+}

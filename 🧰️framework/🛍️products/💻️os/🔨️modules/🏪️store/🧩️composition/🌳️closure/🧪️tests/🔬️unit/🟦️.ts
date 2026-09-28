@@ -97,5 +97,4 @@ export function testOwnedDocumentClosureOracle(): void {
   }
   const stale = new OwnedDocumentClosure(11, 13, 7, 100);
   assert.equal(stale.step({ ...vectors.cases[0]!.input, generation: 8 }, { operation: 11, generation: 13, maximumItems: 1, nowMicros: 1, cancelled: false }).status, "rejected");
-  console.log("[DEBUG] Recursive closure: 16 neutral graphs x3 grants, four chain limits, two breadth limits and five authority refusals agree with Ajv/Graphlib");
 }

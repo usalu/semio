@@ -61,5 +61,14 @@
       { "id": "vsix-missing", "build": 0, "vsix": false, "clis": ["/usr/bin/code"], "listed": {}, "unreachable": [], "installedVia": null, "installCalls": 0, "listCalls": 0 }
     ]
   },
+  "gitKrakenWorkspace": {
+    "submodule": "metabolism",
+    "cases": [
+      { "id": "absent-creates-from-root-and-submodules", "name": "Compose Test Workspace", "authenticated": true, "info": "", "expected": ["ws create Compose Test Workspace --add-repos {workspace},{workspace}/metabolism", "ws refresh Compose Test Workspace", "ws set Compose Test Workspace"] },
+      { "id": "present-adds-only-missing-repos", "name": "Compose Existing Workspace", "authenticated": true, "info": "NAME | DESCRIPTION | TYPE | # OF REPOS | SHARED WITH | ACTIVE\n{workspace}\n", "expected": ["ws update Compose Existing Workspace --add-repos {workspace}/metabolism", "ws refresh Compose Existing Workspace", "ws set Compose Existing Workspace"] },
+      { "id": "present-complete-only-sets-default", "name": "Compose Existing Workspace", "authenticated": true, "info": "{workspace}\n{workspace}/metabolism\n", "expected": ["ws set Compose Existing Workspace"] },
+      { "id": "unauthenticated-skips", "name": "Compose Test Workspace", "authenticated": false, "info": "", "expected": [] }
+    ]
+  },
   "forbiddenCommands": ["git reset", "git clean", "git stash", "rm -rf /var/lib", "DETACH DELETE"]
 }

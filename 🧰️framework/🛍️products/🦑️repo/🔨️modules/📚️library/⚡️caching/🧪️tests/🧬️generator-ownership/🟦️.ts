@@ -60,8 +60,6 @@ export async function testGeneratorOwnership(workspace: string, output: string):
   assert.deepEqual(runs().slice(cold.length), ["generate-worker", "generate"]);
   assert.equal(readFileSync(join(root, "dist/worker.js"), "utf8"), fixture.changedWorker);
   assert.equal(readFileSync(join(root, "dist/boot.js"), "utf8"), fixture.files["boot.ts"]);
-  console.log("[DEBUG] Generator outputs have exclusive physical producers and native Nx schedules the complete package through explicit prerequisites PASS");
-  console.log("[DEBUG] Native Nx reuses and restores every partition, and a worker-only edit reruns the worker plus its consumer while retaining boot bytes PASS");
 }
 
 /** 🧊️ Checks exclusive real WGPU producers against the canonical package projection and Bun's file reader. */
@@ -90,7 +88,6 @@ export async function testWgpuGeneratorOwnership(workspace: string): Promise<voi
     if (source.includes("/🤖️generated/")) assert.ok(project.targets["generate-frame-worker"].inputs.some((input: any) => input.dependentTasksOutputFiles === "**/" + source.split("/🤖️generated/")[1]));
     else assert.ok(project.namedInputs.frameWorkerSources.includes("{workspaceRoot}/" + source), source);
   }
-  console.log("[DEBUG] Exclusive WGPU producers match the complete package preview; native Bun confirms every declared browser source and Nx hashes each worker input PASS");
 }
 
 /** 📦️ Exercises real WGPU bytes through native Nx cold publication, reuse, restoration and source invalidation. */
@@ -144,5 +141,4 @@ appendFileSync(join(root, ".runs"), name + "\\n");
   put(entry, readFileSync(join(root, entry), "utf8") + '\nconsole.log("wgpu-publication-source-change");\n');
   await run(); assert.deepEqual(runs().slice(cold.length), ["worker", "package"]);
   for (const [path, bytes] of expected) if (!path.includes("/🎞️frame-worker/")) assert.equal(readFileSync(join(root, path), "utf8"), bytes, path);
-  console.log("[DEBUG] Real WGPU generation starts with absent output directories, reuses and restores all six exact artifacts through native Nx, and worker-only edits preserve the boot cache PASS");
 }

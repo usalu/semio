@@ -4736,20 +4736,6 @@ fn artifact_history_future_handle_drop_and_terminal_take_resume_are_exact() {
 }
 //#endregion 🔖️Retained submit authority
 
-//#region 🔖️Security
-#[semio_framework_async_macros::async_test]
-async fn security_authz_hook_rejects_a_principal_denied_by_its_policy() {
-    let policy = db_security::RoleBasedPolicy::new();
-    let gate = db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 16), db_security::BudgetRegistry::new(100, 10), Arc::new(NullEmit));
-    let hook = SecurityAuthzHook::new(gate, |actor| db_security::Principal::new(actor.clone(), db_security::TenantId::from("tenant-1"), vec!["viewer".to_string()])).await;
-
-    let document = protocol::ArtifactId("doc-1".to_string());
-    let envelope = envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await;
-    let result = db_artifact::AuthzHook::authorize(&hook, &envelope.actor, &envelope);
-    assert!(matches!(result.await, Err(DbError::Unauthorized(_))), "a default-deny policy with no grants must reject every action");
-}
-//#endregion 🔖️Security
-
 //#region 🔖️MemberOpen
 /// 📦️ The version-graph projection must be OPENABLE as an owned member of a composed document. Until
 /// 2026-09-21 it declared `UnsupportedMemberSnapshotOpen`, whose `step` has exactly one answer —

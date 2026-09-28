@@ -1,0 +1,83 @@
+// #region 🧲️Header
+// 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHelpers/contributions/component.ts
+/** @emoji 🧩️ The host→guest contributions push as an owned, per-instance unit — kept in its OWN module
+ * (no React, no shell imports) so a law can drive it without pulling the shell's element graph, the way
+ * `🏛️ShellHost/🩺️fault` is kept apart from `🏛️ShellHost` itself. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+ */
+// #endregion 🧲️Header
+
+/** 🧩️ The session a contributions closure is installed INTO — the receiver, never the contributor. */
+export type ContributionsSessionKey = { readonly pluginId: string; readonly instanceId: number };
+
+/** 🧩️ What ONE `publish` call actually did, so a caller logs a decision instead of inferring one. */
+export type ContributionsPublishOutcome =
+  | { readonly status: "installed"; readonly chars: number }
+  | { readonly status: "unchanged" }
+  | { readonly status: "empty" }
+  | { readonly status: "failed"; readonly reason: string };
+
+/** 🔌️ Everything the publisher needs from its host, as three ports over an `environment` the caller
+ * captures per publish (the loaded plugin closure, the host/focused mode, the disabled extensions). */
+export type ContributionsPublisherPorts<E> = {
+  readonly registryGeneration: (environment: E) => string;
+  readonly buildPack: (session: ContributionsSessionKey, environment: E) => string;
+  readonly install: (session: ContributionsSessionKey, json: string, environment: E) => Promise<void>;
+};
+
+export type ContributionsPublisher<E> = {
+  readonly publish: (session: ContributionsSessionKey, environment: E) => Promise<ContributionsPublishOutcome>;
+  readonly retire: (instanceId: number) => void;
+  readonly installedFor: (instanceId: number) => string | null;
+};
+
+/**
+ * 🧩️ The host→guest contributions push as its OWN owned, per-instance unit.
+ *
+ * 🏁️ It used to live inside `ShellHost.refreshUi`, behind that function's refresh-generation guard,
+ * and to await a guest document read to cut the pack by operator reachability — so each push was
+ * superseded inside its own read and the closure never crossed (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ * The pack now depends on the receiver's `consumes` row and the loaded closure alone, so nothing is
+ * awaited before the crossing.
+ *
+ * The pack is cut once per `(receiver plugin, registry generation)` and installed per
+ * `(instanceId, content)`: the content is claimed BEFORE the guest crossing, so two overlapping
+ * publishes never push it twice, and released when the crossing throws so a failure can be retried.
+ * `retire(instanceId)` forgets what an instance that went away had installed.
+ */
+export function createContributionsPublisher<E>(ports: ContributionsPublisherPorts<E>): ContributionsPublisher<E> {
+  // 📦️ The scoped pack is a quarter-megabyte cut of the whole loaded closure and depends on nothing
+  // but `(receiver, registry generation)` — cutting it again on every refresh burned real CPU for a
+  // byte-identical answer (71 rebuilds in one 60 s boot, measured).
+  const packByKey = new Map<string, string>();
+  const installedByInstance = new Map<number, string>();
+  return {
+    async publish(session, environment) {
+      try {
+        const packKey = `${session.pluginId}::${ports.registryGeneration(environment)}`;
+        let json = packByKey.get(packKey);
+        if (json === undefined) {
+          json = ports.buildPack(session, environment);
+          packByKey.set(packKey, json);
+        }
+        if (json.length === 0 || json === "[]") return { status: "empty" };
+        const displaced = installedByInstance.get(session.instanceId);
+        if (displaced === json) return { status: "unchanged" };
+        installedByInstance.set(session.instanceId, json);
+        try {
+          await ports.install(session, json, environment);
+        } catch (error) {
+          if (displaced === undefined) installedByInstance.delete(session.instanceId);
+          else installedByInstance.set(session.instanceId, displaced);
+          throw error;
+        }
+        return { status: "installed", chars: json.length };
+      } catch (error) {
+        return { status: "failed", reason: error instanceof Error ? error.message : String(error) };
+      }
+    },
+    retire(instanceId) {
+      installedByInstance.delete(instanceId);
+    },
+    installedFor: (instanceId) => installedByInstance.get(instanceId) ?? null,
+  };
+}

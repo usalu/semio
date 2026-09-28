@@ -44,7 +44,6 @@ test("discovery skips every Cargo target root and admits every look-alike, agree
   }
   const walkSites = discoverySource.split("\n").filter((line) => /DISCOVERY_SKIP_DIRS\.has\(|SEMANTIC_SKIP_DIRS\.has\(/u.test(line) && !/function isDiscoverySkipDirectory/u.test(line) && !/isDiscoverySkipDirectory\(|CARGO_TARGET_DIR_PATTERN/u.test(line));
   expect(walkSites).toEqual([]);
-  console.log("[DEBUG] Cargo target discovery skip proof", JSON.stringify({ skipped: vector.skipped.length, admitted: vector.admitted.length }));
 });
 
 test("registers the Cargo target discovery skip gate through Nx and both launch catalogs", () => {

@@ -489,3 +489,60 @@ export function createGestureSampleLaneV1<Sample, Extra>(ports: GestureSampleLan
   };
 }
 //#endregion 🖱️GestureSampleLane
+
+//#region 🔐️IdentitySettle
+/** 🔐️ What the input funnel knows about the hub session when a user input arrives. */
+export type HubIdentityGateV1 = Readonly<{ capabilityHeld: boolean; identityKnown: boolean; refused: boolean; offline: boolean }>;
+
+/** 🔐️ The longest a user input waits for a just-granted hub session's identity before it is dispatched anyway. The
+ * shell learns who signed in from the session port's `me` about 2 s after the hub chrome shows the session (measured
+ * live, ticket 26/09/23 S18 §14b); until then every identity-bound guest action answers
+ * `s.home.session-identity-required` — the human's first "Create space" right after signing in was refused. */
+export const INPUT_IDENTITY_SETTLE_BOUND_MS_V1 = 5_000;
+
+/** 🔐️ Whether a user input must wait for the held session's identity: the hub granted a session the shell has not
+ * resolved to a human yet. A refused session and a shortage (an unreachable hub keeps the last identity and never
+ * blocks the shell) do not wait; neither does a shell without a session. */
+export function inputAwaitsHubIdentityV1(gate: HubIdentityGateV1): boolean {
+  return gate.capabilityHeld && !gate.identityKnown && !gate.refused && !gate.offline;
+}
+
+/** 🔐️ The one-shot signal the funnel waits on: `settle()` wakes every waiter (the identity arrived, or the session is
+ * gone); a waiter also wakes at its bound or when its signal aborts — an input is delayed, never held forever. */
+export type HubIdentitySettleV1 = Readonly<{
+  settle: () => void;
+  wait: (boundMs: number, signal?: AbortSignal) => Promise<"settled" | "bounded" | "cancelled">;
+  waiting: () => number;
+}>;
+
+export function createHubIdentitySettleV1(setTimer: (run: () => void, ms: number) => unknown = (run, ms) => setTimeout(run, ms), clearTimer: (handle: unknown) => void = (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>)): HubIdentitySettleV1 {
+  const waiters = new Set<(outcome: "settled" | "bounded" | "cancelled") => void>();
+  return {
+    settle: () => {
+      const woken = [...waiters];
+      waiters.clear();
+      for (const wake of woken) wake("settled");
+    },
+    wait: (boundMs, signal) =>
+      new Promise((resolve) => {
+        if (signal?.aborted) return resolve("cancelled");
+        const finish = (outcome: "settled" | "bounded" | "cancelled") => {
+          if (!waiters.delete(finish) && outcome !== "settled") return;
+          clearTimer(timer);
+          signal?.removeEventListener("abort", onAbort);
+          resolve(outcome);
+        };
+        const onAbort = () => finish("cancelled");
+        const timer = setTimer(() => finish("bounded"), Math.max(0, boundMs));
+        signal?.addEventListener("abort", onAbort, { once: true });
+        waiters.add(finish);
+      }),
+    waiting: () => waiters.size,
+  };
+}
+
+/** 🔐️ The notice a user input shows while it waits for the sign-in to finish (en + de). */
+export function inputIdentitySettleNoticeTextV1(locale: string): string {
+  return locale === "de" ? "Die Anmeldung wird abgeschlossen – Ihre Eingabe folgt gleich." : "Finishing sign-in — your input follows in a moment.";
+}
+//#endregion 🔐️IdentitySettle

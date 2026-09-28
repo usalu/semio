@@ -7,35 +7,7 @@
 
 // #region 🔌️Adapters
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, Suspense, useSyncExternalStore, type ComponentProps, type DragEvent, type MouseEvent } from "react";
-import {
-  Box3,
-  BoxGeometry,
-  BufferAttribute,
-  BufferGeometry,
-  Color,
-  ConeGeometry,
-  CylinderGeometry,
-  DoubleSide,
-  EdgesGeometry,
-  Group,
-  IcosahedronGeometry,
-  LineBasicMaterial,
-  LineSegments,
-  Mesh,
-  MeshStandardMaterial,
-  Object3D,
-  OrthographicCamera,
-  PlaneGeometry,
-  PointsMaterial,
-  Quaternion,
-  ShaderMaterial,
-  SphereGeometry,
-  TextureLoader,
-  TorusGeometry,
-  Vector3,
-} from "three";
-import type { ThreeEvent } from "@semio-tech/ui-react";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import type { ThreeCamera, ThreeEvent } from "@semio-tech/ui-react";
 import { meshAssetTransportUrl } from "../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
 import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
@@ -85,6 +57,32 @@ import {
   type SelectionMarqueePoint,
   type TutorialCameraDriver,
   type UiLabel,
+  Box3,
+  BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  ConeGeometry,
+  CylinderGeometry,
+  DoubleSide,
+  EdgesGeometry,
+  Group,
+  IcosahedronGeometry,
+  LineBasicMaterial,
+  LineSegments,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  OrthographicCamera,
+  PlaneGeometry,
+  PointsMaterial,
+  Quaternion,
+  ShaderMaterial,
+  SphereGeometry,
+  TextureLoader,
+  TorusGeometry,
+  Vector3,
+  GLTFLoader,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/assets";
 import { ToolRunProvisionalOutline, ToolRunTraceLayer, TOOL_RUN_PROVISIONAL_PAINT, toolRunTraceDataAttributes, useToolRunProvisional, useToolRunTraceCursorEcho, useToolRunTraceStore, type ToolRunTraceRecordStore } from "./⏯️tool-run-trace/🟦️.tsx";
@@ -4313,7 +4311,7 @@ function pointsSatisfyMarquee(points: readonly (readonly [number, number])[], me
   return coverage === "full" ? points.every(test) : points.some(test);
 }
 
-function projectWorldPoint(point: readonly [number, number, number], offset: readonly [number, number, number], camera: import("three").Camera, rect: DOMRect): { readonly x: number; readonly y: number } {
+function projectWorldPoint(point: readonly [number, number, number], offset: readonly [number, number, number], camera: ThreeCamera, rect: DOMRect): { readonly x: number; readonly y: number } {
   const projected = new Vector3(point[0] + offset[0], point[1] + offset[1], point[2] + offset[2]).project(camera);
   return {
     x: ((projected.x + 1) / 2) * rect.width,
@@ -4328,7 +4326,7 @@ function resolveMarqueeComponentIds(
   activeObjectId: string | undefined,
   marquee: readonly SelectionMarqueePoint[],
   rect: DOMRect,
-  camera: import("three").Camera,
+  camera: ThreeCamera,
   method: SelectionMarqueeMethod,
   coverage: SelectionMarqueeCoverage,
 ): readonly number[] {
@@ -4410,7 +4408,7 @@ function resolveMarqueeInstanceIds(
   meshes: readonly WorldMeshRecord[],
   marquee: readonly SelectionMarqueePoint[],
   rect: DOMRect,
-  camera: import("three").Camera,
+  camera: ThreeCamera,
   method: SelectionMarqueeMethod,
   coverage: SelectionMarqueeCoverage,
 ): readonly string[] {
@@ -4480,7 +4478,7 @@ function resolveClickInstanceId(
   meshes: readonly WorldMeshRecord[],
   click: SelectionMarqueePoint,
   rect: DOMRect,
-  camera: import("three").Camera,
+  camera: ThreeCamera,
 ): string | null {
   const meshById = new Map(meshes.map((mesh) => [mesh.id, mesh]));
   const cam = camera.position;
@@ -4512,7 +4510,7 @@ function resolveClickInstanceId(
   return resolveClickInstanceIdFromProjected(click, candidates);
 }
 
-function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefObject<import("three").Camera | null> }) {
+function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefObject<ThreeCamera | null> }) {
   const camera = useThree((state) => state.camera);
   useEffect(() => {
     cameraRef.current = camera;
@@ -4718,7 +4716,7 @@ function paneSuffixFromSurfaceId(surfaceId?: string): string | undefined {
 /** @emoji 📡️ World-space camera ray through an NDC point — orthographic uses parallel near→far unproject rays;
  * perspective uses the pinhole from `camera.position`. Duck-types `isOrthographicCamera` (not `instanceof`) so
  * R3F-swapped cameras stay correct. */
-function worldRayFromNdc(ndcX: number, ndcY: number, camera: import("three").Camera): { origin: Vector3; direction: Vector3 } | null {
+function worldRayFromNdc(ndcX: number, ndcY: number, camera: ThreeCamera): { origin: Vector3; direction: Vector3 } | null {
   const ortho = camera as OrthographicCamera & { readonly isOrthographicCamera?: boolean };
   if (ortho.isOrthographicCamera) {
     const origin = new Vector3(ndcX, ndcY, -1).unproject(camera);
@@ -4733,7 +4731,7 @@ function worldRayFromNdc(ndcX: number, ndcY: number, camera: import("three").Cam
 }
 
 /** @emoji 🎯️ Intersects the camera ray through a client point with the world Z=0 ground plane (catalogue drop + face drag). */
-export function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera): [number, number, number] | null {
+export function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect, camera: ThreeCamera): [number, number, number] | null {
   const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
   const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
   const ray = worldRayFromNdc(ndcX, ndcY, camera);
@@ -4850,7 +4848,7 @@ export function world3dVolumeBrushCommits(volumeBrushMode: boolean, altKey: bool
 }
 //#endregion WorldVolumeBrushGesture
 
-function resolveCatalogueDropOrigin(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera | null, gridSnapEnabled: boolean, gridFactor: number): [number, number, number] | null {
+function resolveCatalogueDropOrigin(clientX: number, clientY: number, hostRect: DOMRect, camera: ThreeCamera | null, gridSnapEnabled: boolean, gridFactor: number): [number, number, number] | null {
   if (!camera) return null;
   const hit = raycastGroundPoint(clientX, clientY, hostRect, camera);
   if (!hit) return null;
@@ -5263,7 +5261,7 @@ function useWorldInstanceChrome(
  * camera ray through the current pointer position — the standard closest-point-between-two-lines
  * construction, used so a face-normal drag tracks naturally instead of needing a ground/tangent-plane
  * intersection (which is undefined for motion parallel to the plane, i.e. exactly along the normal). */
-function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera, origin: readonly [number, number, number], axis: readonly [number, number, number]): number | null {
+function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, camera: ThreeCamera, origin: readonly [number, number, number], axis: readonly [number, number, number]): number | null {
   const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
   const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
   const ray = worldRayFromNdc(ndcX, ndcY, camera);
@@ -5953,7 +5951,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     setContextMenu(null);
   }, []);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.scene");
-  const cameraRef = useRef<import("three").Camera | null>(null);
+  const cameraRef = useRef<ThreeCamera | null>(null);
   const catalogueDragDepthRef = useRef(0);
   const catalogueDragEncodedRef = useRef<string | null>(null);
   /** 🎉️ Pre-drop instance ids — when the scene gains new ids after {@link commitCatalogueDropAt}, those objects celebrate. */

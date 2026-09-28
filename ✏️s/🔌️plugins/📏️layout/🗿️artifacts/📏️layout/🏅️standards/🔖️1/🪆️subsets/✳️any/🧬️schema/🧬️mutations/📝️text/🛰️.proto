@@ -125,6 +125,73 @@ message SetFrameFlags {
   optional bool locked = 3;
   optional bool visible = 4;
 }
+message UpdateParagraphStyle {
+  string id = 1;
+  string name = 2;
+  string font_family = 3;
+  double font_size = 4;
+  uint32 font_weight = 5;
+  double leading = 6;
+  double tracking = 7;
+  string alignment = 8;
+}
+message UpdateTextFrame {
+  string page_id = 1;
+  string frame_id = 2;
+  string story_id = 3;
+  optional string thread_next = 4;
+  double inset_x = 5;
+  double inset_y = 6;
+  double inset_width = 7;
+  double inset_height = 8;
+}
+message UpdateLayer {
+  string page_id = 1;
+  string layer_id = 2;
+  string name = 3;
+  bool visible = 4;
+  bool locked = 5;
+}
+message CreateCharacterStyle {
+  string id = 1;
+  optional string name = 2;
+}
+message DeleteCharacterStyle {
+  string id = 1;
+}
+message UpdateCharacterStyle {
+  string id = 1;
+  optional string name = 2;
+  optional string font_family = 3;
+  optional double font_size = 4;
+  optional uint32 font_weight = 5;
+  optional bool italic = 6;
+  optional string color = 7;
+  optional double tracking = 8;
+}
+message UpdateParentPage {
+  string id = 1;
+  string name = 2;
+  double width = 3;
+  double height = 4;
+}
+message UpdateSpread {
+  string id = 1;
+  string name = 2;
+}
+message SetPageParent {
+  string id = 1;
+  optional string parent_page_id = 2;
+}
+message SetPageGuides {
+  string id = 1;
+}
+message SetStoryRuns {
+  string id = 1;
+}
+message UpdateLink {
+  string id = 1;
+}
 
 message LayoutMutation {
   oneof kind {
@@ -156,5 +223,17 @@ message LayoutMutation {
     UpdateGrid update_grid = 26;
     SetFrameFlags set_frame_flags = 27;
     RotateFrame rotate_frame = 28;
+    UpdateParagraphStyle update_paragraph_style = 29;
+    UpdateTextFrame update_text_frame = 30;
+    UpdateLayer update_layer = 31;
+    CreateCharacterStyle create_character_style = 32;
+    DeleteCharacterStyle delete_character_style = 33;
+    UpdateCharacterStyle update_character_style = 34;
+    UpdateParentPage update_parent_page = 35;
+    UpdateSpread update_spread = 36;
+    SetPageParent set_page_parent = 37;
+    SetPageGuides set_page_guides = 38;
+    SetStoryRuns set_story_runs = 39;
+    UpdateLink update_link = 40;
   }
 }

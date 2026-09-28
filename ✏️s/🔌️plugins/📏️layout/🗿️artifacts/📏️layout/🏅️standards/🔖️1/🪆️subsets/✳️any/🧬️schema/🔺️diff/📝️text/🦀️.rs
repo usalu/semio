@@ -1,8 +1,8 @@
 //! 🔺️ Layout artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::standards::v1::subsets::any::schema::diff::{LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta, LayoutStoryPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutCharacterStylePatchEntry, LayoutCharacterStylesDelta, LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutParagraphStylePatchEntry, LayoutParagraphStylesDelta, LayoutParentPagePatchEntry, LayoutParentPagesDelta, LayoutSpreadPatchEntry, LayoutSpreadsDelta, LayoutStoriesDelta, LayoutStoryPatchEntry};
 use crate::standards::v1::subsets::any::schema::LayoutArtifact;
-use crate::{ImageLink, LayoutSnapshot, Page, TextStory};
+use crate::{CharacterStyle, ImageLink, LayoutSnapshot, Page, ParagraphStyle, ParentPage, Spread, TextStory};
 use protocol::{Identified, MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
@@ -79,6 +79,22 @@ pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> proto
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutLinkPatchEntry| (&entry.id, &entry.patch))
 }
 
+pub fn apply_paragraph_styles_delta(items: &[ParagraphStyle], delta: &LayoutParagraphStylesDelta) -> protocol::MutationApplyResult<Vec<ParagraphStyle>> {
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutParagraphStylePatchEntry| (&entry.id, &entry.patch))
+}
+
+pub fn apply_character_styles_delta(items: &[CharacterStyle], delta: &LayoutCharacterStylesDelta) -> protocol::MutationApplyResult<Vec<CharacterStyle>> {
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutCharacterStylePatchEntry| (&entry.id, &entry.patch))
+}
+
+pub fn apply_parent_pages_delta(items: &[ParentPage], delta: &LayoutParentPagesDelta) -> protocol::MutationApplyResult<Vec<ParentPage>> {
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutParentPagePatchEntry| (&entry.id, &entry.patch))
+}
+
+pub fn apply_spreads_delta(items: &[Spread], delta: &LayoutSpreadsDelta) -> protocol::MutationApplyResult<Vec<Spread>> {
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutSpreadPatchEntry| (&entry.id, &entry.patch))
+}
+
 impl LayoutDiff {
     /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> protocol::MutationApplyResult<LayoutArtifact> {
@@ -95,6 +111,18 @@ impl LayoutDiff {
             }
             if let Some(grid) = &self.grid {
                 next.grid = grid.clone();
+            }
+            if let Some(delta) = &self.paragraph_styles {
+                next.paragraph_styles = apply_paragraph_styles_delta(&next.paragraph_styles, delta).map_err(|error| error.under(["paragraphStyles"]))?;
+            }
+            if let Some(delta) = &self.character_styles {
+                next.character_styles = apply_character_styles_delta(&next.character_styles, delta).map_err(|error| error.under(["characterStyles"]))?;
+            }
+            if let Some(delta) = &self.parent_pages {
+                next.parent_pages = apply_parent_pages_delta(&next.parent_pages, delta).map_err(|error| error.under(["parentPages"]))?;
+            }
+            if let Some(delta) = &self.spreads {
+                next.spreads = apply_spreads_delta(&next.spreads, delta).map_err(|error| error.under(["spreads"]))?;
             }
             if let Some(delta) = &self.pages {
                 next.pages = apply_pages_delta(&next.pages, delta).map_err(|error| error.under(["pages"]))?;
@@ -137,6 +165,18 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
             }
             if let Some(grid) = &self.grid {
                 next.grid = grid.clone();
+            }
+            if let Some(delta) = &self.paragraph_styles {
+                next.paragraph_styles = apply_paragraph_styles_delta(&next.paragraph_styles, delta).map_err(|error| error.under(["paragraphStyles"]))?;
+            }
+            if let Some(delta) = &self.character_styles {
+                next.character_styles = apply_character_styles_delta(&next.character_styles, delta).map_err(|error| error.under(["characterStyles"]))?;
+            }
+            if let Some(delta) = &self.parent_pages {
+                next.parent_pages = apply_parent_pages_delta(&next.parent_pages, delta).map_err(|error| error.under(["parentPages"]))?;
+            }
+            if let Some(delta) = &self.spreads {
+                next.spreads = apply_spreads_delta(&next.spreads, delta).map_err(|error| error.under(["spreads"]))?;
             }
             if let Some(delta) = &self.pages {
                 next.pages = apply_pages_delta(&next.pages, delta).map_err(|error| error.under(["pages"]))?;
@@ -219,6 +259,27 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
         take!(schema);
         take!(name);
         take!(grid);
+        macro_rules! absorb_collection {
+            ($field:ident) => {
+                if let Some(src) = other.$field {
+                    match &mut self.$field {
+                        Some(dst) => {
+                            dst.added.extend(src.added);
+                            dst.removed.extend(src.removed);
+                            dst.patched.extend(src.patched);
+                            if src.reordered.is_some() {
+                                dst.reordered = src.reordered;
+                            }
+                        }
+                        None => self.$field = Some(src),
+                    }
+                }
+            };
+        }
+        absorb_collection!(paragraph_styles);
+        absorb_collection!(character_styles);
+        absorb_collection!(parent_pages);
+        absorb_collection!(spreads);
         take!(print_target);
         take!(data_fields_json);
         take!(background_drawing);

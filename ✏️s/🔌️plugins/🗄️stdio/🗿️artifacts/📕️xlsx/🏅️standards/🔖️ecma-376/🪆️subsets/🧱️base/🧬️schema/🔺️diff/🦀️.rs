@@ -755,7 +755,7 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
     if removed.is_empty() && modified.is_empty() && added.is_empty() {
         None
     } else {
-        Some(XlsxOpcRelationshipsDiff { removed, modified, added, order: None })
+        Some(XlsxOpcRelationshipsDiff { removed, modified, added, order: Vec::new() })
     }
 }
 
@@ -816,7 +816,7 @@ fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &Xl
             added.push((owner.clone(), list.clone()));
         }
     }
-    XlsxOpcRelationshipsDiff { removed, modified, added, order: None }
+    XlsxOpcRelationshipsDiff { removed, modified, added, order: Vec::new() }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -1,0 +1,92 @@
+{
+  "format": "semio.shell.contributions-receiver",
+  "version": 1,
+  "note": "The session a setContributions install's own re-arm effects run against: the live primary when the receiver IS the primary (identity by pluginId + instanceId), otherwise the receiver with its OWN app and the primary's view state restated for that app (activeModeId from the receiver's app, the primary's windowId/activeWindowKindId dropped). Never the primary's app under the receiver's ids.",
+  "live": {
+    "pluginId": "space",
+    "instanceId": 1,
+    "app": {
+      "id": "s.space.home@1/*#editor",
+      "defaultModeId": "explore"
+    },
+    "viewState": {
+      "activeModeId": "explore",
+      "windowId": "home-main",
+      "activeWindowKindId": "home-main",
+      "locale": "de"
+    }
+  },
+  "cases": [
+    {
+      "id": "the-primary-itself-runs-against-the-live-session",
+      "receiver": {
+        "pluginId": "space",
+        "instanceId": 1,
+        "app": {
+          "id": "s.space.home@1/*#editor",
+          "defaultModeId": "explore"
+        },
+        "viewState": {
+          "activeModeId": "stale",
+          "locale": "en"
+        }
+      },
+      "expect": {
+        "appId": "s.space.home@1/*#editor",
+        "viewState": {
+          "activeModeId": "explore",
+          "windowId": "home-main",
+          "activeWindowKindId": "home-main",
+          "locale": "de"
+        }
+      }
+    },
+    {
+      "id": "a-spawned-program-runs-against-its-own-app",
+      "receiver": {
+        "pluginId": "procedural",
+        "instanceId": 2,
+        "app": {
+          "id": "s.procedural.generation3d@1/*#editor",
+          "modes": [
+            {
+              "id": "graph"
+            }
+          ]
+        },
+        "viewState": {
+          "activeModeId": "explore",
+          "locale": "de"
+        }
+      },
+      "expect": {
+        "appId": "s.procedural.generation3d@1/*#editor",
+        "viewState": {
+          "activeModeId": "graph",
+          "locale": "de"
+        }
+      }
+    },
+    {
+      "id": "a-contributor-instance-of-the-primary-plugin-is-not-the-primary",
+      "receiver": {
+        "pluginId": "space",
+        "instanceId": 5,
+        "app": {
+          "id": "s.space.catalog@1/*#editor"
+        },
+        "viewState": {
+          "activeModeId": "explore",
+          "locale": "de"
+        }
+      },
+      "expect": {
+        "appId": "s.space.catalog@1/*#editor",
+        "viewState": {
+          "activeModeId": "s.space.catalog@1/*#editor",
+          "locale": "de"
+        }
+      }
+    }
+  ]
+}

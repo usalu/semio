@@ -35,5 +35,4 @@ export async function testExtensionPackage(generated: string): Promise<void> {
   });
   assert.deepEqual(entries.map((entry) => entry.name).sort(), fixture.expectedZip.toSorted());
   for (const entry of entries) { assert.equal(entry.time, fixture.time, entry.name); assert.equal(entry.date, fixture.date, entry.name); }
-  console.log("[DEBUG] Native VSCE ships only the runtime allowlist; changed source timestamps preserve exact archive bytes and ZIP metadata PASS");
 }

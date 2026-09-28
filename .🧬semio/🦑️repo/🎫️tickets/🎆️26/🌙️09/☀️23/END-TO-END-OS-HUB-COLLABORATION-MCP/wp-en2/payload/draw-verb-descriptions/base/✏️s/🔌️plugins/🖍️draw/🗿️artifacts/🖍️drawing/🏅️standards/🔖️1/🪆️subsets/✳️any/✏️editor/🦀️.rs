@@ -7,9 +7,10 @@
 //! This file is a routing table: `handle` → `DrawingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
+use crate::editor::drawing::commands::nudge_selection::{nudge_selection_left,nudge_selection_left_fast,nudge_selection_right,nudge_selection_right_fast,nudge_selection_up,nudge_selection_up_fast,nudge_selection_down,nudge_selection_down_fast};
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
-    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
+    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input,
     engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::drawing::modes::edit;
@@ -37,6 +38,9 @@ pub use catalogue_panel::DRAWING_PLAY_BODY_CATALOGUE;
 pub use layers_panel::{DRAWING_LAYER_KIND_DRAG_MIME, DRAWING_PLAY_BODY_LAYERS};
 pub use properties_panel::DRAWING_PLAY_BODY_PROPERTIES;
 
+#[path = "🕹️interaction/🦀️.rs"]
+pub(crate) mod interaction;
+
 //#region 🔖️Constants
 pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
 /// 🧰️ The utility the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
@@ -58,10 +62,11 @@ fn drawing_active_utility(view: &semio_framework_plugin::ViewModel) -> &str {
         .or(view.active_utility_id.as_deref())
         .unwrap_or(DRAWING_DEFAULT_UTILITY)
 }
-/// 🕹️ The single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app declares
-/// (granularity `stroke`, `HierarchyProvider::Flat`, methods Pick/Rectangle/Lasso).
+/// 🕹️ Framework-owned layer selection and snapshot-bound path point selection.
 pub const DRAWING_INTERACTION_DOMAIN: &str = "strokes";
 pub const DRAWING_INTERACTION_GRANULARITY: &str = "stroke";
+pub(crate) const DRAWING_POINT_DOMAIN: &str = "points";
+pub(crate) const DRAWING_POINT_GRANULARITY: &str = "point";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -181,6 +186,8 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
             semio_framework_plugin::ActionArgOption::new("locked", LocalizedLabel::native("Locked", "Gesperrt")),
             semio_framework_plugin::ActionArgOption::new("blendMode", LocalizedLabel::native("Blend Mode", "Mischmodus")),
             semio_framework_plugin::ActionArgOption::new("booleanOperation", LocalizedLabel::native("Boolean Operation", "Boolean-Operation")),
+            semio_framework_plugin::ActionArgOption::new("isolation", LocalizedLabel::native("Isolate Group Blending", "Gruppenmischung isolieren")),
+            semio_framework_plugin::ActionArgOption::new("fillRule", LocalizedLabel::native("Fill Rule", "Füllregel")),
             semio_framework_plugin::ActionArgOption::new("fillEnabled", LocalizedLabel::native("Fill Enabled", "Füllung aktiv")),
             semio_framework_plugin::ActionArgOption::new("strokeEnabled", LocalizedLabel::native("Stroke Enabled", "Kontur aktiv")),
             semio_framework_plugin::ActionArgOption::new("strokeColor", LocalizedLabel::native("Stroke Color", "Konturfarbe")),
@@ -194,6 +201,7 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
             semio_framework_plugin::ActionArgOption::new("transformScaleX", LocalizedLabel::native("Scale X", "Skalierung X")),
             semio_framework_plugin::ActionArgOption::new("transformScaleY", LocalizedLabel::native("Scale Y", "Skalierung Y")),
             semio_framework_plugin::ActionArgOption::new("transformRotation", LocalizedLabel::native("Rotation", "Drehung")),
+            semio_framework_plugin::ActionArgOption::new("transformShear", LocalizedLabel::native("Shear", "Scherung")),
             semio_framework_plugin::ActionArgOption::new("rotationDegrees", LocalizedLabel::native("Rotation (°)", "Drehung (°)")),
             semio_framework_plugin::ActionArgOption::new("traceThreshold", LocalizedLabel::native("Trace Threshold", "Schwellenwert")),
             semio_framework_plugin::ActionArgOption::new("traceSimplify", LocalizedLabel::native("Trace Simplify", "Vereinfachung")),
@@ -248,6 +256,15 @@ semio_framework_plugin::app_commands! {
         "editSelection" as "edit-selection" => edit_selection::EditSelection,
         "editPath" as "edit-path" => edit_path::EditPath,
         "editFill" as "edit-fill" => edit_fill::EditFill,
+        "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
+        "nudgeSelectionLeft" as "nudge-selection-left" => nudge_selection_left::NudgeSelectionLeft,
+        "nudgeSelectionLeftFast" as "nudge-selection-left-fast" => nudge_selection_left_fast::NudgeSelectionLeftFast,
+        "nudgeSelectionRight" as "nudge-selection-right" => nudge_selection_right::NudgeSelectionRight,
+        "nudgeSelectionRightFast" as "nudge-selection-right-fast" => nudge_selection_right_fast::NudgeSelectionRightFast,
+        "nudgeSelectionUp" as "nudge-selection-up" => nudge_selection_up::NudgeSelectionUp,
+        "nudgeSelectionUpFast" as "nudge-selection-up-fast" => nudge_selection_up_fast::NudgeSelectionUpFast,
+        "nudgeSelectionDown" as "nudge-selection-down" => nudge_selection_down::NudgeSelectionDown,
+        "nudgeSelectionDownFast" as "nudge-selection-down-fast" => nudge_selection_down_fast::NudgeSelectionDownFast,
     }
 }
 
@@ -403,6 +420,15 @@ mod args_bridge {
                 }
                 DrawingCommand::EditPath(decode(action, value)?)
             },
+            "deleteSelection" => DrawingCommand::DeleteSelection(decode(action, plain())?),
+            "nudgeSelectionLeft" => DrawingCommand::NudgeSelectionLeft(decode(action, plain())?),
+            "nudgeSelectionLeftFast" => DrawingCommand::NudgeSelectionLeftFast(decode(action, plain())?),
+            "nudgeSelectionRight" => DrawingCommand::NudgeSelectionRight(decode(action, plain())?),
+            "nudgeSelectionRightFast" => DrawingCommand::NudgeSelectionRightFast(decode(action, plain())?),
+            "nudgeSelectionUp" => DrawingCommand::NudgeSelectionUp(decode(action, plain())?),
+            "nudgeSelectionUpFast" => DrawingCommand::NudgeSelectionUpFast(decode(action, plain())?),
+            "nudgeSelectionDown" => DrawingCommand::NudgeSelectionDown(decode(action, plain())?),
+            "nudgeSelectionDownFast" => DrawingCommand::NudgeSelectionDownFast(decode(action, plain())?),
             "editSelection" => {
                 let mut value = plain();
                 if let dsl::DslValue::Object(entries) = &mut value {
@@ -599,10 +625,14 @@ impl DrawingInstanceOperationOwner {
                 return Ok(None);
             }
             let ids=payload.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
-            match session.prepare_layer_move(snapshot,ids) {
+            let point_ids=payload.interaction_state.selection.get(DRAWING_POINT_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
+            match session.prepare_layer_move(snapshot,ids,point_ids) {
                 Ok(false)=>return Ok(None),
                 Err(fault)=>{ self.operations.cancel(live_key); self.active=None; return Err(fault); },
                 Ok(true)=>{},
+            }
+            if session.point_query.as_ref().is_some_and(|query|query.constrained) && session.layer_move.is_none() && session.node_move.is_none() && session.node_marquee.is_none() {
+                session.step_gesture(canvas_pointer_down::drawing_gesture::Event::Escape,snapshot,config);
             }
             let query=session.point_query.as_mut().expect("retained point query");
             let targets = match query.publication_step() {
@@ -616,9 +646,11 @@ impl DrawingInstanceOperationOwner {
                 }
             };
             let query = session.point_query.take().expect("the exact published query remains retained");
-            let effect = if query.hover { canvas_pointer_down::interaction_hover_effect_from_targets(targets) } else { canvas_pointer_down::interaction_select_effect_from_targets(targets, &query.merge) };
             let mut emit = Emit::default();
-            if !query.preserve_selection { emit.effects.push(effect); }
+            if query.node_selection.is_some() {emit.effects.push(canvas_pointer_down::point_selection_effect_from_targets(targets));}
+            else if !query.preserve_selection {
+                emit.effects.push(if query.hover {canvas_pointer_down::interaction_hover_effect_from_targets(targets)}else {canvas_pointer_down::interaction_select_effect_from_targets(targets,&query.merge)});
+            }
             let window_transient = session.window_transient.clone();
             if session.gesture.matches("idle") && session.trace_pointer.is_none() {
                 self.operations.cancel(live_key);
@@ -627,12 +659,17 @@ impl DrawingInstanceOperationOwner {
             return Ok(Some((emit, window_transient)));
         }
         if let DrawingCommand::CanvasPointerDown(pointer) = command {
-            if active_utility_id == "selectDirect" && !pointer.shift && !pointer.ctrl && !pointer.meta && pointer.generation.is_none() {
+            if (active_utility_id=="editNodes" || active_utility_id=="selectDirect" && !pointer.ctrl && !pointer.meta) && pointer.generation.is_none() {
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
                 let world = [x,y];
                 session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility:active_utility_id.into(),world,shift:false,ctrl:false,meta:false },snapshot,config);
                 let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX/session.window_config.viewport.zoom.max(1e-6);
                 let mut query = canvas_pointer_down::DrawingPointQuery::new(command.command_id(),canvas_pointer_down::TracePointerJob::new_query(snapshot,world,tolerance,false),false,"replace".into(),false);
+                query.cursor.node_editing=active_utility_id=="editNodes";
+                query.point_pick_mode=if pointer.shift {interaction::points::PointPickMode::Toggle} else if pointer.ctrl || pointer.meta {interaction::points::PointPickMode::Add} else {interaction::points::PointPickMode::Replace};
+                query.constrained=pointer.shift;
+                query.centered=pointer.alt;
+                query.cursor.retain_selection_bounds(payload.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]))?;
                 query.drag_start = Some(world);
                 session.point_query = Some(query);
                 return Ok(None);
@@ -658,14 +695,21 @@ impl DrawingInstanceOperationOwner {
             DrawingCommand::CanvasPointerMove(pointer) if session.gesture.matches("moving_layer") => {
                 let [x,y] = pointer.last_sample();
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,x,y,pointer.width,pointer.height);
+                session.set_transform_modifiers(pointer.shift,pointer.alt);
                 session.move_layer_preview([x,y]);
                 Some(Some(Emit::default()))
             }
             DrawingCommand::CanvasPointerMove(payload) if session.gesture.matches("marqueeing") && session.gesture.context.method == "lasso" => Some(session.advance_lasso_move(payload,snapshot,config)),
             // 🚫️ A cancelled release clears a live drag and selects/commits nothing.
             DrawingCommand::CanvasPointerUp(payload) if payload.cancelled => Some(Some(canvas_pointer_up::cancel_gesture(session, snapshot, config))),
+            DrawingCommand::CanvasPointerUp(pointer) if session.node_move.is_some() => {
+                let (x,y)=canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
+                session.set_transform_modifiers(pointer.shift,pointer.alt);
+                Some(Some(session.finish_node_move([x,y],snapshot,config)?))
+            }
             DrawingCommand::CanvasPointerUp(pointer) if session.layer_move.is_some() => {
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
+                session.set_transform_modifiers(pointer.shift,pointer.alt);
                 Some(Some(session.finish_layer_move([x,y],snapshot,config)?))
             }
             DrawingCommand::CanvasPointerUp(payload) => {
@@ -1041,6 +1085,15 @@ mod gesture_operation_owner_tests;
 /// one proof row per `Migrated` generated id and `validate_ui_dispatch_classification` rejects
 /// anything that is not `Migrated`.
 const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
+    "deleteSelection",
+    "nudgeSelectionLeft",
+    "nudgeSelectionLeftFast",
+    "nudgeSelectionRight",
+    "nudgeSelectionRightFast",
+    "nudgeSelectionUp",
+    "nudgeSelectionUpFast",
+    "nudgeSelectionDown",
+    "nudgeSelectionDownFast",
     "setSnapshot",
     "commitDocument",
     "setFixtureJson",
@@ -1073,6 +1126,15 @@ const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
 /// — effects are not a store lane, so those are honestly `HostOnly`; the layer routes emit
 /// `DrawingMutation`s; the view routes emit exact Canvas window mutations.
 const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeft", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeftFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionRight", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionRightFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionUp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionUpFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionDown", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionDownFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
@@ -1149,6 +1211,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         let active_utility = input.context.and_then(|context| context.view_state.as_ref()).map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility);
         let mut session = DrawingSession::with_active_utility(active_utility);
         session.interaction.ids = input.interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
+        session.interaction.points = input.interaction.selection.get(DRAWING_POINT_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
         session.window_config = canvas_window::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref()));
         session.window_transient = canvas_window::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         let mut emit = Emit::default();
@@ -1461,6 +1524,8 @@ impl DrawingBoundedProofs {
             "setSnapshot", "commitDocument", "setFixtureJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
             "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "exportDocument", "editSelection", "editPath", "editFill",
+            "deleteSelection",
+    "nudgeSelectionLeft", "nudgeSelectionLeftFast", "nudgeSelectionRight", "nudgeSelectionRightFast", "nudgeSelectionUp", "nudgeSelectionUpFast", "nudgeSelectionDown", "nudgeSelectionDownFast",
         ]
     }
 }
@@ -1488,6 +1553,8 @@ fn render_drawing_body(
     document: &DrawingSnapshot,
     config: &DrawingCanvasWindowConfig,
     preview: &DrawingGesturePreview,
+    selection: &[String],
+    point_selection: &[String],
     view_state: &semio_framework_plugin::ViewModel,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
@@ -1496,7 +1563,7 @@ fn render_drawing_body(
     // that body owns, plus the shared first-paint budget the panel spends in document order.
     let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
     let root = match body_key {
-        DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility),
+        DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility, selection, point_selection),
         DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, &[], labels, &windows),
@@ -1531,6 +1598,11 @@ impl ArtifactEditor for DrawingPlayApp {
 
     const DIALECT: semio_framework::Dialect = crate::DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
+
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+        protocol::InteractionTopology { domains: [(DRAWING_INTERACTION_DOMAIN.into(), interaction::drawing_interaction_topology(doc.snapshot)),(DRAWING_POINT_DOMAIN.into(),interaction::drawing_point_topology(doc.snapshot))].into() }
+    }
+
 
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
     /// without it every live envelope load faults `editor did not declare a loaded-parent child
@@ -1723,12 +1795,13 @@ impl ArtifactEditor for DrawingPlayApp {
         }
         let mut session = DrawingSession::with_active_utility(view_state.map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility));
         session.interaction.ids = interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.clone();
+        session.interaction.points = interaction.selection(DRAWING_POINT_DOMAIN).ids.clone();
         session.window_config = canvas_window::config::current(cfg);
         command.dispatch(doc, cfg, &mut session)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), view_state)
+        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), &[], &[], view_state)
     }
 
     fn render_with_instance_operation_owner(
@@ -1745,7 +1818,7 @@ impl ArtifactEditor for DrawingPlayApp {
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
         };
-        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, view_state)
+        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, &[], &[], view_state)
     }
 
     fn render_with_request_context(
@@ -1760,7 +1833,12 @@ impl ArtifactEditor for DrawingPlayApp {
         if body_key == DRAWING_PLAY_BODY_PROPERTIES {
             return properties_panel::render(doc.snapshot, &interaction.selection(DRAWING_INTERACTION_DOMAIN).ids, semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, body_key)).map(semio_framework_plugin::built_to_component_tree);
         }
-        Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
+        let preview=match doc.render_operation() {
+            Some(operation)=>owner.with_mut::<DrawingInstanceOperationOwner,_>(|owner|Ok(owner.preview_projection(operation.canonical_base_revision,drawing_active_utility(view_state))))
+                .map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner",error.message))?.unwrap_or_default(),
+            None=>DrawingGesturePreview::default(),
+        };
+        render_drawing_body(body_key,doc.snapshot,&canvas_window::config::current(cfg),&preview,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids,&interaction.selection(DRAWING_POINT_DOMAIN).ids,view_state)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
@@ -1935,6 +2013,9 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     semio_framework_plugin::ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppieren")),
                     semio_framework_plugin::ActionArgOption::new("duplicate", LocalizedLabel::native("Duplicate", "Duplizieren")),
                     semio_framework_plugin::ActionArgOption::new("delete", LocalizedLabel::native("Delete", "Löschen")),
+                    semio_framework_plugin::ActionArgOption::new("ungroup", LocalizedLabel::native("Ungroup", "Gruppierung aufheben")),
+                    semio_framework_plugin::ActionArgOption::new("bringForward", LocalizedLabel::native("Bring Forward", "Eine Ebene nach vorne")),
+                    semio_framework_plugin::ActionArgOption::new("sendBackward", LocalizedLabel::native("Send Backward", "Eine Ebene nach hinten")),
                     semio_framework_plugin::ActionArgOption::new("bringToFront", LocalizedLabel::native("Bring to Front", "In den Vordergrund")),
                     semio_framework_plugin::ActionArgOption::new("sendToBack", LocalizedLabel::native("Send to Back", "In den Hintergrund")),
                     semio_framework_plugin::ActionArgOption::new("alignLeft", LocalizedLabel::native("Align Left", "Links ausrichten")),
@@ -1953,6 +2034,33 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("editFill", LocalizedLabel::native("Edit Fill", "Füllung bearbeiten"), ActionKind::Mutation)
                 .with_args([semio_framework_plugin::ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required(), semio_framework_plugin::ActionArgDef::json_text("edit", LocalizedLabel::native("Fill Edit", "Füllungsbearbeitung")).required()]))
             .action_interactive_job("editFill", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation))
+            .action_audience("deleteSelection", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionLeft", LocalizedLabel::native("Nudge Left", "Auswahl nach links verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionLeft", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionLeft", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionLeftFast", LocalizedLabel::native("Nudge Left Fast", "Auswahl schnell nach links verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionLeftFast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionLeftFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionRight", LocalizedLabel::native("Nudge Right", "Auswahl nach rechts verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionRight", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionRight", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionRightFast", LocalizedLabel::native("Nudge Right Fast", "Auswahl schnell nach rechts verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionRightFast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionRightFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionUp", LocalizedLabel::native("Nudge Up", "Auswahl nach oben verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionUp", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionUp", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionUpFast", LocalizedLabel::native("Nudge Up Fast", "Auswahl schnell nach oben verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionUpFast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionUpFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionDown", LocalizedLabel::native("Nudge Down", "Auswahl nach unten verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nudgeSelectionDownFast", LocalizedLabel::native("Nudge Down Fast", "Auswahl schnell nach unten verschieben"), ActionKind::Mutation))
+            .action_audience("nudgeSelectionDownFast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_interactive_job("nudgeSelectionDownFast", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(
                 semio_framework_plugin::ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native(
@@ -1965,7 +2073,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 📤️ Export — a host download effect (`DownloadMediaExport`), never a document operation.
             .action_with(
-                semio_framework_plugin::ActionDefinition { icon_id: "download".into(), ..semio_framework_plugin::ActionDefinition::bounded_catalog("exportDocument", LocalizedLabel::native("Export PDF", "PDF exportieren"), ActionKind::View) }
+                semio_framework_plugin::ActionDefinition { icon_id: "download".into(), ..semio_framework_plugin::ActionDefinition::bounded_catalog("exportDocument", LocalizedLabel::native("Export Drawing", "Zeichnung exportieren"), ActionKind::View) }
                     .describe(LocalizedLabel::native(
                         "Renders the drawing to a downloadable file — a vector-painted PDF page or an SVG document.",
                         "Rendert die Zeichnung in eine herunterladbare Datei — eine vektorgezeichnete PDF-Seite oder ein SVG-Dokument.",
@@ -2103,6 +2211,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .utility(drawing_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("selectDirect", LocalizedLabel::native("Direct Select", "Direktauswahl"), "mouse-pointer-2", "Select", UtilityCategory::Selection))
+            .utility(drawing_utility("editNodes", LocalizedLabel::native("Edit Nodes", "Knoten bearbeiten"), "spline", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("pen", LocalizedLabel::native("Pen", "Stift"), "pen-tool", "Drawing", UtilityCategory::Utilities))
             .utility(drawing_utility("shapeRect", LocalizedLabel::native("Rectangle", "Rechteck"), "rectangle-tool", "Drawing", UtilityCategory::Utilities))
             .utility(drawing_utility("shapeEllipse", LocalizedLabel::native("Ellipse", "Ellipse"), "circle", "Drawing", UtilityCategory::Utilities))
@@ -2112,7 +2221,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .utility(drawing_utility("trace", LocalizedLabel::native("Trace", "Nachzeichnen"), "scan-line", "Combine", UtilityCategory::Utilities))
             .utility(drawing_utility("transformMove", LocalizedLabel::native("Pan", "Verschieben"), "move", "View", UtilityCategory::Utilities))
             .window_kind_utilities(DRAWING_PLAY_WINDOW_CANVAS, vec![
-                "selectMarquee".into(), "selectLasso".into(), "selectDirect".into(),
+                "selectMarquee".into(), "selectLasso".into(), "selectDirect".into(), "editNodes".into(),
                 "pen".into(), "shapeRect".into(), "shapeEllipse".into(), "shapeLine".into(), "shapePolygon".into(),
                 "booleanCombine".into(), "trace".into(), "transformMove".into(),
             ])
@@ -2126,7 +2235,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                 id: DRAWING_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Strokes", "Striche"),
                 granularities: vec![GranularityDefinition { id: DRAWING_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Stroke", "Strich"), icon_id: "pen-tool".into() }],
-                hierarchy: HierarchyProvider::Flat,
+                hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {
                     modes: vec![SelectionMode::Multiple, SelectionMode::Single],
@@ -2136,11 +2245,29 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     broadcast: true,
                 },
             })
-            .window_kind_interactions(DRAWING_PLAY_WINDOW_CANVAS, vec![InteractionRef::new(DRAWING_INTERACTION_DOMAIN)])
+            .interaction(InteractionDefinition {
+                id:DRAWING_POINT_DOMAIN.into(),
+                label:LocalizedLabel::native("Path Points","Pfadpunkte"),
+                granularities:vec![GranularityDefinition {id:DRAWING_POINT_GRANULARITY.into(),label:LocalizedLabel::native("Point","Punkt"),icon_id:"spline".into()}],
+                hierarchy:HierarchyProvider::Topology,
+                hover:HoverSpec::default(),
+                selection:SelectionSpec {modes:vec![SelectionMode::Multiple],methods:vec![SelectionMethod::Pick],merges:vec![MergeMode::Replace,MergeMode::Additive,MergeMode::Subtractive,MergeMode::Invertive],transitive:false,broadcast:true},
+            })
+            .window_kind_interactions(DRAWING_PLAY_WINDOW_CANVAS, vec![InteractionRef::new(DRAWING_INTERACTION_DOMAIN),InteractionRef::new(DRAWING_POINT_DOMAIN)])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("escape", "canvasEscape")
             .keybinding("enter", "canvasCommitDraft")
+            .keybinding("delete", "deleteSelection")
+            .keybinding("backspace", "deleteSelection")
+            .keybinding("left", "nudgeSelectionLeft")
+            .keybinding("shift+left", "nudgeSelectionLeftFast")
+            .keybinding("right", "nudgeSelectionRight")
+            .keybinding("shift+right", "nudgeSelectionRightFast")
+            .keybinding("up", "nudgeSelectionUp")
+            .keybinding("shift+up", "nudgeSelectionUpFast")
+            .keybinding("down", "nudgeSelectionDown")
+            .keybinding("shift+down", "nudgeSelectionDownFast")
             .default_layout(edit::layout())
             // 🎯️ Typed channel surface — the SAME `drawing_io()` the trait's `io()` override returns,
             // declared on the manifest so the committed descriptor carries it too. Without this the

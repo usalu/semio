@@ -1,0 +1,10 @@
+{
+  "title": "Feature Complete PDF Artifact Editor",
+  "emoji": "📘",
+  "status": "open",
+  "description": "Replace the ad hoc PDF artifact editor with a complete end-user editing experience. Every detail of a PDF document must be editable end to end: text, images, vectors, pages, and document properties. The typed PdfSnapshot and existing mutations are the model. The surface must paint the page and write edits back through real mutations.",
+  "goal": "🎯runningpdf",
+  "sessions": [
+    "⚪6a4b7fae57594173b2105e84d16bf608"
+  ]
+}

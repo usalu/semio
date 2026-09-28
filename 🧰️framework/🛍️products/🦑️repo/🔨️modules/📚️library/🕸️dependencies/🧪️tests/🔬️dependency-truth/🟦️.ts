@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { dependencyClassifyOracleEntry, dependencyTestDomain, dependencyIsCompositionManifest, dependencyParseGoModule, type DependencyBaselineEntry, type DependencyEcosystem, type DependencyKind } from "../../📇️inventory/🟦️.ts";
+import { DEPENDENCY_INTERFACE_OWNERS, DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS, dependencyClassifyOracleEntry, dependencyTestDomain, dependencyIsCompositionManifest, dependencyParseGoModule, type DependencyBaselineEntry, type DependencyEcosystem, type DependencyKind } from "../../📇️inventory/🟦️.ts";
 import { DEPENDENCY_REPO_POLICY_ROOT, DEPENDENCY_REPO_POLICY_ROUTERS, dependencyRepoPolicyImportBoundaryFailure, dependencyRepoPolicyLibrarySpecifier, dependencyRepoPolicyRouterSetFailure, dependencyTruthReportFromEntries } from "../../⚖️truth/🟦️.ts";
 
 const WORKSPACE_ROOT = getWorkspaceRoot();
@@ -37,6 +37,13 @@ export function dependencyTruthSelfTests(): number {
   }
   if (!dependencyTestDomain(JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"))).directoryNames.includes("🏭️generator")) throw new Error("[verify dependencies self-test] the taxonomy's fixture-generator directory is not part of the dependency test domain.");
   if (oracleOnly.kinds.join() !== "test-oracle" || oracleOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] isolated test-only oracle was not classified as an oracle.");
+  const [ownedName, owned] = Object.entries(DEPENDENCY_INTERFACE_OWNERS)[0]!;
+  const ownerOnly: DependencyBaselineEntry = { ecosystem: owned.ecosystem, name: ownedName, version: "1", kinds: ["production-runtime"], users: [owned.manifest], productionReachable: true, declarations: [{ user: owned.manifest, version: "1", kind: "production-runtime" }] };
+  dependencyClassifyOracleEntry(ownerOnly, ["owned"], testDomain);
+  if (ownerOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] an interface owner's own declaration was counted as an oracle conflict.");
+  const bypass: DependencyBaselineEntry = { ...ownerOnly, users: [owned.manifest, "product/package.json"], declarations: [{ user: owned.manifest, version: "1", kind: "production-runtime" }, { user: "product/package.json", version: "1", kind: "production-runtime" }] };
+  dependencyClassifyOracleEntry(bypass, ["owned"], testDomain);
+  if (bypass.oracleConflictUsers?.join() !== "product/package.json") throw new Error("[verify dependencies self-test] a production declaration beside the interface owner escaped the oracle conflict.");
   const entry = (ecosystem: DependencyEcosystem, name: string, kind: DependencyKind, user: string, version = "1"): DependencyBaselineEntry => ({ ecosystem, name, version, kinds: [kind], users: [user], productionReachable: kind === "production-runtime" || kind === "production-build", declarations: [{ user, version, kind }] });
   const mixedEntry = (name: string): DependencyBaselineEntry => ({ ecosystem: "js", name, version: "1", kinds: ["repository-tooling"], users: ["package.json", "product/package.json"], productionReachable: false, declarations: [{ user: "package.json", version: "1", kind: "repository-tooling" }, { user: "product/package.json", version: "2", kind: "repository-tooling" }] });
   const rootPackage = JSON.stringify({ packageManager: "bun@1.2.5", engines: { bun: ">=1.2.0" }, devDependencies: { nx: "1", "@nx/devkit": "1", "@nx/js": "1", eslint: "1" } });
@@ -45,6 +52,12 @@ export function dependencyTruthSelfTests(): number {
   const nonRootOwnerReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", "product/package.json", "2")], [], rootPackage, lock);
   if (!rootOwnerReport.entries.mandatedToolchain.some((item) => item.name === "nx") || rootOwnerReport.toolchainConflicts.length !== 0) throw new Error("[verify dependencies self-test] authorized root Nx runner row was not precisely excepted.");
   if (!nonRootOwnerReport.entries.literalExternal.some((item) => item.name === "nx") || nonRootOwnerReport.toolchainConflicts[0]?.user !== "product/package.json") throw new Error("[verify dependencies self-test] unauthorized non-root Nx runner row escaped literal-external inventory.");
+  const recipe = [...DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS.keys()][0]!;
+  const recipeLock = JSON.stringify({ workspaces: { "": { dependencies: { nx: "1", typescript: "5" } } } });
+  const recipeReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", recipe)], [], rootPackage, lock, { [recipe]: recipeLock });
+  if (!recipeReport.entries.mandatedToolchain.some((item) => item.name === "nx") || recipeReport.toolchainConflicts.length !== 0 || recipeReport.auditedToolchain.failures.length !== 0) throw new Error("[verify dependencies self-test] the Nx bootstrap recipe's runner row was not excepted against its own lock.");
+  const staleRecipeReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", recipe, "2")], [], rootPackage, lock, { [recipe]: recipeLock });
+  if (!staleRecipeReport.auditedToolchain.failures.some((failure) => failure.includes(recipe))) throw new Error("[verify dependencies self-test] a recipe row its own lock does not own escaped the toolchain audit.");
   const report = dependencyTruthReportFromEntries(
     [
       entry("python", "composition-runner", "test-runner", "pyproject.toml"),

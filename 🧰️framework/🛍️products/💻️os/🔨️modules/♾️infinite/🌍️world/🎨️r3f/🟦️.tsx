@@ -24,12 +24,13 @@ import {
   type GumballPose,
   type ThreeEvent,
   type TreeDataItem,
+  ThreeOrbitControls,
+  type NormalBufferAttributes,
+  type ThreeTexture,
 } from "@semio-tech/ui-react";
 import { GestureRecognizer, applyPinchToOrbit, type PinchStep } from "@semio-tech/framework";
 import { clearColorResolveCache, resolveColorHex, resolveSpatialAxisColors, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement, type ReactNode } from "react";
-import { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
-import type { NormalBufferAttributes } from "three";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 
 const Canvas = sceneHostPort.fiber.canvas;
@@ -3748,6 +3749,29 @@ export interface WorldCanvasProps {
   readonly onPointerMissed?: (event: MouseEvent) => void;
 }
 
+/** 🧺️ How a {@link WorldCanvas}'s children reach its r3f root without re-rendering `<Canvas>`: the latest children and the
+ * setters of the mounted {@link WorldCanvasChildren}. */
+type WorldCanvasChildrenSlotV1 = { current: ReactNode; readonly listeners: Set<React.Dispatch<React.SetStateAction<ReactNode>>> };
+
+/** 🪣️ Renders the latest children of its {@link WorldCanvasChildrenSlotV1} inside the r3f root — the only part of the canvas a
+ * parent render reaches. */
+function WorldCanvasChildren(props: { readonly slot: WorldCanvasChildrenSlotV1 }): ReactNode {
+  const [children, setChildren] = reactHostPort.useState<ReactNode>(() => props.slot.current);
+  reactHostPort.useLayoutEffect(() => {
+    const slot = props.slot;
+    slot.listeners.add(setChildren);
+    setChildren(() => slot.current);
+    return () => {
+      slot.listeners.delete(setChildren);
+    };
+  }, [props.slot]);
+  return children;
+}
+
+const WORLD_CANVAS_STYLE: CSSProperties = { height: "100%", width: "100%" };
+const WORLD_CANVAS_DEFAULT_DPR: [number, number] = [1, 2];
+const WORLD_CANVAS_DEFAULT_GL = { antialias: true };
+
 /** @emoji 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`).
  *
  * 🎯️ The canvas is mounted into — and binds its DOM events to — a wrapper element this shell names
@@ -3760,7 +3784,12 @@ export interface WorldCanvasProps {
  * Naming the source removes the null rather than swallowing it — the canvas exists only once the
  * wrapper does, and a detached element still accepts a listener. The wrapper holds the canvas and
  * nothing else, so the event scope is exactly the one r3f's inner div had and `props.overlay` stays
- * outside it. */
+ * outside it.
+ *
+ * 📐️ `<Canvas>` renders only when its own configuration changes: a Canvas render re-runs r3f's `configure`, which publishes a
+ * fresh `size` + `viewport` on EVERY call (it compares the 8-key measured rect with the 4-key stored size), re-rendering every
+ * `useThree` size subscriber — twice per canvas per world hover (ticket 26/09/23 F3). Handlers read the latest props through
+ * a ref and the children travel through {@link WorldCanvasChildren}. */
 export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const extra = props.extraRootProps ?? {};
   const frameloop = props.frameloop ?? "demand";
@@ -3769,6 +3798,61 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const onWheelRef = reactHostPort.useRef(props.onWheel);
   const [canvasEventSource, setCanvasEventSource] = reactHostPort.useState<HTMLDivElement | null>(null);
   onWheelRef.current = props.onWheel;
+  const propsRef = reactHostPort.useRef(props);
+  propsRef.current = props;
+  const [childrenSlot] = reactHostPort.useState<WorldCanvasChildrenSlotV1>(() => ({ current: props.children, listeners: new Set() }));
+  reactHostPort.useLayoutEffect(() => {
+    childrenSlot.current = props.children;
+    for (const listener of childrenSlot.listeners) listener(() => props.children);
+  }, [childrenSlot, props.children]);
+  const cameraOptions = ownedCamera
+    ? {
+        up: [...cameraUp] as [number, number, number],
+        position: [...props.cameraPosition!] as [number, number, number],
+        fov: props.cameraFov ?? 45,
+        ...(props.cameraNear !== undefined ? { near: props.cameraNear } : {}),
+        ...(props.cameraFar !== undefined ? { far: props.cameraFar } : {}),
+      }
+    : undefined;
+  const cameraKey = JSON.stringify(cameraOptions ?? null);
+  const dpr = props.dpr ?? WORLD_CANVAS_DEFAULT_DPR;
+  const dprKey = JSON.stringify(dpr);
+  const gl = props.gl ?? WORLD_CANVAS_DEFAULT_GL;
+  const glKey = typeof gl === "function" ? gl : JSON.stringify(gl);
+  const canvas = reactHostPort.useMemo(
+    () =>
+      canvasEventSource ? (
+        <Canvas
+          eventSource={canvasEventSource}
+          frameloop={frameloop}
+          style={WORLD_CANVAS_STYLE}
+          dpr={dpr}
+          shadows={props.shadows}
+          camera={cameraOptions}
+          gl={gl}
+          onPointerDown={(event) => propsRef.current.onPointerDown?.(event.nativeEvent)}
+          onPointerMove={(event) => propsRef.current.onPointerMove?.(event.nativeEvent)}
+          onPointerUp={(event) => propsRef.current.onPointerUp?.(event.nativeEvent)}
+          onPointerLeave={(event) => propsRef.current.onPointerLeave?.(event.nativeEvent)}
+          onPointerCancel={(event) => propsRef.current.onPointerCancel?.(event.nativeEvent)}
+          onWheel={(event) => propsRef.current.onWheel?.(event.nativeEvent)}
+          onContextMenu={(event) => propsRef.current.onContextMenu?.(event)}
+          onDoubleClick={(event) => propsRef.current.onDoubleClick?.(event.nativeEvent)}
+          onLostPointerCapture={(event) => propsRef.current.onLostPointerCapture?.(event.nativeEvent)}
+          onPointerMissed={(event) => propsRef.current.onPointerMissed?.(event)}
+          onCreated={({ camera, gl: renderer }) => {
+            propsRef.current.onCanvasReady?.({ camera, domElement: renderer.domElement });
+          }}
+        >
+          {frameloop === "demand" ? <DemandFrameloopKick /> : null}
+          {props.background ? <color attach="background" args={[props.background]} /> : null}
+          <WorldLayerStack>
+            <WorldCanvasChildren slot={childrenSlot} />
+          </WorldLayerStack>
+        </Canvas>
+      ) : null,
+    [canvasEventSource, frameloop, dprKey, props.shadows, cameraKey, glKey, props.background, childrenSlot],
+  );
   /** 🖱️ The wheel hook belongs on the EVENT SOURCE, not on the canvas: a `<Canvas eventSource>`
    * stamps `pointer-events: none` on its canvas, so a wheel listener bound there is never called. */
   reactHostPort.useEffect(() => {
@@ -3799,44 +3883,7 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
       {...extra}
     >
       <div ref={setCanvasEventSource} style={{ width: "100%", height: "100%" }}>
-        {canvasEventSource ? (
-          <Canvas
-            eventSource={canvasEventSource}
-            frameloop={frameloop}
-            style={{ height: "100%", width: "100%" }}
-            dpr={props.dpr ?? [1, 2]}
-            shadows={props.shadows}
-            camera={
-              ownedCamera
-                ? {
-                    up: [...cameraUp] as [number, number, number],
-                    position: [...props.cameraPosition!] as [number, number, number],
-                    fov: props.cameraFov ?? 45,
-                    ...(props.cameraNear !== undefined ? { near: props.cameraNear } : {}),
-                    ...(props.cameraFar !== undefined ? { far: props.cameraFar } : {}),
-                  }
-                : undefined
-            }
-            gl={props.gl ?? { antialias: true }}
-            onPointerDown={(event) => props.onPointerDown?.(event.nativeEvent)}
-            onPointerMove={(event) => props.onPointerMove?.(event.nativeEvent)}
-            onPointerUp={(event) => props.onPointerUp?.(event.nativeEvent)}
-            onPointerLeave={(event) => props.onPointerLeave?.(event.nativeEvent)}
-            onPointerCancel={(event) => props.onPointerCancel?.(event.nativeEvent)}
-            onWheel={(event) => props.onWheel?.(event.nativeEvent)}
-            onContextMenu={props.onContextMenu}
-            onDoubleClick={(event) => props.onDoubleClick?.(event.nativeEvent)}
-            onLostPointerCapture={(event) => props.onLostPointerCapture?.(event.nativeEvent)}
-            onPointerMissed={props.onPointerMissed}
-            onCreated={({ camera, gl: renderer }) => {
-              props.onCanvasReady?.({ camera, domElement: renderer.domElement });
-            }}
-          >
-            {frameloop === "demand" ? <DemandFrameloopKick /> : null}
-            {props.background ? <color attach="background" args={[props.background]} /> : null}
-            <WorldLayerStack>{props.children}</WorldLayerStack>
-          </Canvas>
-        ) : null}
+        {canvas}
       </div>
       {props.overlay}
     </div>
@@ -4063,7 +4110,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
     [props.reference.origin, props.reference.orientation, props.reference.scale],
   );
   const [pointerHovered, setPointerHovered] = reactHostPort.useState(false);
-  const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: import("three").Texture } | null>(null);
+  const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: ThreeTexture } | null>(null);
   const selectable = worldEntitySelectable(props.reference);
   const inspectable = worldEntityInspectable(props.reference);
   const interactionHovered = selectable && (props.hovered || pointerHovered);

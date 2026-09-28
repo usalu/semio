@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { CHANNEL_VERSION_CONSUMERS, CHANNEL_VERSION_PIN_PATH, channelVersionCensus, channelVersionLiterals, writeChannelVersionConsumers } from "../../🔖️channel-version/🟦️.ts";
+import { decodePackValue } from "../../../../🟦️.ts";
 
 /** 🧭️ The repository root above this law (the directory holding `.mcp.json`). */
 function repositoryRoot(): string {
@@ -23,6 +24,13 @@ function repositoryRoot(): string {
     current = parent;
   }
   return current;
+}
+
+/** 🔢️ A number's f64 little-endian bytes as the Pack codec stores them, written by Node's own `Buffer` (the oracle). */
+function packF64Hex(value: number): string {
+  const bytes = Buffer.alloc(8);
+  bytes.writeDoubleLE(value);
+  return bytes.toString("hex");
 }
 
 describe("channel version authority", () => {
@@ -41,10 +49,22 @@ describe("channel version authority", () => {
       'return row.appChannelVersion === 18 ? { appChannelVersion: 18 } : fail();',
       'execution_protocol: ExecutionProtocol { app_channel_version: 14 },',
       '"required": ["appChannelVersion"],',
+      '"selection": { "executionProtocol": 17, "closure": ["stdio"] }',
     ].join("\n");
     const literals = channelVersionLiterals(text);
-    expect(literals.map((literal) => literal.value)).toEqual([18, 18, 18, 18, 18, 18, 14]);
+    expect(literals.map((literal) => literal.value)).toEqual([18, 18, 18, 18, 18, 18, 14, 17]);
     for (const literal of literals) expect(text.slice(literal.valueStart, literal.valueStart + String(literal.value).length)).toBe(String(literal.value));
+  });
+
+  it("finds a version inside hex-encoded Pack descriptor bytes, as the Pack codec decodes it", () => {
+    const fixture = JSON.parse(readFileSync(join(repositoryRoot(), "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json"), "utf8"));
+    for (const row of fixture.rawCases) {
+      const literals = channelVersionLiterals(JSON.stringify(row));
+      const decoded = decodePackValue(Buffer.from(row.hex, "hex")) as { executionProtocol: { appChannelVersion: number } };
+      expect(literals).toHaveLength(1);
+      expect(literals[0]).toMatchObject({ encoded: true, value: decoded.executionProtocol.appChannelVersion });
+    }
+    expect(channelVersionLiterals(`"${packF64Hex(17)}6170704368616e6e656c56657273696f6e05${packF64Hex(17)}"`).map((literal) => literal.value)).toEqual([17]);
   });
 
   it("the generator rewrites only the drifted literals it may and the census names the rest", () => {
@@ -60,6 +80,7 @@ describe("channel version authority", () => {
       write(consumer.path, `{\n${body}\n}\n`);
     }
     write("unregistered/🟦️.ts", "export const APP_CHANNEL_VERSION_COPY = 20;\n");
+    write("unregistered-pack/🔣️.json", `{ "hex": "11${Buffer.from("appChannelVersion").toString("hex")}05${packF64Hex(20)}" }\n`);
     expect(spawnSync("git", ["init", "-q"], { cwd: root }).status).toBe(0);
     const { written, refused } = writeChannelVersionConsumers(root, { guest: false });
     const rewritable = CHANNEL_VERSION_CONSUMERS.filter((consumer) => !consumer.arbitrary && !consumer.derived && !consumer.guest);
@@ -69,7 +90,7 @@ describe("channel version authority", () => {
       expect(readFileSync(join(root, consumer.path), "utf8")).toContain(`"appChannelVersion": ${consumer.hostileValues![0]}`);
     }
     const { findings } = channelVersionCensus(root);
-    expect(findings.filter((finding) => finding.problem === "unregistered").map((finding) => finding.path)).toEqual(["unregistered/🟦️.ts"]);
+    expect(findings.filter((finding) => finding.problem === "unregistered").map((finding) => finding.path).sort()).toEqual(["unregistered-pack/🔣️.json", "unregistered/🟦️.ts"]);
     expect(findings.filter((finding) => finding.problem === "drift").map((finding) => finding.path).sort()).toEqual(
       CHANNEL_VERSION_CONSUMERS.filter((consumer) => !consumer.arbitrary && (consumer.derived || consumer.guest)).map((consumer) => consumer.path).sort(),
     );

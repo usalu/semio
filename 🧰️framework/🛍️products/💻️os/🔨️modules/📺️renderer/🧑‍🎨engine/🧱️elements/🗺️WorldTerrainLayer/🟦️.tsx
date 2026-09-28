@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { publishedPageUrl } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BufferAttribute, BufferGeometry, CanvasTexture, ClampToEdgeWrapping, DoubleSide, MeshStandardMaterial } from "three";
+import { BufferAttribute, BufferGeometry, CanvasTexture, ClampToEdgeWrapping, DoubleSide, MeshStandardMaterial } from "@semio-tech/ui-react";
 import { createTerrainSession, type TerrainWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 // #endregion 🔌️Adapters
 

@@ -69,4 +69,3 @@ semio-s-artifact-stdio-las = { workspace = true, features = ["component-app-asse
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-framework-value-derive = { workspace = true }

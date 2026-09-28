@@ -86,6 +86,4 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   const scriptText = readFileSync(join(packageRoot, "📜️script.ts"), "utf8"), scriptSource = ts.createSourceFile("script.ts", scriptText, ts.ScriptTarget.Latest, true);
   const check = scriptSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "BrowserWorkerCheckScript").getText(scriptSource);
   assert.ok(check.includes("checkBrowserBoot(")); assert.ok(!check.includes("buildBootScript("));
-  console.log("[DEBUG] Missing and stale browser boot checks preserve artifact bytes and mtime; Nx owns generation PASS");
-  console.log("[DEBUG] Bun/esbuild predicate controls read the canonical default session while WGPU bundles remain independent PASS");
 }

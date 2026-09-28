@@ -14,8 +14,10 @@
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
 import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
-import { HubConnectionIndicator, hubConnectionSummaryV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
+import { posix } from "node:path";
+import { HubConnectionIndicator, SyncAttachCard, hubConnectionSummaryV1, syncAttachTargetV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
 import hubSummary from "../../🧫️fixtures/📶️hub-connection-summary.json";
+import attachTargets from "../../🧫️fixtures/🎯️sync-attach-target.json";
 import hubProjectionSchema from "../../../../🧬️schema/🔗️hub-projection/🔣️.json";
 import hubProjection from "../../../../🧫️fixtures/🔗️hub-projection/🔣️.json";
 // #endregion 🔌️Adapters
@@ -129,3 +131,35 @@ describe("HubConnectionIndicator", () => {
   });
 });
 //#endregion 🔖️HubConnectionIndicator
+
+describe("🎯️ sync attach target", () => {
+  for (const row of attachTargets.cases) {
+    it(row.name, () => {
+      const target = syncAttachTargetV1(row.kind as "file" | "folder" | "remote", row.draft);
+      expect(target).toEqual(row.expected);
+      if (target?.kind === "file") expect(target.folder).toBe(posix.dirname(target.path));
+      if (target?.kind === "remote" && row.draft.trim().split("/").length >= 3) {
+        const url = new URL(`http://${row.draft.trim()}`);
+        const [spaceId, ...document] = url.pathname.slice(1).split("/");
+        expect({ hostPort: target.hostPort, spaceId: target.spaceId, documentId: target.documentId }).toEqual({ hostPort: url.host, spaceId, documentId: document.join("/") });
+      }
+    });
+  }
+});
+
+describe("♿️ sync attach card", () => {
+  afterEach(() => cleanup());
+  for (const cardKind of ["file", "folder", "remote"] as const) {
+    it(`names its ${cardKind} path field by the card's own title and attaches the typed target`, () => {
+      const attached: unknown[] = [];
+      render(<SyncAttachCard activeUri={null} cardKind={cardKind} draftPath="work/doc.json" syncUtilities={[]} status={null} quarantinedConflicts={[]} onAction={() => {}} onDraftPathChange={() => {}} onClose={() => {}} onAttach={(target) => attached.push(target)} onDetach={() => {}} />);
+      const title = document.getElementById(`framework.sync.${cardKind}.title`)?.textContent ?? "";
+      expect(title.length).toBeGreaterThan(0);
+      expect(screen.getByRole("textbox", { name: title })).toBeTruthy();
+      const unlabelled = screen.getAllByRole("button").filter((button) => !button.hasAttribute("aria-label"));
+      expect(unlabelled).toHaveLength(1);
+      unlabelled[0]!.click();
+      expect(attached).toEqual([syncAttachTargetV1(cardKind, "work/doc.json")]);
+    });
+  }
+});

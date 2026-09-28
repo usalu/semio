@@ -219,7 +219,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
        }
       }
       assert.equal(new Set(f.constructionAliasCases.map(x=>x.id)).size,f.constructionAliasCases.length);
-      console.log("[DEBUG] "+JSON.stringify({exactAliasPrefixes:14,exactAliasRows:exactRows,aliasNegativeRows,aliasFaultRows,aliasShortRows,aliasReplayRows,omittedUnlinkRefusals:7,constructorChargeUnchanged:992,originalParentCharge:880,runtimeExecuted:false}));
+      console.log(JSON.stringify({exactAliasPrefixes:14,exactAliasRows:exactRows,aliasNegativeRows,aliasFaultRows,aliasShortRows,aliasReplayRows,omittedUnlinkRefusals:7,constructorChargeUnchanged:992,originalParentCharge:880,runtimeExecuted:false}));
       
       }
       //#endregion
@@ -241,7 +241,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         assert.equal(scalarDeclarationJson.registeredTestProposal.status, "source-oracle-contract");
         assert.equal(scalarDeclarationJson.status, "runtime-unmounted-source-declaration");
         assert.equal(scalarTestsJson.status, "runtime-unmounted-source-oracle");
-        console.log("[DEBUG] canonicalCrossPairRejections=2 provenanceRejections=4 runtimeMounted=false");
         //#endregion
       });
       test("OwnedResidentScalarReceiptModel", () => {
@@ -1472,7 +1471,6 @@ it("OwnedResidentReaderRevocation preserves the original read alias and parent c
         } else retire(source.beginClose());
       }
       expect(prefixes).toBeGreaterThan(100);
-      console.info(`[DEBUG] OwnedValidation vectors=${fixture.cases.length} cancellationPrefixes=${prefixes} grants=1/4096`);
     });
 
     it("OwnedHash streams exact insertion-ordered JSON bytes while retaining old surface owners through cancellation", async () => {
@@ -2380,7 +2378,6 @@ it("OwnedResidentReaderRevocation preserves the original read alias and parent c
       for (const childId of laneRecord.children) { const record = readRecord(Number(childId)); expect(record.component.type).toBe("text"); reassembled += packedTextLeaf((record.component as { readonly value: string }).value, (record.component as { readonly dataAttributes?: Record<string, string> | null }).dataAttributes); }
       expect(reassembled, "a packed leaf that loses its data-attribute slices hands JSON.parse a 512-byte prefix").toBe(payload);
       expect(JSON.parse(reassembled)).toHaveLength(512);
-      console.info(`[DEBUG] ${payload.length} lane bytes crossed the intake in ${nodes.length - 2} packed leaves of up to ${packChunks} slices and reassembled byte-exactly`);
       close(owner); native.client.disposeAll();
     });
 
@@ -2441,7 +2438,6 @@ it("OwnedResidentReaderRevocation preserves the original read alias and parent c
       const second = await drive(relane.map((node) => ({ tag: "upsert", val: { node: encodePackValue(node) } })), 1, 2);
       expect(second.view.view.revision).toBe(2);
       expect(second.steps * 4, "re-publishing one lane of an unchanged document must stay a delta").toBeLessThan(first.steps);
-      console.info(`[DEBUG] packed world lane set: ${packed.nodes.length} nodes, ${carried} carried bytes, ${first.steps} intake steps (${(first.steps / carried).toFixed(2)}/byte), one-lane republish ${second.steps}`);
       close(owner); native.client.disposeAll();
     });
 
@@ -2680,7 +2676,6 @@ it("OwnedResidentReaderRevocation preserves the original read alias and parent c
         owner.surface.unsubscribeNode(owner.subscription); close(owner.surface); expect(() => owner.original.byteAt(0)).toThrow(); expect(() => owner.candidate.byteAt(0)).toThrow();
       }
       expect(steps).toBeGreaterThan(100);
-      console.info(`[DEBUG] OwnedSurface cancellation prefixes: ${steps + 1}; phases: ${[...phases].join(",")}`);
     });
 
     it("ReadLease aborted speculative rendering never creates a subscription owner", async () => {

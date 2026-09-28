@@ -786,6 +786,8 @@ pub mod examples {
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
+    #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🦀️.rs"]
+    pub mod page;
     #[path = "."]
     pub mod pdf14a {
         #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs"]

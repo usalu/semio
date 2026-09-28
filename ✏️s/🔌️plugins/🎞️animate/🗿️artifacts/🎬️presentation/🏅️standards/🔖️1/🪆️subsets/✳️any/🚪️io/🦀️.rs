@@ -63,7 +63,7 @@ pub fn animate_presentation_document_json_to_svg(value: &semio_framework_os_kern
     let background = XmlNode::Element { name: "rect".into(), attrs: attributes(&[("width", "100%"), ("height", "100%"), ("fill", "white")]), children: Vec::new() };
     let title = XmlNode::Element { name: "text".into(), attrs: attributes(&[("x", "32"), ("y", "64"), ("font-size", "32"), ("fill", "#111827")]), children: vec![XmlNode::Text { text: title.into() }] };
     let root = XmlNode::Element { name: "svg".into(), attrs: attributes(&[("xmlns", "http://www.w3.org/2000/svg"), ("viewBox", "0 0 1280 720"), ("width", "1280"), ("height", "720")]), children: vec![background, title] };
-    Ok((write_svg_xml(&XmlDocument { root: Some(root), ..Default::default() }), 1280, 720))
+    Ok((write_svg_xml(&XmlDocument { root: Some(root), ..Default::default() })?, 1280, 720))
 }
 
 /// 📥️ Rasterizes a DWG drawing through the native host into a one-slide deck.
@@ -71,7 +71,7 @@ pub fn animate_presentation_document_json_to_svg(value: &semio_framework_os_kern
 pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<dsl::DslValue, String> {
     use semio_s_artifact_stdio_svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::dwg_drawing_to_svg(drawing)?;
-    let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
+    let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?)?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
     let frame = crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
     let source = crate::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None };

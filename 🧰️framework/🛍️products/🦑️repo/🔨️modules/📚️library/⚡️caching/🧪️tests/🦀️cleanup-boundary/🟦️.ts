@@ -46,7 +46,6 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
     const oracle = JSON.parse(await runTool("cargo", ["metadata", "--locked", "--offline", "--no-deps", "--format-version=1"], root, signal, true, env));
     assert.equal(oracle.packages[0].name, cargo.package);
     for (const entrypoint of fixture.entrypoints) assert.ok(!code.includes(entrypoint), "Cargo must not orchestrate cleanup indirectly");
-    console.log("[DEBUG] Native Nx Cargo build/check/test and Cargo metadata succeed without cleanup stamps or detached cleanup processes PASS");
     passed = true;
   } finally { controller.abort(); process.off("SIGINT", stop); process.off("SIGTERM", stop); if (passed) rmSync(root, { recursive: true, force: true }); }
 }

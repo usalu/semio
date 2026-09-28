@@ -30,5 +30,4 @@ export function testFemScalarOwnerOracle(): void {
     });
     assert.deepEqual(values.slice(0, modes), publication.eigenvalues.slice(0, modes));
   }
-  console.log(`[DEBUG] FEM scalar owners match NumPy ${fixture.oracle.version}: three non-diagonal RHS columns, three retained precondition steps and two complete modal publication prefixes`);
 }

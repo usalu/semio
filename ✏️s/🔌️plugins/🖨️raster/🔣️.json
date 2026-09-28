@@ -670,6 +670,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [
@@ -1301,6 +1346,51 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -1309,6 +1399,57 @@
           }
         ],
         "actions": [
+          {
+            "id": "exportPng",
+            "label": {
+              "native": {
+                "en": "Export PNG",
+                "de": "PNG exportieren"
+              },
+              "reuse": {
+                "en": "Export PNG",
+                "de": "PNG exportieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Downloads the visible image as PNG with transparency. Layers remain editable.",
+                  "de": "Lädt das sichtbare Bild als PNG mit Transparenz herunter. Die Ebenen bleiben bearbeitbar."
+                },
+                "reuse": {
+                  "en": "Downloads the visible image as PNG with transparency. Layers remain editable.",
+                  "de": "Lädt das sichtbare Bild als PNG mit Transparenz herunter. Die Ebenen bleiben bearbeitbar."
+                }
+              }
+            }
+          },
           {
             "id": "addLayer",
             "label": {
@@ -1478,6 +1619,168 @@
                 "reuse": {
                   "en": "Applies a cancellable pixel operation to the selected layer and records the result in shared history.",
                   "de": "Wendet eine abbrechbare Pixeloperation auf die gewählte Ebene an und speichert das Ergebnis im gemeinsamen Verlauf."
+                }
+              }
+            }
+          },
+          {
+            "id": "flattenLayers",
+            "label": {
+              "native": {
+                "en": "Flatten Image",
+                "de": "Bild reduzieren"
+              },
+              "reuse": {
+                "en": "Flatten Image",
+                "de": "Bild reduzieren"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces all layers with the visible image. Undo restores the original layers.",
+                  "de": "Ersetzt alle Ebenen durch das sichtbare Bild. Rückgängig stellt die ursprünglichen Ebenen wieder her."
+                },
+                "reuse": {
+                  "en": "Replaces all layers with the visible image. Undo restores the original layers.",
+                  "de": "Ersetzt alle Ebenen durch das sichtbare Bild. Rückgängig stellt die ursprünglichen Ebenen wieder her."
+                }
+              }
+            }
+          },
+          {
+            "id": "mergeDown",
+            "label": {
+              "native": {
+                "en": "Merge Down",
+                "de": "Nach unten vereinen"
+              },
+              "reuse": {
+                "en": "Merge Down",
+                "de": "Nach unten vereinen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Merges the selected visible layer with its lower normal-blend sibling. Undo restores both layers.",
+                  "de": "Vereint die ausgewählte sichtbare Ebene mit der darunterliegenden Ebene im normalen Mischmodus. Rückgängig stellt beide Ebenen wieder her."
+                },
+                "reuse": {
+                  "en": "Merges the selected visible layer with its lower normal-blend sibling. Undo restores both layers.",
+                  "de": "Vereint die ausgewählte sichtbare Ebene mit der darunterliegenden Ebene im normalen Mischmodus. Rückgängig stellt beide Ebenen wieder her."
+                }
+              }
+            }
+          },
+          {
+            "id": "editMask",
+            "label": {
+              "native": {
+                "en": "Paint Mask",
+                "de": "Maske malen"
+              },
+              "reuse": {
+                "en": "Paint Mask",
+                "de": "Maske malen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Paints mask coverage without changing source pixels.",
+                  "de": "Malt Maskendeckung ohne die Quellpixel zu ändern."
+                },
+                "reuse": {
+                  "en": "Paints mask coverage without changing source pixels.",
+                  "de": "Malt Maskendeckung ohne die Quellpixel zu ändern."
                 }
               }
             }
@@ -2193,6 +2496,141 @@
               "reuse": {
                 "en": "Set Brush Hardness",
                 "de": "Pinselhärte festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "setPaintTarget",
+            "label": {
+              "native": {
+                "en": "Set Paint Target",
+                "de": "Bearbeitungsziel festlegen"
+              },
+              "reuse": {
+                "en": "Set Paint Target",
+                "de": "Bearbeitungsziel festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "setPixelSelection",
+            "label": {
+              "native": {
+                "en": "Set Pixel Selection",
+                "de": "Pixelauswahl festlegen"
+              },
+              "reuse": {
+                "en": "Set Pixel Selection",
+                "de": "Pixelauswahl festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "setMaskValue",
+            "label": {
+              "native": {
+                "en": "Set Mask Value",
+                "de": "Maskenwert festlegen"
+              },
+              "reuse": {
+                "en": "Set Mask Value",
+                "de": "Maskenwert festlegen"
               }
             },
             "kind": "view",
@@ -3637,7 +4075,7 @@
               }
             ],
             "hierarchy": {
-              "kind": "flat"
+              "kind": "topology"
             },
             "hover": {
               "enabled": true,
@@ -3846,7 +4284,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -3871,7 +4355,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -5017,7 +5547,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -5314,8 +5844,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "0b7758bfc5cea2f5f6a38c20ae858723a97353f8c84ad926ffe8fca6a10c108f",
-    "coreWasmSha256": "d9f0b37e4b980f45f83a1aac6e39b7c15fb49e58631c1884880d7888136eddff",
-    "descriptorSha256": "b58d647636d8c0a857a9688b697312ea803ff834448d0dadbb13c438f2a00f7a"
+    "wasmSha256": "9f66b9109509ac7a453f4edbdeabb73c12cc37670dc5bd041bff1af467327b7f",
+    "coreWasmSha256": "7ec23039ab65916a43a9cd65e8825c31a2c63241851178af4b8cea6a58dcb2dc",
+    "descriptorSha256": "e038f19ab49cd8ab6994c422683124852691c10ebdf15a753ab08c81738fbe8e"
   }
 }

@@ -6,6 +6,64 @@ Slice ST2, session 14 (2026-09-27 18:3x, Opus executor). Coordinator = `main`. C
 `st2-apply.py`). Captures `wp-st2/generated/`. Durable data `.🧬semio/🌐hub/s14-st2-*/`. Guest-linked edits = prepared
 patches + overlay proofs until the coordinator announces WINDOW 3 OPEN in `📓️fleet-14-agents.md`.
 
+## Session 14b
+
+| # | Item | State | Evidence |
+|---|------|-------|----------|
+| 0 | live tree carries no half-applied ST2/CX1/1b edit | **verified 12:1x**: all three dry runs on the live tree 0 problems (every anchor exactly once, no "already applied" edit, no new file present); no `🗄️stdio/🧩️extensions`, no `🏘️composition`; diff vs yesterday's dry diff = context line numbers only | `generated/st2-dry-live-3.txt`, `cx1-dry-live-3.txt`, `nx1b-dry-live-3.txt`, `st2-gen-live-3.txt` |
+| 1 | 1b registry Nx soundness | held for window 3: it edits chain inputs the running chain reads (`🔁️rebuild/🔣️.json` via `rebuild-all --from`, registry + caching `📋️project.json`, `⚡️caching/🔣️policy.json` → every `bun nx` graph) — rule 2 freezes them even though no guest links them | — |
+| 2 | CX1 txt/tsv/html codecs (26 → 29) | dry run clean; overlay re-proof pending | — |
+| 3 | ST per-family stdio components | generator + dry run clean on the live tree (9 families, 158 + 18 apps, 18 edits / 36 new / 1 move); overlay re-proof pending | — |
+| 4 | every stdio kind opens/edits/exports in `s` + hub | window 3; hub publisher rows for the 9 families added to the code part (guest-codec packages, `linkedCodecRegistry: null`, right after `stdio` in `--packages all`) | `generated/st2-dry-live-code-5.txt` |
+| U1 | URGENT chain fix (coordinator 12:4x): `XlsxSnapshot` became OPC `xml_parts` (peer 04:35) → vcs xlsx import/export red (E0609/E0560), same break in forms + architect program exporters | vcs: export = stdio `build_minimal_xlsx`, import = `XlsxSnapshot::project_workbook`, first column = col 0 (was B); calamine oracle law replaces the bare round trip; forms: same export fix + new calamine law; architect: exporter + unit test + oracle-case projection onto `project_workbook`. Test-only `calamine 0.36.1` dev-dep in vcs + forms with the two Cargo.lock edges (`cargo metadata --locked --offline` rc 0). Native test queued (priority stamp) | `generated/native-vcs-1.txt`, backups `vcs-xlsx-before/` |
+
+| U2 | forms LIB red on the live tree (peer 04:41/04:46): 3 panels called `crate::editor::forms::forms_play_labels` (only `…::terminology::` has it) + test-only: inspection test on the old `render(…, labels, …)` signature, editor unit test `include_str!` one dir too high | obvious path fixes (non-test lib code → chain-failure category, like U1) | `generated/native-forms-1.txt`, `native-fix2-1.txt` |
+| U3 | H14 relay: `🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json` fails its schema (`componentKind` const `hostSnapshot` since the 09-15 fixture→hostSnapshot terminology rename, fixture kept `"fixture"`; Rust `component_kind` is a free string) | fixture value → `hostSnapshot` (rule 22, test-only); hub `trusted-stdio-gis-bundle-check --source` now passes it and stops at the NEXT red: `🔗️compiled-dependencies` rawCases hex descriptors still carry `appChannelVersion` 18 vs constant 19 (H14's channel-19 fixture pass, hub owner) | `generated/kind-formats-source-1.txt`, `native-fix2-1.txt` |
+| — | CX1 generation anchor | `BOOTSTRAP_GENERATION_OLD` → `76d1a92f…` (H14 channel 19); NEW in window 3 via `bun .tmp-ticket/wp-h14/h14-bootstrap-generation.ts 19` after the CX1 codec change (my overlay probe `cx1-generation.py` gave `0021ba99…` on the 12:26 channel-18 tree — superseded); dry run 0 problems | `generated/cx1-dry-live-5.txt` |
+
+### Window-3 runbook (ST2, compile-atomic, one step at a time; start on "WINDOW 3 OPEN")
+
+1. Re-dry-run on the live tree: `python3 wp-st2/nx1b-apply.py`, `cx1-apply.py`, `st2-gen.py` + `st2-apply.py --dry-run --part code`
+   (all must report 0 problems; else re-derive the refused anchor first).
+2. 1b: `nx1b-apply.py --write` → `bun wp-st2/nx1b-law.ts /Users/ueli/Documents/semio` + `bun wp-st2/nx1b-policy-vectors.ts` → row.
+3. CX1: `cx1-apply.py --write` → `bun .tmp-ticket/wp-h14/h14-bootstrap-generation.ts --write 19` (stdio receipts 26 → 29 change
+   the stdio-gis generation; the tool writes all 4 occurrences) → native lane: `cargo test -p semio-s-plugin-stdio --lib --tests`
+   (+ `--features full-artifact-catalog --test native_openable_provider`), `-p semio-s-artifact-stdio-{txt,tsv,html} --lib --tests`,
+   `-p semio-hub --lib` (fence/provider laws) → row.
+4. ST code: `st2-apply.py --write --part code` → native: `cargo test -p semio-s-plugin-stdio --test shipped_fleet --test editor_catalog`
+   + `cargo check -p semio-s-plugin-stdio-{image,media,cad,bim,mesh,pdf,office,semio,binary} --lib --tests`; wasm lane:
+   `cargo check --target wasm32-wasip2` of the 10 stdio packages, then `bun nx run @semio-tech/stdio-plugin:editor-component-check`
+   (links + validates every stdio package component; the 1M-function ceiling proof, stdio-semio = 38 apps is the largest) → row.
+5. RELAY R10: `st2-apply.py --write --part r10` as its serialized step, then its refresh/taxonomy/render (158 stdio launch rows).
+6. Descriptors: stdio + 9 families `describe` (wasm; stdio's committed descriptor goes stale with steps 3–4 — its
+   `descriptor_is_fresh` law is red until then), `plugin-registry:generate`, play pane coverage law, stdio catalogue contract.
+7. Item 4: `serve s react dev` (6570) opens/edits/exports one document per stdio kind (os-dev program-matrix rows), then a
+   `--packages all` publish (families included via the hub publisher rows of step 4) → hub-document-sweep on the fresh hub.
+
+### Session 14b Log
+
+- 12:0x start (successor). Read preamble 14 (+14b), AGENTS.md, fleet log, this report, the Codex stdio ticket (plan, validation):
+  the peer still ships the nine-editor stdio component; its gate `testEditorCatalogContract(…, shipping)` + `--full-catalog`
+  diagnostic are the 19:11 shape the ST patch already rewrites (union over the ten stdio packages, no `[DEBUG]`).
+- 12:09 generator re-run on the live tree: identical partition (`generated/st2-gen-live-3.txt`); plan/payload of 09-27 kept in
+  `generated/prev-s14/`.
+- 12:1x overlay `s13-cx1-overlay` re-synced (2 395 + 86 files; docx/xlsx changed 12:12–12:19 by the chain-green fixer) and
+  CX1 + 1b + ST (all) re-applied (`generated/{cx1,nx1b,st2}-write-overlay-4.txt`). Overlay proofs: taxonomy load valid
+  (`taxonomy-probe-overlay-3.txt`); stdio catalogue contract **88 editors / 10 packages / 36 formats** (`stdio-contract-overlay-3.txt`),
+  mutant (family 🔢️binary moved away) **red 32/36** (`…-mutant-3.txt`); live tree still red 7/36 as the peer expects
+  (`stdio-shipping-contract-live-3.txt`); 1b receipt law **PASS** (`lane-job1-1.txt`); native `cargo check -p semio-s-plugin-stdio`
+  + the 9 families `--lib --tests` **rc 0** in 11.5 min (overlay lane, private build-dir; only warning in the families = unused
+  `extern crate value_derive` → removed from the generator template together with the unused `semio-framework-value-derive` dep).
+  Play pane coverage: wrong vitest filter (the law is registered in-source by `🔨️modules/🧩️runtime/🟦️.ts`) → rerun pending.
+- 12:2x `st2-apply.py --part code|r10|all`: the r10 part (taxonomy, workspace-contract counts, root policy row, every
+  `📋️project.json`, the composition move + referrers, launch seed/json) is R10's serialized window-3 step; code-then-r10 ==
+  all byte-identical (scratch mini-root), re-application refused. RELAY R10 sent via main.
+- 12:3x hub publication for the families (item 4 prep): the hub admits the same kind in several packages (codec identity =
+  plugin + package + kind + schema; `GuestArtifactCodecBinding` for packages without a linked provider), so each family
+  publishes like note/draw: own component-probed codec rows, open targets bound to them. Added to the code part
+  (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`: 9 `TRUSTED_BOOTSTRAP_PACKAGES` rows + `--packages all` order) — lands only after
+  W4's publish (the chain's `--packages all` reads that list).
+
 ## Session 14
 
 | # | Item | State | Evidence |

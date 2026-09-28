@@ -13,8 +13,9 @@
 //#region 🔌️Adapters
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { Script } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "../../../📚️library/🕸️dependencies/📇️inventory/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Schema
@@ -75,8 +76,10 @@ export type ProvidedRequirement = "hub" | "serve" | "localServe";
 
 /** 🏗️ How the gate stands up one requirement zero-touch: an Nx target it holds for the whole run, answering at
  * `url` + `readyPath` within `readyBoundMs`; `{hub}` and `{runDir}` are substituted in `args` and `env`. A process that
- * exits while the url already answers is a reuse of a running server, not a failure. */
-export type GoalPlanProvider = Readonly<{ url: string; readyPath: string; readyBoundMs: number; project: string; target: string; args: readonly string[]; env?: Readonly<Record<string, string>>; requires: readonly "hub"[] }>;
+ * exits while the url already answers is a reuse of a running server, not a failure. A hub provider's `adminCapability`
+ * (repo-relative or absolute) names the admin-relay capability file its launcher keeps; the gate hands it to `hubAdmin`
+ * checks when the command line names none. */
+export type GoalPlanProvider = Readonly<{ url: string; readyPath: string; readyBoundMs: number; project: string; target: string; args: readonly string[]; env?: Readonly<Record<string, string>>; requires: readonly "hub"[]; adminCapability?: string }>;
 
 /** 🗺️ `semio.acceptance.goal-plan/v1`. */
 export type GoalPlan = Readonly<{ schema: "semio.acceptance.goal-plan/v1"; id: string; title: LocalizedText; outcomes: readonly GoalPlanOutcome[]; providers?: Readonly<Partial<Record<ProvidedRequirement, GoalPlanProvider>>>; steps: readonly GoalPlanStep[] }>;
@@ -384,7 +387,7 @@ function syntheticResult(check: GoalPlanCheck, status: AcceptanceStatus, started
 const GOAL_GATE_BACKENDS_CHECK: GoalPlanCheck = { id: "backends-up", title: { en: "Shared postgres and neo4j servers", de: "Gemeinsame postgres- und neo4j-Server" }, criteria: ["2.4"], project: "os-hub-ts", target: "backend-up", args: ["all"], requires: [], browsers: 0 };
 
 /** 🧯️ Why a provided requirement is absent: the provider's failure, in the gate's log language. */
-type ProvisionFailures = ReadonlyMap<ProvidedRequirement, string>;
+type ProvisionFailures = ReadonlyMap<ProvidedRequirement | "hubAdmin", string>;
 
 function missingRequirement(check: GoalPlanCheck, options: GoalGateOptions, backendsReady: boolean | null): AcceptanceRequirement | undefined {
   return check.requires.find((requirement) => (requirement === "hub" && !options.hub) || (requirement === "serve" && !options.serve) || (requirement === "localServe" && !options.localServe) || (requirement === "hubAdmin" && !options.hubAdminCapability) || (requirement === "backends" && backendsReady === false));
@@ -394,7 +397,7 @@ async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGat
   const startedAt = new Date();
   const missing = missingRequirement(check, options, backendsReady);
   if (missing === "backends") return syntheticResult(check, "blocked", startedAt, { missing }, { en: "the shared postgres/neo4j servers did not start (os-hub-ts:backend-up)", de: "die gemeinsamen postgres/neo4j-Server starteten nicht (os-hub-ts:backend-up)" }, []);
-  const provisionFailure = missing === "hub" || missing === "serve" || missing === "localServe" ? provisionFailures.get(missing) : undefined;
+  const provisionFailure = missing === "hub" || missing === "serve" || missing === "localServe" || missing === "hubAdmin" ? provisionFailures.get(missing) : undefined;
   if (provisionFailure && missing) return syntheticResult(check, "blocked", startedAt, { missing }, { en: `the gate could not stand up ${missing}: ${provisionFailure}`.slice(0, 1800), de: `das Tor konnte ${missing} nicht bereitstellen: ${provisionFailure}`.slice(0, 1800) }, []);
   if (missing) return syntheticResult(check, "blocked", startedAt, { missing }, { en: `needs --${missing} <url>`, de: `benötigt --${missing} <url>` }, []);
   if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, {}, { en: "cancelled before start", de: "vor dem Start abgebrochen" }, []);
@@ -487,15 +490,17 @@ export function goalSummaryMarkdown(summary: GoalSummary, plan: GoalPlan, langua
 }
 
 const PROVIDED_REQUIREMENTS: readonly ProvidedRequirement[] = ["hub", "serve", "localServe"];
+const ADMIN_CAPABILITY_BOUND_MS = 60_000;
 
 /** 🏗️ Stands up, in dependency order, every requirement the selected checks need that the command line did not name and
  * the plan provides; returns the resolved options, the holders to stop at the end and why any provider failed. */
-async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected: readonly GoalPlanStep[], options: GoalGateOptions): Promise<{ resolved: GoalGateOptions; holders: Readonly<{ stop: () => Promise<void> }>[]; failures: Map<ProvidedRequirement, string> }> {
+async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected: readonly GoalPlanStep[], options: GoalGateOptions): Promise<{ resolved: GoalGateOptions; holders: Readonly<{ stop: () => Promise<void> }>[]; failures: Map<ProvidedRequirement | "hubAdmin", string> }> {
   const needed = new Set(selected.flatMap((step) => step.checks.flatMap((check) => check.requires)));
   const values: Record<ProvidedRequirement, string | null> = { hub: options.hub, serve: options.serve, localServe: options.localServe };
   if (needed.has("serve") && plan.providers?.serve?.requires.includes("hub")) needed.add("hub");
+  if (needed.has("hubAdmin") && !options.hubAdminCapability && plan.providers?.hub?.adminCapability) needed.add("hub");
   const holders: Readonly<{ stop: () => Promise<void> }>[] = [];
-  const failures = new Map<ProvidedRequirement, string>();
+  const failures = new Map<ProvidedRequirement | "hubAdmin", string>();
   for (const requirement of PROVIDED_REQUIREMENTS) {
     const provider = plan.providers?.[requirement];
     if (!needed.has(requirement) || values[requirement] || !provider) continue;
@@ -519,7 +524,20 @@ async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected:
       console.log(`[goal-gate] provider ${requirement} FAILED: ${reason}`);
     }
   }
-  return { resolved: { ...options, ...values }, holders, failures };
+  let hubAdminCapability = options.hubAdminCapability;
+  const hubProvider = plan.providers?.hub;
+  if (needed.has("hubAdmin") && !hubAdminCapability && values.hub) {
+    if (hubProvider?.adminCapability && values.hub === hubProvider.url) {
+      const path = isAbsolute(hubProvider.adminCapability) ? hubProvider.adminCapability : join(repoRoot, hubProvider.adminCapability);
+      const deadline = Date.now() + Math.min(hubProvider.readyBoundMs, ADMIN_CAPABILITY_BOUND_MS);
+      while (!existsSync(path) && Date.now() < deadline && !options.signal.aborted) await new Promise((resolveDelay) => setTimeout(resolveDelay, 250));
+      if (existsSync(path)) {
+        hubAdminCapability = path;
+        console.log(`[goal-gate] hubAdmin: the hub provider's admin capability ${path}`);
+      } else failures.set("hubAdmin", `the hub provider published no admin capability at ${path}`);
+    } else failures.set("hubAdmin", "a hub the gate did not stand up needs --hub-admin-capability <file>");
+  }
+  return { resolved: { ...options, ...values, hubAdminCapability }, holders, failures };
 }
 
 /** 🎯️ Runs the goal plan's steps in order — each step's checks serially or in parallel within the browser and process
@@ -764,56 +782,57 @@ export function runSourceCensus(repoRoot: string, signal: AbortSignal, onProgres
   return { files: sources.length, placeholders, jobs, placeholderDisagreements, callDisagreements, unparsed };
 }
 
-/** 🏷️ One docstring opener that breaks AGENTS.md's emoji-first rule: the `@emoji` residue token in front of the emoji, or
- * no emoji at all (a symbol glyph such as `⊕` or `√` counts as the marker). */
+/** 🏷️ One docstring line that breaks AGENTS.md's emoji-first rule: the `@emoji` residue token in front of the emoji, or
+ * an opener with no emoji at all (a symbol glyph such as `⊕` or `√` counts as the marker). */
 export type DocstringHit = Readonly<{ path: string; line: number; rule: "at-emoji" | "no-emoji"; text: string }>;
 
-const DOCSTRING_MARKER = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regional_Indicator}|[0-9#*]\uFE0F?\u20E3)/u;
+const DOCSTRING_MARKER = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regional_Indicator}|[0-9#*]️?⃣)/u;
+const AT_EMOJI_LINE = /(?:\/\/\/|\/\/!|\/\*\*)\s*@emoji|^\s*\*\s*@emoji/u;
+const RUST_LINE_DOC = /^\/\/[/!](?!\/)/u;
 
-function docstringHit(path: string, line: number, content: string): DocstringHit | null {
-  const text = content.trim();
-  if (text.length === 0) return null;
-  if (text.startsWith("@emoji")) return { path, line, rule: "at-emoji", text: text.slice(0, 80) };
-  return DOCSTRING_MARKER.test(text) ? null : { path, line, rule: "no-emoji", text: text.slice(0, 80) };
-}
-
-/** 🏷️ The opener of every docstring in one source: a Rust `///` / `//!` run's first non-empty line, a TypeScript `/** … *\/`
- * block's first non-empty content line (on the `/**` line or a following ` * ` line). */
+/** 🏷️ Every docstring finding of one source. `at-emoji`: each line where a doc opener (`///`, `//!`, `/**`) or a block
+ * continuation (` * `) is followed by the `@emoji` token — wherever it stands, so an `@emoji` paragraph inside a run and a
+ * generator's emitted doc line count too. `no-emoji`: each docstring opener — a Rust `///` / `//!` run's first non-empty
+ * line, a `/** … *\/` block's first non-empty content line (Rust and TypeScript; `/**\/` and `/***` are no docstrings, and
+ * a `/**` behind `//` or a quote is text) — that starts with neither an emoji nor a symbol glyph. */
 export function docstringHitsOfText(path: string, text: string): DocstringHit[] {
-  const hits: DocstringHit[] = [];
   const lines = text.split("\n");
+  const hits: DocstringHit[] = [];
+  lines.forEach((raw, index) => {
+    if (AT_EMOJI_LINE.test(raw)) hits.push({ path, line: index + 1, rule: "at-emoji", text: raw.trim().slice(0, 80) });
+  });
+  const flagged = new Set(hits.map((hit) => hit.line));
+  const opener = (index: number, content: string): void => {
+    const trimmed = content.trim();
+    if (flagged.has(index + 1) || trimmed.startsWith("@emoji") || DOCSTRING_MARKER.test(trimmed)) return;
+    hits.push({ path, line: index + 1, rule: "no-emoji", text: trimmed.slice(0, 80) });
+  };
   if (path.endsWith(".rs")) {
     let inRun = false;
     let opened = false;
     lines.forEach((raw, index) => {
       const line = raw.trimStart();
-      const doc = /^\/\/[/!](?!\/)/u.test(line);
-      if (!doc) {
+      if (!RUST_LINE_DOC.test(line)) {
         inRun = false;
         return;
       }
       if (!inRun) opened = false;
       inRun = true;
-      if (opened) return;
-      const content = line.slice(3);
-      if (content.trim().length === 0) return;
+      if (opened || line.slice(3).trim().length === 0) return;
       opened = true;
-      const hit = docstringHit(path, index + 1, content);
-      if (hit) hits.push(hit);
+      opener(index, line.slice(3));
     });
-    return hits;
   }
   let open = false;
   lines.forEach((raw, index) => {
     if (!open) {
       const start = raw.indexOf("/**");
-      if (start < 0 || raw.slice(start, start + 4) === "/**/" ) return;
+      if (start < 0 || raw[start + 3] === "/" || raw[start + 3] === "*" || /\/\/|["'`]/u.test(raw.slice(0, start))) return;
       const rest = raw.slice(start + 3);
       const closeAt = rest.indexOf("*/");
       const content = closeAt >= 0 ? rest.slice(0, closeAt) : rest;
       if (content.trim().length > 0) {
-        const hit = docstringHit(path, index + 1, content);
-        if (hit) hits.push(hit);
+        opener(index, content);
         return;
       }
       open = closeAt < 0;
@@ -823,13 +842,12 @@ export function docstringHitsOfText(path: string, text: string): DocstringHit[] 
     const content = (closeAt >= 0 ? raw.slice(0, closeAt) : raw).replace(/^\s*\*?/u, "");
     if (content.trim().length > 0) {
       open = false;
-      const hit = docstringHit(path, index + 1, content);
-      if (hit) hits.push(hit);
+      opener(index, content);
       return;
     }
     if (closeAt >= 0) open = false;
   });
-  return hits;
+  return hits.sort((left, right) => left.line - right.line);
 }
 
 /** 🏷️ The docstring census over every tracked Rust / TypeScript source outside the ticket tree, generated trees and
@@ -855,6 +873,107 @@ export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProg
   const scanned = new Set(hits.filter((hit) => hit.rule === "at-emoji").map((hit) => `${hit.path}:${hit.line}`));
   const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
   onProgress(`${sources.length}/${sources.length} sources scanned`);
+  return { files: sources.length, hits, disagreements };
+}
+/** 🐞️ One line carrying the `[DEBUG]` tag, which AGENTS.md reserves for temporary logs removed before a change lands. */
+export type DebugTagHit = Readonly<{ path: string; line: number; text: string }>;
+
+/** 🐞️ Every line of one source that carries the `[DEBUG]` tag. */
+export function debugTagHitsOfText(path: string, text: string): DebugTagHit[] {
+  return text.split("\n").flatMap((line, index) => (line.includes("[DEBUG]") ? [{ path, line: index + 1, text: line.trim().slice(0, 120) }] : []));
+}
+
+/** 🐞️ The census's own rule vocabulary — this module and the source-census fixture name the tag they look for. */
+export const DEBUG_TAG_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧫️fixtures/🧮️source-census/🔣️.json"];
+
+/** 🐞️ The `[DEBUG]` census over every tracked text source outside the ticket tree, Markdown prose and
+ * {@link DEBUG_TAG_CENSUS_EXEMPT}, cross-checked file by file against `git grep -c` (the oracle). Progress every 5000
+ * files; the signal stops the walk. */
+export function runDebugTagCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const scope = ["--", ":!.🧬semio", ":!*.md", ":!.cursor", ...DEBUG_TAG_CENSUS_EXEMPT.map((path) => `:!${path}`)];
+  const listed = spawnSync("git", ["grep", "-l", "-z", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const sources = listed.stdout.split("\0").filter(Boolean);
+  const hits: DebugTagHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("debug-tag census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} tagged sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    hits.push(...debugTagHitsOfText(path, text));
+  }
+  const oracle = new Map(spawnSync("git", ["grep", "-c", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")), Number(row.slice(row.lastIndexOf(":") + 1))] as const));
+  const scanned = new Map<string, number>();
+  for (const hit of hits) scanned.set(hit.path, (scanned.get(hit.path) ?? 0) + 1);
+  const disagreements = [...new Set([...oracle.keys(), ...scanned.keys()])].filter((path) => (oracle.get(path) ?? 0) !== (scanned.get(path) ?? 0));
+  onProgress(`${sources.length}/${sources.length} tagged sources scanned`);
+  return { files: sources.length, hits, disagreements };
+}
+/** 🧱️ The JavaScript libraries reachable only through their interface module, package → owning directory (the dependency
+ * policy's {@link DEPENDENCY_INTERFACE_OWNERS}): production code outside the owner never imports the package or its
+ * subpaths; test-domain code (the taxonomy's tests, fixtures, examples, oracles, probes, generators) may use it as an oracle. */
+export const INTERFACE_OWNED_PACKAGES: Readonly<Record<string, string>> = Object.freeze(Object.fromEntries(Object.entries(DEPENDENCY_INTERFACE_OWNERS).filter(([, owner]) => owner.ecosystem === "js").map(([name, owner]) => [name, owner.directory])));
+
+/** 🧱️ One import of an interface-owned package outside its owner. */
+export type InterfaceImportHit = Readonly<{ path: string; line: number; specifier: string; owner: string }>;
+
+const MODULE_SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)["']([^"'\n]+)["']/gmu;
+
+/** 🧱️ Whether a path belongs to the test domain: under the domain root or below one of its directory names. */
+export function isTestDomainPath(path: string, testDomain: Readonly<{ directoryNames: readonly string[]; domainPath: string }>): boolean {
+  return path.startsWith(`${testDomain.domainPath}/`) || path.split("/").slice(0, -1).some((segment) => testDomain.directoryNames.includes(segment));
+}
+
+/** 🧱️ The imports of interface-owned packages in one production source outside their owners. */
+export function interfaceImportHitsOfText(path: string, text: string, owners: Readonly<Record<string, string>> = INTERFACE_OWNED_PACKAGES): InterfaceImportHit[] {
+  const hits: InterfaceImportHit[] = [];
+  for (const match of text.matchAll(MODULE_SPECIFIER)) {
+    const specifier = match[1]!;
+    const owned = Object.keys(owners).find((name) => specifier === name || specifier.startsWith(`${name}/`));
+    if (!owned || path.startsWith(owners[owned]!)) continue;
+    const at = match.index! + match[0].length - specifier.length - 1;
+    hits.push({ path, line: text.slice(0, at).split("\n").length, specifier, owner: owners[owned]! });
+  }
+  return hits;
+}
+
+/** 🧱️ The interface-ownership census over every tracked TypeScript / JavaScript production source (the test domain read from
+ * the taxonomy), cross-checked line for line against `git grep` (the oracle). */
+export function runInterfaceImportCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
+  const testDomain = dependencyTestDomain(taxonomy);
+  const pathspec = ["--", "*.ts", "*.tsx", "*.js", "*.jsx", "*.mjs", "*.cjs", ":!.🧬semio"];
+  const listed = spawnSync("git", ["ls-files", "-z", ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
+  const sources = listed.stdout.split("\0").filter((path) => path && !isTestDomainPath(path, testDomain));
+  const hits: InterfaceImportHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("interface-ownership census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} production sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    if (Object.keys(INTERFACE_OWNED_PACKAGES).some((name) => text.includes(name))) hits.push(...interfaceImportHitsOfText(path, text));
+  }
+  const names = Object.keys(INTERFACE_OWNED_PACKAGES).map((name) => name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|");
+  const production = new Set(sources);
+  const oracle = new Set(
+    spawnSync("git", ["grep", "-n", "-E", `(from|import|require)[[:space:]]*\\(?[[:space:]]*["'](${names})(/[^"']*)?["']`, ...pathspec], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 })
+      .stdout.split("\n")
+      .filter(Boolean)
+      .map((row) => row.split(":").slice(0, 2))
+      .filter(([path]) => production.has(path!) && !Object.values(INTERFACE_OWNED_PACKAGES).some((owner) => path!.startsWith(owner)))
+      .map((parts) => parts.join(":")),
+  );
+  const scanned = new Set(hits.map((hit) => `${hit.path}:${hit.line}`));
+  const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
+  onProgress(`${sources.length}/${sources.length} production sources scanned`);
   return { files: sources.length, hits, disagreements };
 }
 //#endregion 🧮️SourceCensus

@@ -639,12 +639,14 @@ pub mod part_1 {
 
     /// 📐️ Layer-wise oedometric settlement [m] (EN 1997-1 §6.6); returns (s, governing layer id).
     pub fn settlement_oedometric_m(layers: &[SoilLayer], width: f64, length: f64, embedment: f64, q_sls_pa: f64) -> (f64, String) {
-        settlement_oedometric_with_gwl(layers, width, length, embedment, q_sls_pa, f64::INFINITY)
+        let (s, id, _) = settlement_oedometric_with_gwl(layers, width, length, embedment, q_sls_pa, f64::INFINITY);
+        (s, id)
     }
 
+    /// 📐️ Oedometric settlement with GWL; returns `(s, governing_layer_id, governing_layer_contribution)`.
     pub fn settlement_oedometric_with_gwl(
         layers: &[SoilLayer], width: f64, length: f64, embedment: f64, q_sls_pa: f64, gwl: f64,
-    ) -> (f64, String) {
+    ) -> (f64, String, f64) {
         let mut s = 0.0;
         let mut best_id = String::new();
         let mut best_contrib = 0.0;
@@ -677,9 +679,10 @@ pub mod part_1 {
                 best_id = first.id.clone();
                 let e = first.oedometric_modulus.max(1.0);
                 s = q_sls_pa / e * width.max(0.1) * 0.5;
+                best_contrib = s;
             }
         }
-        (s, best_id)
+        (s, best_id, best_contrib)
     }
 
     pub fn settlement_m(layers: &[SoilLayer], width: f64, q_pa: f64, _poisson: f64) -> f64 {
@@ -1073,24 +1076,29 @@ fn layer_at(layers: &[SoilLayer], depth: f64) -> Option<&SoilLayer> {
 fn design_actions(p: &AnnexParams, g: f64, q: f64) -> f64 { p.gamma_g * g + p.gamma_q * q }
 
 fn find_required_width(
-    footing: &SpreadFoundation, layer: &SoilLayer, lc: &FoundationLoadCase,
+    footing: &SpreadFoundation, layer: &SoilLayer, phi_deg: f64, lc: &FoundationLoadCase,
     approach: DesignApproach, annex: AnnexChoice, situation: &str, gwl: f64, start: f64,
 ) -> f64 {
     let p = resolve_params(approach, annex, situation);
+    let length = footing.length.max(0.3);
     let mut b = start.max(0.3);
-    for _ in 0..40 {
+    for _ in 0..80 {
         let v = design_actions(&p, lc.vertical_permanent, lc.vertical_variable);
         let h = design_actions(&p, lc.horizontal_permanent, lc.horizontal_variable);
         let m = design_actions(&p, lc.moment_permanent, lc.moment_variable);
         let e = m / v.max(1.0);
         let gamma_b = part_1::effective_gamma_below_pa_m(layer.gamma, layer.gamma_prime, footing.embedment, gwl, b);
         let r = part_1::design_bearing_resistance_with_params(
-            layer.phi_prime_deg, layer.cohesion_effective, layer.gamma, gamma_b, b, footing.length.max(b), footing.embedment,
+            phi_deg, layer.cohesion_effective, layer.gamma, gamma_b, b, length, footing.embedment,
             e, 0.0, h, v, footing.base_inclination_deg, &p,
         );
-        if v <= r { return (b * 1000.0).ceil() / 1000.0; }
+        if v <= r {
+            return ((b * 1.02) * 1000.0).ceil() / 1000.0;
+        }
         b *= 1.08;
-        if b > 30.0 { break; }
+        if b > 80.0 {
+            break;
+        }
     }
     b
 }
@@ -1552,7 +1560,7 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
                     e_b, 0.0, h_d, v_d, footing.base_inclination_deg, &p,
                 )
             };
-            let b_req = find_required_width(footing, &layer, lc, approach, annex, &sit, gwl, footing.width);
+            let b_req = find_required_width(footing, &layer, phi_use, lc, approach, annex, &sit, gwl, footing.width);
             let mut bearing = CheckResult::assess(
                 format!("en1997.6.5.bearing.{}.{}", footing.id, lc.id),
                 if gk == 1 { part1054 } else { part1 },
@@ -1721,7 +1729,7 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
             for lc in &footing.load_cases {
                 q_sls_max = q_sls_max.max((lc.vertical_permanent + lc.vertical_variable) / area);
             }
-            let (s, gov_id) = part_1::settlement_oedometric_with_gwl(
+            let (s, gov_id, s_gov) = part_1::settlement_oedometric_with_gwl(
                 &doc.layers, footing.width, footing.length, footing.embedment, q_sls_max, gwl,
             );
             let gov_layer = doc.layers.iter().find(|l| l.id == gov_id).unwrap_or(&layer);
@@ -1741,17 +1749,19 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
                 &format!("s={:.1} mm gegen Grenze {:.1} mm (ödometrisch, GW={:.1} m, Schicht {}).", s * 1000.0, footing.settlement_limit * 1000.0, gwl, gov_layer.id),
             ));
             if s > footing.settlement_limit {
-                let e_req = gov_layer.oedometric_modulus * s / footing.settlement_limit.max(1e-9);
+                let s_other = (s - s_gov).max(0.0);
+                let room = (footing.settlement_limit - s_other).max(footing.settlement_limit * 1e-6);
+                let e_req = gov_layer.oedometric_modulus * (s_gov / room).max(1.0) * 1.02;
                 sett = sett.remedy(Remedy::at_least(
                     subject_entity(&gov_layer.id, &gov_path, &format!("Layer {}", gov_layer.id), &format!("Schicht {}", gov_layer.id)),
                     Quantity::new(QuantityKind::Stress, gov_layer.oedometric_modulus),
                     Quantity::new(QuantityKind::Stress, e_req),
                     loc(&format!("Increase oedometric modulus of layer {} to at least {:.0} MPa.", gov_layer.id, e_req / 1e6), &format!("Steifemodul der Schicht {} auf mindestens {:.0} MPa erhöhen.", gov_layer.id, e_req / 1e6)),
                 )).remedy(Remedy::at_least(
-                    subject_entity(&footing.id, &path_w, &label.en, &label.de),
-                    Quantity::length_m(footing.width),
-                    Quantity::length_m(footing.width * (s / footing.settlement_limit).sqrt()),
-                    loc("Widen footing to reduce contact stress and settlement.", "Fundament verbreitern, um Sohlspannung und Setzung zu reduzieren."),
+                    subject_entity(&footing.id, &path_limit, &label.en, &label.de),
+                    Quantity::length_m(footing.settlement_limit),
+                    Quantity::length_m(s),
+                    loc("Raise the settlement limit to at least the computed settlement.", "Setzungsgrenze mindestens auf die berechnete Setzung anheben."),
                 ));
             }
             report.push(sett.build());
@@ -1918,12 +1928,42 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
                     &format!("Sit={sit_lbl}; T_ed={:.0} kN gegen R_t,d={:.0} kN.", t_ed / 1000.0, r_t_d / 1000.0),
                 ));
                 if t_ed > r_t_d {
+                    let n_req = ((t_ed / (r_t_d / pile.count.max(1) as f64)).ceil() as u32).max(pile.count);
+                    let path_tv = id_path("piles", &pile.id, "tensionVariable");
+                    let t_var_cap = if pile.tension_variable > 1.0 {
+                        let p_only = design_actions(&p, pile.tension_permanent, 0.0);
+                        if p_only <= r_t_d {
+                            (pile.tension_variable * (r_t_d - p_only).max(0.0) / (t_ed - p_only).max(1.0)).max(0.0)
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    };
                     ten = ten.remedy(Remedy::at_least(
-                        subject_entity(&pile.id, &path_l, &label.en, &label.de),
-                        Quantity::length_m(pile.length),
-                        Quantity::length_m(pile.length * t_ed / r_t_d.max(1.0)),
-                        loc("Increase pile length to raise shaft tension resistance.", "Pfahllänge erhöhen, um den Zugwiderstand zu steigern."),
+                        subject_entity(&pile.id, &id_path("piles", &pile.id, "count"), &label.en, &label.de),
+                        Quantity::new(QuantityKind::Dimensionless, pile.count as f64),
+                        Quantity::new(QuantityKind::Dimensionless, n_req as f64),
+                        loc("Increase pile count to raise tension resistance.", "Pfahlanzahl erhöhen, um den Zugwiderstand zu steigern."),
                     ));
+                    if pile.tension_variable > t_var_cap + 1.0 {
+                        ten = ten.remedy(Remedy::at_most(
+                            subject_entity(&pile.id, &path_tv, &label.en, &label.de),
+                            Quantity::new(QuantityKind::Force, pile.tension_variable),
+                            Quantity::new(QuantityKind::Force, t_var_cap),
+                            loc("Reduce variable tension action.", "Veränderliche Zugeinwirkung reduzieren."),
+                        ));
+                    }
+                    if n_req <= pile.count {
+                        let path_tp = id_path("piles", &pile.id, "tensionPermanent");
+                        let t_perm_req = pile.tension_permanent * r_t_d / t_ed.max(1.0);
+                        ten = ten.remedy(Remedy::at_most(
+                            subject_entity(&pile.id, &path_tp, &label.en, &label.de),
+                            Quantity::new(QuantityKind::Force, pile.tension_permanent),
+                            Quantity::new(QuantityKind::Force, t_perm_req),
+                            loc("Reduce permanent tension action.", "Ständige Zugeinwirkung reduzieren."),
+                        ));
+                    }
                 }
                 let tb = ten.build();
                 if best_ten.as_ref().map(|(bu, _)| u_t > *bu).unwrap_or(true) {
@@ -2023,20 +2063,36 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
         ));
         if h_d > r_slide {
             let path_h = id_path("retainingWalls", &wall.id, "height");
+            let path_e = id_path("retainingWalls", &wall.id, "embedment");
+            let half_passive = 0.5 * r_passive;
+            let width_req = if r_base > 1e-9 {
+                wall.base_width * ((h_d - half_passive).max(0.0) / r_base).max(1.0) * 1.05
+            } else {
+                wall.base_width * h_d / r_slide.max(1.0) * 1.05
+            };
+            let e_p_need = 2.0 * (h_d - r_base).max(0.0) * p_project.gamma_r_e;
+            let embed_req = if e_p_k > 1e-9 {
+                (wall.embedment * (e_p_need / e_p_k).sqrt() * 1.05).max(wall.embedment)
+            } else {
+                (wall.embedment * 2.0).max(2.0)
+            };
+            // Active force ~ h²; scale height so design H drops to R with margin (fixed surcharge term → iterate once).
+            let h_scale = (r_slide / h_d.max(1e-9)).sqrt().clamp(0.05, 1.0);
+            let height_req = (wall.height * h_scale * 0.95).max(0.5);
             slide = slide.remedy(Remedy::at_least(
                 subject_entity(&wall.id, &path_b, &label.en, &label.de),
                 Quantity::length_m(wall.base_width),
-                Quantity::length_m(wall.base_width * h_d / r_slide.max(1.0)),
-                loc("Widen wall base or increase embedment.", "Sohlbreite oder Einbindung erhöhen."),
+                Quantity::length_m(width_req),
+                loc("Widen wall base to raise sliding resistance.", "Sohlbreite erhöhen, um den Gleitwiderstand zu steigern."),
             )).remedy(Remedy::at_least(
-                subject_entity(&wall.id, &id_path("retainingWalls", &wall.id, "embedment"), &label.en, &label.de),
+                subject_entity(&wall.id, &path_e, &label.en, &label.de),
                 Quantity::length_m(wall.embedment),
-                Quantity::length_m((wall.embedment * 1.4).max(1.0)),
+                Quantity::length_m(embed_req),
                 loc("Increase wall embedment to raise passive resistance.", "Wand-Einbindung erhöhen, um den Passivwiderstand zu steigern."),
             )).remedy(Remedy::at_most(
                 subject_entity(&wall.id, &path_h, &label.en, &label.de),
                 Quantity::length_m(wall.height),
-                Quantity::length_m((wall.height * 0.9).max(1.0)),
+                Quantity::length_m(height_req),
                 loc("Reduce retained height to lower active earth pressure.", "Stützhöhe reduzieren, um den aktiven Erddruck zu verringern."),
             ));
         }

@@ -67,7 +67,6 @@ describe("marker-only folder clean discovery", () => {
         const removed = removals.has(tree.root) || [...removals].some((path) => tree.root.startsWith(`${path}/`));
         expect(oracle).toBe(tree.expectRemoval);
         expect(removed).toBe(tree.expectRemoval);
-        console.info("[DEBUG] marker-only folder vector", JSON.stringify({ id: tree.id, oracle, removed, removals: [...removals] }));
       } finally {
         rmSync(root, { recursive: true, force: true });
       }

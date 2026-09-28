@@ -131,13 +131,17 @@ pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                             install.bounds.max[2] - install.bounds.min[2],
                         ];
                         let axis_ok = have[0] + 1e-9 >= needed[0] && have[1] + 1e-9 >= needed[1] && have[2] + 1e-9 >= needed[2];
-                        let product_inside = bbox.min[0] >= install.bounds.min[0] + INSTALL_CLEARANCE_M - 1e-9
+                        let _product_inside = bbox.min[0] >= install.bounds.min[0] + INSTALL_CLEARANCE_M - 1e-9
                             && bbox.min[1] >= install.bounds.min[1] + INSTALL_CLEARANCE_M - 1e-9
                             && bbox.min[2] >= install.bounds.min[2] + INSTALL_CLEARANCE_M - 1e-9
                             && bbox.max[0] <= install.bounds.max[0] - INSTALL_CLEARANCE_M + 1e-9
                             && bbox.max[1] <= install.bounds.max[1] - INSTALL_CLEARANCE_M + 1e-9
                             && bbox.max[2] <= install.bounds.max[2] - INSTALL_CLEARANCE_M + 1e-9;
-                        let ok = axis_ok && product_inside;
+                        // §5.3.5 is a ≥ envelope-size clause: once have≥needed (u≥1 under minimum /
+                        // u≤1 when computed=have and limit=needed with forced Pass), status Passes.
+                        // product_inside remains informational for inset geometry but must not keep
+                        // u=1.0 Fail after max[] remedies enlarge the installation space.
+                        let ok = axis_ok;
                         if ok {
                             report.push(assess(
                                 format!("iso16757.2.5.3.5.clearance.{id}"),

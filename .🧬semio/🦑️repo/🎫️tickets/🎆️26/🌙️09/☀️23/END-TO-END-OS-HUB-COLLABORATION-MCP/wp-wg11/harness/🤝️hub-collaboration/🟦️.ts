@@ -13,18 +13,21 @@
  *   user is the renderer's live law `a_native_and_a_react_user_collaborate_on_one_hub_document` (it creates the space and a
  *   block2d document through its own door); the browser user — wasm32 or React — follows the law's file handshake step by step:
  *   open, presence both ways, native edit ingested, own edit ingested natively, each undoes only their own edit, a reload
- *   converges. `--mode cursors` runs `a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board` instead (React only).
+ *   converges.
+ * - `native-react-cursors` (`wgpu-peer-cursors-native-react`): the native law
+ *   `a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board` with a React follower: each user's pointer over the shared
+ *   board is painted as a peer cursor on the other's board.
  * - `cursors` (`wgpu-peer-cursors`): two wasm32 shells on one puzzle2d board; each user's pointer over its own board is painted
  *   as a peer cursor on the other's board (pixel deltas over a control pass).
  * - `agent-pixels` (`wgpu-agent-reply-pixels`): a human holds a hub note in the wasm32 shell while a delegated agent, its own
  *   principal over the stdio semio MCP, adds a block; the human's roster names the agent AS an agent, the block is decoded
- *   into the Artifact panel without a reload, and the live frame of the document window equals a cold reference render of the
- *   same committed state (a fresh session attaching afterwards) within the measured frame noise, while differing from the
- *   frame before the agent's edit.
+ *   into the Artifact panel without a reload, and the live frame changes by at least `agentEditMinPixels` from the frame before
+ *   the agent's edit while equalling, within `agentSameMaxPixels` (or twice the measured frame noise), a cold reference render
+ *   of the same committed state by a fresh session of the same human opened after the first one closed.
  *
  * Every control of the wasm32 shell is reached through its accessibility mirror (`#semio-wgpu-accessibility`), so each run is
  * also a keyboard-reachability proof. Humans come from `SEMIO_TWO_HUMAN_USER{1,2}_{EMAIL,PASSWORD}` only (never argv, never
- * logged); a missing credential, hub or serve is a `blocked` record.
+ * logged); a missing credential or hub, or a serve that can neither be reused nor started, is a `blocked` record.
  *
  * Promoted from the session-12–14 ticket harnesses (ticket 26/09/23: `wp-wg7`/`wp-wg9` `wg9-browser-collab.mjs` +
  * `wg9-agent-probe.ts`, `wp-wg8`/`wp-wg10` `cross-shell.mjs` + `run-cross-shell.sh`, `wp-wg11`).
@@ -47,7 +50,7 @@ import { devServePortV1, ensureDevServe } from "/Users/ueli/Documents/semio/🧰
 
 //#region 🔖️Contract
 /** 🧭️ The journeys this harness runs, each one acceptance check. */
-export type HubCollaborationJourneyV1 = "wasm32" | "wasm32-react" | "wasm32-native" | "native-react" | "cursors" | "agent-pixels";
+export type HubCollaborationJourneyV1 = "wasm32" | "wasm32-react" | "wasm32-native" | "native-react" | "native-react-cursors" | "cursors" | "agent-pixels";
 
 /** 🧾️ The acceptance check each journey files its record under (the gate appends `-<locale>`). */
 export const HUB_COLLABORATION_CHECKS: Readonly<Record<HubCollaborationJourneyV1, string>> = {
@@ -55,19 +58,22 @@ export const HUB_COLLABORATION_CHECKS: Readonly<Record<HubCollaborationJourneyV1
   "wasm32-react": "wgpu-collaboration-wasm32-react",
   "wasm32-native": "wgpu-collaboration-wasm32-native",
   "native-react": "wgpu-collaboration-native-react",
+  "native-react-cursors": "wgpu-peer-cursors-native-react",
   cursors: "wgpu-peer-cursors",
   "agent-pixels": "wgpu-agent-reply-pixels",
 };
 
-/** 🧩️ The hub kind (creation-catalog schema) each journey's document is, the wasm32 playground variant that edits it, and the
- * browser serves the journey drives (`wgpu` release serve of that variant, the React `s` dev serve). */
-export const HUB_COLLABORATION_KINDS: Readonly<Record<HubCollaborationJourneyV1, Readonly<{ schema: string; variant: string; wgpu: boolean; react: boolean }>>> = {
-  wasm32: { schema: "note.document", variant: "note", wgpu: true, react: false },
-  "wasm32-react": { schema: "block.2d", variant: "block2d", wgpu: true, react: true },
-  "wasm32-native": { schema: "block.2d", variant: "block2d", wgpu: true, react: false },
-  "native-react": { schema: "block.2d", variant: "block2d", wgpu: false, react: true },
-  cursors: { schema: "puzzle.2d.fixture", variant: "puzzle2d", wgpu: true, react: false },
-  "agent-pixels": { schema: "note.document", variant: "note", wgpu: true, react: false },
+/** 🧩️ The hub kind (creation-catalog schema) each journey's document is, the wasm32 playground variant that edits it, the
+ * browser serves the journey drives (`wgpu` release serve of that variant, the React `s` dev serve) and whether the native wgpu
+ * shell (the renderer's live law, which creates its own space and document) is one of the users. */
+export const HUB_COLLABORATION_KINDS: Readonly<Record<HubCollaborationJourneyV1, Readonly<{ schema: string; variant: string; wgpu: boolean; react: boolean; native: boolean }>>> = {
+  wasm32: { schema: "note.document", variant: "note", wgpu: true, react: false, native: false },
+  "wasm32-react": { schema: "block.2d", variant: "block2d", wgpu: true, react: true, native: false },
+  "wasm32-native": { schema: "block.2d", variant: "block2d", wgpu: true, react: false, native: true },
+  "native-react": { schema: "block.2d", variant: "block2d", wgpu: false, react: true, native: true },
+  "native-react-cursors": { schema: "block.2d", variant: "block2d", wgpu: false, react: true, native: true },
+  cursors: { schema: "puzzle.2d.fixture", variant: "puzzle2d", wgpu: true, react: false, native: false },
+  "agent-pixels": { schema: "note.document", variant: "note", wgpu: true, react: false, native: false },
 };
 
 /** ⏱️ Bounds every judgement uses (one place, so a slower machine changes numbers, never code paths). */
@@ -81,8 +87,11 @@ export const HUB_COLLABORATION_BOUNDS = {
   expiryMs: 120_000,
   relinkMs: 60_000,
   frozenBeatMs: 2_000,
+  keptLineMs: 8_000,
   cursorSettleMs: 3_500,
   agentSeenMs: 60_000,
+  agentEditMinPixels: 256,
+  agentSameMaxPixels: 64,
   nativeStepMs: 900_000,
 } as const;
 
@@ -100,12 +109,11 @@ export function hubCollaborationHumans(env: NodeJS.ProcessEnv = process.env): re
 /** 🚧️ A missing precondition (credential, hub, serve, native runtime): the record is `blocked`, not `fail`. */
 export class HubCollaborationBlocked extends Error {}
 
-/** 🎛️ One run. `wgpuServe` / `reactServe` must already answer (a harness never starts a shell it does not own; the gate's serve
- * fixture starts them); `nativeBinary` runs a prebuilt renderer test binary instead of `cargo test`. */
+/** 🎛️ One run. `wgpuServe` / `reactServe` name the serves to drive; `null` → the run starts its own through `ensureDevServe`
+ * (see {@link provisionServe}); `nativeBinary` runs a prebuilt renderer test binary instead of `cargo test`. */
 export type HubCollaborationOptionsV1 = Readonly<{
   repoRoot: string;
   journey: HubCollaborationJourneyV1;
-  mode: "edits" | "cursors";
   hub: string;
   wgpuServe: string | null;
   reactServe: string | null;
@@ -844,7 +852,7 @@ const GERMAN_LINK_LINE = /Verbindung|Zugriff/u;
 const ENGLISH_LINK_LINE = /connection|access/iu;
 
 function requireServe(url: string | null, flag: string): string {
-  if (!url) throw new HubCollaborationBlocked(`${flag} is required for this journey`);
+  if (!url) throw new HubCollaborationBlocked(`this run holds no ${flag} serve`);
   return url;
 }
 
@@ -914,8 +922,13 @@ async function wasm32Journey(run: JourneyRun): Promise<void> {
   record("a short cut never freezes A (the frame worker keeps answering)", beats.every((beat) => beat.answered && beat.latencyMs < HUB_COLLABORATION_BOUNDS.frozenBeatMs), { beats, connectionsCut: cut });
   const offline = await kind.edit(a);
   const queued = await a.view();
-  const kept = await a.link();
-  record("A edits during the cut: admitted locally, and the shell says the edit is kept", offline === "activated" && kind.count(queued) > onlineCount && (/pending|ausstehend/iu.test(queued.sync) || kept.codes.includes("reconnecting")), { offline, count: kind.count(queued), ...kept });
+  const keptSince = Date.now();
+  let kept = await a.link();
+  while (!/pending|ausstehend/iu.test(kept.sync) && !kept.codes.includes("reconnecting") && Date.now() - keptSince < HUB_COLLABORATION_BOUNDS.keptLineMs) {
+    await a.page.waitForTimeout(500);
+    kept = await a.link();
+  }
+  record("A edits during the cut: admitted locally, and the shell says the edit is kept", offline === "activated" && kind.count(queued) > onlineCount && (/pending|ausstehend/iu.test(kept.sync) || kept.codes.includes("reconnecting")), { offline, count: kind.count(queued), saidAfterMs: Date.now() - keptSince, ...kept });
   await a.page.waitForTimeout(Math.max(0, HUB_COLLABORATION_BOUNDS.shortCutMs - (Date.now() - severedAt)));
   relays[0].heal();
   const healedAt = Date.now();
@@ -1026,11 +1039,9 @@ async function wasm32ReactJourney(run: JourneyRun): Promise<void> {
 }
 
 /** 🦀️ The native wgpu user (the live law) with a wasm32 or React browser user following its handshake. */
-async function nativeJourney(run: JourneyRun, browserShell: "wasm32" | "react"): Promise<void> {
+async function nativeJourney(run: JourneyRun, browserShell: "wasm32" | "react", cursors = false): Promise<void> {
   const { options, browser, record } = run;
   const handshake = new Handshake(join(options.outDir, options.tag, "handshake"), record);
-  const cursors = options.mode === "cursors";
-  if (cursors && browserShell !== "react") throw new HubCollaborationBlocked("--mode cursors pairs the native user with React only");
   const law = cursors ? "a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board" : "a_native_and_a_react_user_collaborate_on_one_hub_document";
   const native = spawnNativeLaw(options, law, handshake.dir, join(options.outDir, options.tag));
   let alive = true;
@@ -1222,21 +1233,25 @@ async function agentPixelsJourney(run: JourneyRun): Promise<void> {
     if (!moving) break;
   }
   await agent.close().catch(() => undefined);
-  const reference = await Wasm32Shell.boot(browser, options.humans[0], serve, options.hub, options.locale, run.clock, documentId);
+  await human.context.close();
+  const reference = await Wasm32Shell.boot(browser, { ...options.humans[0], label: `${options.humans[0].label} (cold reference)` }, serve, options.hub, options.locale, run.clock, documentId);
+  run.onCleanup(async () => writeFileSync(run.out("console-reference.txt"), reference.lines.join("\n")));
   await signedIn(run, reference);
   await attached(run, reference);
   await reference.openSyncCard();
   await kind.prepare(reference);
-  await reference.waitFor((view) => kind.count(view) === kind.count(decoded.view) && view, 60_000);
+  const referenceDecoded = await reference.waitFor((view) => kind.count(view) === kind.count(decoded.view) && view, 60_000);
+  record("a fresh session decodes the same committed state (cold reference)", referenceDecoded.value !== null, { count: [kind.count(decoded.view), kind.count(referenceDecoded.view)] });
   await parked(reference);
   const cold = await regionPixels(reference.page, body, run.out("agent-reference.png"));
   await reference.context.close();
   const differsFromBefore = changedPixelCount(before, live);
   const differsFromReference = changedPixelCount(live, cold);
-  const tolerance = Math.max(2 * noise, Math.round(body.width * body.height * 0.002));
-  Object.assign(run.measured, { agentFrameNoise: noise, agentFrameChangedFromBefore: differsFromBefore, agentFrameDiffFromReference: differsFromReference, agentFrameTolerance: tolerance });
-  record("the agent's edit changes the rendered frame", differsFromBefore > tolerance, { differsFromBefore, tolerance, noise });
-  record("the live frame equals a cold reference render of the same committed state", differsFromReference <= tolerance, { differsFromReference, tolerance, noise, evidence: [run.out("agent-live.png"), run.out("agent-reference.png")] });
+  const edited = Math.max(4 * noise, HUB_COLLABORATION_BOUNDS.agentEditMinPixels);
+  const same = Math.max(2 * noise, HUB_COLLABORATION_BOUNDS.agentSameMaxPixels);
+  Object.assign(run.measured, { agentFrameNoise: noise, agentFrameChangedFromBefore: differsFromBefore, agentFrameDiffFromReference: differsFromReference, agentFrameEditedMin: edited, agentFrameSameMax: same });
+  record("the agent's edit changes the rendered frame", differsFromBefore >= edited, { differsFromBefore, edited, noise });
+  record("the live frame equals a cold reference render of the same committed state", referenceDecoded.value !== null && differsFromReference <= same, { differsFromReference, same, noise, evidence: [run.out("agent-before.png"), run.out("agent-live.png"), run.out("agent-reference.png")] });
 }
 //#endregion 🔖️Journeys
 
@@ -1246,9 +1261,32 @@ const JOURNEY_BODIES: Readonly<Record<HubCollaborationJourneyV1, (run: JourneyRu
   "wasm32-react": wasm32ReactJourney,
   "wasm32-native": (run) => nativeJourney(run, "wasm32"),
   "native-react": (run) => nativeJourney(run, "react"),
+  "native-react-cursors": (run) => nativeJourney(run, "react", true),
   cursors: cursorsJourney,
   "agent-pixels": agentPixelsJourney,
 };
+
+/** 🔌️ A free loopback port for a serve this run starts itself. */
+async function freeLoopbackPort(): Promise<number> {
+  const probe = createServer();
+  await new Promise<void>((ready, fail) => probe.once("error", fail).listen(0, "127.0.0.1", ready));
+  const { port } = probe.address() as AddressInfo;
+  await new Promise<void>((closed) => probe.close(() => closed()));
+  return port;
+}
+
+/** 🛎️ The serve a journey drives, through S18's shared `ensureDevServe`: the one `--serve` / `--react-serve` names (reused when it
+ * answers, started on that port otherwise), or — flag omitted — one started on a free loopback port (the wgpu release serve of
+ * the journey's variant, the React `s` dev serve); only what this run started is stopped at its end. A serve that cannot be had
+ * is a missing precondition (`blocked`). */
+async function provisionServe(options: HubCollaborationOptionsV1, url: string | null, shell: Readonly<{ variant: string; renderer: "wgpu" | "react"; profile: "release" | "dev" }>, cleanups: (() => Promise<void>)[]): Promise<string> {
+  const port = url ? devServePortV1(url) : await freeLoopbackPort();
+  const fixture = await ensureDevServe({ repoRoot: options.repoRoot, port, variant: shell.variant, renderer: shell.renderer, profile: shell.profile, hubUrl: options.hub, locale: options.locale, signal: options.signal, onProgress: (_status, line) => console.log(line) }).catch((error: unknown) => {
+    throw new HubCollaborationBlocked(`${shell.renderer} serve on port ${port}: ${error instanceof Error ? error.message : String(error)}`);
+  });
+  if (!fixture.reused) cleanups.push(() => fixture.stop());
+  return url ?? (shell.renderer === "wgpu" ? `${fixture.url}?plugin=${shell.variant}` : fixture.url);
+}
 
 /** 🌐️ Refuses a hub or serve that does not answer: a missing precondition, never a failed journey. */
 async function requireAnswering(url: string, what: string): Promise<void> {
@@ -1272,21 +1310,16 @@ export async function runHubCollaboration(options: HubCollaborationOptionsV1): P
   };
   await requireAnswering(`${options.hub}/readyz`, "hub");
   const kind = HUB_COLLABORATION_KINDS[options.journey];
-  const serves = [
-    ...(kind.wgpu ? [{ url: requireServe(options.wgpuServe, "--serve"), variant: kind.variant, renderer: "wgpu" as const, profile: "release" as const }] : []),
-    ...(kind.react ? [{ url: requireServe(options.reactServe, "--react-serve"), variant: "s", renderer: "react" as const, profile: "dev" as const }] : []),
-  ];
   const cleanups: (() => Promise<void>)[] = [];
   const document = { spaceId: "", documentId: "" };
   try {
-    for (const serve of serves) {
-      const fixture = await ensureDevServe({ repoRoot: options.repoRoot, port: devServePortV1(serve.url), variant: serve.variant, renderer: serve.renderer, profile: serve.profile, hubUrl: options.hub, locale: options.locale, signal: options.signal, onProgress: (_status, line) => console.log(line) }).catch((error: unknown) => {
-        throw new HubCollaborationBlocked(`${serve.renderer} serve ${serve.url}: ${error instanceof Error ? error.message : String(error)}`);
-      });
-      if (!fixture.reused) cleanups.push(() => fixture.stop());
-    }
+    const serving: HubCollaborationOptionsV1 = {
+      ...options,
+      wgpuServe: kind.wgpu ? await provisionServe(options, options.wgpuServe, { variant: kind.variant, renderer: "wgpu", profile: "release" }, cleanups) : null,
+      reactServe: kind.react ? await provisionServe(options, options.reactServe, { variant: "s", renderer: "react", profile: "dev" }, cleanups) : null,
+    };
     const token = await hubProbeSignIn(options.hub, options.humans[0].email, options.humans[0].password, "wgpucollab");
-    if (options.journey !== "wasm32-native" && options.journey !== "native-react") {
+    if (!kind.native) {
       const prepared = await prepareDocument(options, kind.schema, token);
       Object.assign(document, { spaceId: prepared.spaceId, documentId: prepared.documentId });
       report.measured.documentCreatedMs = prepared.createdMs;
@@ -1295,7 +1328,7 @@ export async function runHubCollaboration(options: HubCollaborationOptionsV1): P
     const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,WebGPU", "--ignore-gpu-blocklist", "--use-angle=metal"] });
     cleanups.push(() => browser.close());
-    await JOURNEY_BODIES[options.journey]({ options, browser, record, measured: report.measured, clock, out: (name) => join(directory, name), document, onCleanup: (cleanup) => cleanups.push(cleanup), token });
+    await JOURNEY_BODIES[options.journey]({ options: serving, browser, record, measured: report.measured, clock, out: (name) => join(directory, name), document, onCleanup: (cleanup) => cleanups.push(cleanup), token });
   } catch (error) {
     if (error instanceof HubCollaborationBlocked) throw error;
     report.fatal = String(error instanceof Error ? (error.stack ?? error.message) : error).slice(0, 1_500);
@@ -1316,8 +1349,9 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
   return value === undefined || value.startsWith("--") ? undefined : value;
 }
 
-/** 🚪️ `hub-collaboration-acceptance --journey <wasm32|wasm32-react|wasm32-native|native-react|cursors|agent-pixels> --hub <url>
- * [--serve <wgpu serve url>] [--react-serve <url>] [--locale en|de] [--mode edits|cursors] [--space <id> --document <id>]
+/** 🚪️ `hub-collaboration-acceptance --journey <wasm32|wasm32-react|wasm32-native|native-react|native-react-cursors|cursors|agent-pixels>
+ * --hub <url> [--serve <wgpu serve url>] [--react-serve <url>] [--locale en|de] [--space <id> --document <id>] (an omitted serve is
+ * started by the run itself on a free loopback port and stopped at its end)
  * [--native-binary <path>] [--native-modules <dir>] [--tag <t>] [--out <dir>]` — runs one journey, publishes its acceptance
  * record (`<check>-<locale>`), exits non-zero unless every step passes. */
 export async function runHubCollaborationCli(repoRoot: string, defaultOutDir: string, segments: readonly string[], defaults: Readonly<{ nativeModules?: () => string }> = {}): Promise<void> {
@@ -1338,11 +1372,10 @@ export async function runHubCollaborationCli(repoRoot: string, defaultOutDir: st
       const hub = flagValue(segments, "--hub");
       if (!hub) throw new HubCollaborationBlocked("--hub is required");
       const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
-      const native = journey === "wasm32-native" || journey === "native-react";
+      const native = HUB_COLLABORATION_KINDS[journey].native;
       const report = await runHubCollaboration({
         repoRoot,
         journey,
-        mode: flagValue(segments, "--mode") === "cursors" ? "cursors" : "edits",
         hub: hub.replace(/\/$/u, ""),
         wgpuServe: flagValue(segments, "--serve") ?? null,
         reactServe: flagValue(segments, "--react-serve") ?? null,

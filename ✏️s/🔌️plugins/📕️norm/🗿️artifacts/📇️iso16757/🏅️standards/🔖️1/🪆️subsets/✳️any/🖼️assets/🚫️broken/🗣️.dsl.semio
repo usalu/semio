@@ -40,6 +40,7 @@ product-series [id:TEXT class-id:TEXT names:REC shared-property-values:MAP geome
 products [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST static-properties:LIST] {
   product-cv series-cv {preferred=locale=en text=CV-50
   alternatives [locale:TEXT text:TEXT] {
+    fr CV-50
   }
   } [ parameter-id=dn allowed-values=[ {
     kind="decimal" value=50.0
@@ -52,7 +53,10 @@ products [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST 
       kind="decimal" value=999.0
     }
   }
-  property-values=[ ] ] [ ]
+  property-values=[ definition-id=prop-dn value={
+    kind="decimal" value=50.0
+  }
+  ] ] [ ]
 }
 product-indexes [id:TEXT product-id:TEXT variant-id:TEXT search-tags:LIST] {
   index-cv50 product-cv variant-50 [ CV-50 product-cv dn50 ]
@@ -100,7 +104,7 @@ geometry=objects={
   }
   symbolic {
   }
-  spaces=[ id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 ] surfaces=[ ] ports=[ ] parameter-bindings={
+  spaces=[ id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 ] surfaces=[ ] ports=[ id=port-in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet ] parameter-bindings={
     width=prop-dn
   }
 }
@@ -110,7 +114,7 @@ primitive-registry [id:TEXT parameters:LIST] {
   sphere [ radius ]
 }
 selection=class-id=class-valve series-id=series-cv constraints=[ id=constraint-dn property-id=prop-dn operator=equal value={
-  kind="decimal" value=50.0
+  kind="decimal" value=999.0
 }
 ] part-number-rule={
   function_id="partno" kind="script" source="dn * 10 + 50"

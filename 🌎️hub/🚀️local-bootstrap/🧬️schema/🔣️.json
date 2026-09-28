@@ -983,6 +983,41 @@
           "maxLength": 128
         }
       }
+    },
+    "LocalAdminCapabilityV1": {
+      "description": "🛡️ The admin-relay capability a development hub's session broker keeps 0600 in the hub data root (refreshed when a caller creates the sibling admin-request file).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "origin",
+        "capability",
+        "sessionId",
+        "expiresAt"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.local-admin-capability/v1"
+        },
+        "origin": {
+          "type": "string",
+          "pattern": "^http://127\\.0\\.0\\.1:[0-9]{1,5}$"
+        },
+        "capability": {
+          "type": "string",
+          "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "expiresAt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
     }
   }
 }

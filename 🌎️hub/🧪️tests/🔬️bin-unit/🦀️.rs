@@ -1835,6 +1835,31 @@ fn a_transiently_refused_batch_names_the_declared_resend_code_and_a_permanent_on
     }
 }
 
+/// ⚖️ C12 P1 (ticket 26/09/23 session 14): a document socket's gate admits, on a full budget, the largest batch the
+/// document backbone declares legal (`DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES` — a link cut's whole outbox arrives as
+/// one); an emptied budget refuses transiently (`hub.unavailable`, the client resends); a batch that was admitted but not
+/// committed is admitted again once the budget refilled — never a replay — while a committed operation is.
+#[test]
+fn a_document_socket_admits_a_declared_maximal_batch_and_readmits_an_uncommitted_one() {
+    run_socket_test(|| async {
+        let document = WireArtifactId("p1-socket-budget".to_string());
+        let gate = document_socket_gate(db::security::RoleBasedPolicy::new().with_grant(db::security::Grant::allow("editor", &["db", "document", "*", "**"], &[db::security::Action::Write])));
+        let principal = db::security::Principal::new(ActorId("actor-1".to_string()), db::security::TenantId::from("space-1"), vec!["editor".to_string()]);
+        let tenant = db::security::TenantId::from("space-1");
+        let template = sample_envelope("p1", &document).await;
+        let envelopes: Vec<MutationEnvelope> = (0..protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES).map(|index| MutationEnvelope { mutation_id: protocol::MutationId(format!("p1-{index}")), ..template.clone() }).collect();
+        assert!(admit_writes(&gate, &principal, &tenant, &document, &envelopes, 0).await.is_ok(), "a full budget admits a declared-maximal batch");
+        let refused = admit_writes(&gate, &principal, &tenant, &document, &envelopes[..1], 1).await.expect_err("an emptied budget refuses");
+        let messages: serde_json::Value = serde_json::from_slice(&messages_for_error(&refused)).expect("messages are JSON");
+        assert_eq!(messages[0]["code"], semio_hub::refusal::HUB_TRANSIENT_APPLY_REFUSAL_CODE, "an emptied budget is a transient refusal: {refused}");
+        let refilled_ms = (protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES as u64 * 1_000).div_ceil(DOCUMENT_SOCKET_COMMAND_REFILL_PER_SECOND as u64) + 1;
+        assert!(admit_writes(&gate, &principal, &tenant, &document, &envelopes, refilled_ms).await.is_ok(), "an admitted but uncommitted batch is readmitted, never a replay");
+        gate.record_committed(&[(&envelopes[0].actor, &envelopes[0].mutation_id)], refilled_ms);
+        let replayed = admit_writes(&gate, &principal, &tenant, &document, &envelopes[..1], refilled_ms + 1_000).await.expect_err("a committed operation is a replay within the window");
+        assert!(matches!(replayed, db::DbError::Conflict(_)) && messages_for_error(&replayed).is_empty(), "a replay is permanent: {replayed}");
+    });
+}
+
 /// 🏘️ A member of many spaces reads its space list and its event pages in bounded time, exactly: the list is one
 /// directory query and each event page one membership read (WG8 on 7800: 25–58 s for 82 spaces, the list folded the
 /// whole event log and mounted every document). The oracle is the event-log fold (`os_directory::fold_all`): the same
@@ -4941,6 +4966,28 @@ fn a_reader_added_to_an_older_space_is_told_its_access_changed_and_its_own_new_s
         assert!(own_frames.iter().any(|message| matches!(message, DirectoryStreamMessage::Event { event } if matches!(&event.body, os_directory::DirectoryEventBody::SpaceCreated { space_id, .. } if *space_id == own))), "the creator reads its space from its first event: {own_frames:?}");
         state.directory_service.execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#test", owner.user_id) }, DirectoryCommand::RemoveMember { space_id: older.clone(), user_id: reader.user_id.clone() }).await.expect("remove reader");
         assert_eq!(next_directory_message(&mut socket).await, DirectoryStreamMessage::AccessChanged { space_id: older.clone(), change: os_directory::DirectoryAccessChange::Revoked }, "no AccessChanged for its own space; then its removal from the older one");
+        socket.close(None).await.expect("close reader socket");
+        stop_recovery_server(state, shutdown, server).await;
+    });
+}
+
+/// 🗑️ Live on a global directory socket: a member of a space its owner deletes is told its access was revoked (its own
+/// `member.removed` of the deletion), so its Home re-reads the directory from the origin without the space.
+#[test]
+fn a_member_of_a_deleted_space_is_told_its_access_was_revoked() {
+    run_socket_test(|| async {
+        let state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("deleted-space state open deadline");
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        let owner = issue_test_session(&state, "deleted-owner@example.test").await;
+        let reader = issue_test_session(&state, "deleted-reader@example.test").await;
+        let doomed = create_space_for_test(&state, &owner.user_id, "Doomed", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &doomed, "deleted-reader@example.test", DirectorySpaceRole::Spectator).await;
+        let receipt = issue_directory_socket_grant(bearer_headers(&reader.token), State(state.clone()), Bytes::new()).await.expect("reader grant").0;
+        let since = state.directory.head_seq().await.expect("directory head");
+        let (mut socket, _) = connect_async(socket_request(&format!("ws://{addr}/directory/socket/v1?since={since}"), &receipt.grant)).await.expect("reader socket");
+        socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("reader hello");
+        state.directory_service.execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#test", owner.user_id) }, DirectoryCommand::DeleteSpace { space_id: doomed.clone() }).await.expect("delete space");
+        assert_eq!(next_directory_message(&mut socket).await, DirectoryStreamMessage::AccessChanged { space_id: doomed.clone(), change: os_directory::DirectoryAccessChange::Revoked }, "the deletion revokes the member's access");
         socket.close(None).await.expect("close reader socket");
         stop_recovery_server(state, shutdown, server).await;
     });

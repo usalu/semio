@@ -64,7 +64,7 @@
         "artifact_kind": "s.stdio.svg",
         "artifact_schema": "stdio.svg",
         "extension": "svg",
-        "pack_schema_hash": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
+        "pack_schema_hash": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
         "runtime_capability_id": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1"
       }
     }

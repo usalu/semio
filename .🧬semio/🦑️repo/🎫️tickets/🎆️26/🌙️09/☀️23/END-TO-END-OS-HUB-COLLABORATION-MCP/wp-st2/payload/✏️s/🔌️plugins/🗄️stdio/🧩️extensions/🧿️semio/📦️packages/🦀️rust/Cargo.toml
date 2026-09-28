@@ -149,4 +149,3 @@ semio-s-artifact-stdio-semio = { workspace = true, features = ["component-app-as
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-framework-value-derive = { workspace = true }

@@ -37,7 +37,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(await get(`${extension.route}/🌉️bridge.js`)).toEqual([200, "export const extension = 1;"]);
         expect(await get(`${plugin.route}/🌉️bridge.js`)).toEqual([200, "export const plugin = 1;"]);
         expect((await get(`${vendor}/missing.bin`))[0]).toBe(404);
-        console.log(`[DEBUG] play dev route table: ${mounts.length} unique mounts, font pack + shim + plugin + extension served`);
       } finally {
         await new Promise<void>(done => server.close(() => done()));
         rmSync(workspace, { recursive: true, force: true });

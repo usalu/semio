@@ -980,6 +980,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const focusLabel = useLabel("ui.window.focus");
   const unfocusLabel = useLabel("ui.window.unfocus");
   const closeLabel = useLabel("ui.window.close");
+  const tabsLabel = useLabel("ui.window.tabs");
 
   const focusTab = (index: number) => {
     const tab = tabs[(index + tabs.length) % tabs.length];
@@ -1106,7 +1107,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   if (tabs.length === 0 && !modeDragActive && displayTabs.length === 0) return null;
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabs" data-corner={corner} role="tablist" className={cn("flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden", modeDragActive && dropZoneReadyClass)}>
+    <div ref={ref} data-slot="mode-dock-tabs" data-corner={corner} role="tablist" aria-label={tabsLabel} className={cn("flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden", modeDragActive && dropZoneReadyClass)}>
       {displayTabs.map((tab) =>
         tab.preview === "ghost" ? (
           <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>

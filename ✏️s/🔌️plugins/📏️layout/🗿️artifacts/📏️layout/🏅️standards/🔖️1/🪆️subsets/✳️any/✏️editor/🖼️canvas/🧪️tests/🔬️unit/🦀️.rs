@@ -110,3 +110,28 @@ async fn canvas_layers_labels_a_linked_pdf_when_it_has_no_proxy() {
     let overview = canvas_layers(&doc, &far, &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true);
     assert!(!overview.contains(".preview") && !overview.contains("s.stdio.pdf"), "a zoomed-out sheet keeps the frame and drops the accurate mark: {overview}");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn canvas_layers_turns_a_rotated_proxy() {
+    let mut image = semio_s_artifact_stdio_png::PngSnapshot::default();
+    image.width = 2;
+    image.height = 1;
+    image.pixels = vec![255, 0, 0, 255, 0, 0, 255, 255];
+    let png = semio_s_artifact_stdio_png::io::encode_png(&image).expect("png");
+    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    doc.links[0].state = Some("ready".into());
+    doc.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
+    let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
+    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    bounds.rotation = std::f64::consts::FRAC_PI_2;
+    let json = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true);
+    let layers: serde_json::Value = serde_json::from_str(&json).expect("layers");
+    let layer = layers.as_array().expect("array").iter().find(|layer| layer["id"] == "frame-image-1.image").expect("rotated image");
+    assert_eq!(layer["kind"], "image");
+    let url = layer["dataUrl"].as_str().expect("data url");
+    let payload = url.strip_prefix("data:image/png;base64,").expect("png url");
+    let decoded = semio_s_artifact_stdio_png::io::decode_png(&decode_base64(payload).expect("base64")).expect("png");
+    assert_eq!((decoded.width, decoded.height), (1, 2));
+    assert_eq!(&decoded.pixels[0..4], &[255, 0, 0, 255], "the left pixel turns to the top");
+    assert_eq!(&decoded.pixels[4..8], &[0, 0, 255, 255], "the right pixel turns to the bottom");
+}

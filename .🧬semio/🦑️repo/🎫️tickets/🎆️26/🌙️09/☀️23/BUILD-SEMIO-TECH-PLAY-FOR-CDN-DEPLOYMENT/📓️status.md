@@ -20,8 +20,17 @@ in `.🧬semio/🦑️repo/⚡️cache/play-fleet/cdn-build/build-<n>.log`.
   each component is self-consistent and only missing components need building.
 - 06:31 build-3: `nx run-many -t materialize-release` for the 8 missing components only.
 
-## Next
+## 09-28
 
-1. Verify all 60 components complete (`prepare release` logic).
-2. `nx run @semio-tech/semio-tech-play:build --excludeTaskDependencies` → `dist/site`.
-3. Serve `dist/site` statically (no dev server), boot panes in a browser, check console/network for 404s.
+`prepare release` reported 69 panes and 60 components. `bun ./🔨️modules/📦️site/📜️script.ts build` exited 0 in 117s (vite 51.80s, 2153 runtime files from 63 artifacts). The monolith `dist/site` is removed after packing. Upload each folder under `🏢️semio-tech/🎡️play/dist/pages`:
+
+| folder | host | bytes |
+| --- | --- | --- |
+| play | play.semio-tech.com | 176474018 |
+| map | map.assets.semio-tech.com | 609289505 |
+| media | media.assets.semio-tech.com | 203051322 |
+| modules | modules.assets.semio-tech.com | 711825652 |
+
+Each page is under the 1_000_000_000 byte budget. `play` has `index.html` and `CNAME`. The three asset pages have `CNAME` and `_headers` with `Access-Control-Allow-Origin: *`.
+
+A first rebuild attempt from the repo root exited 1 (`StopIteration`: the site script is not at the repo root). Rebuilt from `🏢️semio-tech/🎡️play` after CAD release artifacts updated at 15:35–15:39. Exit 0 at 15:58 (vite 4m 49s). `modules.assets.semio-tech.com` is 712457886 bytes and includes `semio_s_plugin_cad_component.core.wasm` from 15:35. All four pages remain under the budget.

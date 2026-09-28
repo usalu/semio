@@ -162,11 +162,18 @@ pub struct DbLimits {
     pub max_preview_ttl_ms: u64,
 }
 
+/// @emoji 📦️ `max_batch_commands` is the wire's declared document-backbone batch maximum
+/// (`protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES`): an authority never refuses, for its own
+/// capacity, a batch the wire declares legal (ticket 26/09/23 session 14, C12 P1 — a link cut's whole
+/// outbox arrives as one batch).
 impl Default for DbLimits {
     fn default() -> Self {
-        Self { max_command_bytes: 8 * 1024 * 1024, max_batch_commands: 4_096, max_payload_bytes: 256 * 1024 * 1024, max_query_bytes: 4 * 1024 * 1024, max_mailbox_depth: 65_536, max_open_artifacts: 100_000, max_preview_ttl_ms: 5 * 60 * 1_000 }
+        Self { max_command_bytes: 8 * 1024 * 1024, max_batch_commands: DECLARED_BATCH_COMMANDS, max_payload_bytes: 256 * 1024 * 1024, max_query_bytes: 4 * 1024 * 1024, max_mailbox_depth: 65_536, max_open_artifacts: 100_000, max_preview_ttl_ms: 5 * 60 * 1_000 }
     }
 }
+
+const DECLARED_BATCH_COMMANDS: u32 = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES as u32;
+const _: () = assert!(DECLARED_BATCH_COMMANDS as usize == protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES);
 
 /// @emoji 📏️ Validates `len` against `max` BEFORE the caller allocates anything sized by it —
 /// shared by every length check across the `db` family so the "validate before allocating"

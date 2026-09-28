@@ -221,7 +221,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
         IoPayload::Text(_) => return Err("note→svg via semio/drawing bridge: expected a Binary (ArtifactPack) svg payload".into()),
     };
     let svg_snapshot = <semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
-    Ok((write_svg_xml(&svg_snapshot.doc), width, height))
+    Ok((write_svg_xml(&svg_snapshot.doc).map_err(|error| format!("note→svg via semio/drawing bridge: write svg: {error}"))?, width, height))
 }
 
 pub fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {

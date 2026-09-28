@@ -652,3 +652,12 @@ write(RUNTIME_TEST, read(RUNTIME_TEST).replace(
        * pack, the spr AND the op text, so an adapter that drops it silently loses the document's ops.
        * This law therefore pins the text crossing verbatim, not merely that a document was read. */""",
 ))
+
+MANIFEST_RS = "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs"
+write(MANIFEST_RS, read(MANIFEST_RS).replace(
+    """/// deduplicated by id. The react shell's navbar select (`ShellHost`'s `exampleOptions`) and the
+/// host's own example-graph scoping (`exampleArtifactSources`) both answer it, and so does the
+/// TypeScript twin `examplesForDialect` (`🛂️manifest/🟦️.ts`); both are pinned against the shared""",
+    """/// deduplicated by id. The react shell's navbar select (`ShellHost`'s `exampleOptions`) answers it,
+/// and so does the TypeScript twin `examplesForDialect` (`🛂️manifest/🟦️.ts`); both are pinned against the shared""",
+))

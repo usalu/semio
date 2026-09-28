@@ -53,7 +53,6 @@ for (const row of fixture.processes) {
     expect(Boolean(reference.timedOut)).toBe(result.timeout);
     expect(reference.stdout).toBe(result.output);
     if (!row.timeout) expect(result.status).toBe(reference.code);
-    console.log(`[DEBUG] ${row.name}: ${JSON.stringify(result)}`);
   }, 12000);
 }
 

@@ -6,6 +6,62 @@ Slice AV2 of session 14 (Opus executor, coordinator `main`), continues AV1 (`�
 
 ## Session 14
 
+### Session 14b
+
+Successor AV2 agent (2026-09-28 12:0x, after the usage cut + app restart). Guest freeze ON since CHAIN LAUNCHED 12:02:46.
+
+| # | Item | Status | Evidence |
+|---|---|---|---|
+| b1 | Live tree carries no half-applied AV2 edits | **verified 12:1x**: 0/18 new files exist, 0 hunks "already carried", 0 hits for `VideoRenderExport`/`media.video-render`/`VideoRenderJob`/`video-render-export` under `🧰️framework`, animate, root `📜️script.ts` | §14b log 12:1x |
+| b2 | Re-base the payload onto the overnight tree (Codex ~1 870 files) | **done**: 3-way merge (`git merge-file -p`, read-only) of snapshot `s14b-av2-snapshot` onto the live files, 14 conflicts in 5 files resolved by `wp-av2/av2-rebase-resolve.py` (all unions with Codex's icon-render-export wire twin + document-transfer task lane + plugin rustfmt); payload **67 hunks / 25 files + 18 new, dry run 0 problems** | `av2-patch.py make`, `av2-apply.py` |
+| b3 | Host-only parts landable during the freeze | **none**: every host piece (VideoRenderHost, TaskManager/ShellHost/PluginRuntime, raster TS twin) imports the kernel TS twin (`🎠️kernel/🟦️.ts`, frozen, bundled by the chain); the root verify lane names files that only exist after the guest landing → all of it lands in window 3 as ONE compile-atomic set | — |
+| b4 | Overlay proofs on the re-based overlay (TS laws, tsc, cargo overlay lane) | TS laws **5/5 PASS**, tsc **0 errors**; cargo hold 1 (12:46–13:18): kernel `video_render` **5/5**, raster `video` **3/3**, plugin-host `check --lib --tests` **exit 0**, plugin lib test **red** (6 peer test reds + 1 AV2: wire round-trip literal lacked `images` → fixed); animate steps + plugin re-run queued (pid 72586, 13th) | `generated/laws-14b-2.txt`, `tsc-14b-2.txt`, `cargo-14b/`, `cargo-14b-2/` |
+| b5 | Window 3 landing (native + wasm32, landing rows) | pending (freeze) | — |
+| b6 | Live: export from running `s` (local doc + hub doc), FFmpeg verification of the file | pending (after b5) | — |
+
+#### Log 14b
+
+- 12:1x read preamble (rules 1–21 + 14b), fleet tail, this report. Predecessor state: overlay cargo proof never ran (lane ticket
+  `generated/cargo/lane-1.out` empty — killed by the cut); `payload/hunks.json` was stale (19:08, before the 19:1x–20:2x additions;
+  apply crashed on a missing new file). Previous payload kept at `.🧬semio/🌐hub/s14-av2-payload-0927/`.
+- 12:1x b1 verified (see table). Dry run of the re-made 09-27 payload on the live tree: 12 anchors gone (Codex overnight: plugin
+  `🦀️.rs` rustfmt of the `downloaded` line, wire-turn `wireIconRenderExport` + `icon-render-export` case, TaskManager
+  `documentTransfer` lane, ShellHost document-transfer tasks) — none "already carried".
+- 12:2x b2: snapshot (base + AV2 overlay versions) → `.🧬semio/🌐hub/s14b-av2-snapshot/`; overlay re-synced (108 125 tracked, 3 054
+  copied); new base `.🧬semio/🌐hub/s14b-av2-base/` = live versions; 3-way merge; conflicts resolved (unions); ShellHost's
+  in-definition comment block on the `videoRenderExport` branch dropped (AGENTS.md); PluginRuntime decodes the program with the
+  same `decodePackWire` the icon door uses; no-op `📦️packages/🦀️rust/🦀️.rs` dropped from the manifest.
+- 12:2x b4: TS laws run 1 FAIL kernel-program (`Unexpected export`: the merge ate the `}` closing Codex's `wireIconRenderExport`
+  → resolver fixed: live + `}` + AV2); run 2 **5/5 PASS** (program valid=3 invalid=23; job streams=2 refusals=8; raster 6 cases;
+  host both tiers, 36 events; FFmpeg decodes 6 streams / 54 frames byte-exact). tsc run 1: `TS2300 Duplicate identifier
+  downloadMediaExportBytes` (Codex imported it overnight for document export; the AV2 import dropped) → run 2 **exit 0**.
+  Payload now **66 hunks / 25 files + 18 new, dry run 0 problems**. Scan of added lines vs the base for other duplicates: none real.
+- 12:2x overlay cargo proof queued (`fleet-mutex.sh overlay av2 -- zsh wp-av2/av2-overlay-cargo.sh generated/cargo-14b`, pid
+  60712; steps kernel/raster/plugin tests, plugin-host check, animate-artifact tests, animate-plugin check; private
+  `s13-av1-build`/`s13-av1-target`).
+- 12:3x window-3 tooling: `av2-apply.py --write` now saves pre-landing bytes to `.🧬semio/🌐hub/s14b-av2-prelanding/` and
+  `--revert` restores them (refuses when any file changed since the landing; removes the new files + emptied dirs) — round trip
+  on a scratch copy of the base: byte-identical. `av2-land.sh`: dry run → write → native-lane `check` of the 6 crates →
+  red = immediate revert; green = native tests, TS laws on the live tree, tsc (`tsc/tsconfig-live.json`).
+- 12:4x S20 (via main): io-matrix `mp4` IoFormat + `judgeMp4File` (ffprobe h264 + frames, ffmpeg null decode, oracle
+  `ffprobe+ffmpeg`) + animate pin `mp4` IN THE TREE since 12:3x; oracle proven by S20 (x264 file ok, truncated copy refused,
+  `wp-s20/generated/probe-mp4.ts`). Live animate row today: `exportVideoFromDeck` refused `not-ui-safe` (pre-landing) — window 3 flips it.
+- 12:46–13:18 overlay hold 1 (`generated/cargo-14b/`): kernel `test -p semio-framework --lib -- video_render` **5 passed**; raster
+  `-- video` **3 passed**; plugin `--lib -- wire_effect_round_trip` did not compile: E0063 `images` missing in the AV2 round-trip
+  literal (predecessor added `VideoRenderProgram.images` at 19:1x, never re-ran this test) → fixed in the overlay; the other 6
+  errors are peers' overnight test reds (window-kits include path, `from_media_export`/`segmented_closures` privacy, f64 deref) —
+  a peer fixed them in the live tree 12:3x–12:49 (`test_from_media_export`), picked up by the next sync; plugin-host `check --lib
+  --tests` **exit 0** (78 warnings, 5 m 05 s). animate-artifact was still compiling third-party deps at the 30-min hold limit →
+  stopped (my pids 90318 + cargo 47818 only), remaining steps re-queued (`cargo-14b-2/`, lane pid 72586).
+- 13:0x `av2-overlay-sync.py` now never overwrites the slice's edited files and lists the ones whose live copy drifted from
+  the base; new `av2-rebase.py` (3-way merge of drifted files, base := live). 13:0x sync: 507 copied, 3 drifted (ShellHost,
+  PluginRuntime, plugin `🦀️.rs` — peers editing right now) → re-based, 0 conflicts; payload still 66 hunks / 25 + 18, dry run 0.
+- Coverage note: the Rust `Effect` gains `VideoRenderExport`; every exhaustive match (kernel, plugin, reactor, 🌐host, 🖥️host,
+  imports, wire test) is in the payload; the wgpu shell matches with a catch-all (compiles; drops the effect with its
+  `[DEBUG] wgpu-shell effect dropped` line) — wgpu video export is NOT in this slice (open item for WG11's successor).
+
+### Session 14 (09-27, predecessor)
+
 | # | Item | Status | Evidence |
 |---|---|---|---|
 | 1 | Read preambles, AV1 handover, overlay state | done | §Log 18:3x |

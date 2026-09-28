@@ -90,8 +90,6 @@ RUN set -eu; \
     cd /; \
     rm -rf /tmp/semio-runtime
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
-
 USER vscode
 
 ENV BUN_INSTALL=/home/vscode/.bun

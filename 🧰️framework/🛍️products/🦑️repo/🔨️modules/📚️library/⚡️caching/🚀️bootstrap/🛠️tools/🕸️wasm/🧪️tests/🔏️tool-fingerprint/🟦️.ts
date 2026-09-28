@@ -26,6 +26,5 @@ export async function testWasmToolFingerprint(workspace: string, output: string)
     assert.notEqual(invalid.status, 0); assert.match(invalid.stderr, /accepts no arguments/);
     const policy = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../../🔣️policy.json"), "utf8"));
     assert.ok(policy.toolchains.wasm.commands.includes(`bun ${JSON.stringify(script.slice(workspace.length + 1))} fingerprint`));
-    console.log("[DEBUG] Isolated WASM fingerprint has no application/test imports, acquires no tools and matches native optimizer version output PASS");
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }

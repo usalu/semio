@@ -127,7 +127,4 @@ export function testArtifactFieldParityOracle(): void {
     policyArtifactOwnershipFieldParity(root).filter((breach) => breach.path.endsWith("/🟦️.ts") && breach.missing.some((field) => field.startsWith("declaration:"))),
     [],
   );
-  console.log(`[DEBUG] schema policy discovered ${owners.length} standard/subset owners matching independent fast-glob discovery`);
-  console.log(`[DEBUG] ${fixture.typescriptModules.length} alias/module graphs matched TypeScript compiler symbols; ${fixture.graphql.length} GraphQL metadata cases matched equivalent TypeScript AST field sets`);
-  console.log("[DEBUG] schema field discovery matched independent TypeScript AST names; missing/extra field reports matched Ajv exact-record validation");
 }

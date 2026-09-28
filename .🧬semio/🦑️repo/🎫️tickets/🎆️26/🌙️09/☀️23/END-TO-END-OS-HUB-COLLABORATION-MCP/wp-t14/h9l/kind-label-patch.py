@@ -108,7 +108,8 @@ HUNKS = [
 
 def literal_bodies(text):
     for match in LITERAL.finditer(text):
-        if text[max(0, match.start() - 11):match.start()].endswith("pub struct "):
+        before = text[max(0, match.start() - 11):match.start()]
+        if before.endswith("pub struct ") or before.rstrip().endswith("->"):
             continue
         index, depth = match.end(), 1
         while depth and index < len(text):
@@ -145,6 +146,9 @@ def rewrite(file, text, plan, missing):
         else:
             replacement = f"label: {path}::data(id),"
         edits.append((start + found.start(), start + found.end(), replacement))
+    edits = sorted(set(edits))
+    if any(later[0] < earlier[1] for earlier, later in zip(edits, edits[1:])):
+        raise SystemExit(f"{file}: overlapping label edits {edits}")
     for begin, finish, replacement in reversed(edits):
         text = text[:begin] + replacement + text[finish:]
     plan.append((file, len(edits)))
@@ -159,14 +163,18 @@ def main():
     for file in files:
         text = open(ROOT + file, encoding="utf-8").read()
         changed[file] = rewrite(file, text, plan, missing)
+    applied = 0
     for file, old, new in HUNKS:
         text = changed.get(file) or open(ROOT + file, encoding="utf-8").read()
+        if new in text and (old in new or old not in text):
+            applied += 1
+            continue
         if text.count(old) != 1:
             failures.append(f"{file}: anchor matched {text.count(old)}× — {old[:80]!r}")
             continue
         changed[file] = text.replace(old, new)
     literal_sites = sum(count for _, count in plan)
-    print(f"literal sites rewritten: {literal_sites} in {sum(1 for _, count in plan if count)} files; exact hunks: {len(HUNKS) - len(failures)}/{len(HUNKS)}")
+    print(f"literal sites rewritten: {literal_sites} in {sum(1 for _, count in plan if count)} files; exact hunks: {len(HUNKS) - len(failures) - applied}/{len(HUNKS)} to apply, {applied} already applied")
     for file, count in plan:
         if count:
             print(f"  {count:3d}  {file}")
@@ -176,7 +184,10 @@ def main():
         print("ANCHOR", failure)
     if missing or failures:
         sys.exit(1)
-    if APPLY:
+    changed = {file: text for file, text in changed.items() if text != open(ROOT + file, encoding="utf-8").read()}
+    if not changed:
+        print("nothing to do (applied)")
+    elif APPLY:
         for file, text in changed.items():
             open(ROOT + file, "w", encoding="utf-8").write(text)
         print("applied")

@@ -67,5 +67,4 @@ appendFileSync(join(root, ".runs"), profile + "\\n");
   await check(fixture.stdout);
   put(`${rust}/🦀️.rs`, source(fixture.changedStdout));
   await run(); assert.deepEqual(runs(), ["dev", "dev", "release", "release"]); await check(fixture.changedStdout);
-  console.log("[DEBUG] Native renderer dev/release outputs match Cargo, retain executable bytes and permissions through Nx restoration, and rebuild after source changes PASS");
 }

@@ -25,8 +25,8 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
             return Err(IoError { message: "DocxIntoWriter: expected a binary payload".to_string(), diagnostics: Vec::new() });
         };
         let docx = <DocxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("DocxIntoWriter: {error}"), diagnostics: Vec::new() })?;
-        let text = docx
-            .document
+        let document = docx.project_document().map_err(|error| IoError { message: format!("DocxIntoWriter: {error}"), diagnostics: Vec::new() })?;
+        let text = document
             .body
             .iter()
             .filter_map(|block| match block {

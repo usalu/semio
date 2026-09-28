@@ -1,0 +1,217 @@
+[
+ {
+  "id": "000",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "001",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "002",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "003",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🔮️oracles/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "004",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "005",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧬️schema/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "006",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "007",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts",
+  "mode": "create"
+ },
+ {
+  "id": "008",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "009",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧪️tests/📥️lists-a-persisted-studio-beside-an-imported-one/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "010",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "011",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "012",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "013",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "014",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧫️fixtures/📥️lists-a-persisted-studio-beside-an-imported-one/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "015",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "016",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧬️schema/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "017",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "018",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🟦️.ts",
+  "mode": "create"
+ },
+ {
+  "id": "019",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "020",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧪️tests/📤️unlists-the-studio-and-keeps-its-sibling/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "021",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "022",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "023",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "024",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "025",
+  "path": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "026",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/📇️mutate-os-config-local-catalog/🥒️.feature",
+  "mode": "create"
+ },
+ {
+  "id": "027",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/📇️mutate-os-config-local-catalog/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "028",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/📇️mutate-os-config-local-catalog/🟦️.ts",
+  "mode": "create"
+ },
+ {
+  "id": "029",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts",
+  "mode": "create"
+ },
+ {
+  "id": "030",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "031",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+  "mode": "whole"
+ },
+ {
+  "id": "032",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "033",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "034",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "035",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️apply-local-catalog-document/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "036",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "037",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-space/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "038",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💾️persist-locally/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "039",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️delete-virtual-file-system-node/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "040",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "041",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "042",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts",
+  "mode": "whole"
+ }
+]

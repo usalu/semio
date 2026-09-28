@@ -227,7 +227,6 @@ for (const row of vector.cases)
         operationError = error;
       }
       after = snapshot(target.root);
-      console.info(`[DEBUG] Empty-facet authoring ${row.id}: ${JSON.stringify({ created: result?.created.length ?? null, skipped: result?.skipped.length ?? null, error: operationError ? String(operationError) : null })}`);
       if (late) expect(injected).toBe(true);
       if (row.expected === "rejected") {
         expect(operationError).toBeInstanceOf(Error);
@@ -381,7 +380,6 @@ for (const row of requestInput.cases)
         const after = snapshot(target.root),
           partial = operationError instanceof ArtifactScaffoldError ? operationError.partial : null;
         records.push({ id: row.id, dryRun, injected, readMutation, error: String(operationError), partial, beforeDigest: hash(JSON.stringify(before)), afterDigest: hash(JSON.stringify(after)) });
-        console.info(`[DEBUG] Public artifact request ${row.id}: ${JSON.stringify({ dryRun, injected, created: partial?.created.length, error: String(operationError) })}`);
         expect(operationError).toBeInstanceOf(ArtifactScaffoldError);
         expect(String(operationError)).toContain(row.error);
         expect(partial!.created).toHaveLength(row.ownedFiles);

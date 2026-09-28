@@ -357,6 +357,24 @@ pub const AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE: &str = "interactive-job.preview-
 /// agent must pass the ids the verb declares.
 pub const COMMAND_TARGETS_REQUIRED_FAULT_CODE: &str = "app.command.targets-required";
 
+/// 👁️ The fault an edit answers on a hub session whose principal only reads: the hub holds it as a spectator of its
+/// space (its delegation's audience is `read`). Refused before any guest runs.
+pub const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
+
+/// 🗣️ What the agent tells its human about a [`VIEWER_READ_ONLY_FAULT_CODE`] refusal, `(en, de)`.
+pub const VIEWER_READ_ONLY_REMEDY: (&str, &str) = (
+    "This session may only read this space; ask your human for an edit delegation.",
+    "Diese Sitzung darf diesen Space nur lesen; bitte deinen Menschen um eine Delegation zum Bearbeiten.",
+);
+
+/// 🧷️ The fault an edit answers on a hub session that holds no live hub document for the verb's plugin: nothing it
+/// authored could reach the hub, so it never runs (a hub session never edits a plugin's own genesis document).
+pub const HUB_EDIT_UNBOUND_FAULT_CODE: &str = "hub.edit-unbound";
+
+/// 📮️ The fault a committed edit answers when its hub document did not acknowledge it in time; the edit is reverted in
+/// the session, so the agent retries instead of believing a write the hub may never hold.
+pub const HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE: &str = "hub.relay-unacknowledged";
+
 /// 🗣️ What the agent tells its human about an [`AGENT_LANE_UNCARRIED_FAULT_CODE`] refusal, `(en, de)`.
 pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
     "This action runs only in the semio shell; ask your human to run it there.",
@@ -372,13 +390,20 @@ pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
 /// `BatchOnlyPendingRewrite`) is a non-retryable `PLUGIN_UNAVAILABLE`; a preview whose ops exceed the
 /// verb's declared output cap (`interactive-job.preview-output`) is `INPUT_INVALID`; a mutation the
 /// document's own state refuses (`transaction.member-rejected`, e.g. a target that is not there) is
-/// `PRECONDITION_FAILED`. A verb whose emit publishes a lane an agent transaction cannot carry
+/// `PRECONDITION_FAILED`. A hub session's edit that could not reach the hub is refused by name: a spectator's is
+/// `PERMISSION_DENIED` ([`VIEWER_READ_ONLY_FAULT_CODE`]), one with no live hub document `PRECONDITION_FAILED`
+/// ([`HUB_EDIT_UNBOUND_FAULT_CODE`]), one the hub did not acknowledge a retryable `PLUGIN_UNAVAILABLE`
+/// ([`HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`]). A verb whose emit publishes a lane an agent transaction cannot carry
 /// ([`AGENT_LANE_UNCARRIED_FAULT_CODE`]) is a non-retryable `PLUGIN_UNAVAILABLE` whose `details` name the
 /// fault and tell the agent, in en and de, to hand the action to its human. An unrecognised code is
 /// `Internal` (never silently swallowed).
 fn map_fault(fault: &Fault) -> GatewayError {
     match fault.code.as_str() {
-        "viewer.read-only" | "capability-denied" => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
+        VIEWER_READ_ONLY_FAULT_CODE => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": VIEWER_READ_ONLY_REMEDY.0, "de": VIEWER_READ_ONLY_REMEDY.1 } })),
+        "capability-denied" => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
+        HUB_EDIT_UNBOUND_FAULT_CODE => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
+        HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
         "mutation.rejected" => GatewayError::new(GatewayErrorCode::SideEffectRejected, fault.message.clone()),
         "transaction.member-rejected" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
         "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
@@ -395,6 +420,14 @@ fn map_fault(fault: &Fault) -> GatewayError {
         code if code == store::sync::DocumentLinkStatus::AccessRevoked.code() => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
         code if code == store::sync::DocumentLinkStatus::LinkExpired.code() => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
         _ => GatewayError::new(GatewayErrorCode::Internal, fault.message.clone()),
+    }
+}
+/// 📮️ The error a commit answers when its hub document did not acknowledge it: the refusal the link reported, or
+/// [`HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`] when the hub stayed silent. The caller has already reverted the edit.
+fn unacknowledged_relay_error(edit_id: &str, relay: &HubRelayOutcome) -> GatewayError {
+    match &relay.refused {
+        Some(code) => map_fault(&Fault { code: code.clone(), message: format!("the hub refused edit {edit_id} ({}); it was reverted in this session", relay.detail) }),
+        None => map_fault(&Fault { code: HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE.to_string(), message: format!("the hub did not acknowledge edit {edit_id} in time ({}); it was reverted in this session — retry once the hub answers", relay.detail) }),
     }
 }
 //#endregion 🔖️Port
@@ -444,6 +477,7 @@ struct MockInstanceState {
     prepared: BTreeMap<String, (PreparedOps, u64)>,
     force_budget_exceeded: bool,
     force_commit_fault: Option<Fault>,
+    force_relay: Option<HubRelayOutcome>,
     force_undo_fails: bool,
     empty_preview: bool,
     child_preview: Option<Vec<u8>>,
@@ -452,7 +486,7 @@ struct MockInstanceState {
 #[cfg(test)]
 impl MockInstanceState {
     fn new(instance: u32) -> Self {
-        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_undo_fails: false, empty_preview: false, child_preview: None }
+        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_relay: None, force_undo_fails: false, empty_preview: false, child_preview: None }
     }
 
     fn revision(&self) -> RevisionStamp {
@@ -508,7 +542,7 @@ impl MockInstanceState {
                             let edit_id = format!("edit-{}", self.head_edit_id);
                             self.prepared.remove(&txn_id);
                             self.pending = None;
-                            AppFrame::TransactionCommitted { txn_id, edit_id, relay: None }
+                            AppFrame::TransactionCommitted { txn_id, edit_id, relay: self.force_relay.take() }
                         }
                     }
                 }
@@ -594,6 +628,11 @@ impl MockArtifactChannel {
 
     pub fn force_commit_fault(&self, instance: u32, fault: Fault) {
         self.with_instance(instance, |state| state.force_commit_fault = Some(fault));
+    }
+
+    /// 📮️ The next commit on `instance` answers as a hub-bound commit whose relay ended with `outcome`.
+    pub fn force_relay(&self, instance: u32, outcome: HubRelayOutcome) {
+        self.with_instance(instance, |state| state.force_relay = Some(outcome));
     }
 
     pub fn force_undo_fails(&self, instance: u32) {
@@ -1183,9 +1222,9 @@ impl ActionAdapter {
         let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: invocation_id.clone() };
         let commit_result = match self.transaction_prepare_with_retry(record.instance, record.ops.clone(), &format!("agent invoke {}", record.capability_id), origin, now_ms) {
             Ok(txn_id) => match self.exchange_one(record.instance, AppCommand::TransactionCommit { txn_id: txn_id.clone() }) {
-                Ok(AppFrame::TransactionCommitted { edit_id, relay: Some(HubRelayOutcome { refused: Some(code), detail, .. }), .. }) => {
+                Ok(AppFrame::TransactionCommitted { edit_id, relay: Some(relay), .. }) if !relay.acknowledged => {
                     let _ = self.exchange_one(record.instance, AppCommand::TransactionUndo { group_id: txn_id.clone() });
-                    Err(map_fault(&Fault { code, message: format!("the hub refused edit {edit_id} ({detail}); it was reverted in this session") }))
+                    Err(unacknowledged_relay_error(&edit_id, &relay))
                 }
                 Ok(AppFrame::TransactionCommitted { edit_id, relay, .. }) => {
                     let after = match self.exchange_one(record.instance, AppCommand::ReadHistory) {
@@ -1202,9 +1241,9 @@ impl ActionAdapter {
                         revision_before: Some(current.clone()),
                         revision_after: Some(after),
                         diff_uri: None,
-                        warnings: relay.iter().filter(|relay| !relay.acknowledged).map(|relay| format!("relay-pending: {}", relay.detail)).collect(),
+                        warnings: Vec::new(),
                         undo_token: Some(undo_token),
-                        postconditions: std::iter::once(format!("edit:{edit_id}")).chain(relay.iter().filter(|relay| relay.acknowledged).map(|_| "relay:acknowledged".to_string())).collect(),
+                        postconditions: std::iter::once(format!("edit:{edit_id}")).chain(relay.map(|_| "relay:acknowledged".to_string())).collect(),
                         replayed: false,
                     })
                 }
@@ -1366,6 +1405,11 @@ impl ActionAdapter {
         let mut commit_error: Option<GatewayError> = None;
         for (index, txn_id) in prepared_txn_ids.iter().rev() {
             match self.exchange_one(saga.members[*index].instance, AppCommand::TransactionCommit { txn_id: txn_id.clone() }) {
+                Ok(AppFrame::TransactionCommitted { edit_id, relay: Some(relay), .. }) if !relay.acknowledged => {
+                    commit_error = Some(unacknowledged_relay_error(&edit_id, &relay));
+                    committed.push((*index, txn_id.clone(), edit_id));
+                    break;
+                }
                 Ok(AppFrame::TransactionCommitted { edit_id, .. }) => committed.push((*index, txn_id.clone(), edit_id)),
                 Ok(other) => {
                     commit_error = Some(GatewayError::new(GatewayErrorCode::Internal, format!("unexpected frame from TransactionCommit: {other:?}")));

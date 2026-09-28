@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, WORKSPACE_EXTENSION, devcontainerStart, editorCliOrder, gitKrakenWorkspaceState, installWorkspaceExtension, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
+import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, WORKSPACE_EXTENSION, configureGitKrakenWorkspace, devcontainerStart, editorCliOrder, gitKrakenWorkspaceState, installWorkspaceExtension, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
 
 /** 🎙️ A host that records every program call and answers from `answer`, never running anything. */
 function recordingHost(answer: (command: string, args: readonly string[]) => Partial<LifecycleAnswer> = () => ({})): LifecycleHost & { calls: string[][]; inputs: Map<string, string>; lines: string[] } {
@@ -25,8 +25,8 @@ function recordingHost(answer: (command: string, args: readonly string[]) => Par
 }
 
 /** 🔁️ The devcontainer start/attach lifecycle against its language-agnostic fixture: the fontconfig document (fast-xml-parser
- * oracle), architecture and release-asset selection (lodash oracle), editor CLI order, GitKraken workspace states,
- * duplicate-free `safe.directory`, Claude auth storage on a real temporary home, the idempotent shell hook, a start run
+ * oracle), architecture and release-asset selection (lodash oracle), editor CLI order, GitKraken workspace states and the
+ * create / complete / set calls on a checkout with a submodule, duplicate-free `safe.directory`, Claude auth storage on a real temporary home, the idempotent shell hook, a start run
  * that never issues a destructive command, and every extension-install outcome through a recording host. */
 export async function testDevcontainerLifecycle(workspace: string, generated: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️lifecycle/🔣️.json"), "utf8"));
@@ -42,6 +42,13 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
   }
   for (const row of fixture.editorOrder) assert.deepEqual(editorCliOrder(row.env), row.order, JSON.stringify(row.env));
   for (const row of fixture.gitKrakenInfo) assert.equal(gitKrakenWorkspaceState(row.info), row.state, row.info);
+  for (const row of fixture.gitKrakenWorkspace.cases) {
+    const checkout = mkdtempSync(join(generated, `lifecycle-gitkraken-${row.id}-`)), fill = (text: string) => text.replaceAll("{workspace}", checkout);
+    writeFileSync(join(checkout, ".gitmodules"), `[submodule "${fixture.gitKrakenWorkspace.submodule}"]\n\tpath = ${fixture.gitKrakenWorkspace.submodule}\n`);
+    const host = recordingHost((command, args) => (command === "gk" && args[0] === "auth" ? { status: row.authenticated ? 0 : 1 } : command === "gk" && args[1] === "info" ? { stdout: fill(row.info) } : command === "git" && args.includes("--get-regexp") ? { stdout: `submodule.${fixture.gitKrakenWorkspace.submodule}.path ${fixture.gitKrakenWorkspace.submodule}\n` } : {}));
+    configureGitKrakenWorkspace(host, { workspace: checkout, home: checkout, user: "vscode", env: { SEMIO_GITKRAKEN_WORKSPACE_NAME: row.name }, arch: "x64" });
+    assert.deepEqual(host.calls.filter((call) => call[0] === "gk" && call[1] === "ws" && call[2] !== "info").map((call) => call.slice(1).join(" ")), row.expected.map(fill), row.id);
+  }
   assert.deepEqual(missingSafeDirectories(fixture.safeDirectories.listed, fixture.safeDirectories.required), fixture.safeDirectories.missing);
   const once = withSshAgentShellBlock("export PATH=$PATH\n");
   assert.equal(withSshAgentShellBlock(once), once, "the signing-agent shell hook is appended once");
@@ -67,6 +74,9 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
   devcontainerStart(start, context);
   const flat = start.calls.map((call) => call.join(" "));
   for (const directory of PERSISTED_HOME_DIRECTORIES) assert.ok(flat.includes(`sudo chown -R vscode:vscode ${join(home, directory)}`), directory);
+  const devcontainer = Bun.JSONC.parse(readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8")) as { remoteUser: string; mounts: string[] };
+  const homeVolumes = devcontainer.mounts.map((mount) => /(?:^|,)target=([^,]+)/u.exec(mount)?.[1] ?? "").filter((target) => target.startsWith(`/home/${devcontainer.remoteUser}/`));
+  for (const target of homeVolumes) assert.ok(PERSISTED_HOME_DIRECTORIES.some((directory) => `${target}/`.startsWith(`/home/${devcontainer.remoteUser}/${directory}/`)), `the persisted home volume ${target} is handed to the container user on start`);
   assert.ok(flat.includes(`sudo chown -R vscode:vscode ${join(checkout, "♻️mit-bestand/🔎️recherche")}`));
   assert.equal(start.inputs.get("sudo tee /etc/fonts/local.conf"), EMOJI_FONTCONFIG);
   assert.deepEqual(flat.filter((call) => call.startsWith("git config --global --add safe.directory")), [`git config --global --add safe.directory ${join(checkout, "♻️mit-bestand/🔎️recherche")}`]);
@@ -91,5 +101,8 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
     assert.equal(existsSync(join(root, "install.lock")), false, `${row.id}: the install lock is released`);
   }
   assert.ok(existsSync(join(workspace, WORKSPACE_EXTENSION.packageRoot, "package.json")), "the workspace extension package exists where the lifecycle packages it");
-  console.log("✅️ Devcontainer lifecycle: fontconfig (fast-xml-parser), tool selection (lodash), editor order, GitKraken states, safe.directory, Claude auth storage, start without destructive commands, extension install outcomes PASS");
+  const vsixTarget = JSON.parse(readFileSync(join(workspace, WORKSPACE_EXTENSION.packageRoot, "📋️project.json"), "utf8")).targets[WORKSPACE_EXTENSION.target.split(":")[1]!];
+  assert.deepEqual(vsixTarget.dependsOn, ["build"], "the VSIX target builds the extension first");
+  assert.deepEqual(vsixTarget.outputs, [`{projectRoot}/${WORKSPACE_EXTENSION.vsix}`], "the lifecycle installs exactly the VSIX the Nx target outputs");
+  console.log("✅️ Devcontainer lifecycle: fontconfig (fast-xml-parser), tool selection (lodash), editor order, GitKraken states + workspace calls, safe.directory, Claude auth storage, start without destructive commands, extension install outcomes PASS");
 }

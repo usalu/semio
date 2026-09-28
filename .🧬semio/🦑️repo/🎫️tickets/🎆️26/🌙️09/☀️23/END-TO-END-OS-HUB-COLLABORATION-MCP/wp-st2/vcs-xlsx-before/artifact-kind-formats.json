@@ -1,0 +1,14 @@
+{
+  "id": "s.fixture.document",
+  "name": "Format Roundtrip",
+  "sourceFormat": "fixture.document",
+  "componentKind": "fixture",
+  "dimension": "2d",
+  "mediaCapability": "meshOnly",
+  "mediaType": { "class": "twoD", "form": "vector" },
+  "schema": "fixture.document",
+  "exportFormats": [],
+  "importFormats": [],
+  "exportStdioKinds": ["stdio.svg", "stdio.png"],
+  "importStdioKinds": ["stdio.dwg", "stdio.svg"]
+}

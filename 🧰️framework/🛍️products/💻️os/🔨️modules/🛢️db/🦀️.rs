@@ -32,7 +32,7 @@ pub use crate::db_engine::{
     CatalogView, CheckpointPublicationSnapshot, CommandReceipt, Consistency, Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult,
     DatabaseCapabilityOpenTerminalHandle, DatabaseCapabilityOpenTerminalResult, DatabaseCatalogReadCloseStep, DatabaseCatalogReadFuture, DatabaseCatalogReadProgress, DatabaseCatalogReadRejected, DatabaseCatalogReadResult,
     DatabaseCatalogReadTerminalHandle, DatabaseCatalogReadTerminalResult, DatabaseCatalogRootKey, DatabaseDocumentOpenRejected, DatabaseRetainedActivityRejected, DatabaseShutdownBlock, DatabaseShutdownControl, DatabaseShutdownPhase,
-    DatabaseShutdownProgress, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
+    DatabaseShutdownProgress, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
 /// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family

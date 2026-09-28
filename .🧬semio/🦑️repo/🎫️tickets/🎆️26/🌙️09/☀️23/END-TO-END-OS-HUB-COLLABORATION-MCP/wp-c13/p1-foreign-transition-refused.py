@@ -242,11 +242,13 @@ def schema_after(schema: dict) -> dict:
 
 
 problems = 0
+writes: dict[pathlib.Path, str] = {}
 for relative, hunks in HUNKS.items():
     path = root / relative
-    text = path.read_text(encoding="utf-8")
+    original = path.read_text(encoding="utf-8")
+    text = original
     for old, new in hunks:
-        if text.count(new) == 1 and text.count(old) == 0:
+        if text.count(new) == 1:
             state = "already applied"
         elif text.count(old) == 1:
             state = "applies"
@@ -255,14 +257,17 @@ for relative, hunks in HUNKS.items():
             state = f"MISSING (old {text.count(old)}, new {text.count(new)})"
             problems += 1
         print(f"{relative}: {state}: {old.strip().splitlines()[0][:90]}")
-    if apply and problems == 0:
-        path.write_text(text, encoding="utf-8")
+    if text != original:
+        writes[path] = text
 for relative, transform in ((FIXTURE, fixture_after), (SCHEMA, schema_after)):
     path = root / relative
     before = json.loads(path.read_text(encoding="utf-8"))
     after = transform(before)
     print(f"{relative}: {'already applied' if after == before else 'applies'}")
-    if apply and problems == 0 and after != before:
-        path.write_text(json.dumps(after, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if after != before:
+        writes[path] = json.dumps(after, indent=2, ensure_ascii=False) + "\n"
+if apply and problems == 0:
+    for path, text in writes.items():
+        path.write_text(text, encoding="utf-8")
 print(f"{'APPLIED' if apply and problems == 0 else 'DRY RUN'}: {problems} problem(s)")
 sys.exit(1 if problems else 0)

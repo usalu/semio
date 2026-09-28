@@ -123,3 +123,29 @@ Executors = Opus 5.5 agents, one slice each. Auditors = Sonnet 5 agents, read-on
     (b) at most ONE dev serve and ONE hub per slice (two serves only for a two-shell run, stopped right after), ≤ 1 headless
     browser, stop everything idle NOW and record it; (c) `NX_DAEMON=false` for every `bun nx …` (two wedged workspace
     daemons sat 31 min in project-graph calculation); (d) a queued lane ticket costs nothing — keep it, don't bypass the lane.
+
+## Session 14b — Restart (2026-09-28 12:0x)
+
+- The whole fleet was cut ~20:45 yesterday by the account usage limit; the app then restarted: every agent, hub 7800, serves,
+  holds, the disk guard and all lane waiters died. Agents cannot be resumed; every slice gets a successor agent with the SAME
+  slice name that continues `📓️wp-<slice>.md` (read its `## Session 14` table + log first; reconcile your predecessor's
+  in-flight tree edits and prepared patches before anything else).
+- A peer (Codex, not running now) edited ~1 870 source files overnight 01:50–05:0x; nothing since. Re-diff every prepared patch
+  (dry-run) against the live tree before relying on it.
+- **CHAIN LAUNCHED 2026-09-28 12:02:46** (`wp-w4/w4-chain.sh final`, pid 45604, log `.🧬semio/🌐hub/s14-w4-logs/chain-final.txt`).
+  **GUEST FREEZE is ON** (rule 2) until W4 reports `final-publish.rc` = 0 and the coordinator writes "WINDOW 3 OPEN".
+- Hub 7800 resumed on B3 at 12:03 (hold 45800, `wp-w4/w4-hub-resume.sh s13-w3-hub-7800-b3`, rolling capture). Disk guard pid
+  45433. Disk 101 GiB free (build-landing deleted). Lane slots: native 1, overlay 1, wasm = chain only.
+- Rule 21 stays: one serve + one hub per slice, ≤ 1 headless browser, `NX_DAEMON=false`, no lane bypass. The machine is idle
+  apart from the chain — keep it that way for the chain's sake (the chain is the critical path).
+- **Usage budget:** a 20-agent fleet burned the 5-hour usage window in 2.5 h yesterday. Wait with ONE blocking call per ≤ 10 min
+  (never short polls), keep reports terse, don't re-read large files you already summarized, and prefer finishing one item end to
+  end over starting many.
+22. **Test-only fixes during the freeze (13:1x):** fixtures, `🧪️tests/` files and `#[cfg(test)]`-only code in guest-linked
+    crates MAY land during the guest freeze when no non-test code changes (they don't affect the chain's lib/wasm builds);
+    compile-atomic in the native lane (`--lib --tests`), landing row. Anything touching non-test code stays prepared.
+23. **Overlay lane = 1 slot, disk-bound (13:5x):** every overlay with a private build-dir grows to 40–50 GB cold (p9-build 50 GB,
+    t14 42 GB); disk is at 101 GiB free with the chain still to write wasm-release units. Overlay proofs are OPTIONAL
+    pre-validation — window 3 proves every set compile-atomically in the real tree anyway (native lane + wasm lane). Only queue
+    an overlay build when it de-risks a large guest set (≥ 20 files or kernel/SDK wide); otherwise keep the patch dry-run clean
+    and wait for window 3. Delete your own overlay build-dir as soon as its proof is recorded (record the deletion).

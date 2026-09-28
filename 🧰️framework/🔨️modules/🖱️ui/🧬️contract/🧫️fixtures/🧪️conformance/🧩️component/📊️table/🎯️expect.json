@@ -1,12 +1,12 @@
 {
   "case": "table",
   "kind": "component",
-  "description": "A windowed Table (rows 12–13 of 40) with two TableRows — header, cells and row actions are props, so the table is three node records.",
+  "description": "A windowed Table (rows 12–13 of 40) with two TableRows — header, cells and row actions are props (the one row-action representation); the editable row's cells are its two Commit-bound, revision-guarded input children, the plain row has none, so the table is five node records.",
   "outcome": "accept",
   "limits": null,
   "tree": {
     "root": 0,
-    "nodeCount": 3,
+    "nodeCount": 5,
     "shape": [
       {
         "id": 0,
@@ -21,12 +21,27 @@
         "id": 1,
         "key": "space:sp-1",
         "type": "tableRow",
-        "children": []
+        "children": [
+          3,
+          4
+        ]
       },
       {
         "id": 2,
         "key": "space:sp-2",
         "type": "tableRow",
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "cell-0",
+        "type": "input",
+        "children": []
+      },
+      {
+        "id": 4,
+        "key": "cell-1",
+        "type": "input",
         "children": []
       }
     ]
@@ -55,9 +70,27 @@
       "live": "off",
       "shortcut": null,
       "hidden": false
+    },
+    {
+      "id": 3,
+      "label": "Name",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": "Kind",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
     }
   ],
   "actionIds": [
-    "s.space.home@1/*#editor.openSpace@1"
+    "s.space.home@1/*#editor.openSpace@1",
+    "s.stdio.csv@rfc4180/*#editor.set-cell@1",
+    "s.stdio.csv@rfc4180/*#editor.set-cell@1"
   ]
 }

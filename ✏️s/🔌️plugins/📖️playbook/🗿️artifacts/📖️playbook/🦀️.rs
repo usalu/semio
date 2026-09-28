@@ -838,6 +838,12 @@ pub mod editor {
                         mod component;
                         pub use component::*;
                     }
+                    #[path = "."]
+                    pub mod files {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder/🪟️windows/🗂️files/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
                 }
             }
         }

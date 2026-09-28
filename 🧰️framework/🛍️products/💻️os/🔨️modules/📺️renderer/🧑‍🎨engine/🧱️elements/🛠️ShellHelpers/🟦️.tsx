@@ -3304,9 +3304,9 @@ export function resolveIntroductionDefinition(introduction: IntroductionDefiniti
 
 //#region 🎥️TutorialUiBridge
 /** @emoji 🕹️ Copies the exact typed selection projection without retaining mutable manifest arrays or invoking special object keys. */
-function captureInteractionSelection(state: ShellState): TutorialUiSnapshot["interactionSelection"] {
+function captureInteractionSelection(interaction: InteractionState): TutorialUiSnapshot["interactionSelection"] {
   const selection: Record<string, { granularity: string; ids: string[]; anchorId?: string }> = {};
-  for (const [domainId, current] of Object.entries(state.interaction.selection)) {
+  for (const [domainId, current] of Object.entries(interaction.selection)) {
     const captured = { granularity: current.granularity, ids: [...current.ids], ...(current.anchorId === undefined ? {} : { anchorId: current.anchorId }) };
     Object.defineProperty(selection, domainId, { value: captured, enumerable: true, writable: true, configurable: true });
   }
@@ -3324,8 +3324,8 @@ function tutorialInteractionSelection(selection: TutorialUiSnapshot["interaction
   return result;
 }
 
-/** @emoji 🎥️ Captures the shell's current `ShellState` (+ active session) as a renderer-neutral `TutorialUiSnapshot` — the recorder's periodic full-snapshot keyframes and the `TutorialBar`'s "record" path both call this. See the Rust doc comment on `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState` itself. */
-export function captureTutorialUiSnapshot(state: ShellState, session: ActiveSession | null): TutorialUiSnapshot {
+/** @emoji 🎥️ Captures the shell's current `ShellState`, its local interaction (`LocalInteractionStoreV1`) and the active session as a renderer-neutral `TutorialUiSnapshot` — the recorder's periodic full-snapshot keyframes and the `TutorialBar`'s "record" path both call this. See the Rust doc comment on `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState` itself. */
+export function captureTutorialUiSnapshot(state: ShellState, interaction: InteractionState, session: ActiveSession | null): TutorialUiSnapshot {
   const activeUtilityByWindowId: Record<string, string> = {};
   for (const [windowId, utilityId] of Object.entries(state.actionPane.activeUtilityByWindowId)) {
     if (utilityId) activeUtilityByWindowId[windowId] = utilityId;
@@ -3344,7 +3344,7 @@ export function captureTutorialUiSnapshot(state: ShellState, session: ActiveSess
     layout: captureCurrentFrameworkLayout(state.layout.shellLayout, state.layout.extraWindowInstances),
     activePanelTabByGroup,
     panelJson: session?.viewState.panelJson,
-    interactionSelection: captureInteractionSelection(state),
+    interactionSelection: captureInteractionSelection(interaction),
     openDialogId: state.overlays.dialog?.dialogId,
     expandedTreeIds: Object.entries(state.layout.treeOpenStates).filter(([, open]) => open).map(([id]) => id),
     commandPanelOpen: state.overlays.searchOpen,

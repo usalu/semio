@@ -15,6 +15,11 @@ fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn workbook(snapshot: &XlsxSnapshot) -> XlsxWorkbook {
+    snapshot.project_workbook().expect("the canonical XML parts project a workbook")
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_workbook() -> XlsxWorkbook {
     XlsxWorkbook {
         sheets: vec![
@@ -63,7 +68,7 @@ async fn builder_produces_minimal_valid_package_that_decodes_back() {
     assert!(opc::sniff_opc_bytes(&bytes));
     assert!(sniff_xlsx_bytes(&bytes));
     let decoded = decode_xlsx(&bytes).expect("decode minimal package");
-    assert_eq!(decoded.workbook, sample_workbook());
+    assert_eq!(workbook(&decoded), sample_workbook());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -73,17 +78,14 @@ async fn shared_strings_are_carried_verbatim_never_resolved_or_deduped() {
     // real bytes carry the table unchanged AND every cell keeps its own index (not a
     // resolved-text copy the old `Text` variant used to collapse into).
     let snap = build_minimal_xlsx(sample_workbook());
-    let sst_bytes = snap.opc.part_bytes("xl/sharedStrings.xml").expect("sharedStrings.xml part present");
-    let sst_xml = xml_document_from_text(std::str::from_utf8(sst_bytes).unwrap()).expect("parse sst");
-    // 🩹 `shared_strings_from_xml` is module-private to the deserializers component; this test
-    // re-derives the same strings via a full decode round trip instead of reaching in directly.
-    let _ = sst_xml;
+    assert!(snap.xml_part(SHARED_STRINGS_PART).is_some(), "the SST is an authoritative XML part");
+    xml_document_from_text(&snap.part_text(SHARED_STRINGS_PART).expect("sharedStrings.xml text")).expect("parse sst");
     let bytes = encode_xlsx(&snap).expect("encode");
-    let re_decoded = decode_xlsx(&bytes).expect("decode");
-    assert_eq!(re_decoded.workbook.shared_strings, vec!["Name".to_string(), "Score".to_string(), "Alice".to_string()]);
-    assert_eq!(re_decoded.workbook.sheets[0].cells.iter().find(|c| c.row == 2 && c.col == 0).unwrap().value, XlsxCellValue::SharedString(2));
-    assert_eq!(re_decoded.workbook.sheets[0].cells.iter().find(|c| c.row == 3 && c.col == 0).unwrap().value, XlsxCellValue::SharedString(2));
-    assert_eq!(re_decoded.workbook.sheets[1].cells[0].value, XlsxCellValue::SharedString(2));
+    let re_decoded = workbook(&decode_xlsx(&bytes).expect("decode"));
+    assert_eq!(re_decoded.shared_strings, vec!["Name".to_string(), "Score".to_string(), "Alice".to_string()]);
+    assert_eq!(re_decoded.sheets[0].cells.iter().find(|c| c.row == 2 && c.col == 0).unwrap().value, XlsxCellValue::SharedString(2));
+    assert_eq!(re_decoded.sheets[0].cells.iter().find(|c| c.row == 3 && c.col == 0).unwrap().value, XlsxCellValue::SharedString(2));
+    assert_eq!(re_decoded.sheets[1].cells[0].value, XlsxCellValue::SharedString(2));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -122,12 +124,12 @@ async fn decode_resolves_real_hand_built_package_with_every_cell_type() {
     opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, WORKBOOK_PART);
 
     let bytes = opc::encode_opc(&opc).expect("encode hand-built package");
-    let decoded = decode_xlsx(&bytes).expect("decode hand-built xlsx");
+    let decoded = workbook(&decode_xlsx(&bytes).expect("decode hand-built xlsx"));
 
-    assert_eq!(decoded.workbook.sheets.len(), 1);
-    assert_eq!(decoded.workbook.sheets[0].name, "Q1");
-    assert_eq!(decoded.workbook.shared_strings, vec!["Quarter".to_string(), "Revenue & Profit".to_string()]);
-    let cells = &decoded.workbook.sheets[0].cells;
+    assert_eq!(decoded.sheets.len(), 1);
+    assert_eq!(decoded.sheets[0].name, "Q1");
+    assert_eq!(decoded.shared_strings, vec!["Quarter".to_string(), "Revenue & Profit".to_string()]);
+    let cells = &decoded.sheets[0].cells;
     let at = |row: u32, col: u32| cells.iter().find(|c| c.row == row && c.col == col).map(|c| &c.value);
     assert_eq!(at(1, 0), Some(&XlsxCellValue::SharedString(0)));
     assert_eq!(at(1, 1), Some(&XlsxCellValue::SharedString(1)));
@@ -160,41 +162,48 @@ async fn decode_rejects_out_of_range_shared_string_index() {
 
 #[semio_framework_async_macros::async_test]
 async fn unmodeled_parts_survive_decode_encode_verbatim() {
-    let snap = build_minimal_xlsx(sample_workbook());
-    let mut opc = snap.opc.clone();
-    opc.set_part("xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", b"<styleSheet/>".to_vec());
-    let bytes = opc::encode_opc(&opc).expect("encode");
+    const STYLES_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml";
+    let mut snap = build_minimal_xlsx(sample_workbook());
+    snap.opc.content_types.set_override("xl/styles.xml", STYLES_CONTENT_TYPE);
+    snap.opc.set_part("xl/media/blob.bin", "application/octet-stream", vec![0, 159, 255]);
+    snap.xml_parts.push(crate::schema::snapshot::XlsxXmlPart { path: "xl/styles.xml".into(), content_type: STYLES_CONTENT_TYPE.into(), document: xml_document_from_text("<styleSheet/>").expect("styles xml") });
+    snap.validate_authority().expect("an unmodeled XML part and a binary part are valid package authority");
+    let bytes = encode_xlsx(&snap).expect("encode");
 
     let decoded = decode_xlsx(&bytes).expect("decode");
-    assert_eq!(decoded.opc.part_bytes("xl/styles.xml"), Some(b"<styleSheet/>".as_slice()));
+    assert_eq!(decoded.part_text("xl/styles.xml").as_deref(), snap.part_text("xl/styles.xml").as_deref());
+    assert_eq!(decoded.opc.part_bytes("xl/media/blob.bin"), Some([0u8, 159, 255].as_slice()));
     let re_encoded = encode_xlsx(&decoded).expect("re-encode");
     let re_decoded = decode_xlsx(&re_encoded).expect("re-decode");
-    assert_eq!(re_decoded.opc.part_bytes("xl/styles.xml"), Some(b"<styleSheet/>".as_slice()));
-    assert_eq!(re_decoded.workbook, sample_workbook());
+    assert_eq!(re_decoded.part_text("xl/styles.xml").as_deref(), snap.part_text("xl/styles.xml").as_deref());
+    assert_eq!(re_decoded.opc.part_bytes("xl/media/blob.bin"), Some([0u8, 159, 255].as_slice()));
+    assert_eq!(workbook(&re_decoded), sample_workbook());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip() {
     let original = build_minimal_xlsx(sample_workbook());
     let bytes = encode_xlsx(&original).expect("encode");
-    let analyzed = decode_xlsx(&bytes).expect("decode");
-    let rebuilt = build_minimal_xlsx(analyzed.workbook.clone());
+    let analyzed = workbook(&decode_xlsx(&bytes).expect("decode"));
+    let rebuilt = build_minimal_xlsx(analyzed.clone());
     let rebuilt_bytes = encode_xlsx(&rebuilt).expect("encode rebuilt");
-    let reanalyzed = decode_xlsx(&rebuilt_bytes).expect("decode rebuilt");
-    assert_eq!(reanalyzed.workbook, analyzed.workbook);
+    let reanalyzed = workbook(&decode_xlsx(&rebuilt_bytes).expect("decode rebuilt"));
+    assert_eq!(reanalyzed, analyzed);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn shrinking_sheet_count_drops_stale_worksheet_parts() {
-    let mut wide = sample_workbook();
-    let snap_wide = build_minimal_xlsx(wide.clone());
-    assert!(snap_wide.opc.part("xl/worksheets/sheet2.xml").is_some());
+    use crate::schema::mutations::{apply_xlsx_mutation, remove_sheet::RemoveSheet, XlsxMutation};
+    let mut snap = build_minimal_xlsx(sample_workbook());
+    let second = crate::schema::mutations::cell_address::xlsx_cell_address(&snap, "Second", 1, 0).expect("second sheet cell").part_path;
+    assert!(snap.xml_part(&second).is_some());
 
-    wide.sheets.truncate(1);
-    let bytes = encode_xlsx(&XlsxSnapshot::from_parts(snap_wide.opc, wide)).expect("encode narrower workbook");
+    apply_xlsx_mutation(&mut snap, &XlsxMutation::RemoveSheet(RemoveSheet { name: "Second".into() }));
+    let bytes = encode_xlsx(&snap).expect("encode narrower workbook");
     let decoded = decode_xlsx(&bytes).expect("decode");
-    assert!(decoded.opc.part("xl/worksheets/sheet2.xml").is_none(), "stale second sheet must be dropped, not left orphaned");
-    assert_eq!(decoded.workbook.sheets.len(), 1);
+    assert!(decoded.xml_part(&second).is_none() && decoded.opc.part(&second).is_none(), "stale second sheet must be dropped, not left orphaned");
+    assert!(decoded.opc.relationships.values().flatten().all(|relationship| !second.ends_with(relationship.target.trim_start_matches('/'))), "no relationship still targets the dropped worksheet");
+    assert_eq!(workbook(&decoded).sheets.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -227,9 +236,9 @@ async fn decode_recognizes_strict_office_document_and_shared_strings_relationshi
 
     let bytes = opc::encode_opc(&opc).expect("encode strict-shaped package");
     assert!(sniff_xlsx_bytes(&bytes), "a Strict-shaped package must still sniff as xlsx");
-    let decoded = decode_xlsx(&bytes).expect("decode Strict-shaped package");
-    assert_eq!(decoded.workbook.sheets.len(), 1);
-    assert_eq!(decoded.workbook.sheets[0].cells[0].value, XlsxCellValue::SharedString(0));
+    let decoded = workbook(&decode_xlsx(&bytes).expect("decode Strict-shaped package"));
+    assert_eq!(decoded.sheets.len(), 1);
+    assert_eq!(decoded.sheets[0].cells[0].value, XlsxCellValue::SharedString(0));
 }
 
 //#region 🔖️ConformanceLaws

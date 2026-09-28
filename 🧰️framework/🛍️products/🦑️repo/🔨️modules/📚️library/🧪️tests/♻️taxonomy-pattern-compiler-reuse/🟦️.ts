@@ -78,7 +78,6 @@ test("actual current pattern semantics agree with both compilers and the indepen
     }
     expect(actual.expressions).toHaveLength(vector.cases.length * vector.rounds);
     expect(actual.tests()).toBe(vector.cases.length * vector.rounds);
-    console.info(`[DEBUG] Pattern compiler baseline ${compiler.id}: ${actual.expressions.length} constructions for ${vector.uniqueNormalizedPatterns} distinct normalized patterns`);
   }
 });
 
@@ -240,7 +239,6 @@ test("actual load and parse declarations reread and revalidate independent match
     expect([reads, parses, validations]).toEqual([6, 5, 4]);
     expect(captured).toHaveLength(6);
     expect(new Set(captured.map((input) => input.contentHash)).size).toBe(1);
-    console.info(`[DEBUG] Fresh matcher ${compiler.id}: ${firstCount} unique schema compilations per load, ${reads} actual reads, ${parses} parse attempts, ${validations} complete validations`);
   }
 });
 

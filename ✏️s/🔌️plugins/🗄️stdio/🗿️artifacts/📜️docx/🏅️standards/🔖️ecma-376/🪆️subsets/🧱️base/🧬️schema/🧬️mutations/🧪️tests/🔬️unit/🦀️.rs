@@ -22,16 +22,16 @@ fn word_namespace_oracle(xml: &str, namespace: &str) -> Vec<(String, Vec<(String
         match reader.read_event().unwrap() {
             Event::Start(event) | Event::Empty(event) => {
                 let (resolved, local) = reader.resolver().resolve_element(event.name());
-                if !matches!(resolved, ResolveResult::Bound(value) if value.as_ref() == namespace.as_bytes()) {
+                if !matches!(resolved, ResolveResult::Bound(value) if value.as_ref() == namespace) {
                     continue;
                 }
-                let name = String::from_utf8(local.as_ref().to_vec()).unwrap();
+                let name = local.as_ref().to_owned();
                 let attrs = event
                     .attributes()
                     .map(|attr| attr.unwrap())
                     .filter_map(|attr| {
                         let (resolved, local) = reader.resolver().resolve_attribute(attr.key);
-                        matches!(resolved, ResolveResult::Bound(value) if value.as_ref() == namespace.as_bytes()).then(|| (String::from_utf8(local.as_ref().to_vec()).unwrap(), attr.normalized_value(XmlVersion::Explicit1_0).unwrap().into_owned()))
+                        matches!(resolved, ResolveResult::Bound(value) if value.as_ref() == namespace).then(|| (local.as_ref().to_owned(), attr.normalized_value(XmlVersion::Explicit1_0).unwrap().into_owned()))
                     })
                     .collect();
                 result.push((name, attrs));
@@ -243,7 +243,7 @@ fn identical_run_insertion_invalidates_the_original_canonical_address() {
         let mut runs = 0usize;
         loop {
             match reader.read_event().unwrap() {
-                Event::Start(event) if event.local_name().as_ref() == b"r" => runs += 1,
+                Event::Start(event) if event.local_name().as_ref() == "r" => runs += 1,
                 Event::Eof => break,
                 _ => {}
             }
@@ -281,7 +281,7 @@ fn canonical_xml_addresses_support_empty_and_default_namespaces_and_reject_unbou
         let mut saw_field = false;
         loop {
             match reader.read_event().unwrap() {
-                Event::Start(event) if event.local_name().as_ref() == b"field" => saw_field = true,
+                Event::Start(event) if event.local_name().as_ref() == "field" => saw_field = true,
                 Event::Eof => break,
                 _ => {}
             }
@@ -330,7 +330,7 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
         loop {
             match reader.read_event().unwrap() {
                 Event::Start(event) | Event::Empty(event) => {
-                    let local = String::from_utf8(event.local_name().as_ref().to_vec()).unwrap();
+                    let local = event.local_name().as_ref().to_owned();
                     if local == "t" {
                         text_elements += 1;
                     }

@@ -230,7 +230,6 @@ export function testWindowScope(): void {
   assert.ok(!reservedShellChordsV1(SHELL_KEYBINDINGS).has("mod+shift+g"), "an app chord the shell never names stays the app's");
 
   const generateOwner = fixture.chords.filter((row) => row.mode === "generate" && row.actionId === "addGeneration");
-  console.log(`[DEBUG] window-scope: ${fixture.stacks.length} stack projections, ${fixture.dockSeed.length} dock seeds, ${fixture.tabPresentation.length} tab presentations, ${fixture.chords.length} chord targets (${generateOwner.length} addGeneration), ${fixture.unownedHint.length} hint locales, ${fixture.reservedChords.cases.length} reserved-chord rows (${reserved.size} reserved)`);
 }
 
 describe("⌨️ window scope", () => {

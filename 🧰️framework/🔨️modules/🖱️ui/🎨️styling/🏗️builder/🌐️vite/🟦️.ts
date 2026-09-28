@@ -397,7 +397,15 @@ export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<Playgro
 //#region 🔖️HostHtmlPlugin
 /** @emoji 🎬️ Inline shell paint before Tailwind finishes compiling the play stylesheet. */
 export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
-  "html{color-scheme:light dark}html,body,#root{height:100%;margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
+  "html{color-scheme:light dark}html,body,#root{height:var(--ui-available-height,100dvh);margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
+
+/** @emoji 📐 Sizes the host to the available viewport before first paint.
+ *
+ * `100vh` is the screen. On Android Firefox the browser navbar is drawn over that screen and a
+ * `100vh` page with `overflow: hidden` is clipped underneath it. `visualViewport.height` is the
+ * available height; the same choice as {@link availableViewportHeightPx}. Listeners keep the
+ * variable live as the toolbar shows and hides. */
+export const PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT = `(function(){var last="";function sync(){var vv=window.visualViewport;var h=vv&&vv.height>0?vv.height:window.innerHeight;if(!(h>0)||!isFinite(h))return;var px=Math.round(h)+"px";if(px===last)return;last=px;document.documentElement.style.setProperty("--ui-available-height",px)}sync();var vv=window.visualViewport;if(vv&&vv.addEventListener){vv.addEventListener("resize",sync);vv.addEventListener("scroll",sync)}window.addEventListener("resize",sync);window.addEventListener("orientationchange",sync)})();`;
 
 /**
  * @emoji 🌓️ Synchronous appearance bootstrap for every semio host `🌐️.html` head.
@@ -442,6 +450,7 @@ export const PLAYGROUND_PLAY_BOOT_THEME_SCRIPT = `(function(){try{var c=JSON.par
  * {@link playgroundPlayBootHtmlPlugin} inject from, so the generalized host and playground never drift. */
 function semioHostBootHeadTags(): { readonly tag: string; readonly attrs?: Record<string, string>; readonly children?: string; readonly injectTo: "head-prepend" | "head" }[] {
   return [
+    { tag: "script", children: PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, injectTo: "head-prepend" },
     { tag: "style", children: PLAYGROUND_PLAY_BOOT_INLINE_STYLE, injectTo: "head-prepend" },
     { tag: "script", children: PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, injectTo: "head-prepend" },
     { tag: "script", children: PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, injectTo: "head-prepend" },
@@ -775,7 +784,7 @@ const SEMIO_STATUS_SURFACE_GLYPH: Record<"empty" | "error" | "loading", string> 
 
 function semioStatusSurfaceInlineStyle(): string {
   const c = SEMIO_STATUS_SURFACE_COLORS;
-  return `html{color-scheme:light dark}html,body{height:100%;margin:0}body{background-color:${c.lightBg};color:${c.lightFg};display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif}@media (prefers-color-scheme: dark){body{background-color:${c.darkBg};color:${c.darkFg}}}`;
+  return `html{color-scheme:light dark}html,body{height:100dvh;margin:0}body{background-color:${c.lightBg};color:${c.lightFg};display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif}@media (prefers-color-scheme: dark){body{background-color:${c.darkBg};color:${c.darkFg}}}`;
 }
 
 /** @emoji 🚦️ Minimal, standalone status document (empty/error/loading) for host-agnostic contexts that
@@ -1766,6 +1775,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️ViteElementsAssets

@@ -123,5 +123,4 @@ export function testFemPcgWireOracle(): void {
   const turns = fixture.cases.map((row) => row.fields.reduce((sum, field) => sum + field.values.length + 4, 2));
   assert.deepEqual(turns, [93, 40, 40]);
   assert.equal(turns.reduce((sum, count) => sum + count, 0), 173);
-  console.log("[DEBUG] PCG wire: 21 exact pages agree with DataView and fast-json-patch, including derived negative zero");
 }

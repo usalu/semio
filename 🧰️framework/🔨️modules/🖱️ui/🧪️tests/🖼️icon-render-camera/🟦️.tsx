@@ -2,13 +2,13 @@ import type { IconRenderRequest } from "@semio-tech/ui-styling";
 import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🖼️icon-render-camera/🔣️.json";
 import schema from "../../🧬️schema/🖼️icon-render-camera/🔣️.json";
-/** 📐️ Type-only three.js namespace; the runtime `THREE` value arrives through the dependency bag and would shadow this name. */
-import type * as Three from "three";
+/** 📐️ three.js itself, the oracle the icon camera is measured against (a test of the ui module, the library's interface owner). */
+import * as THREE from "three";
 
 /** 🖼️ The icon renderer's camera and SVG finishing: an orthographic shot keeps its zoom, a fitted shot recomputes it from the
  * model bounds, and a transparent shot drops the three.js SVGRenderer clear colour. */
-export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🎯️targets/⚛️react/🟦️.tsx"), "THREE" | "buildIconCamera" | "finalizeIconSvgMarkup" | "iconRenderCameraPose">): Promise<void> {
-  const { THREE, buildIconCamera, finalizeIconSvgMarkup, iconRenderCameraPose } = dependencies;
+export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🎯️targets/⚛️react/🟦️.tsx"), "buildIconCamera" | "finalizeIconSvgMarkup" | "iconRenderCameraPose">): Promise<void> {
+  const { buildIconCamera, finalizeIconSvgMarkup, iconRenderCameraPose } = dependencies;
   const { describe, expect, it } = vitest;
   describe("icon camera projection contract", () => {
     it("validates the shared language-neutral camera cases", () => {
@@ -29,7 +29,7 @@ export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMe
           lights: { ambientIntensity: 1, ambientColor: "#fff", sunAzimuth: 0, sunElevation: 45, sunIntensity: 1, sunColor: "#fff" },
         };
         const pose = iconRenderCameraPose(request, model);
-        const camera = buildIconCamera(request, pose) as Three.PerspectiveCamera | Three.OrthographicCamera;
+        const camera = buildIconCamera(request, pose) as THREE.PerspectiveCamera | THREE.OrthographicCamera;
         camera.updateMatrixWorld(true);
         for (const field of ["position", "target"] as const) {
           pose[field].forEach((value, axis) => expect(Math.abs(value - sample.expected[field][axis])).toBeLessThan(fixture.tolerance));
@@ -67,8 +67,8 @@ export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMe
         camera: { position: [10, -10, 8], target: [0, 0, 0], zoom: 42, projection: "orthographic" as const },
       };
       const camera = buildIconCamera(request);
-      expect((camera as Three.OrthographicCamera).isOrthographicCamera).toBe(true);
-      expect((camera as Three.OrthographicCamera).zoom).toBe(42);
+      expect((camera as THREE.OrthographicCamera).isOrthographicCamera).toBe(true);
+      expect((camera as THREE.OrthographicCamera).zoom).toBe(42);
     });
     it("recomputes orthographic zoom when fit is enabled", () => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4));

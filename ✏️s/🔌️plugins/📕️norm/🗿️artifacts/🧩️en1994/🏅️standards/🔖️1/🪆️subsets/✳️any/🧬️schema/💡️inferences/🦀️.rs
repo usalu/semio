@@ -302,7 +302,10 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     .annex(annex)
     .explanation(lc(format!("V_L,Ed = {:.1} kN, V_L,Rd = {:.1} kN.", v_l_ed / 1e3, v_l_rd / 1e3), format!("V_L,Ed = {:.1} kN, V_L,Rd = {:.1} kN. (DE-NA)", v_l_ed / 1e3, v_l_rd / 1e3)));
     if v_l_ed > v_l_rd {
-        let as_need = beam.transverse_as_m2_per_m * v_l_ed / v_l_rd.max(1.0);
+        let p = AnnexParams::for_annex(annex);
+        let f_yd = 500e6 / p.gamma_s;
+        let as_steel = v_l_ed / (f_yd * beam.span_m / 2.0).max(1e-12);
+        let as_need = as_steel.max(beam.transverse_as_m2_per_m * v_l_ed / v_l_rd.max(1.0));
         vl = vl.remedy(Remedy::at_least(beam_ref(&beam, "transverseAsM2PerM"), Quantity::new(QuantityKind::Area, beam.transverse_as_m2_per_m), Quantity::new(QuantityKind::Area, as_need),
             lc(format!("Increase transverse reinforcement to ≥ {:.0} mm²/m.", as_need * 1e6), format!("Querbewehrung auf ≥ {:.0} mm²/m erhöhen.", as_need * 1e6))));
     }
@@ -330,8 +333,52 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
             format!("Biegedrillknicken ({stage_de}) über {comb_de}: M_Ed = {:.1} kNm, M_b,Rd = {:.1} kNm.", m_ltb_ed / 1e3, m_b / 1e3),
         ));
         if m_ltb_ed > m_b {
-            ltb = ltb.remedy(Remedy::at_most(beam_ref(&beam, "ltbLengthM"), Quantity::length_m(beam.ltb_length_m), Quantity::length_m(beam.ltb_length_m * m_b / m_ltb_ed.max(1.0)),
-                lc("Reduce LTB length (add restraints).", "Biegedrillknicklänge verkürzen.")));
+            let mut trial_min = beam.clone();
+            trial_min.ltb_length_m = 0.05;
+            let m_b_at_min_l = part_1_1::ltb_moment_resistance_nm(&trial_min, f_y, annex);
+            if m_b_at_min_l >= m_ltb_ed {
+                // Shorter L → higher χ_LT: search max L in [0.05, current] that still clears.
+                let mut lo = 0.05_f64;
+                let mut hi = beam.ltb_length_m.max(0.05);
+                for _ in 0..32 {
+                    let mid = 0.5 * (lo + hi);
+                    let mut trial = beam.clone();
+                    trial.ltb_length_m = mid;
+                    if part_1_1::ltb_moment_resistance_nm(&trial, f_y, annex) >= m_ltb_ed {
+                        lo = mid;
+                    } else {
+                        hi = mid;
+                    }
+                }
+                let l_req = lo;
+                if l_req + 1e-9 < beam.ltb_length_m {
+                    ltb = ltb.remedy(Remedy::at_most(beam_ref(&beam, "ltbLengthM"), Quantity::length_m(beam.ltb_length_m), Quantity::length_m(l_req),
+                        lc("Reduce LTB length (add restraints).", "Biegedrillknicklänge verkürzen.")));
+                }
+            } else {
+                // Catalogue resolve() overwrites geometry leaves — remedy designation to a heavier section that clears at current L.
+                let clearing: Vec<String> = SteelSection::heavier_heb_options(&beam.steel.designation)
+                    .into_iter()
+                    .filter(|d| {
+                        let Some(sec) = SteelSection::from_catalogue(d) else { return false };
+                        let mut trial = beam.clone();
+                        trial.steel = sec;
+                        part_1_1::ltb_moment_resistance_nm(&trial, f_y, annex) >= m_ltb_ed
+                    })
+                    .collect();
+                if !clearing.is_empty() {
+                    ltb = ltb.remedy(Remedy::one_of(beam_ref(&beam, "steel.designation"), clearing,
+                        lc("Select a heavier steel section so M_b,Rd ≥ M_Ed.", "Schwereren Stahlquerschnitt wählen, damit M_b,Rd ≥ M_Ed.")));
+                } else if let Some(a) = beam.actions.iter().find(|a| a.kind == "imposed" && a.q_area_pa.abs() > 1e-9)
+                    .or_else(|| beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9))
+                {
+                    let q_leaf = format!("actions[id={}].qAreaPa", a.id);
+                    let q_cur = a.q_area_pa.abs();
+                    let q_req = q_cur * (m_b / m_ltb_ed.max(1.0)) * 0.98;
+                    ltb = ltb.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
+                        lc("Reduce governing area load so LTB M_Ed ≤ M_b,Rd.", "Maßgebende Flächenlast absenken, damit LTB M_Ed ≤ M_b,Rd.")));
+                }
+            }
         }
         report.push(ltb.build());
     } else {
@@ -388,27 +435,36 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("{}: δ = {:.1} mm, Grenze L/250 = {:.1} mm.", sls_freq.label_de, delta * 1000.0, delta_lim * 1000.0),
     ));
     if delta > delta_lim {
-        let q_leaf = if beam.actions.iter().any(|a| a.id == "Q-office") {
-            "actions[id=Q-office].qAreaPa".to_string()
-        } else if let Some(a) = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9) {
-            format!("actions[id={}].qAreaPa", a.id)
-        } else {
-            "spanM".into()
-        };
-        let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(2e3);
-        sls = sls.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_cur * delta_lim / delta * 0.95),
-            lc("Reduce imposed load or increase stiffness.", "Nutzlast reduzieren oder Steifigkeit erhöhen.")));
+        let ratio = (delta_lim / delta.max(1e-12)).clamp(0.0, 1.0);
+        let span_req = beam.span_m * ratio.powf(1.0 / 3.0) * 0.98;
+        sls = sls.remedy(Remedy::at_most(beam_ref(&beam, "spanM"), Quantity::length_m(beam.span_m), Quantity::length_m(span_req),
+            lc("Reduce span so frequent deflection ≤ L/250.", "Spannweite reduzieren, damit δ häufig ≤ L/250.")));
+        if let Some(a) = beam.actions.iter().find(|a| a.id == "Q-office")
+            .or_else(|| beam.actions.iter().find(|a| a.kind == "imposed" && a.stage == "composite" && a.q_area_pa.abs() > 1e-9))
+        {
+            let q_leaf = format!("actions[id={}].qAreaPa", a.id);
+            let q_cur = a.q_area_pa.abs();
+            // Permanent share can dominate M; zero the imposed lead so δ falls with M_q removal when that is enough,
+            // otherwise span remedy above clears alone / sequentially.
+            let q_req = q_cur * ratio * 0.5;
+            sls = sls.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
+                lc("Reduce imposed load so frequent deflection ≤ L/250.", "Nutzlast reduzieren, damit δ häufig ≤ L/250.")));
+        }
     }
     report.push(sls.build());
 
     // SLS quasi-permanent — crack control EN 1994-1-1 §7.4 with n_L
     let as_min = part_1_1::as_min_hogging_m2_per_m(&beam, b_eff);
     let s_max_bar = part_1_1::max_bar_spacing_m(beam.wk_limit_m.max(0.0003));
-    let crack_demand = (as_min / beam.as_hogging_m2_per_m.max(1e-12)).max(beam.bar_spacing_m / s_max_bar.max(1e-9));
     // Long-term modular ratio scales tension demand under QP hogging
     let qp_hog = sls_qp.m_hog_nm.abs().max(sls_qp.m_nm.abs() * 0.05);
     let n_l_fac = 0.9 + 0.1 * (n_l / 10.0).min(2.0);
-    let crack_util = crack_demand * n_l_fac * (1.0 + qp_hog / (sls_char.m_nm.abs().max(1.0) + qp_hog));
+    let load_fac = 1.0 + qp_hog / (sls_char.m_nm.abs().max(1.0) + qp_hog);
+    let scale = n_l_fac * load_fac;
+    // Limits shared with remedies so util = provided/limit is exactly 1.0 at equality (≤ Pass).
+    let as_limit = as_min * scale.max(1.0);
+    let s_limit = s_max_bar / scale.max(1.0);
+    let crack_util = (as_limit / beam.as_hogging_m2_per_m.max(1e-12)).max(beam.bar_spacing_m / s_limit.max(1e-12));
     let mut crack = CheckResult::assess(
         format!("en1994.7.4.crack.{}", beam.id), "DIN EN 1994-1-1",
         ClauseId::new("EN 1994-1-1", "§7.4 / EN 1992-1-1 §7.3", "7.4"), beam_ref(&beam, "asHoggingM2PerM"),
@@ -421,13 +477,17 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("{}: n_L={n_l:.2}; A_s,min={:.1} mm²/m, vorhanden {:.1}; Stababstand={:.0}/{:.0} mm.", sls_qp.label_de, as_min * 1e6, beam.as_hogging_m2_per_m * 1e6, beam.bar_spacing_m * 1000.0, s_max_bar * 1000.0),
     ));
     if beam.as_hogging_m2_per_m < as_min || crack_util > 1.0 {
-        let as_req = (as_min * crack_util.max(1.0)).max(as_min);
-        crack = crack.remedy(Remedy::at_least(beam_ref(&beam, "asHoggingM2PerM"), Quantity::new(QuantityKind::Area, beam.as_hogging_m2_per_m), Quantity::new(QuantityKind::Area, as_req),
-            lc(format!("Provide ≥ {:.0} mm²/m hogging reinforcement.", as_req * 1e6), format!("≥ {:.0} mm²/m Stützbewehrung vorsehen.", as_req * 1e6))));
-    }
-    if beam.bar_spacing_m > s_max_bar {
-        crack = crack.remedy(Remedy::at_most(beam_ref(&beam, "barSpacingM"), Quantity::length_m(beam.bar_spacing_m), Quantity::length_m(s_max_bar),
-            lc(format!("Reduce bar spacing to ≤ {:.0} mm.", s_max_bar * 1000.0), format!("Stababstand auf ≤ {:.0} mm verringern.", s_max_bar * 1000.0))));
+        let as_req = as_limit.max(as_min);
+        if beam.as_hogging_m2_per_m < as_req {
+            crack = crack.remedy(Remedy::at_least(beam_ref(&beam, "asHoggingM2PerM"), Quantity::new(QuantityKind::Area, beam.as_hogging_m2_per_m), Quantity::new(QuantityKind::Area, as_req),
+                lc(format!("Provide ≥ {:.0} mm²/m hogging reinforcement.", as_req * 1e6), format!("≥ {:.0} mm²/m Stützbewehrung vorsehen.", as_req * 1e6))));
+        }
+        // Place spacing on the passing side of the ≤ limit (not exact FP equality of inverse products).
+        let s_req = s_limit * 0.98;
+        if beam.bar_spacing_m > s_req {
+            crack = crack.remedy(Remedy::at_most(beam_ref(&beam, "barSpacingM"), Quantity::length_m(beam.bar_spacing_m), Quantity::length_m(s_req),
+                lc(format!("Reduce bar spacing to ≤ {:.0} mm.", s_req * 1000.0), format!("Stababstand auf ≤ {:.0} mm verringern.", s_req * 1000.0))));
+        }
     }
     report.push(crack.build());
 }
@@ -538,7 +598,15 @@ fn evaluate_slab(report: &mut CheckReport, doc: &En1994Snapshot, slab: &Composit
         format!("{}: m_Ed = {:.2} kNm/m, m_Rd = {:.2} kNm/m (inkl. A_p aus t).", uls.label_de, m_ed / 1e3, m_rd / 1e3),
     ));
     if m_ed > m_rd {
-        let as_need = slab.as_m2_per_m * m_ed / m_rd.max(1.0);
+        let p = AnnexParams::for_annex(annex);
+        let d = (slab.concrete_thickness_m - 0.02).max(0.05);
+        let f_yd = 500e6 / p.gamma_s;
+        let a_p = slab.sheeting.a_p_m2_per_m();
+        let f_yp = 280e6 / p.gamma_m0.max(1.0);
+        let m_sheet = a_p * f_yp * (slab.sheeting.height_m / 2.0);
+        let m_from_sheet = 0.5 * m_sheet;
+        let as_from_moment = (m_ed - m_from_sheet).max(0.0) / (f_yd * 0.9 * d).max(1e-12);
+        let as_need = as_from_moment.max(slab.as_m2_per_m * m_ed / m_rd.max(1.0));
         mb = mb.remedy(Remedy::at_least(SubjectRef::new(slab.id.clone(), slab_path(slab, "asM2PerM"), label.clone()), Quantity::new(QuantityKind::Area, slab.as_m2_per_m), Quantity::new(QuantityKind::Area, as_need),
             lc(format!("Increase slab reinforcement to ≥ {:.0} mm²/m.", as_need * 1e6), format!("Plattenbewehrung auf ≥ {:.0} mm²/m erhöhen.", as_need * 1e6))));
     }

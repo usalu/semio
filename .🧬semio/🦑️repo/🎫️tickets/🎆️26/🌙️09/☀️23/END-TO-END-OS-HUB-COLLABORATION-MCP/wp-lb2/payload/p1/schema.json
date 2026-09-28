@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/contract/editing/details-arena-headroom.json",
   "title": "DetailsArenaHeadroomFixture",
-  "description": "Cases for the stdio details panel under a short process-wide UiValue arena: a csv-shaped document, the collections left free while it renders, and whether the details window renders whole or shortened (never refused).",
+  "description": "Cases for the stdio details panel under a short process-wide UiValue arena: a csv-shaped document, the headroom left free while it renders (a share of what its complete render measurably holds), and whether the details window renders whole or shortened (never refused).",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "section", "controller", "cases"],
   "properties": {
-    "schema": { "const": "semio.stdio.details-arena-headroom/v1" },
+    "schema": { "const": "semio.stdio.details-arena-headroom/v2" },
     "section": { "type": "string", "minLength": 1, "description": "Node key of the details section whose rows are counted." },
     "controller": { "type": "string", "pattern": "^s\\.stdio\\.[a-z0-9-]+@[^#]+#editor$" },
     "cases": {
@@ -16,13 +16,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "records", "fields", "typed", "freeCollections", "expect"],
+        "required": ["id", "records", "fields", "typed", "headroom", "expect"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
           "records": { "type": "integer", "minimum": 1 },
           "fields": { "type": "integer", "minimum": 1 },
           "typed": { "type": "boolean", "description": "Schema-bound collections (a creation template, no untyped add controls)." },
-          "freeCollections": { "type": "integer", "minimum": 0, "description": "Arena collections left free while the details window renders." },
+          "headroom": { "enum": ["none", "third", "half", "complete-plus-one-row"], "description": "Arena collections left free while the details window renders, relative to the collections its complete render holds (none, a third, half, or all of them plus one priced row)." },
           "expect": { "enum": ["complete", "shortened"] }
         }
       }

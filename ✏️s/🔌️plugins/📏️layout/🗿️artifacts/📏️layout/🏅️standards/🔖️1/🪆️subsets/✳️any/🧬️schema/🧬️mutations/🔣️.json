@@ -86,6 +86,43 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-page-margins/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-paragraph-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-text-frame/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-layer/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-character-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-character-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-character-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-parent-page/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-spread/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-parent/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-guides/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-story-runs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-link/schema.json"
     }
   ]
 }
+

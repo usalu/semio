@@ -40,11 +40,11 @@ const repoRoot = getWorkspaceRoot();
 
 import { readPackageName } from "../../../🔌️plugin/🏗️build/📦️materialization/🟦️.ts";
 
-import { runStudioE2eVerify } from "../🎬️studio/🟦️.ts";
+import { runHomeE2eCli, runStudioE2eVerify } from "../🎬️studio/🟦️.ts";
 
 import { CATALOG_SMOKE_DEFAULT_OUT_REL, catalogSmokeExitCode, runCatalogSmokeVerify } from "../🔬️catalog-smoke/🟦️.ts";
 
-import { runCollabE2eVerify } from "../🤝️collaboration/🟦️.ts";
+import { runCollabE2eCli } from "../🤝️collaboration/🟦️.ts";
 
 import { runProgramMatrixCli } from "../🧮️program-matrix/🟦️.ts";
 
@@ -62,6 +62,8 @@ import { runIdleBudgetCli } from "../💤️idle-budget/🟦️.ts";
 
 import { runInteractionLatencyCli } from "../⏱️interaction-latency/🟦️.ts";
 
+import { runBootBudgetCli } from "../🥾️boot-budget/🟦️.ts";
+
 import { PluginCapabilityLintScript } from "../🧹️capability-policy/🟦️.ts";
 
 
@@ -74,7 +76,7 @@ class VerifyScript extends BundleScript {
     const studioUrl = process.env.S_STUDIO_URL ?? `http://127.0.0.1:${port}/`;
     const timeoutMs = Number(process.env.S_STUDIO_E2E_TIMEOUT_MS ?? 300_000);
     if (segments[0] === "collab") {
-      await runCollabE2eVerify();
+      await runCollabE2eCli(segments.slice(1));
       return;
     }
     if (segments[0] === "hub-sweep") {
@@ -85,12 +87,20 @@ class VerifyScript extends BundleScript {
       await runIoMatrixCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🚪️io-matrix"), segments.slice(1));
       return;
     }
+    if (segments[0] === "home") {
+      await runHomeE2eCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🏠️home-e2e"), segments.slice(1));
+      return;
+    }
     if (segments[0] === "two-human") {
       await runTwoHumanCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/👥️two-human"), segments.slice(1));
       return;
     }
     if (segments[0] === "latency") {
       await runInteractionLatencyCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/⏱️interaction-latency"), segments.slice(1));
+      return;
+    }
+    if (segments[0] === "boot") {
+      await runBootBudgetCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🥾️boot-budget"), segments.slice(1));
       return;
     }
     if (segments[0] === "idle") {

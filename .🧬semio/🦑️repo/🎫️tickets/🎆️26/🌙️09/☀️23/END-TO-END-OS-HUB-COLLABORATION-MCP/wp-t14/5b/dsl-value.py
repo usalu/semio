@@ -29,7 +29,7 @@ def text_of(path):
 
 def exact(path, old, new):
     text = text_of(path)
-    if new.strip() and new in text and old not in text:
+    if new.strip() and new in text and (old in new or old not in text):
         return
     if text.count(old) != 1:
         problems.append(f"{path.relative_to(ROOT)}: anchor found {text.count(old)} times: {old.strip()[:80]!r}")
@@ -46,7 +46,8 @@ if "dsl_value_literal_matches_serde_json_and_keeps_written_order" not in text_of
     edits[LAW] = text_of(LAW).rstrip("\n") + '''
 
 /// 🧾️ `dsl_value!` equals `serde_json::json!` (third-party oracle) on every literal form — null, booleans, signed, unsigned
-/// and fractional numbers, nested arrays and objects, `const` and parenthesized expression keys, trailing commas — and,
+/// and fractional numbers, nested arrays and objects, `const` and parenthesized expression keys, trailing commas, borrowed
+/// values (`&String`, `&[String]`, `&&str`) — and,
 /// unlike `json!` without `preserve_order`, keeps object entries in written order.
 #[test]
 fn dsl_value_literal_matches_serde_json_and_keeps_written_order() {
@@ -63,6 +64,10 @@ fn dsl_value_literal_matches_serde_json_and_keeps_written_order() {
     assert_eq!(crate::dsl_value!([]), DslValue::Array(Vec::new()));
     assert_eq!(crate::dsl_value!({}), DslValue::Object(Vec::new()));
     assert_eq!(serde_json::Value::from(&crate::dsl_value!([[1, [2]], { "k": [3] }])), serde_json::json!([[1, [2]], { "k": [3] }]));
+    let borrowed_text = &names[0];
+    let borrowed_list: &[String] = &names;
+    let borrowed_str: &&str = &"x";
+    assert_eq!(serde_json::Value::from(&crate::dsl_value!({ "t": borrowed_text, "l": borrowed_list, "s": borrowed_str })), serde_json::json!({ "t": borrowed_text, "l": borrowed_list, "s": borrowed_str }));
 }
 '''
 KERNEL = ROOT / "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs"

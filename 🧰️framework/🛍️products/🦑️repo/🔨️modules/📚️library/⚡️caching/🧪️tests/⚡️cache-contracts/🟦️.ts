@@ -145,7 +145,6 @@ export async function testCommandInputs(workspace: string, output: string): Prom
     for (const path of cases.commandRouter.excluded) assert.ok(!routerPaths.includes(path), `unrelated native command input ${path}`);
     const routerOracle = await require("esbuild").build({ entryPoints: [join(root, cases.commandRouter.entry)], absWorkingDir: root, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
     assert.deepEqual(routerPaths.sort(), Object.keys(routerOracle.metafile.inputs).sort(), "Local native router closure must match the independent esbuild oracle");
-    console.log("[DEBUG] Native input closure preserves rustc-consumed assets, excludes frontend and separate tests, and matches the esbuild command import oracle PASS");
     
     const boundaries = JSON.parse(readFileSync(join(fixtures, "command-boundaries/🧫️cases.json"), "utf8"));
     assert.equal(require("jsonschema").validate(boundaries, JSON.parse(readFileSync(join(fixtures, "command-boundaries/🛂️schema/🔣️.json"), "utf8"))).valid, true);
@@ -183,7 +182,6 @@ export async function testBrowserModuleRelocation(workspace: string): Promise<vo
   }
   const bundle = await require("esbuild").build({ entryPoints: [join(directory, "🟦️.ts")], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
   assert.equal(Object.keys(bundle.metafile.inputs).length, 1);
-  console.log(`[DEBUG] ${fixture.cases.length} browser relocation vectors match es-module-lexer import spans with a single-file production boundary PASS`);
 }
 
 /** 🎪️ Keeps Vite's runtime description independent of build commands and brand implementations. */
@@ -251,7 +249,6 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   }
   const command = readFileSync(join(directory, "../..", pipeline.command), "utf8");
   for (const forbidden of [...pipeline.forbiddenCommandImports, ...pipeline.forbiddenOrchestration]) assert.equal(command.includes(forbidden), false, `Demonstrator hides ${forbidden}`);
-  console.log(`[DEBUG] Demonstrator runtime catalog, full component union and ${inputs.length}-file pure import boundary PASS`);
 }
 
 /** 🕸️ Compares runtime selection with an independent directed-graph traversal. */
@@ -310,8 +307,6 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
     }
     checked++;
   }
-  console.log("[DEBUG] Runtime component closure includes transitive contributions, unions and hosts and matches graphlib PASS");
-  console.log(`[DEBUG] ${checked} real playground preparation targets match the independent Cargo metadata runtime closure PASS`);
 }
 
 /** 🗂️ Keeps producers inside the workspace supplied by Nx's own task environment. */
@@ -332,7 +327,6 @@ export function testWorkspaceRoots(workspace: string, output: string): void {
       assert.equal(child.stdout.toString(), row.expected === "workspace" ? workspace : root, row.name);
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
-  console.log("[DEBUG] Workspace resolution respects Nx's native task environment before standalone hints PASS");
 }
 
 /** 🧶️ Validates location-sensitive locked dependencies against Nx's native hash planner. */
@@ -386,7 +380,6 @@ export async function testBunDependencies(workspace: string, output: string): Pr
     for (const row of cases.resolutions) assert.equal(Bun.resolveSync(row.name, location(row.from)), join(location(row.key), "📜️script.ts"), `Bun resolver: ${row.from} -> ${row.name}`);
     for (const row of cases.importers) { mkdirSync(dirname(join(root, row.file)), { recursive: true }); assert.equal(Bun.resolveSync(row.name, dirname(join(root, row.file))), join(location(row.key), "📜️script.ts"), `Bun importer: ${row.file}`); }
   } finally { rmSync(root, { recursive: true, force: true }); }
-  console.log("[DEBUG] Bun dependency locations, cycles, aliases, peers, optional platforms and scoped patch bytes match native Nx hash plans PASS");
 }
 
 /** 🧬️ Compares prerequisite closure with Cargo's independent package and dependency model. */
@@ -537,7 +530,6 @@ writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
     }
     const declared = cacheInternals.projectInputs({ name: "fixture", namedInputs: { nativeSources: ["{workspaceRoot}/external.bin"] }, targets: {} }, "app", root, new Map());
     assert.ok(declared.nativeTestSources.includes("{workspaceRoot}/external.bin"), "tests inherit declared production native inputs");
-    console.log("[DEBUG] Native preparation production/test dependency closure matches Cargo metadata and declared inputs propagate to tests PASS");
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
 
@@ -567,7 +559,6 @@ export function testNxDaemonDiagnostics(workspace: string, output: string): void
   try {
     const child = Bun.spawnSync(["node", "--eval", source], { cwd: workspace, env: { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(root, "workspace-data") }, stdout: "pipe", stderr: "pipe", timeout: 10000 });
     assert.equal(child.exitCode, 0, child.stdout.toString() + child.stderr.toString());
-    console.log("[DEBUG] Installed Nx daemon diagnostics preserve the tail using bounded reads PASS");
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
 
@@ -592,7 +583,6 @@ export function testNxDaemonTaskEnvironment(workspace: string): void {
   const env = { ...process.env, NX_LOAD_DOT_ENV_FILES: "true" };
   const child = Bun.spawnSync(["node", "--eval", source], { cwd: workspace, env, stdout: "pipe", stderr: "pipe", timeout: 10000 });
   assert.equal(child.exitCode, 0, child.stdout.toString() + child.stderr.toString());
-  console.log("[DEBUG] Nx daemon graph identity ignores task-scoped environment and preserves real graph controls PASS");
 }
 
 /** 📓️ Checks installed Nx retention against native append descriptors and unowned path boundaries. */
@@ -633,7 +623,6 @@ export function testNxDaemonRetention(workspace: string, output: string): void {
   fs.renameSync(actualDirectory,savedDirectory); fs.symlinkSync(savedDirectory,actualDirectory,process.platform === "win32" ? "junction" : "dir");
   fs.copyFileSync(path.join(savedDirectory,"outside.log"),filename); logger.pruneDaemonLog(); assert.equal(fs.statSync(filename).size,vector.limitBytes*2);
   fs.rmSync(actualDirectory); fs.renameSync(savedDirectory,actualDirectory);
-  console.log("[DEBUG] Nx daemon retention: repeated native writes are bounded, tail preserved and existing append descriptor stays live PASS");
 `;
   try {
     const child = Bun.spawnSync(["node", "--eval", code], { cwd: workspace, env: { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(directory, "workspace-data") }, stdout: "pipe", stderr: "pipe", timeout: 10000 });
@@ -771,9 +760,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     await testDependencyBootstrap(root, ticketOutput(root, []));
     await testNxTooling(root, ticketOutput(root, []));
     await testDependencyCancellation(root, ticketOutput(root, []));
-    console.log("[DEBUG] Native command contracts passed; collecting project inventory");
     const result = await (await import("../../📇️inventory/🧪️tests/🕸️coverage/🟦️.ts")).testNativeInventory(root, inventory), contracts = result.projects;
-    console.log(`[DEBUG] Project inventory collected: ${contracts.length} projects`);
     const toml = createRequire(testSource.url)("@iarna/toml");
     let componentPackages = 0;
     const componentLaunchers: { project: string; pluginId: string }[] = [];
@@ -851,7 +838,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.deepEqual(session.outputs, [`{projectRoot}/dist/sessions/${variant}`]);
       assert.ok(session.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
     }
-    console.log("[DEBUG] Component and activation contracts passed; checking editor and playground contracts");
     const registryRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
     const { generatePlaygroundRegistry } = await import(join(registryRoot, "🎮️playground/🔎️discovery/🟦️.ts"));
     const { buildPlaygroundSession } = await import(join(registryRoot, "🎮️playground/🧭️session/🟦️.ts"));
@@ -938,7 +924,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.deepEqual(target.outputs, [entry.output]);
       assert.ok(contracts.find((project) => project.name === entry.consumerProject)!.targets[entry.consumerTarget].dependsOn.includes(`${entry.project}:${entry.target}`));
     }
-    console.log("[DEBUG] Editor and playground contracts passed; checking lifecycle and compiler contracts");
     const mcpRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp";
     const mcp = await import(join(root, mcpRoot, "🟦️.ts"));
     const binaryVectors = JSON.parse(readFileSync(join(root, mcpRoot, "🎚️config/🧱️binary-gate.json"), "utf8"));
@@ -1095,7 +1080,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     }
     const ticket = process.env.SEMIO_TICKET_DIR;
     assert.ok(ticket, "SEMIO_TICKET_DIR must point to the active ticket for generated test files");
-    console.log("[DEBUG] Lifecycle and compiler contracts passed; checking source discovery and cancellation");
     const fixture = join(resolve(root, ticket), "🗑️generated", "policy-contract");
     const rustFixture = join(fixture, "rust-inputs");
     for (const [path, contents] of Object.entries(vectors.rust.files)) { mkdirSync(dirname(join(rustFixture, path)), { recursive: true }); writeFileSync(join(rustFixture, path), contents as string); }

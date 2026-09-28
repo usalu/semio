@@ -212,5 +212,4 @@ test("registration only: coordinate progress has one exact route package and lau
 afterAll(() => {
   const identities = [...observations].map(([path, before]) => ({ path, sha256: createHash("sha256").update(before).digest("hex"), size: before.length, stable: before.equals(input(path)) }));
   expect(identities.every((entry) => entry.stable)).toBe(true);
-  console.log("[DEBUG] reference-coordinate-progress inputs " + JSON.stringify(identities));
 });

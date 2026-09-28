@@ -1050,6 +1050,140 @@
           "5": "skipped"
         }
       }
+    },
+    {
+      "name": "a hub provider hands its launcher's admin capability to the hubAdmin checks",
+      "options": {
+        "hub": null,
+        "serve": null
+      },
+      "providers": {
+        "hub": "ready"
+      },
+      "adminCapability": "published",
+      "steps": [
+        {
+          "id": "one",
+          "mode": "serial",
+          "gatesRest": false,
+          "checks": [
+            {
+              "id": "viewer",
+              "criteria": [
+                "3.4"
+              ],
+              "requires": [
+                "hub",
+                "hubAdmin"
+              ],
+              "browsers": 1
+            },
+            {
+              "id": "census",
+              "criteria": [
+                "5.9"
+              ],
+              "requires": [],
+              "browsers": 0
+            }
+          ]
+        }
+      ],
+      "exits": {
+        "viewer": 0,
+        "census": 0
+      },
+      "records": {},
+      "expected": {
+        "verdict": "pass",
+        "statuses": {
+          "viewer": "pass",
+          "census": "pass"
+        },
+        "executed": [
+          "viewer",
+          "census"
+        ],
+        "provisioned": [
+          "hub"
+        ],
+        "stopped": [
+          "hub"
+        ],
+        "outcomes": {
+          "1": "skipped",
+          "2": "skipped",
+          "3": "pass",
+          "4": "skipped",
+          "5": "pass"
+        }
+      }
+    },
+    {
+      "name": "a hub provider without an admin capability blocks only the hubAdmin checks",
+      "options": {
+        "hub": null,
+        "serve": null
+      },
+      "providers": {
+        "hub": "ready"
+      },
+      "adminCapability": "missing",
+      "steps": [
+        {
+          "id": "one",
+          "mode": "serial",
+          "gatesRest": false,
+          "checks": [
+            {
+              "id": "viewer",
+              "criteria": [
+                "3.4"
+              ],
+              "requires": [
+                "hub",
+                "hubAdmin"
+              ],
+              "browsers": 1
+            },
+            {
+              "id": "census",
+              "criteria": [
+                "5.9"
+              ],
+              "requires": [],
+              "browsers": 0
+            }
+          ]
+        }
+      ],
+      "exits": {
+        "census": 0
+      },
+      "records": {},
+      "expected": {
+        "verdict": "blocked",
+        "statuses": {
+          "viewer": "blocked",
+          "census": "pass"
+        },
+        "executed": [
+          "census"
+        ],
+        "provisioned": [
+          "hub"
+        ],
+        "stopped": [
+          "hub"
+        ],
+        "outcomes": {
+          "1": "skipped",
+          "2": "skipped",
+          "3": "blocked",
+          "4": "skipped",
+          "5": "pass"
+        }
+      }
     }
   ]
 }

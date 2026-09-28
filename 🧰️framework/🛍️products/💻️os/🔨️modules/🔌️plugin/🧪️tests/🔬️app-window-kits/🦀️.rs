@@ -283,7 +283,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_projects_independent_row_and_column_windows_with_logical_addresses() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis/🔣️.json")).expect("two-axis fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis/🔣️.json")).expect("two-axis fixture");
         let row_total = fixture["rowTotal"].as_u64().unwrap() as usize;
         let column_total = fixture["columnTotal"].as_u64().unwrap() as usize;
         let row_offset = fixture["rowOffset"].as_u64().unwrap() as u32;
@@ -336,8 +336,8 @@ mod window_kits_tests {
         assert_eq!(input.value.as_str(), "r400c702");
         let binding = row.children[2].bindings.iter().find(|binding| binding.trigger == Trigger::Commit).expect("commit");
         let Some(UiValue::Map(args)) = &binding.args else { panic!("args") };
-        assert!(matches!(args.iter().find_map(|(key, value)| (key.as_str() == "row").then_some(value)), Some(UiValue::Number(value)) if *value == 400.0));
-        assert!(matches!(args.iter().find_map(|(key, value)| (key.as_str() == "column").then_some(value)), Some(UiValue::Number(value)) if *value == 702.0));
+        assert!(matches!(args.iter().find_map(|(key, value)| (key.as_str() == "row").then_some(value)), Some(UiValue::Number(value)) if value == 400.0));
+        assert!(matches!(args.iter().find_map(|(key, value)| (key.as_str() == "column").then_some(value)), Some(UiValue::Number(value)) if value == 702.0));
         assert_eq!(fixture["cells"][0][2], "r400c702");
     }
 

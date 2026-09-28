@@ -62,7 +62,6 @@ test("Chromium preserves the exact captured sibling when a new scene is inserted
     const events = await page.evaluate(() => (window as unknown as { siblingEvents: { receiver: number; type: string }[] }).siblingEvents);
     expect(events).toEqual(plan.events.map((type) => ({ receiver: plan.receiver, type })));
     expect(new Set(events.filter(({ type }) => type === "pointerup").map(({ receiver }) => receiver)).size).toBe(plan.terminalReceivers);
-    console.info("[DEBUG] Chromium kept sibling B captured through A,B to A,C,B and delivered one outside terminal release");
   } finally {
     await browser.close();
   }
@@ -109,7 +108,6 @@ test("Chromium retires every pointer capture with its removed scene and admits a
     await page.mouse.down();
     expect(await page.evaluate(() => (window as unknown as { freshCaptured: boolean }).freshCaptured)).toBe(true);
     await page.mouse.up();
-    console.info("[DEBUG] Chromium retired sixteen removed-node pointer captures and accepted the successor");
   } finally {
     await browser.close();
   }
@@ -210,7 +208,6 @@ test("Chromium captures the topmost scene through release outside every scene", 
       expect(observed.menuOpen, scenario.name).toBe(scenario.menuOpen);
       expect(observed.deltas, scenario.name).toEqual(scenario.events.includes("pointermove") ? [fixture.moveDelta] : []);
     }
-    console.log("[DEBUG] Chromium matched captured scene, chrome, modal, wheel, secondary, cancelled, refreshed, and replaced owner sequences");
   } finally {
     await browser.close();
   }

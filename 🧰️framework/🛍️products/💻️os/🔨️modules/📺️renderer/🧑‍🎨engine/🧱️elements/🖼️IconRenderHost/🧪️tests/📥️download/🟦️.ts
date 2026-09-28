@@ -26,7 +26,6 @@ it("delivers the real icon data-url download through Chromium with exact UTF-8 b
       expect(download.suggestedFilename()).toBe(sample.filename);
       expect(path).not.toBeNull();
       expect(readFileSync(path!)).toEqual(Buffer.from(sample.value, "utf8"));
-      console.log(`[DEBUG] Chromium saved icon export ${sample.filename} with ${Buffer.byteLength(sample.value)} exact bytes`);
       await download.delete();
     }
   } finally { await browser.close(); }

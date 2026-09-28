@@ -1217,10 +1217,11 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     &format!("Außergewöhnlich ACC-6.11: |M_Ed|={:.1} kNm ≤ M_Rd={:.1} kNm (γ_c={:.2}, γ_s={:.2}, {})", acc_e.m_ed.abs() / 1e3, m_rd_acc / 1e3, params_acc.gamma_c, params_acc.gamma_s, acc_e.combination_id),
                 ));
             if acc_e.m_ed.abs() > m_rd_acc {
+                let d_req = d * (acc_e.m_ed.abs() / m_rd_acc.max(1.0)).max(1.0) * 1.05;
                 flex_acc = flex_acc.remedy(Remedy::at_least(
                     member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                     length_m(d),
-                    length_m(d * 1.2),
+                    length_m(d_req),
                     L("Increase effective depth for accidental combination.", "Statische Nutzhöhe für außergewöhnliche Kombination erhöhen."),
                 ));
             }
@@ -1736,7 +1737,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         if sig_s > lim_s {
             if let Some(layer) = member.longitudinal.first() {
                 let a_need = a_s * sig_s / lim_s.max(1e-12);
-                let d_req = (layer.diameter * (a_need / a_s.max(1e-12)).sqrt()).max(layer.diameter * 1.05);
+                let d_req = (layer.diameter * (a_need / a_s.max(1e-12)).sqrt() * 1.2).max(layer.diameter * 1.05);
                 ss = ss.remedy(Remedy::at_least(
                     member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
                     length_m(layer.diameter),
@@ -1758,11 +1759,12 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             &format!("Betondruckspannung σ_c={:.1} MPa ≤ 0,60 f_ck unter charakteristischer GZG ({})", sig_c / 1e6, sc.combination_id),
         ));
         if sig_c > lim_c {
+            let d_req = d * (sig_c / lim_c.max(1e-12)).max(1.0) * 1.05;
             scc = scc.remedy(Remedy::at_least(
-                member_ref(doc, member, &member_path(&member.id, "height")),
-                length_m(h),
-                length_m(h * 1.1),
-                L("Increase section height to reduce concrete stress.", "Querschnittshöhe erhöhen, um die Betonspannung zu senken."),
+                member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
+                length_m(d),
+                length_m(d_req),
+                L("Increase effective depth to reduce concrete stress.", "Statische Nutzhöhe erhöhen, um die Betonspannung zu senken."),
             ));
         }
         out.push(scc.build());
@@ -1778,10 +1780,11 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 &format!("σ_c={:.1} MPa ≤ 0,45 f_ck={:.1} MPa für lineares Kriechen ({})", sig_c / 1e6, lim / 1e6, qp.combination_id),
             ));
         if sig_c > lim {
+            let d_req = d * (sig_c / lim.max(1e-12)).max(1.0) * 1.05;
             qp_c = qp_c.remedy(Remedy::at_least(
                 member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                 length_m(d),
-                length_m(d * 1.1),
+                length_m(d_req),
                 L("Increase depth to satisfy creep stress limit.", "Nutzhöhe erhöhen für Kriechspannungsgrenze."),
             ));
         }
@@ -2069,7 +2072,7 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
             &format!("Betonausbruchkegel: N_Ed={:.1} kN ≤ N_Rd,c={:.1} kN", n_ed / 1e3, n_rd_c / 1e3),
         ));
     if n_ed > n_rd_c {
-        let h_req = anchor.h_ef * (n_ed / n_rd_c).powf(2.0 / 3.0);
+        let h_req = anchor.h_ef * (n_ed / n_rd_c.max(1e-12)).powf(2.0 / 3.0) * 1.05;
         c = c.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
             length_m(anchor.h_ef), length_m(h_req),
@@ -2104,10 +2107,22 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
             &format!("Spalten: N_Ed={:.1} kN ≤ N_Rd,sp={:.1} kN", n_ed / 1e3, n_rd_sp / 1e3),
         ));
     if n_ed > n_rd_sp {
+        let ratio = (n_ed / n_rd_sp.max(1e-12)).max(1.0) * 1.05;
+        let h_cap = (anchor.c1 / 1.5).max(anchor.h_ef);
+        let gain_at_cap = (h_cap / anchor.h_ef.max(1e-12)).powf(1.5);
+        let h_req = if gain_at_cap + 1e-12 >= ratio {
+            anchor.h_ef * ratio.powf(2.0 / 3.0)
+        } else {
+            let need_sqrt_h = ratio * anchor.h_ef.powf(1.5) * 1.5 / anchor.c1.max(1e-12);
+            need_sqrt_h.powi(2)
+        };
         sp = sp.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()),
-            length_m(anchor.c1), length_m(anchor.c1 * 1.25),
-            L("Increase edge distance against splitting.", "Randabstand gegen Spalten vergrößern."),
+            SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
+            length_m(anchor.h_ef), length_m(h_req),
+            L(
+                &format!("Increase effective embedment to ≥ {:.0} mm against splitting.", h_req * 1000.0),
+                &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm gegen Spalten erhöhen.", h_req * 1000.0),
+            ),
         ));
     }
     out.push(sp.build());
@@ -2158,10 +2173,33 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
             &format!("Interaktion: (N/N_Rd)^1,5+(V/V_Rd)^1,5={:.3} ≤ 1 (N_Ed={:.1} kN, V_Ed={:.1} kN)", inter, n_ed / 1e3, v_ed / 1e3),
         ));
     if inter > 1.0 {
+        let scale = inter.max(1.0) * 1.15;
+        let h_req = anchor.h_ef * scale.powf(2.0 / 3.0);
+        let c_req = anchor.c1 * scale.powf(2.0 / 3.0);
+        let a_req = anchor.a_s * scale;
+        ix = ix.remedy(Remedy::at_least(
+            SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
+            length_m(anchor.h_ef), length_m(h_req),
+            L(
+                &format!("Increase effective embedment to ≥ {:.0} mm for tension–shear interaction.", h_req * 1000.0),
+                &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm für Zug–Querkraft-Interaktion erhöhen.", h_req * 1000.0),
+            ),
+        ));
+        ix = ix.remedy(Remedy::at_least(
+            SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()),
+            length_m(anchor.c1), length_m(c_req),
+            L(
+                &format!("Increase edge distance to ≥ {:.0} mm for tension–shear interaction.", c_req * 1000.0),
+                &format!("Randabstand auf ≥ {:.0} mm für Zug–Querkraft-Interaktion erhöhen.", c_req * 1000.0),
+            ),
+        ));
         ix = ix.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label),
-            area_m2(anchor.a_s), area_m2(anchor.a_s * inter),
-            L("Increase anchor capacity for tension–shear interaction.", "Dübeltragfähigkeit für Zug–Querkraft-Interaktion erhöhen."),
+            area_m2(anchor.a_s), area_m2(a_req),
+            L(
+                &format!("Increase anchor steel area to ≥ {:.1} mm² for tension–shear interaction.", a_req * 1e6),
+                &format!("Dübelstahlquerschnitt auf ≥ {:.1} mm² für Zug–Querkraft-Interaktion erhöhen.", a_req * 1e6),
+            ),
         ));
     }
     out.push(ix.build());

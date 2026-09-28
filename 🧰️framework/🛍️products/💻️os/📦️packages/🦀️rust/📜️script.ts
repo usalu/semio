@@ -751,9 +751,10 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
             [...segment.physicalCommitsAfter].sort((a: number, b: number) => a - b),
             segment.physicalCommitsAfter,
           );
-          assert.equal(segment.physicalCommitsAfter.at(-1), segment.frames.length - 1);
+          const frames = segment.frames.flatMap((frame: any) => Array.from({ length: frame.repeat ?? 1 }, () => frame));
+          assert.equal(segment.physicalCommitsAfter.at(-1), frames.length - 1);
           let current: { id: string; kinds: string[] } | null = null;
-          for (const [ordinal, frame] of segment.frames.entries()) {
+          for (const [ordinal, frame] of frames.entries()) {
             if (frame.kind === "header") {
               if (ordinal !== 0 || current !== null) throw "corrupt";
               continue;
@@ -802,7 +803,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
       ],
     );
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
-    assert(source.includes("struct WalTransactionGate") && source.includes("frames: [Option<WalRecordFrame>; 64]"), "logical admission must retain fixed frame spans, not owned decoded records");
+    assert(source.includes("struct WalTransactionGate") && source.includes("frames: Vec<WalRecordFrame>") && source.includes("self.frames.len() >= WAL_TRANSACTION_RECORDS_MAX") && source.includes("count > WAL_TRANSACTION_RECORDS_MAX"), "logical admission must retain frame spans (not owned decoded records) up to the writer's own transaction bound");
     assert(source.includes("WalCommittedCursor") && source.includes("WalCommittedTransaction"), "materializers need one shared borrowed committed cursor");
     assert(source.includes("enum WalVerifiedFrameStep"), "verified replay must yield after each physical frame without repeating whole-frame CRC work");
     assert(source.includes("trait WalImmutableByteSource"), "History must share the authenticated frame source without borrowing another field across polls");
@@ -1501,7 +1502,7 @@ class DurableGroupJournalCheckScript extends BundleScript {
     const sink = artifactSource.slice(artifactSource.indexOf("struct ArtifactDurableGroupJournalSinkV1"), artifactSource.indexOf("type ArtifactBuildFuture"));
     assert(sink.includes("NotSubmitted") && sink.includes("Awaiting") && sink.includes("Failed") && sink.includes("Committed") && sink.includes("terminal_is_empty"));
     assert(!sink.includes("block_on"));
-    assert(walSource.includes("pub(crate) fn preflight_submit(&self, records: &WalRecordBatch)") && walSource.includes("wal transaction exceeds readable segment"));
+    assert(walSource.includes("pub(crate) fn preflight_submit(&self, commands: &[Vec<u8>], records: &WalRecordBatch)") && walSource.includes("wal transaction exceeds readable segment"));
     assert(engineSource.includes("pub fn durable_group_journal_sink(&self, now_ms: u64)"));
     const laws = [
       "db_artifact::tests::document_authority_durable_group_journal_commits_one_exact_fsync_event",

@@ -5084,7 +5084,9 @@ const HUB_CATCH_UP_ORIGIN: &str = "hub.catch-up";
 /// holds the document's write gate, so the frontier read first is exactly the one the submit starts
 /// from: a receipt that does not advance `commit_seq` is the engine's idempotent replay of an
 /// already-committed `command_id` — acknowledged again for the resending client, never relayed as new.
-async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>) {
+/// An accepted batch's operations join `gate`'s replay guard; a refused one's never do, so its resend
+/// is admitted again.
+async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::SecurityGate, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>) {
     let committed_before = handle.frontier().await.map(|frontier| frontier.commit_seq).ok();
     let batch = match db::document::CommandBatch::new(envelopes.clone()).await {
         Ok(batch) => batch,
@@ -5095,6 +5097,7 @@ async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id:
     };
     match handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy }).await {
         Ok(Ok(receipt)) => {
+            gate.record_committed(&envelopes.iter().map(|envelope| (&envelope.actor, &envelope.mutation_id)).collect::<Vec<_>>(), now_ms().max(0) as u64);
             let frontier = engine_frontier_to_wire(&receipt.frontier, receipt.command_id.0.clone());
             let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() };
             let advanced = committed_before.is_some_and(|before| receipt.frontier.commit_seq > before);
@@ -5108,21 +5111,31 @@ async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id:
     }
 }
 
-/// @emoji 🚪️ Runs `envelopes` through `gate.admit_command` one at a time (tenant isolation, then
-/// `Action::Write` authz on `AuthzScope::CommandKind`, DoS budget, replay dedupe — see
-/// `SecurityGate::admit_command`'s own doc) before any of them reach `db::ArtifactHandle::submit`.
-/// Returns the first rejection reason, or `None` once every envelope is admitted. `kind` is a
-/// constant ("write") rather than a per-envelope command-kind string: this crate sits above
-/// `db_artifact`'s pipeline and never interprets an operation's schema/diff semantics (matches
-/// `db_security`'s own module doc — payload interpretation stays out of this layer), so command-kind
-/// granularity inside one document is not this wave's concern.
-async fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolArtifactId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Option<String> {
-    for envelope in envelopes {
-        if let Err(error) = gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.mutation_id, physical_ms).await {
-            return Some(error.to_string());
-        }
-    }
-    None
+/// @emoji 🚪️ Admits `envelopes` as one batch through `gate.admit_commands` (tenant isolation, then
+/// `Action::Write` authz on `AuthzScope::CommandKind`, the DoS budget charged for the whole batch at
+/// once, replay dedupe — see `SecurityGate::admit_commands`' own doc) before any of them reach
+/// `db::ArtifactHandle::submit`; admission records nothing, [`submit_commands`] records the committed
+/// operations. `kind` is a constant ("write") rather than a per-envelope command-kind string: this
+/// crate sits above `db_artifact`'s pipeline and never interprets an operation's schema/diff semantics
+/// (matches `db_security`'s own module doc — payload interpretation stays out of this layer), so
+/// command-kind granularity inside one document is not this wave's concern.
+async fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolArtifactId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Result<(), db::DbError> {
+    let commands: Vec<(&ActorId, &protocol::MutationId)> = envelopes.iter().map(|envelope| (&envelope.actor, &envelope.mutation_id)).collect();
+    gate.admit_commands(principal, tenant, document, "write", &commands, physical_ms).await
+}
+
+/// 🪣️ A document socket's DoS budget, in commands: its capacity is the document backbone's declared
+/// batch maximum, so a full bucket admits every batch the wire declares legal — a link cut's whole
+/// outbox arrives as one (ticket 26/09/23 session 14, C12 P1) — and an emptied one refuses
+/// transiently (`hub.unavailable`) until it refills at [`DOCUMENT_SOCKET_COMMAND_REFILL_PER_SECOND`].
+const DOCUMENT_SOCKET_COMMAND_BUDGET: u32 = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES as u32;
+/// 🪣️ Commands per second a document socket's budget regains.
+const DOCUMENT_SOCKET_COMMAND_REFILL_PER_SECOND: u32 = 60;
+
+/// @emoji 🚧️ One document socket's security gate over `policy`: a 60 s replay window of 256 committed
+/// operations per actor and the declared-batch-sized command budget.
+fn document_socket_gate(policy: db::security::RoleBasedPolicy) -> db::security::SecurityGate {
+    db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(DOCUMENT_SOCKET_COMMAND_BUDGET, DOCUMENT_SOCKET_COMMAND_REFILL_PER_SECOND), Arc::new(db::NullEmit))
 }
 
 /// ⏱️ How long one document-socket frame — a command's admission, document write and durable commit
@@ -5174,13 +5187,13 @@ async fn handle_client_frame(
             for envelope in &mut envelopes {
                 envelope.document_id = db_id.clone();
             }
-            if let Some(reason) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
+            if let Err(error) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
                 let frontier = best_effort_frontier(handle).await;
-                let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason, messages: Vec::new() }) }], frontier };
+                let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: messages_for_error(&error) }) }], frontier };
                 return sender.send(encode(&ack, document_id).await).await.is_ok();
             }
             let _document_write = state.socket_binding_gates.document_write(&DocumentScope::new(space_id, document_id)).lock_owned().await;
-            let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes, state.merge_policy).await;
+            let (ack, relay) = submit_commands(handle, gate, actor, batch_id, envelopes, state.merge_policy).await;
             if let Some(commands_frame) = relay {
                 let _ = fanout.send(commands_frame);
             }
@@ -5356,7 +5369,7 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
         AuthOutcome::Denied => unreachable!("Denied already returned above"),
     };
     let policy = db::security::RoleBasedPolicy::new().with_grant(db::security::Grant::allow(role_str.clone(), &["db", "document", "*", "**"], &granted));
-    let gate = db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(240, 60), Arc::new(db::NullEmit));
+    let gate = document_socket_gate(policy);
     let principal = db::security::Principal::new(actor.clone(), tenant.clone(), vec![role_str]);
 
     let db_id = db_artifact_id(&scope);

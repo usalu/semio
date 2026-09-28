@@ -67,5 +67,4 @@ export async function testGithubHistory(): Promise<void> {
     try { await assert.rejects(api("/stream", reading.signal), /abort/i); assert.ok(Date.now() - started < 2000); }
     finally { clearTimeout(timer); }
   } finally { await server.stop(true); }
-  console.log("[DEBUG] GitHub history pagination, identity, schema/lodash projection, failure fallback, cancellation and real bounded HTTP transport PASS");
 }

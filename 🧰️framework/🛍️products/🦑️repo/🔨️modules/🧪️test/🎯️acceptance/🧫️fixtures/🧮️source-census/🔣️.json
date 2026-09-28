@@ -17,9 +17,21 @@
   ],
   "docstrings": [
     { "name": "a Rust docstring opening with its emoji", "path": "🧰️framework/x/🦀️.rs", "text": "/// 🧹️ Clears the cache.\nfn clear() {}\n", "expected": [] },
-    { "name": "the @emoji residue in front of a Rust docstring emoji", "path": "🧰️framework/x/🦀️.rs", "text": "/// @emoji 🧹️ Clears the cache.\n/// @emoji is not an opener here\nfn clear() {}\n", "expected": [{ "line": 1, "rule": "at-emoji" }] },
+    { "name": "the @emoji residue in front of a Rust docstring emoji, also inside the run", "path": "🧰️framework/x/🦀️.rs", "text": "/// @emoji 🧹️ Clears the cache.\n/// @emoji 🗑️ A second paragraph keeps its residue too.\nfn clear() {}\n", "expected": [{ "line": 1, "rule": "at-emoji" }, { "line": 2, "rule": "at-emoji" }] },
     { "name": "a Rust docstring without an emoji, and a blank first doc line", "path": "🧰️framework/x/🦀️.rs", "text": "/// Plain summary.\nfn a() {}\n\n///\n/// ✅️ Opens on the second line.\nfn b() {}\n//// four slashes are not a doc\n", "expected": [{ "line": 1, "rule": "no-emoji" }] },
     { "name": "an inner Rust module docstring with a symbol marker", "path": "🧰️framework/x/🦀️.rs", "text": "//! ⊕ Sums.\n", "expected": [] },
-    { "name": "TypeScript one-line and multi-line docstrings", "path": "🧰️framework/x/🟦️.ts", "text": "/** 🧹️ Clears. */\nexport const a = 1;\n/** @emoji 🧹️ Tagged. */\nexport const b = 2;\n/**\n * @emoji 🌐️ Tagged on the second line.\n */\nexport const c = 3;\n/**\n * plain\n */\nexport const d = 4;\n/**/\n", "expected": [{ "line": 3, "rule": "at-emoji" }, { "line": 6, "rule": "at-emoji" }, { "line": 10, "rule": "no-emoji" }] }
+    { "name": "TypeScript one-line and multi-line docstrings", "path": "🧰️framework/x/🟦️.ts", "text": "/** 🧹️ Clears. */\nexport const a = 1;\n/** @emoji 🧹️ Tagged. */\nexport const b = 2;\n/**\n * @emoji 🌐️ Tagged on the second line.\n */\nexport const c = 3;\n/**\n * plain\n */\nexport const d = 4;\n/**/\n", "expected": [{ "line": 3, "rule": "at-emoji" }, { "line": 6, "rule": "at-emoji" }, { "line": 10, "rule": "no-emoji" }] },
+    { "name": "Rust block docstrings count like TypeScript ones", "path": "🧰️framework/x/🦀️.rs", "text": "/** @emoji 🔩️ Builds a mesh. */\npub fn a() {}\n/** Plain block summary.\n * More. */\npub fn b() {}\n/** 🧩️ Opens with its emoji. */\npub fn c() {}\n", "expected": [{ "line": 1, "rule": "at-emoji" }, { "line": 3, "rule": "no-emoji" }] },
+    { "name": "a generator's emitted doc line carries the residue as well", "path": "🧰️framework/x/🟦️.ts", "text": "/** 🏭️ Emits a header. */\nexport const header = (emoji: string): string => `/// @emoji ${emoji} Generated.`;\n", "expected": [{ "line": 2, "rule": "at-emoji" }] },
+    { "name": "banners, empty blocks and quoted or commented openers are no docstrings", "path": "🧰️framework/x/🟦️.ts", "text": "/*****************\n * banner\n *****************/\n// see /** plain */ in the docs\nconst glob = \"src/**/x\";\nconst s = '/** plain */';\n/**/\n", "expected": [] }
+  ],
+  "debugTags": [
+    { "name": "tagged prints, errors and comments in any language", "path": "🧰️framework/x/🦀️.rs", "text": "fn a() {\n    eprintln!(\"[DEBUG] a={}\", 1);\n    // [DEBUG] temporary widening\n}\nfn b() { panic!(\"[DEBUG] refused\") }\n", "expected": [2, 3, 5] },
+    { "name": "the renamed channel and untagged lines are clean", "path": "🧰️framework/x/🟦️.ts", "text": "console.log(\"[TRACE] frame 3\");\nconsole.log(\"DEBUG without brackets\");\nconst tag = \"[debug]\";\n", "expected": [] }
+  ],
+  "interfaceImports": [
+    { "name": "direct value, type, addon and dynamic imports outside the owner", "path": "🧰️framework/🛍️products/💻️os/x/🟦️.tsx", "text": "import {\n  Mesh,\n} from \"three\";\nimport { GLTFLoader } from \"three/examples/jsm/loaders/GLTFLoader.js\";\ntype Camera = import(\"three\").Camera;\nconst lazy = await import('three');\n", "expected": [3, 4, 5, 6] },
+    { "name": "the owning ui module imports the package and its addons freely", "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "text": "import * as THREE from \"three\";\nimport { OrbitControls } from \"three/addons/controls/OrbitControls.js\";\n", "expected": [] },
+    { "name": "look-alike package names and the ui interface are not the owned package", "path": "🧰️framework/🛍️products/💻️os/x/🟦️.tsx", "text": "import { MeshBVH } from \"three-mesh-bvh\";\nimport { Mesh } from \"@semio-tech/ui-react\";\nconst label = \"from three\";\n", "expected": [] }
   ]
 }

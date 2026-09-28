@@ -384,6 +384,7 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::OperationCompleted { .. } => None,
         AppFrame::DocumentArchive { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::DocumentArchiveLoad { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::MediaExportSubmitted { in_reply_to, .. } | AppFrame::MediaExportStatus { in_reply_to, .. } | AppFrame::MediaExportChunk { in_reply_to, .. } => Some(*in_reply_to),
     }
 }
 
@@ -2209,7 +2210,11 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::SetMergePolicy { seq, .. }
         | AppCommand::ResolveConflict { seq, .. }
         | AppCommand::ReadConflicts { seq }
-        | AppCommand::Presence { seq, .. } => *seq,
+        | AppCommand::Presence { seq, .. }
+        | AppCommand::SubmitMediaExport { seq, .. }
+        | AppCommand::PollMediaExport { seq, .. }
+        | AppCommand::CancelMediaExport { seq, .. }
+        | AppCommand::TakeMediaExportChunk { seq, .. } => *seq,
     }
 }
 //#endregion 🔖️WasmtimeNodeHost

@@ -239,6 +239,54 @@ fn q_time(s: f64) -> Quantity { Quantity::new(QuantityKind::Time, s) }
 fn q_dim(v: f64) -> Quantity { Quantity::new(QuantityKind::Dimensionless, v) }
 fn loc(en: &str, de: &str) -> LocalizedCopy { LocalizedCopy::new(en, de) }
 
+
+/// 🧮 Scale a characteristic leaf so the linear design effect drops to `limit` (0.99 margin).
+fn scale_char_for_limit(current: f64, design: f64, limit: f64) -> f64 {
+    if design.abs() < 1e-18 {
+        return 0.0;
+    }
+    current * (limit / design).abs() * 0.99
+}
+
+/// 🩹 Emit at-most remedies for every action leaf that still carries the demand component.
+fn scale_action_leaf_remedies(
+    owner_kind: &str,
+    owner_id: &str,
+    actions: &[crate::snapshot::MemberAction],
+    leaf: &str,
+    read: impl Fn(&crate::snapshot::MemberAction) -> f64,
+    design: f64,
+    limit: f64,
+    to_q: impl Fn(f64) -> Quantity,
+    label: LocalizedCopy,
+    action_en: &str,
+    action_de: &str,
+) -> Vec<Remedy> {
+    let mut out = Vec::new();
+    if design.abs() <= limit.abs() + 1e-18 {
+        return out;
+    }
+    for a in actions.iter().filter(|a| a.kind != "fire") {
+        let cur = read(a);
+        if cur.abs() < 1e-18 {
+            continue;
+        }
+        let req = scale_char_for_limit(cur, design, limit);
+        out.push(Remedy::at_most(
+            SubjectRef::new(
+                owner_id,
+                format!("{owner_kind}[id={owner_id}].actions[id={}].{leaf}", a.id),
+                label.clone(),
+            ),
+            to_q(cur),
+            to_q(req),
+            loc(action_en, action_de),
+        ));
+    }
+    out
+}
+
+
 pub mod na_de {
     use crate::document::AnnexChoice;
     pub const HAZ_ZONE_M: f64 = 0.025;
@@ -1010,10 +1058,16 @@ fn utilization_check(
 ) -> CheckResult {
     let u = if limit.value.abs() > 0.0 { computed.value.abs() / limit.value.abs() } else if computed.value.abs() > 0.0 { f64::INFINITY } else { 0.0 };
     if u > 1.0 && remedies.is_empty() && !subject.path.is_empty() {
+        let required = if subject.path.contains("bucklingLength") || subject.path.contains("ltbLength") {
+            // Zero would fall back to member.length in L_cr — use a positive fraction of computed demand.
+            Quantity::new(computed.kind, (computed.value.abs() / u.max(1.0) * 0.99).max(1e-6))
+        } else {
+            Quantity::new(computed.kind, computed.value * (1.0 / u.max(1.0)) * 0.99)
+        };
         remedies.push(Remedy::at_most(
             subject.clone(),
             computed,
-            Quantity::new(computed.kind, 0.0),
+            required,
             loc("Reduce the governing demand until utilization ≤ 1.", "Maßgebende Beanspruchung senken, bis Ausnutzung ≤ 1."),
         ));
     }
@@ -1264,14 +1318,18 @@ pub fn check_member(
     let m_rd_z = wel_z * alloy.f_o_pa / params.gamma_m1;
     let mut remedies_mz = Vec::new();
     if m_z.abs() > m_rd_z && m_rd_z > 0.0 {
-        remedies_mz.push(Remedy::at_most(
-            SubjectRef::new(&member.id, path_mz.clone(), member_label(&member.id)),
-            q_moment(m_z),
-            q_moment(m_rd_z.copysign(m_z)),
-            loc(
-                &format!("Reduce |M_z,Ed| to ≤ {:.2} kNm.", m_rd_z/1e3),
-                &format!("|M_z,Ed| auf ≤ {:.2} kNm reduzieren.", m_rd_z/1e3),
-            ),
+        remedies_mz.extend(scale_action_leaf_remedies(
+            "members",
+            &member.id,
+            &member.actions,
+            "mZK",
+            |a| a.m_z_k,
+            m_z,
+            m_rd_z,
+            q_moment,
+            member_label(&member.id),
+            &format!("Reduce action M_z,k so |M_z,Ed| ≤ {:.2} kNm.", m_rd_z/1e3),
+            &format!("Einwirkung M_z,k senken, sodass |M_z,Ed| ≤ {:.2} kNm.", m_rd_z/1e3),
         ));
     }
     out.push(utilization_check(
@@ -1393,6 +1451,33 @@ pub fn check_member(
         ),
         remedies_b,
     ));
+    let mut remedies_fb_z = Vec::new();
+    if n_ed.abs() > n_b_rd_z && n_b_rd_z > 0.0 {
+        let chi_req_z = (n_ed.abs() * params.gamma_m1 / (a_eff * alloy.f_o_pa)).min(1.0);
+        let mut lo_z = 0.1;
+        let mut hi_z = member.buckling_length_z.max(0.5);
+        for _ in 0..40 {
+            let mid = 0.5 * (lo_z + hi_z);
+            let lb = part_1_1::lambda_bar(mid, i_z, a_eff.max(a_gross), alloy.f_o_pa);
+            let ch = part_1_1::chi_from_lambda(lb, alpha, lambda_0);
+            if ch >= chi_req_z { lo_z = mid; } else { hi_z = mid; }
+        }
+        remedies_fb_z.push(Remedy::at_most(
+            SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthZ", member.id), member_label(&member.id)),
+            q_length(member.buckling_length_z),
+            q_length(lo_z.max(0.05)),
+            loc(
+                &format!("Reduce buckling length L_cr,z to at most {:.2} m.", lo_z.max(0.05)),
+                &format!("Knicklänge L_cr,z auf höchstens {:.2} m verkürzen.", lo_z.max(0.05)),
+            ),
+        ));
+        remedies_fb_z.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "nK", |a| a.n_k, n_ed, n_b_rd_z, q_force,
+            member_label(&member.id),
+            "Reduce |N_k| so flexural buckling about z complies.",
+            "|N_k| senken, damit Biegeknicken um z erfüllt ist.",
+        ));
+    }
     out.push(utilization_check(
         format!("en1999.6.3.1.fb.z.{}", member.id),
         part,
@@ -1406,9 +1491,23 @@ pub fn check_member(
             &format!("λ̄_z={lb_z:.6}, χ_z={chi_z:.6}, N_b,Rd,z={:.1} kN (ULS {combo}, lead {action_id}).", n_b_rd_z/1e3),
             &format!("λ̄_z={lb_z:.6}, χ_z={chi_z:.6}, N_b,Rd,z={:.1} kN (GZT {combo}, führend {action_id}).", n_b_rd_z/1e3),
         ),
-        Vec::new(),
+        remedies_fb_z,
     ));
     // Slenderness always tracks L_cr even when χ = 1 (plateau).
+    let lb_t_slend = part_1_1::lambda_bar(l_cr_t, i_y.min(i_z), a_eff.max(a_gross), alloy.f_o_pa);
+    let mut remedies_lam_y = Vec::new();
+    if lb_y > 3.0 {
+        let l_req = (member.buckling_length_y * 3.0 / lb_y * 0.99).max(0.05);
+        remedies_lam_y.push(Remedy::at_most(
+            SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthY", member.id), member_label(&member.id)),
+            q_length(member.buckling_length_y),
+            q_length(l_req),
+            loc(
+                &format!("Reduce L_cr,y to at most {:.2} m so λ̄_y ≤ 3.", l_req),
+                &format!("L_cr,y auf höchstens {:.2} m verkürzen, damit λ̄_y ≤ 3.", l_req),
+            ),
+        ));
+    }
     out.push(utilization_check(
         format!("en1999.6.3.1.lambda.y.{}", member.id),
         part,
@@ -1422,22 +1521,35 @@ pub fn check_member(
             &format!("λ̄_y={lb_y:.6} from L_cr,y (ULS {combo}, lead {action_id})."),
             &format!("λ̄_y={lb_y:.6} aus L_cr,y (GZT {combo}, führend {action_id})."),
         ),
-        Vec::new(),
+        remedies_lam_y,
     ));
+    let mut remedies_lam_t = Vec::new();
+    if lb_t_slend > 3.0 {
+        let l_req = (member.buckling_length_t * 3.0 / lb_t_slend * 0.99).max(0.05);
+        remedies_lam_t.push(Remedy::at_most(
+            SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthT", member.id), member_label(&member.id)),
+            q_length(member.buckling_length_t),
+            q_length(l_req),
+            loc(
+                &format!("Reduce L_cr,T to at most {:.2} m so λ̄_T ≤ 3.", l_req),
+                &format!("L_cr,T auf höchstens {:.2} m verkürzen, damit λ̄_T ≤ 3.", l_req),
+            ),
+        ));
+    }
     out.push(utilization_check(
         format!("en1999.6.3.1.lambda.t.{}", member.id),
         part,
         ClauseId::new("EN 1999-1-1", "§6.3.1", "6.3.1.4"),
         SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthT", member.id), member_label(&member.id)),
         loc("Non-dimensional slenderness λ̄_T", "Bezogene Schlankheit λ̄_T"),
-        q_dim(part_1_1::lambda_bar(l_cr_t, i_y.min(i_z), a_eff.max(a_gross), alloy.f_o_pa)),
+        q_dim(lb_t_slend),
         q_dim(3.0),
         annex,
         loc(
             &format!("λ̄_T from L_cr,T={l_cr_t:.4} m (ULS {combo}, lead {action_id})."),
             &format!("λ̄_T aus L_cr,T={l_cr_t:.4} m (GZT {combo}, führend {action_id})."),
         ),
-        Vec::new(),
+        remedies_lam_t,
     ));
     out.push(utilization_check(
         format!("en1999.6.3.1.lcr.{}", member.id),
@@ -1587,11 +1699,23 @@ pub fn check_member(
                 loc("Set a positive member length for SLS deflection.", "Positive Bauteillänge für GZG-Durchbiegung setzen."),
             ));
         } else if w_lim > 0.0 {
-            rem_w.push(Remedy::at_most(
-                SubjectRef::new(&member.id, format!("members[id={}].actions[id={}].mYK", member.id, sls_qp.action_id), member_label(&member.id)),
-                q_moment(sls_qp.m_y_ed.abs()),
-                q_moment(sls_qp.m_y_ed.abs() * w_lim / w_qp.max(1e-12)),
-                loc("Reduce quasi-permanent moment so deflection ≤ L/200.", "Quasi-ständiges Moment senken, damit Durchbiegung ≤ L/200."),
+            rem_w.extend(scale_action_leaf_remedies(
+                "members", &member.id, &member.actions, "mYK", |a| a.m_y_k, sls_qp.m_y_ed, sls_qp.m_y_ed.abs() * w_lim / w_qp.max(1e-12), q_moment,
+                member_label(&member.id),
+                "Reduce M_y,k so quasi-permanent deflection ≤ L/200.",
+                "M_y,k senken, damit quasi-ständige Durchbiegung ≤ L/200.",
+            ));
+            rem_w.extend(scale_action_leaf_remedies(
+                "members", &member.id, &member.actions, "gKLine", |a| a.g_k_line, w_qp, w_lim, q_force,
+                member_label(&member.id),
+                "Reduce g_k so quasi-permanent deflection ≤ L/200.",
+                "g_k senken, damit quasi-ständige Durchbiegung ≤ L/200.",
+            ));
+            rem_w.extend(scale_action_leaf_remedies(
+                "members", &member.id, &member.actions, "qKLine", |a| a.q_k_line, w_qp, w_lim, q_force,
+                member_label(&member.id),
+                "Reduce q_k so quasi-permanent deflection ≤ L/200.",
+                "q_k senken, damit quasi-ständige Durchbiegung ≤ L/200.",
             ));
         }
     }
@@ -1614,11 +1738,24 @@ pub fn check_member(
     let sigma_lim = 0.8 * alloy.f_o_pa; // elastic SLS stress limit
     let mut rem_s = Vec::new();
     if sigma_sls > sigma_lim {
-        rem_s.push(Remedy::at_most(
-            SubjectRef::new(&member.id, format!("members[id={}].actions[id={}].mYK", member.id, sls_char.action_id), member_label(&member.id)),
-            q_moment(sls_char.m_y_ed.abs()),
-            q_moment(if wel_eff > 0.0 { sigma_lim * wel_eff } else { 0.0 }),
-            loc("Reduce characteristic SLS moment so σ ≤ 0.8 f_o.", "Charakteristisches GZG-Moment senken, damit σ ≤ 0,8 f_o."),
+        let m_lim = if wel_eff > 0.0 { sigma_lim * wel_eff } else { 0.0 };
+        rem_s.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "mYK", |a| a.m_y_k, sls_char.m_y_ed, m_lim, q_moment,
+            member_label(&member.id),
+            "Reduce M_y,k so characteristic SLS σ ≤ 0.8 f_o.",
+            "M_y,k senken, damit charakteristische GZG-Spannung σ ≤ 0,8 f_o.",
+        ));
+        rem_s.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "gKLine", |a| a.g_k_line, sigma_sls, sigma_lim, q_force,
+            member_label(&member.id),
+            "Reduce g_k so characteristic SLS σ ≤ 0.8 f_o.",
+            "g_k senken, damit charakteristische GZG-Spannung σ ≤ 0,8 f_o.",
+        ));
+        rem_s.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "qKLine", |a| a.q_k_line, sigma_sls, sigma_lim, q_force,
+            member_label(&member.id),
+            "Reduce q_k so characteristic SLS σ ≤ 0.8 f_o.",
+            "q_k senken, damit charakteristische GZG-Spannung σ ≤ 0,8 f_o.",
         ));
     }
     out.push(utilization_check(
@@ -1641,11 +1778,24 @@ pub fn check_member(
     let sigma_freq = if wel_eff > 0.0 { sls_freq.m_y_ed.abs() / wel_eff } else { 0.0 };
     let mut rem_f = Vec::new();
     if sigma_freq > sigma_lim {
-        rem_f.push(Remedy::at_most(
-            SubjectRef::new(&member.id, format!("members[id={}].actions[id={}].mYK", member.id, sls_freq.action_id), member_label(&member.id)),
-            q_moment(sls_freq.m_y_ed.abs()),
-            q_moment(if wel_eff > 0.0 { sigma_lim * wel_eff } else { 0.0 }),
-            loc("Reduce frequent SLS moment so σ ≤ 0.8 f_o.", "Häufiges GZG-Moment senken, damit σ ≤ 0,8 f_o."),
+        let m_lim = if wel_eff > 0.0 { sigma_lim * wel_eff } else { 0.0 };
+        rem_f.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "mYK", |a| a.m_y_k, sls_freq.m_y_ed, m_lim, q_moment,
+            member_label(&member.id),
+            "Reduce M_y,k so frequent SLS σ ≤ 0.8 f_o.",
+            "M_y,k senken, damit häufige GZG-Spannung σ ≤ 0,8 f_o.",
+        ));
+        rem_f.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "gKLine", |a| a.g_k_line, sigma_freq, sigma_lim, q_force,
+            member_label(&member.id),
+            "Reduce g_k so frequent SLS σ ≤ 0.8 f_o.",
+            "g_k senken, damit häufige GZG-Spannung σ ≤ 0,8 f_o.",
+        ));
+        rem_f.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "qKLine", |a| a.q_k_line, sigma_freq, sigma_lim, q_force,
+            member_label(&member.id),
+            "Reduce q_k so frequent SLS σ ≤ 0.8 f_o.",
+            "q_k senken, damit häufige GZG-Spannung σ ≤ 0,8 f_o.",
         ));
     }
     out.push(utilization_check(
@@ -1759,16 +1909,41 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
         let pitch_factor = (0.85 + 0.05 * pitch_ratio).clamp(0.80, 1.25);
         let f_rd = (if f_v > 0.0 && f_b > 0.0 { (f_v * f_b) / (f_v + f_b) } else { f_v.min(f_b) }) * pitch_factor;
         let mut remedies = Vec::new();
-        if v_ed > f_rd && f_rd > 0.0 {
-            let n_req = ((conn.bolts.rows * conn.bolts.bolts_per_row) as f64 * v_ed / f_rd * 1.15).ceil() as u32;
+        let force_bolt = v_ed + n_ed.abs();
+        if force_bolt > f_rd && f_rd > 0.0 {
+            let n_now = (conn.bolts.rows * conn.bolts.bolts_per_row) as f64;
+            let n_req = (n_now * force_bolt / f_rd * 1.05).ceil().max(n_now + 1.0) as u32;
+            let per_row = (n_req / conn.bolts.rows.max(1)).max(conn.bolts.bolts_per_row + 1);
             remedies.push(Remedy::at_least(
                 SubjectRef::new(&conn.id, format!("connections[id={}].bolts.boltsPerRow", conn.id), conn_label(&conn.id)),
                 q_dim(conn.bolts.bolts_per_row as f64),
-                q_dim((n_req / conn.bolts.rows.max(1)).max(conn.bolts.bolts_per_row as u32 + 1) as f64),
+                q_dim(per_row as f64),
                 loc(
-                    &format!("Increase bolt count (rows×bolts) so F_Rd ≥ {:.1} kN.", v_ed/1e3),
-                    &format!("Schraubenzahl erhöhen, sodass F_Rd ≥ {:.1} kN.", v_ed/1e3),
+                    &format!("Increase bolt count (rows×bolts) so F_Rd ≥ {:.1} kN.", force_bolt/1e3),
+                    &format!("Schraubenzahl erhöhen, sodass F_Rd ≥ {:.1} kN.", force_bolt/1e3),
                 ),
+            ));
+            let rows_req = (n_req / conn.bolts.bolts_per_row.max(1)).max(conn.bolts.rows + 1);
+            remedies.push(Remedy::at_least(
+                SubjectRef::new(&conn.id, format!("connections[id={}].bolts.rows", conn.id), conn_label(&conn.id)),
+                q_dim(conn.bolts.rows as f64),
+                q_dim(rows_req as f64),
+                loc(
+                    &format!("Increase bolt rows so F_Rd ≥ {:.1} kN.", force_bolt/1e3),
+                    &format!("Schraubenreihen erhöhen, sodass F_Rd ≥ {:.1} kN.", force_bolt/1e3),
+                ),
+            ));
+            remedies.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "vZK", |a| a.v_z_k, force_bolt, f_rd, q_force,
+                conn_label(&conn.id),
+                "Reduce V_z,k so bolted resistance governs.",
+                "V_z,k senken, damit Schraubentragfähigkeit maßgebend ist.",
+            ));
+            remedies.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "nK", |a| a.n_k, force_bolt, f_rd, q_force,
+                conn_label(&conn.id),
+                "Reduce N_k so bolted resistance governs.",
+                "N_k senken, damit Schraubentragfähigkeit maßgebend ist.",
             ));
         }
         if conn.bolts.edge_distance < 1.2 * conn.bolts.diameter {
@@ -1822,9 +1997,21 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
     if kind == "welded" || kind == "combined" {
         let f_w = part_1_1::weld_resistance(&conn.welds, alloy.f_u_pa, params.gamma_m2) * (alloy.rho_u_haz.min(alloy.rho_o_haz) / (1.0 + part_1_1::haz_extent_m(&conn.welds, conn.bolts.plate_thickness).max(conn.welds.throat) * 10.0)).clamp(0.2, 1.0);
         let mut remedies = Vec::new();
-        if v_ed > f_w && f_w > 0.0 {
-            let a_req = v_ed * conn.welds.beta_w * params.gamma_m2 / alloy.f_u_pa;
-            let t_req = a_req / conn.welds.length.max(1e-6);
+        let force_weld = v_ed + n_ed.abs();
+        if force_weld > f_w && f_w > 0.0 {
+            let rho_haz = alloy.rho_u_haz.min(alloy.rho_o_haz);
+            let mut t_req = conn.welds.throat;
+            for _ in 0..48 {
+                let mut trial = conn.welds.clone();
+                trial.throat = t_req;
+                let haz = part_1_1::haz_extent_m(&trial, conn.bolts.plate_thickness).max(trial.throat);
+                let fac = (rho_haz / (1.0 + haz * 10.0)).clamp(0.2, 1.0);
+                let f_w_base = part_1_1::weld_resistance(&trial, alloy.f_u_pa, params.gamma_m2);
+                let need = force_weld / fac.max(1e-9);
+                let a_need = need * trial.beta_w.max(0.01) * params.gamma_m2 / part_1_1::filler_fu_pa(&trial.filler_alloy, alloy.f_u_pa).max(1e-9);
+                t_req = (a_need / trial.length.max(1e-6)).max(t_req);
+                if f_w_base * fac >= force_weld * 0.999 { break; }
+            }
             remedies.push(Remedy::at_least(
                 SubjectRef::new(&conn.id, format!("connections[id={}].welds.throat", conn.id), conn_label(&conn.id)),
                 q_length(conn.welds.throat),
@@ -1834,7 +2021,11 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
                     &format!("Kehlnahtdicke von {:.1} mm auf mindestens {:.1} mm erhöhen.", conn.welds.throat*1e3, t_req*1e3),
                 ),
             ));
-            let l_req = a_req / conn.welds.throat.max(1e-6);
+            let haz0 = part_1_1::haz_extent_m(&conn.welds, conn.bolts.plate_thickness).max(conn.welds.throat);
+            let fac0 = (rho_haz / (1.0 + haz0 * 10.0)).clamp(0.2, 1.0);
+            let a_need = force_weld / fac0.max(1e-9) * conn.welds.beta_w.max(0.01) * params.gamma_m2
+                / part_1_1::filler_fu_pa(&conn.welds.filler_alloy, alloy.f_u_pa).max(1e-9);
+            let l_req = a_need / conn.welds.throat.max(1e-6);
             remedies.push(Remedy::at_least(
                 SubjectRef::new(&conn.id, format!("connections[id={}].welds.length", conn.id), conn_label(&conn.id)),
                 q_length(conn.welds.length),
@@ -1843,6 +2034,18 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
                     &format!("Increase weld length from {:.0} mm to at least {:.0} mm (or relocate weld).", conn.welds.length*1e3, l_req*1e3),
                     &format!("Nahtlänge von {:.0} mm auf mindestens {:.0} mm erhöhen (oder Naht verlegen).", conn.welds.length*1e3, l_req*1e3),
                 ),
+            ));
+            remedies.push(Remedy::at_most(
+                SubjectRef::new(&conn.id, format!("connections[id={}].welds.hazExtent", conn.id), conn_label(&conn.id)),
+                q_length(conn.welds.haz_extent),
+                q_length(0.0),
+                loc("Reduce stored HAZ extent so weld resistance recovers.", "Gespeicherte WEZ-Ausdehnung senken, damit Nahttragfähigkeit steigt."),
+            ));
+            remedies.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "vZK", |a| a.v_z_k, force_weld, f_w, q_force,
+                conn_label(&conn.id),
+                "Reduce V_z,k so weld resistance governs.",
+                "V_z,k senken, damit Schweißtragfähigkeit maßgebend ist.",
             ));
         }
         out.push(utilization_check(
@@ -1884,18 +2087,35 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
         }
         let mut rem_s = Vec::new();
         if force_s > f_lim && f_lim > 0.0 {
-            rem_s.push(Remedy::at_most(
-                SubjectRef::new(
-                    &conn.id,
-                    format!("connections[id={}].actions[id={}].qKLine", conn.id, sls.action_id),
-                    conn_label(&conn.id),
-                ),
-                q_force(force_s),
-                q_force(f_lim),
-                loc(
-                    "Reduce frequent SLS connection force below resistance.",
-                    "Häufige GZG-Anschlusskraft unter die Tragfähigkeit senken.",
-                ),
+            rem_s.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "vZK", |a| a.v_z_k, force_s, f_lim, q_force,
+                conn_label(&conn.id),
+                "Reduce V_z,k so frequent SLS connection force ≤ F_Rd.",
+                "V_z,k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
+            ));
+            rem_s.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "nK", |a| a.n_k, force_s, f_lim, q_force,
+                conn_label(&conn.id),
+                "Reduce N_k so frequent SLS connection force ≤ F_Rd.",
+                "N_k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
+            ));
+            rem_s.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "qKLine", |a| a.q_k_line, force_s, f_lim, q_force,
+                conn_label(&conn.id),
+                "Reduce q_k so frequent SLS connection force ≤ F_Rd.",
+                "q_k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
+            ));
+            rem_s.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "gKLine", |a| a.g_k_line, force_s, f_lim, q_force,
+                conn_label(&conn.id),
+                "Reduce g_k so frequent SLS connection force ≤ F_Rd.",
+                "g_k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
+            ));
+            rem_s.extend(scale_action_leaf_remedies(
+                "connections", &conn.id, &conn.actions, "mYK", |a| a.m_y_k, force_s, f_lim, q_moment,
+                conn_label(&conn.id),
+                "Reduce M_y,k so frequent SLS connection force ≤ F_Rd.",
+                "M_y,k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
             ));
         }
         out.push(utilization_check(
@@ -1995,14 +2215,20 @@ pub fn check_fire(
     let u = u_n.max(u_m);
     let mut remedies = Vec::new();
     if u > 1.0 {
-        let k_req = if u_n >= u_m {
-            if n_rd > 0.0 { (n_ed / n_rd).min(1.0) } else { 0.0 }
-        } else if m_rd > 0.0 {
-            (m_ed / m_rd).min(1.0)
+        let demand_ratio = if n_rd > 0.0 || m_rd > 0.0 {
+            (if n_rd > 0.0 { n_ed / n_rd } else { 0.0 }).max(if m_rd > 0.0 { m_ed / m_rd } else { 0.0 })
         } else {
-            0.0
+            f64::INFINITY
         };
-        let theta_req = if k_req >= 1.0 { 100.0 } else { (550.0 - 450.0 * k_req).clamp(100.0, 550.0) };
+        // Clear duration heating first so θ_eff → θ_a, then set θ_a for k_θ ≥ demand.
+        remedies.push(Remedy::at_most(
+            SubjectRef::new(&fire.id, format!("fireScenarios[id={}].durationS", fire.id), loc("Fire duration", "Branddauer")),
+            Quantity::new(QuantityKind::Time, fire.duration_s),
+            Quantity::new(QuantityKind::Time, 0.0),
+            loc("Clear fire exposure duration so θ_eff = θ_a.", "Branddauer auf null setzen, damit θ_eff = θ_a."),
+        ));
+        let k_req = demand_ratio.min(1.0);
+        let theta_req = if k_req >= 1.0 { 100.0 } else { (550.0 - 450.0 * k_req).clamp(20.0, 550.0) };
         remedies.push(Remedy::at_most(
             SubjectRef::new(&fire.id, format!("fireScenarios[id={}].thetaA", fire.id), loc(&format!("Fire {}", fire.id), &format!("Brand {}", fire.id))),
             q_temp(fire.theta_a),
@@ -2012,11 +2238,30 @@ pub fn check_fire(
                 &format!("θ_a auf ≤ {:.0} °C senken, damit k_θ≥{k_req:.3} den Brandwiderstand wiederherstellt.", theta_req),
             ),
         ));
-        remedies.push(Remedy::at_most(
-            SubjectRef::new(&fire.id, format!("fireScenarios[id={}].durationS", fire.id), loc("Fire duration", "Branddauer")),
-            Quantity::new(QuantityKind::Time, fire.duration_s),
-            Quantity::new(QuantityKind::Time, 600.0),
-            loc("Shorten fire exposure duration.", "Branddauer verkürzen."),
+        // Fire combination can still exceed ambient capacity — scale member actions to ambient Rd.
+        remedies.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "nK", |a| a.n_k, n_ed.max(1e-9), n_rd.max(1e-9), q_force,
+            member_label(&member.id),
+            "Reduce N_k so fire utilization ≤ 1 at ambient capacity.",
+            "N_k senken, damit Brandausnutzung bei Umgebungstragfähigkeit ≤ 1.",
+        ));
+        remedies.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "mYK", |a| a.m_y_k, m_ed.max(1e-9), m_rd.max(1e-9), q_moment,
+            member_label(&member.id),
+            "Reduce M_y,k so fire utilization ≤ 1 at ambient capacity.",
+            "M_y,k senken, damit Brandausnutzung bei Umgebungstragfähigkeit ≤ 1.",
+        ));
+        remedies.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "gKLine", |a| a.g_k_line, u, 1.0, q_force,
+            member_label(&member.id),
+            "Reduce g_k so fire utilization ≤ 1.",
+            "g_k senken, damit Brandausnutzung ≤ 1.",
+        ));
+        remedies.extend(scale_action_leaf_remedies(
+            "members", &member.id, &member.actions, "qKLine", |a| a.q_k_line, u, 1.0, q_force,
+            member_label(&member.id),
+            "Reduce q_k so fire utilization ≤ 1.",
+            "q_k senken, damit Brandausnutzung ≤ 1.",
         ));
     }
     utilization_check(
@@ -2187,13 +2432,35 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
     ));
     let mut remedies_m = Vec::new();
     if m_ed.abs() > m_rd && m_rd > 0.0 {
-        remedies_m.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].mYK", sheet.id, action_id), loc("Sheet moment", "Blechmoment")),
-            q_moment(m_ed.abs()),
-            q_moment(m_rd),
+        remedies_m.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "mYK", |a| a.m_y_k, m_ed, m_rd, q_moment,
+            loc("Sheet moment", "Blechmoment"),
+            &format!("Reduce M_y,k so M_Ed ≤ {:.2} kNm.", m_rd/1e3),
+            &format!("M_y,k senken, sodass M_Ed ≤ {:.2} kNm.", m_rd/1e3),
+        ));
+        remedies_m.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "gKLine", |a| a.g_k_line, m_ed, m_rd, q_force,
+            loc("Sheet", "Blech"),
+            "Reduce g_k so sheeting bending complies.",
+            "g_k senken, damit Blechbiegung erfüllt ist.",
+        ));
+        remedies_m.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "qKLine", |a| a.q_k_line, m_ed, m_rd, q_force,
+            loc("Sheet", "Blech"),
+            "Reduce q_k so sheeting bending complies.",
+            "q_k senken, damit Blechbiegung erfüllt ist.",
+        ));
+        let t_req = if alloy.f_o_pa > 0.0 {
+            // W_el ∝ t² → scale thickness by sqrt(u)
+            sheet.thickness * (m_ed.abs() / m_rd).sqrt() * 1.05
+        } else { sheet.thickness };
+        remedies_m.push(Remedy::at_least(
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].thickness", sheet.id), loc("Sheet thickness", "Blechdicke")),
+            q_length(sheet.thickness),
+            q_length(t_req),
             loc(
-                &format!("Reduce M_Ed to ≤ {:.2} kNm or thicken the sheet.", m_rd/1e3),
-                &format!("M_Ed auf ≤ {:.2} kNm reduzieren oder Blech verdicken.", m_rd/1e3),
+                &format!("Increase thickness to ≥ {:.2} mm for bending.", t_req * 1e3),
+                &format!("Dicke auf ≥ {:.2} mm für Biegung erhöhen.", t_req * 1e3),
             ),
         ));
     }
@@ -2218,11 +2485,21 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
     let n_rd = a_eff * alloy.f_o_pa / params.gamma_m1;
     let mut rem_n = Vec::new();
     if n_ed.abs() > n_rd && n_rd > 0.0 {
-        rem_n.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].nK", sheet.id, action_id), loc("Sheet axial", "Blech-Normalkraft")),
-            q_force(n_ed),
-            q_force(n_rd.copysign(n_ed)),
-            loc("Reduce |N_Ed| on the cold-formed sheet.", "|N_Ed| am kaltgeformten Blech reduzieren."),
+        rem_n.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "nK", |a| a.n_k, n_ed, n_rd, q_force,
+            loc("Sheet axial", "Blech-Normalkraft"),
+            "Reduce N_k so cold-formed axial resistance governs.",
+            "N_k senken, damit Normalkraftwiderstand kaltgeformt maßgebend ist.",
+        ));
+        let t_req = sheet.thickness * (n_ed.abs() / n_rd) * 1.05;
+        rem_n.push(Remedy::at_least(
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].thickness", sheet.id), loc("Sheet thickness", "Blechdicke")),
+            q_length(sheet.thickness),
+            q_length(t_req),
+            loc(
+                &format!("Increase thickness to ≥ {:.2} mm for axial resistance.", t_req * 1e3),
+                &format!("Dicke auf ≥ {:.2} mm für Normalkraft erhöhen.", t_req * 1e3),
+            ),
         ));
     }
     out.push(utilization_check(
@@ -2306,17 +2583,42 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
     let u_i = if n_rd > 0.0 && m_rd > 0.0 { n_ed.abs()/n_rd + m_ed.abs()/m_rd } else { 0.0 };
     let mut rem_nm = Vec::new();
     if u_i > 1.0 {
-        rem_nm.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].mYK", sheet.id, action_id), loc("Sheet moment", "Blechmoment")),
-            q_moment(m_ed.abs()),
-            q_moment((m_rd * (1.0 - n_ed.abs()/n_rd.max(1e-9))).max(0.0)),
-            loc("Reduce M_Ed so N–M interaction ≤ 1.", "M_Ed reduzieren, sodass N–M-Interaktion ≤ 1."),
+        // Scale both N and M characteristic leaves by 1/u so sequential (or either path set) lands ≤ 1.
+        let n_lim = n_ed.abs() / u_i * 0.99;
+        let m_lim = m_ed.abs() / u_i * 0.99;
+        rem_nm.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "mYK", |a| a.m_y_k, m_ed, m_lim, q_moment,
+            loc("Sheet moment", "Blechmoment"),
+            "Reduce M_y,k so N–M interaction ≤ 1.",
+            "M_y,k senken, sodass N–M-Interaktion ≤ 1.",
         ));
-        rem_nm.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].nK", sheet.id, action_id), loc("Sheet axial", "Blech-Normalkraft")),
-            q_force(n_ed.abs()),
-            q_force((n_rd * (1.0 - m_ed.abs()/m_rd.max(1e-9))).max(0.0)),
-            loc("Reduce |N_Ed| so N–M interaction ≤ 1.", "|N_Ed| reduzieren, sodass N–M-Interaktion ≤ 1."),
+        rem_nm.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "nK", |a| a.n_k, n_ed, n_lim, q_force,
+            loc("Sheet axial", "Blech-Normalkraft"),
+            "Reduce N_k so N–M interaction ≤ 1.",
+            "N_k senken, sodass N–M-Interaktion ≤ 1.",
+        ));
+        rem_nm.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "gKLine", |a| a.g_k_line, u_i, 1.0, q_force,
+            loc("Sheet", "Blech"),
+            "Reduce g_k so N–M interaction ≤ 1.",
+            "g_k senken, sodass N–M-Interaktion ≤ 1.",
+        ));
+        rem_nm.extend(scale_action_leaf_remedies(
+            "coldFormed", &sheet.id, &sheet.actions, "qKLine", |a| a.q_k_line, u_i, 1.0, q_force,
+            loc("Sheet", "Blech"),
+            "Reduce q_k so N–M interaction ≤ 1.",
+            "q_k senken, sodass N–M-Interaktion ≤ 1.",
+        ));
+        let t_req = sheet.thickness * u_i.sqrt() * 1.05;
+        rem_nm.push(Remedy::at_least(
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].thickness", sheet.id), loc("Sheet thickness", "Blechdicke")),
+            q_length(sheet.thickness),
+            q_length(t_req),
+            loc(
+                &format!("Increase thickness to ≥ {:.2} mm for N–M.", t_req * 1e3),
+                &format!("Dicke auf ≥ {:.2} mm für N–M erhöhen.", t_req * 1e3),
+            ),
         ));
     }
     out.push(utilization_check(
@@ -2429,13 +2731,26 @@ fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMate
     ));
     let mut remedies_t = Vec::new();
     if sigma_theta_ed.abs() > sigma_theta_rd && sigma_theta_rd > 0.0 {
-        remedies_t.push(Remedy::at_most(
-            SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].mYK", shell.id, action_id), loc("Circumferential stress", "Umfangsspannung")),
-            q_stress(sigma_theta_ed.abs()),
-            q_stress(sigma_theta_rd),
+        remedies_t.extend(scale_action_leaf_remedies(
+            "shells", &shell.id, &shell.actions, "mYK", |a| a.m_y_k, sigma_theta_ed, sigma_theta_rd, q_stress,
+            loc("Circumferential stress", "Umfangsspannung"),
+            &format!("Reduce M_y,k (σ_θ) to ≤ {:.0} MPa design.", sigma_theta_rd/1e6),
+            &format!("M_y,k (σ_θ) senken auf Bemessung ≤ {:.0} MPa.", sigma_theta_rd/1e6),
+        ));
+        remedies_t.extend(scale_action_leaf_remedies(
+            "shells", &shell.id, &shell.actions, "mZK", |a| a.m_z_k, sigma_theta_ed, sigma_theta_rd, q_stress,
+            loc("Circumferential stress", "Umfangsspannung"),
+            "Reduce M_z,k so circumferential shell stress complies.",
+            "M_z,k senken, damit Umfangsspannung der Schale erfüllt ist.",
+        ));
+        let t_req = shell.thickness * (sigma_theta_ed.abs() / sigma_theta_rd) * 1.05;
+        remedies_t.push(Remedy::at_least(
+            SubjectRef::new(&shell.id, format!("shells[id={}].thickness", shell.id), loc("Shell thickness", "Schalendicke")),
+            q_length(shell.thickness),
+            q_length(t_req),
             loc(
-                &format!("Reduce σ_θ,Ed to ≤ {:.0} MPa.", sigma_theta_rd/1e6),
-                &format!("σ_θ,Ed auf ≤ {:.0} MPa reduzieren.", sigma_theta_rd/1e6),
+                &format!("Increase shell thickness to ≥ {:.2} mm.", t_req*1e3),
+                &format!("Schalendicke auf ≥ {:.2} mm erhöhen.", t_req*1e3),
             ),
         ));
     }
@@ -2456,13 +2771,26 @@ fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMate
     ));
     let mut remedies_tau = Vec::new();
     if tau_ed.abs() > tau_rd && tau_rd > 0.0 {
-        remedies_tau.push(Remedy::at_most(
-            SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].vZK", shell.id, action_id), loc("Shear stress", "Schubspannung")),
-            q_stress(tau_ed.abs()),
-            q_stress(tau_rd),
+        remedies_tau.extend(scale_action_leaf_remedies(
+            "shells", &shell.id, &shell.actions, "vZK", |a| a.v_z_k, tau_ed, tau_rd, q_stress,
+            loc("Shear stress", "Schubspannung"),
+            &format!("Reduce V_z,k (τ) to ≤ {:.0} MPa design.", tau_rd/1e6),
+            &format!("V_z,k (τ) senken auf Bemessung ≤ {:.0} MPa.", tau_rd/1e6),
+        ));
+        remedies_tau.extend(scale_action_leaf_remedies(
+            "shells", &shell.id, &shell.actions, "vYK", |a| a.v_y_k, tau_ed, tau_rd, q_stress,
+            loc("Shear stress", "Schubspannung"),
+            "Reduce V_y,k so shell shear complies.",
+            "V_y,k senken, damit Schalenschub erfüllt ist.",
+        ));
+        let t_req = shell.thickness * (tau_ed.abs() / tau_rd) * 1.05;
+        remedies_tau.push(Remedy::at_least(
+            SubjectRef::new(&shell.id, format!("shells[id={}].thickness", shell.id), loc("Shell thickness", "Schalendicke")),
+            q_length(shell.thickness),
+            q_length(t_req),
             loc(
-                &format!("Reduce τ_Ed to ≤ {:.0} MPa (τ_Rcr/γ_M1).", tau_rd/1e6),
-                &format!("τ_Ed auf ≤ {:.0} MPa reduzieren (τ_Rcr/γ_M1).", tau_rd/1e6),
+                &format!("Increase shell thickness to ≥ {:.2} mm for shear.", t_req*1e3),
+                &format!("Schalendicke auf ≥ {:.2} mm für Schub erhöhen.", t_req*1e3),
             ),
         ));
     }

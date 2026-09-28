@@ -2131,12 +2131,19 @@ enum PdfSection {
     Complete,
 }
 
+#[derive(Clone, Debug)]
+struct PdfRaster {
+    width: u32,
+    height: u32,
+    rgb: Vec<u8>,
+}
+
 /// 📕️ One painted element of a page's content stream, in page (top-left, y-down) coordinates.
 #[derive(Clone, Debug)]
 enum PdfItem {
     Rect { x: f32, y: f32, width: f32, height: f32, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]> },
-    Glyph { x: f32, y: f32, size: f32, glyph_id: u16 },
-    Image { x: f32, y: f32, width: f32, height: f32, placeholder: bool },
+    Glyph { x: f32, y: f32, size: f32, glyph_id: u16, color: [f32; 4] },
+    Image { x: f32, y: f32, width: f32, height: f32, rotation: f32, placeholder: bool, mark: String, raster: Option<PdfRaster> },
 }
 
 /// 📕️ One exported page: its media box and how many `pdf_items` it owns (items are contiguous in
@@ -3504,12 +3511,12 @@ impl LayoutExportJob {
             push(PdfItem::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height, fill: rect.fill.as_ref().map(|color| color.0), stroke: rect.stroke.as_ref().map(|color| color.0) }, &mut self.pdf_items)?;
         }
         for image in &list.images {
-            push(PdfItem::Image { x: image.x, y: image.y, width: image.width, height: image.height, placeholder: image.placeholder }, &mut self.pdf_items)?;
+            push(PdfItem::Image { x: image.x, y: image.y, width: image.width, height: image.height, rotation: image.rotation, placeholder: image.placeholder, mark: image.preview.clone(), raster: image.proxy_data_url.as_deref().and_then(Self::proxy_png_rgb) }, &mut self.pdf_items)?;
         }
         for run in &list.text_runs {
             for glyph in &run.glyphs {
                 let glyph_id = u16::try_from(glyph.glyph_id).map_err(|_| "layout-export-glyph-range")?;
-                push(PdfItem::Glyph { x: glyph.x, y: glyph.y, size: glyph.font_size, glyph_id }, &mut self.pdf_items)?;
+                push(PdfItem::Glyph { x: glyph.x, y: glyph.y, size: glyph.font_size, glyph_id, color: glyph.color.0 }, &mut self.pdf_items)?;
             }
         }
         self.pdf_pages.push(PdfPagePlan { width, height, items });
@@ -3544,6 +3551,105 @@ impl LayoutExportJob {
         7 + 3 * page
     }
 
+
+
+fn proxy_png_rgb(data_url: &str) -> Option<PdfRaster> {
+    let payload = data_url.strip_prefix("data:image/png;base64,")?;
+    let bytes = decode_base64(payload).ok()?;
+    let snapshot = semio_s_artifact_stdio_png::io::decode_png(&bytes).ok()?;
+    let pixels = u64::from(snapshot.width).checked_mul(u64::from(snapshot.height))?;
+    if pixels == 0 || pixels > 65_536 {
+        return None;
+    }
+    let expected = (pixels as usize).checked_mul(4)?;
+    if snapshot.pixels.len() != expected {
+        return None;
+    }
+    let mut rgb = Vec::with_capacity(expected / 4 * 3);
+    for pixel in snapshot.pixels.chunks_exact(4) {
+        let alpha = f32::from(pixel[3]) / 255.0;
+        for channel in 0..3 {
+            rgb.push(((f32::from(pixel[channel]) / 255.0 * alpha + (1.0 - alpha)) * 255.0).round() as u8);
+        }
+    }
+    Some(PdfRaster { width: snapshot.width, height: snapshot.height, rgb })
+}
+
+fn pdf_image_matrix(x: f32, y: f32, width: f32, height: f32, rotation: f32, page_height: f32) -> String {
+    if rotation.abs() < 1.0e-4 {
+        return format!("{width:.3} 0 0 {height:.3} {x:.3} {:.3}", page_height - y - height);
+    }
+    let cx = x + width * 0.5;
+    let cy = y + height * 0.5;
+    let (sin, cos) = rotation.sin_cos();
+    let map = |px: f32, py: f32| {
+        let dx = px - cx;
+        let dy = py - cy;
+        let sx = cx + dx * cos - dy * sin;
+        let sy = cy + dx * sin + dy * cos;
+        (sx, page_height - sy)
+    };
+    let bottom_left = map(x, y + height);
+    let bottom_right = map(x + width, y + height);
+    let top_left = map(x, y);
+    format!(
+        "{:.3} {:.3} {:.3} {:.3} {:.3} {:.3}",
+        bottom_right.0 - bottom_left.0,
+        bottom_right.1 - bottom_left.1,
+        top_left.0 - bottom_left.0,
+        top_left.1 - bottom_left.1,
+        bottom_left.0,
+        bottom_left.1
+    )
+}
+
+fn pdf_inline_image(x: f32, y: f32, width: f32, height: f32, rotation: f32, page_height: f32, raster: &PdfRaster) -> String {
+    let mut hex = String::with_capacity(raster.rgb.len() * 2);
+    for byte in &raster.rgb {
+        hex.push_str(&format!("{byte:02X}"));
+    }
+    let matrix = Self::pdf_image_matrix(x, y, width, height, rotation, page_height);
+    format!("q {matrix} cm\nBI\n/W {} /H {} /CS /RGB /BPC 8 /F /AHx\nID\n{hex}>\nEI\nQ\n", raster.width, raster.height)
+}
+
+fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_height: f32) -> String {
+    let inset = 4.0_f32.min(width * 0.2).min(height * 0.2);
+    if mark.is_empty() || inset < 0.5 {
+        return String::new();
+    }
+    let left = x + inset;
+    let right = x + width - inset;
+    let top = page_height - (y + inset);
+    let bottom = page_height - (y + height - inset);
+    let line = |x1: f32, y1: f32, x2: f32, y2: f32| format!("q 0.2000 0.2500 0.3000 RG 1.5 w {x1:.3} {y1:.3} m {x2:.3} {y2:.3} l S Q\n");
+    match mark {
+        "page" => format!("q 0.2000 0.2500 0.3000 RG 1.5 w {left:.3} {bottom:.3} {:.3} {:.3} re S Q\n", right - left, top - bottom),
+        "stroke" => line(left, top, right, bottom),
+        "map" => {
+            let mid_x = (left + right) * 0.5;
+            let mid_y = (top + bottom) * 0.5;
+            format!("{}{}", line(mid_x, top, mid_x, bottom), line(left, mid_y, right, mid_y))
+        }
+        "curve" => {
+            let mid_x = (left + right) * 0.5;
+            format!("{}{}", line(left, bottom, mid_x, top), line(mid_x, top, right, bottom))
+        }
+        "grid" => {
+            let step_x = (right - left) / 3.0;
+            let step_y = (top - bottom) / 3.0;
+            let mut ops = String::new();
+            for step in 1..3 {
+                let y = bottom + step_y * step as f32;
+                let x = left + step_x * step as f32;
+                ops.push_str(&line(left, y, right, y));
+                ops.push_str(&line(x, bottom, x, top));
+            }
+            ops
+        }
+        _ => String::new(),
+    }
+}
+
     fn pdf_item_ops(item: &PdfItem, page_height: f32) -> String {
         let color = |rgba: [f32; 4]| format!("{:.4} {:.4} {:.4}", rgba[0].clamp(0.0, 1.0), rgba[1].clamp(0.0, 1.0), rgba[2].clamp(0.0, 1.0));
         match item {
@@ -3558,15 +3664,24 @@ impl LayoutExportJob {
                 }
                 ops
             }
-            PdfItem::Image { x, y, width, height, placeholder } => {
+            PdfItem::Image { x, y, width, height, rotation, placeholder, mark, raster } => {
+                if let Some(raster) = raster {
+                    return Self::pdf_inline_image(*x, *y, *width, *height, *rotation, page_height, raster);
+                }
                 let path = format!("{:.3} {:.3} {:.3} {:.3} re", x, page_height - y - height, width, height);
-                if *placeholder {
+                let body = if *placeholder {
                     format!("q 0.92 0.88 0.84 rg {path} f Q\nq 0.75 0.35 0.2 RG 1 w {path} S Q\n")
                 } else {
                     format!("q 0.85 0.85 0.85 rg {path} f Q\n")
-                }
+                };
+                format!("{body}{}", Self::pdf_preview_ops(mark, *x, *y, *width, *height, page_height))
             }
-            PdfItem::Glyph { x, y, size, glyph_id } => format!("BT /F1 {:.3} Tf 1 0 0 1 {:.3} {:.3} Tm <{:04X}> Tj ET\n", size, x, page_height - y, glyph_id),
+            PdfItem::Glyph { x, y, size, glyph_id, color: fill } => {
+                let tinted = fill[0] > 0.001 || fill[1] > 0.001 || fill[2] > 0.001;
+                let open = if tinted { format!("q {} rg ", color(*fill)) } else { String::new() };
+                let close = if tinted { " Q" } else { "" };
+                format!("{open}BT /F1 {:.3} Tf 1 0 0 1 {:.3} {:.3} Tm <{:04X}> Tj ET{close}\n", size, x, page_height - y, glyph_id)
+            }
         }
     }
 
@@ -4419,7 +4534,6 @@ pub(crate) fn output_name(request: &LayoutExportRequest) -> String {
     }
 }
 
-#[cfg(test)]
 fn decode_base64(value: &str) -> Result<Vec<u8>, String> {
     let mut result = Vec::with_capacity(value.len() / 4 * 3);
     for quartet in value.as_bytes().chunks_exact(4) {
@@ -4441,7 +4555,6 @@ fn decode_base64(value: &str) -> Result<Vec<u8>, String> {
     Ok(result)
 }
 
-#[cfg(test)]
 fn base64_value(byte: u8) -> Result<u8, String> {
     match byte {
         b'A'..=b'Z' => Ok(byte - b'A'),

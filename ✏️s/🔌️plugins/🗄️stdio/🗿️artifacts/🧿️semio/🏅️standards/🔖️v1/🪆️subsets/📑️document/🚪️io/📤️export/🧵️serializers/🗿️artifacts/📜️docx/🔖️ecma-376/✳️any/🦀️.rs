@@ -1,7 +1,7 @@
 //! 📤️ Serialize `s.stdio.semio/v1/document` into a real `s.stdio.docx` (ecma-376) snapshot —
-//! the mirror of this pair's deserializer. Zero codec reimplementation: only builds a
-//! `DocxSnapshot` value (`opc` regenerated fresh by docx's own `engine::encode_docx` from
-//! `document`, never touched here directly).
+//! the mirror of this pair's deserializer. Zero codec reimplementation: the `DocxSnapshot`'s
+//! authoritative XML parts and OPC metadata come from docx's own `build_minimal_docx`, never
+//! assembled here directly.
 //!
 //! Honest, documented losses (never fabricated):
 //! - docx's block model only has `Paragraph`/`Table` — `List`/`Quote` FLATTEN (their nested
@@ -18,8 +18,8 @@
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
 use semio_s_artifact_stdio_docx::DocxSnapshot;
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -71,7 +71,7 @@ impl ArtifactSerializer for SemioDocumentToDocx {
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let styles = from.styles.iter().map(|s| DocxStyle { id: s.id.clone(), name: s.name.clone(), based_on: s.based_on.clone() }).collect();
         let body = from.blocks.iter().flat_map(map_semio_block).collect();
-        Ok(DocxSnapshot::from_parts(OpcPackage::default(), DocxDocument { body, styles }))
+        Ok(build_minimal_docx(DocxDocument { body, styles }))
     }
 }
 //#endregion 🔖️Serializer

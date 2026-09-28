@@ -62,3 +62,11 @@ export function sharedDocumentOpeningRoleV1(events: readonly DirectoryEvent[], s
   const role = space.members.find((member) => member.userId === userId)?.role;
   return role !== undefined && hubAccessPermits(accessPolicy as HubAccessPolicyV1, [role], "document.write") ? "editor" : "viewer";
 }
+
+/** 🔀️ Whether switching a shared document's surface to `to` is refused for a human whose access to its space is `access`
+ * ({@link sharedDocumentOpeningRoleV1}; `null` = nothing decided, a local document): the hub issues a read-only member
+ * only the viewer and answers the editor `component-unavailable`, so the shell refuses that switch itself — with the
+ * `view-only-access` reason — instead of reopening the document onto a surface the hub will never serve. */
+export function sharedDocumentRoleSwitchRefusedV1(access: AppRole | null, to: AppRole): boolean {
+  return to === "editor" && access === "viewer";
+}

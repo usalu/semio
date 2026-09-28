@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-layer/schema.json",
+  "title": "UpdateLayer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pageId", "layerId", "name", "visible", "locked"],
+  "properties": {
+    "pageId": { "type": "string" },
+    "layerId": { "type": "string" },
+    "name": { "type": "string", "minLength": 1 },
+    "visible": { "type": "boolean" },
+    "locked": { "type": "boolean" }
+  }
+}

@@ -55,7 +55,7 @@ OLD = '''        /// 🧪️ Every declared app action must bridge through `comm
                 "setInteractionGranularity",
             ];
             for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)) {
-                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) {
+                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) || action.id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID {
                     continue;
                 }
                 // 🧱️ Window-KIT catalog rows are framework-owned surface verbs, not app actions: the shared
@@ -108,6 +108,12 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
             "set-node",
         ];
 
+        /// 🧱️ Whether `id` is a verb the framework owns rather than the app: one of [`FRAMEWORK_OWNED_VERBS`], a tool-run
+        /// verb, or the typed-operation cancellation every app inherits.
+        fn framework_owned_verb(id: &str) -> bool {
+            FRAMEWORK_OWNED_VERBS.contains(&id) || crate::is_tool_run_action_id(id) || id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID
+        }
+
         /// 🧪️ Every declared app action must bridge through `command_from_action`, round-trip `command_id`, and read
         /// only the arguments it declares ([`declared_verbs_reading_undeclared_arguments`]).
         pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
@@ -115,7 +121,7 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
             let definition = manifest().definition;
             let _app = A::default();
             for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)) {
-                if FRAMEWORK_OWNED_VERBS.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) {
+                if framework_owned_verb(&action.id) {
                     continue;
                 }
                 let empty_args = DslValue::Object(Vec::new());
@@ -150,8 +156,8 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
             "elementId", "layerId", "spaceId", "artifactId", "checkpointId", "entrySeq", "enabled", "visible", "locked",
         ];
 
-        /// 🔑️ Every declared verb of `definition` — window-claimed and app-level, the [`FRAMEWORK_OWNED_VERBS`] and
-        /// tool-run verbs excepted — whose `bridge` reads an argument it does not declare. Base: the staged declared
+        /// 🔑️ Every declared verb of `definition` — window-claimed and app-level, the framework-owned verbs excepted
+        /// (`framework_owned_verb`) — whose `bridge` reads an argument it does not declare. Base: the staged declared
         /// defaults (`effective_action_args`, exactly what a shell or agent dispatches — an undeclared staged key is
         /// dropped there whenever the verb declares any argument). Probe: each key of
         /// [`UNDECLARED_ARGUMENT_VOCABULARY`] ∪ every argument key any action of `definition` declares, which the verb
@@ -168,7 +174,7 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
             let mut probed = std::collections::BTreeSet::new();
             let mut reads = Vec::new();
             for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(definition, window)).chain(definition.actions.iter()) {
-                if !probed.insert(action.id.as_str()) || FRAMEWORK_OWNED_VERBS.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) {
+                if !probed.insert(action.id.as_str()) || framework_owned_verb(&action.id) {
                     continue;
                 }
                 let staged = effective_action_args(&action.args, &DslValue::Object(Vec::new()), None);
@@ -244,7 +250,7 @@ CTOR_NEW = """        ArtifactCodecTableV1 { pack_schema_hash: pack_schema_hash:
 problems = []
 path = ROOT / SDK
 current = path.read_text(encoding="utf-8")
-if "pub async fn declared_verbs_reading_undeclared_arguments" in current:
+if "pub fn declared_verbs_reading_undeclared_arguments" in current:
     print("already applied")
     sys.exit(0)
 for label, old in [("bridge law block", OLD), ("codec table struct tail", TABLE_OLD), ("codec table constructor", CTOR_OLD)]:

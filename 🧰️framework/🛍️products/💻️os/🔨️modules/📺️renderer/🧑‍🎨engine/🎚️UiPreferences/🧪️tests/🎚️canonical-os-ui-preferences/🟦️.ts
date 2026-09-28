@@ -31,7 +31,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const validate = new Ajv({ strict: true }).compile(uiPreferencesSchema);
       expect(validate?.(reloaded), JSON.stringify(validate?.errors)).toBe(true);
       expect(resolveUiPreferences(reloaded, { appearance: "system", layout: "desktop", driverId: "default", locale: "en", terminology: "native", themeId: "semio" }).locale).toBe("de");
-      console.info("[DEBUG] canonical OS UI preference events replayed, cross-shell propagated, isolated, and schema-validated");
     });
   });
 }

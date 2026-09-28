@@ -80,5 +80,4 @@ for (const row of fixture.cases) it(`React Mode replays ${row.id}`, () => {
   if (row.maximized === null) fireEvent.click(container.querySelector(`[data-stack-path='${fixture.maximized}'] [data-slot='mode-dock-tab-focus']`)!);
   rerender(mode(row.windows, row.weights, row.label, row.layoutLabel, true));
   expect(container.querySelector('[data-slot="mode"]')?.getAttribute("data-maximized-path")).toBe(String(fixture.maximized));
-  console.log(`[DEBUG] React maximize resync ${row.id}: ${row.maximized ?? "restored"}`);
 });

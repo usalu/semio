@@ -148,7 +148,7 @@ impl EmitEvent {
 /// `NullEmit` (`db_artifact`, `db_actor` — R11(c): no real call site anywhere threads anything else
 /// through them) rather than depending on `db_observe` directly — dedyn-emit-runtime, O1/R11(a):
 /// replaces the former `&dyn Emit`/`Arc<dyn Emit>` erasure with the same trivial-generics shape
-/// `AuthzHook`/`VersionGraph` already use, so `db_core..db_cluster` stay `db_observe`-free while
+/// `VersionGraph` already uses, so `db_core..db_cluster` stay `db_observe`-free while
 /// `db_observe`'s real sinks (structured/audit JSON-lines, metric registries) implement this trait.
 pub trait Emit: Send + Sync {
     fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;

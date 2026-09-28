@@ -136,7 +136,6 @@ describe("Shell document opening", () => {
       expect(retired.map(([key, owner]) => `${key}:${owner.clientInstanceId}`)).toEqual(row.closed);
       expect([...owners].map(([key, owner]) => `${key}:${owner.clientInstanceId}`).sort()).toEqual([...row.remaining].sort());
     }
-    console.log("[DEBUG] Document opening replacement: failed-restored=1 committed-retired=2 background-refused=1");
   });
 
   it("serializes background admissions and reaps them on invalidation, failure, and close", async () => {
@@ -185,7 +184,6 @@ describe("Shell document opening", () => {
       await sessions.run("space-a", port);
       expect(deepEqual(observed, expected), scenario).toBe(true);
     }
-    console.log("[DEBUG] Background document sessions: reuse=1 generation-retired=1 late-create-reaped=1 retry=1 explicit-close=1 authority-retired=1");
   });
 
   it("retires exact failed document admissions and socket timers without disturbing their replacement", async () => {
@@ -231,7 +229,6 @@ describe("Shell document opening", () => {
         expect(route, row.id).toBe(row.replace !== "none" ? "opening-b" : row.outcome === "failed" ? null : "opening-a");
       }
     } finally { vi.useRealTimers(); }
-    console.log("[DEBUG] Document opening: neutral=7 failed-owner-cleanup=4 replacement-preserved=2 timer-leaks=0");
   }, 2_000);
 
   it("finishes physical cleanup even when route retirement throws", async () => {
@@ -284,6 +281,5 @@ describe("Shell document opening", () => {
     await lane.close("b");
     expect(lane.idle).toBe(true);
     expect(observed.filter(event => event === "detach")).toHaveLength(2);
-    console.log("[DEBUG] Document attachment: late-attach-retired=1 replacement-preserved=1 idle-lane-reaped=1");
   });
 });

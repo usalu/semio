@@ -52,7 +52,7 @@ impl Default for En1994Snapshot {
         slab.id = "slab-S1".into();
         Self {
             annex: AnnexChoice::De,
-            structure_kind: "bridge".into(),
+            structure_kind: "building".into(),
             steel_f_y_pa: 355e6,
             beams: vec![beam],
             columns: vec![col],

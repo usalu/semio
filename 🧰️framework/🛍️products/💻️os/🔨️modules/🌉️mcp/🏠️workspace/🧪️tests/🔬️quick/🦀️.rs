@@ -84,6 +84,41 @@ fn a_terminal_link_answers_a_waiting_commit_at_once_with_the_refusal() {
     assert_eq!(relay.terminal().as_deref(), Some("access-revoked"));
 }
 
+/// 🚦️ A hub session's edit is refused before its guest runs unless an author holds a live hub document of the verb's
+/// plugin: a terminal link names its code, a spectator (a `read` delegation) is read-only, an authority that is not
+/// ready refuses retryably, and no bound document — or one without a document actor — is unbound, never a local write
+/// on the plugin's genesis document (measured 2026-09-28 by H13: a read agent's addBlock answered SUCCEEDED on
+/// `plugin:note`, hub head 0).
+#[test]
+fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_live_document() {
+    use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
+    let binding = |blocked: &str| PluginArtifactBinding {
+        schema: "s.note.note".to_string(),
+        plugin_id: "note".to_string(),
+        app_id: "note.editor".to_string(),
+        surface_id: Some("s.note.note@1/*#editor".to_string()),
+        document: Some(Arc::new(SessionDocumentPair { pack: b"pack".to_vec(), spr: b"spr".to_vec() })),
+        backbone: None,
+        backbone_blocked_by: Some(blocked.to_string()),
+        relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+        relay: Arc::default(),
+    };
+    let document = binding("no `store::ArtifactCodec` is registered for artifact schema `s.note.note`");
+    let spectator = hub_edit_refusal(Ok(DirectorySpaceRole::Spectator), "note", Some(("hub-note", &document))).expect("a spectator never edits");
+    assert_eq!(spectator.code, crate::actions::VIEWER_READ_ONLY_FAULT_CODE);
+    let unready = hub_edit_refusal(Err("hub descriptor binding is refreshing".to_string()), "note", Some(("hub-note", &document))).expect("no role, no edit");
+    assert!(unready.code == "plugin.unavailable" && unready.message.contains("refreshing"), "{unready:?}");
+    let nothing_open = hub_edit_refusal(Ok(DirectorySpaceRole::Author), "note", None).expect("no hub document, no edit");
+    assert!(nothing_open.code == crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE && nothing_open.message.contains("`note`") && nothing_open.message.contains("artifact_open"), "{nothing_open:?}");
+    let no_actor = hub_edit_refusal(Ok(DirectorySpaceRole::Author), "note", Some(("hub-note", &document))).expect("no document actor, no edit");
+    assert!(no_actor.code == crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE && no_actor.message.contains("hub-note") && no_actor.message.contains("ArtifactCodec"), "{no_actor:?}");
+    document.relay.record_terminal(store::sync::DocumentLinkStatus::AccessRevoked.code(), "access was withdrawn");
+    let revoked = hub_edit_refusal(Ok(DirectorySpaceRole::Author), "note", Some(("hub-note", &document))).expect("a terminal link takes no edit");
+    assert_eq!(revoked.code, store::sync::DocumentLinkStatus::AccessRevoked.code());
+    let committed = commits_with_nothing_relayed(vec![AppFrame::TransactionCommitted { txn_id: "t".into(), edit_id: "e".into(), relay: None }]);
+    assert!(matches!(&committed[..], [AppFrame::TransactionCommitted { relay: Some(relay), .. }] if !relay.acknowledged && relay.refused.is_none()), "{committed:?}");
+}
+
 #[test]
 fn probe_pack_schema_hash_matches_the_cross_process_descriptor_contract() {
     let actual = store::os_pack::schema_hash(&probe_record_spec()).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
@@ -393,7 +428,7 @@ fn unbound_plugin_artifacts() -> Arc<Mutex<HashMap<String, PluginArtifactBinding
 #[test]
 fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
     let bound = unbound_plugin_artifacts();
-    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound));
+    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound), None);
     let note = AppRoute { plugin_id: "note".to_string(), app_id: Some("note.editor".to_string()) };
     let cad = AppRoute { plugin_id: "cad".to_string(), app_id: Some("cad.editor".to_string()) };
     assert_eq!(router.session_artifact_for(&note), None, "nothing bound yet");
@@ -457,21 +492,21 @@ fn every_app_of_a_multi_app_plugin_routes_to_its_own_instance_slot() {
 
 #[test]
 fn routing_artifact_channel_purecommand_unknown_capability_is_not_found_before_opening_any_channel() {
-    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts());
+    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
     let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "totally.unknown.capability".to_string(), input: serde_json::json!({}) }]).expect_err("unknown capability must not route to any plugin");
     assert_eq!(fault.code, "capability.not-found");
 }
 
 #[test]
 fn routing_artifact_channel_purecommand_gateway_owned_capability_is_plugin_unavailable() {
-    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts());
+    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
     let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "capabilities.search".to_string(), input: serde_json::json!({}) }]).expect_err("a gateway-owned capability names no plugin channel");
     assert_eq!(fault.code, "plugin.unavailable");
 }
 
 #[test]
 fn routing_artifact_channel_exchange_on_an_unrouted_instance_without_a_purecommand_is_plugin_unavailable() {
-    let mut router = RoutingArtifactChannel::new(empty_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts());
+    let mut router = RoutingArtifactChannel::new(empty_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None);
     let fault = router.exchange(0, vec![AppCommand::ReadHistory]).expect_err("no known plugin for this instance and no PureCommand to derive one from");
     assert_eq!(fault.code, "plugin.unavailable");
 }
@@ -525,7 +560,7 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
     let (note_verb, cad_verb) = (first_app_verb("note"), first_app_verb("cad"));
     let note_instance = capability_instance_slot(&catalog, &note_verb).expect("note's verb has a route slot");
     let cad_instance = capability_instance_slot(&catalog, &cad_verb).expect("cad's verb has a route slot");
-    let mut router = RoutingArtifactChannel::new(Arc::clone(&catalog), Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts());
+    let mut router = RoutingArtifactChannel::new(Arc::clone(&catalog), Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts(), None);
 
     let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand { capability_id: note_verb.clone(), input: serde_json::json!({}) }]);
     assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{note_verb} must route to a real note channel: {note_result:?}");
@@ -631,7 +666,7 @@ fn only_a_backbone_effect_addressed_at_this_channel_is_document_egress() {
 #[test]
 fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() {
     let bound = unbound_plugin_artifacts();
-    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound));
+    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound), None);
     let note = AppRoute { plugin_id: "note".to_string(), app_id: Some("note.editor".to_string()) };
     let unbound = router.relay_backbone_egress(&note, vec![vec![1, 2, 3]]).expect_err("no bound document at all");
     assert_eq!(unbound.code, "channel.not-wired");
@@ -828,7 +863,7 @@ fn isolated_compile_worker_entry() {
 /// 📮️ A hub commit is acknowledged only by a status the document actor reports AFTER the relay: a live
 /// link, nothing pending and an acknowledged head. A stale acknowledgement from before the relay, a
 /// link in backoff and a link that expired all answer `acknowledged: false` with the link state and
-/// the last coded fault, so `action_invoke` says `relay-pending` instead of an unqualified success.
+/// the last coded fault, so `action_invoke` reverts the edit and answers `hub.relay-unacknowledged`, never an unqualified success.
 /// Measured 2026-09-26 on hub 7800: 1 of 3 agent commits answered SUCCEEDED while the hub head never moved.
 #[test]
 fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay() {

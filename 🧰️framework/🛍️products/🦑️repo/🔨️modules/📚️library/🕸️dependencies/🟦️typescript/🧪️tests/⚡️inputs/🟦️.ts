@@ -38,5 +38,4 @@ export async function testTypeScriptSourceInputs(generated: string): Promise<voi
   for (const malformed of [{ ...fixture.contract, unknown: true }, { ...fixture.contract, entries: ["../entry.ts"] }, { ...fixture.contract, entries: [] }]) {
     assert.equal(validate(malformed), false); assert.throws(() => api.relativeSourceInputs(malformed, root));
   }
-  console.log("[DEBUG] Source inputs match esbuild, Bun/Node runtime values, changed imports and absent generated boundaries PASS");
 }

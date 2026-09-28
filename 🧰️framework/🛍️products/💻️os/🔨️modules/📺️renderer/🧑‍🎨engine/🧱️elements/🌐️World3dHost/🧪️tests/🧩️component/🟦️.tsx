@@ -116,16 +116,16 @@ function mountedBatches(ledger: ToolRunTraceStore): Batch[] {
         const oracle = new Matrix4().compose(new Vector3(...subject.position), new Quaternion(...subject.rotation), new Vector3(subject.scale, subject.scale, subject.scale));
         return oracle.elements.every((value, index) => Math.abs(value - matrix.elements[index]!) < 1e-5);
       });
-      expect(hit, `[DEBUG] instance ${at} of a live batch matches no resident record`).toBeTruthy();
+      expect(hit, `instance ${at} of a live batch matches no resident record`).toBeTruthy();
       const subject = hit![1].subject as Extract<ToolRunTraceSubject, { kind: "instance3d" }>;
       expect(mesh.geometry.getAttribute("position").count, "[DEBUG] a batch must draw through meshesJson[mesh]").toBe(fixture.meshes[subject.mesh]!.data.positions.length / 3);
       kinds.add(`${subject.mesh}:${hit![1].verdict}`);
     }
-    expect(kinds.size, "[DEBUG] one instanced mesh carries exactly one (mesh, verdict)").toBe(1);
+    expect(kinds.size, "one instanced mesh carries exactly one (mesh, verdict)").toBe(1);
     const [key] = [...kinds];
     const [mesh0, verdict] = key!.split(":");
     const prior = counts.get(key!)?.count ?? 0;
-    expect(prior, `[DEBUG] ${key} is mounted twice`).toBe(0);
+    expect(prior, `${key} is mounted twice`).toBe(0);
     counts.set(key!, { mesh: Number(mesh0), verdict: verdict!, count: mesh.count });
   }
   return [...counts.values()].sort((a, b) => a.mesh - b.mesh || a.verdict.localeCompare(b.verdict));
@@ -185,7 +185,7 @@ describe("🎬️ world 3d host tool run trace mount", () => {
     runFrames();
     expect(recorded.instanced.filter((entry) => entry.live)).toHaveLength(0);
     expect(host().getAttribute("data-tool-run-records")).toBe("0");
-    expect(recorded.dashed, "[DEBUG] every provisional instance paints the dashed provisional outline").toBe(fixture.provisionalOutlines);
+    expect(recorded.dashed, "every provisional instance paints the dashed provisional outline").toBe(fixture.provisionalOutlines);
     let cursor: ToolRunTraceCursor | null = null;
     for (const step of fixture.steps) {
       ledger.applyOps(step.ops.map((op) => toolRunTraceOpFromJson(op as never)));

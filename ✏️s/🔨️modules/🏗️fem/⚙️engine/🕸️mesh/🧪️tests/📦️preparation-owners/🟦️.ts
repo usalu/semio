@@ -42,5 +42,4 @@ export function testMeshPreparationOwners(): void {
     if (!state.pendingPoint && !state.pendingIndex && state.constraints < row.maximumTriangles * 3) update("constraints", state.constraints + 1);
     assert.deepEqual(state, row.expected, row.id);
   }
-  console.log("[DEBUG] Mesh preparation ownership matches four reservation cases at both pointer widths and three pre-append refusal cases through JSONPatch");
 }

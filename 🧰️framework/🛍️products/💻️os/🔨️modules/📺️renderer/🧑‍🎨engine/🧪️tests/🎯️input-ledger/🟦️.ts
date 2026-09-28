@@ -36,11 +36,15 @@ import {
   INPUT_REFUSAL_LABELS_V1,
   INPUT_REFUSAL_NOTIFIED_V1,
   INPUT_REFUSAL_RETRYABLE_V1,
+  createHubIdentitySettleV1,
+  inputAwaitsHubIdentityV1,
+  inputIdentitySettleNoticeTextV1,
   type GestureSendV1,
   type InputOutcomeV1,
   type InputProvenanceV1,
   type InputRefusalReasonV1,
 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
+import identityGate from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔐️identity-gate.json";
 
 const REFUSAL_REASONS = Object.keys(INPUT_REFUSAL_RETRYABLE_V1) as InputRefusalReasonV1[];
 
@@ -560,3 +564,50 @@ describe("gesture sample lane", () => {
   });
 });
 //#endregion 🖱️L4 gesture sample lane
+
+//#region 🔐️IdentitySettle
+describe("🔐️ identity gate", () => {
+  for (const row of identityGate.cases) {
+    it(row.name, () => {
+      expect(inputAwaitsHubIdentityV1(row.gate)).toBe(row.awaits);
+    });
+  }
+
+  it("wakes every waiter on settle, in arrival order, and forgets them", async () => {
+    const settle = createHubIdentitySettleV1();
+    const order: string[] = [];
+    const first = settle.wait(60_000).then((outcome) => order.push(`a:${outcome}`));
+    const second = settle.wait(60_000).then((outcome) => order.push(`b:${outcome}`));
+    expect(settle.waiting()).toBe(2);
+    settle.settle();
+    await Promise.all([first, second]);
+    expect(order).toEqual(["a:settled", "b:settled"]);
+    expect(settle.waiting()).toBe(0);
+  });
+
+  it("releases a waiter at its bound, and a settle after that changes nothing", async () => {
+    const timers: (() => void)[] = [];
+    const settle = createHubIdentitySettleV1((run) => timers.push(run), () => {});
+    const waited = settle.wait(5_000);
+    timers[0]!();
+    expect(await waited).toBe("bounded");
+    settle.settle();
+    expect(settle.waiting()).toBe(0);
+  });
+
+  it("releases a waiter whose signal aborts, and an already-aborted signal never waits", async () => {
+    const settle = createHubIdentitySettleV1();
+    const controller = new AbortController();
+    const waited = settle.wait(60_000, controller.signal);
+    controller.abort();
+    expect(await waited).toBe("cancelled");
+    expect(await settle.wait(60_000, controller.signal)).toBe("cancelled");
+    expect(settle.waiting()).toBe(0);
+  });
+
+  it("tells the human in both languages that the input follows", () => {
+    expect(inputIdentitySettleNoticeTextV1("en")).toMatch(/sign-in/u);
+    expect(inputIdentitySettleNoticeTextV1("de")).toMatch(/Anmeldung/u);
+  });
+});
+//#endregion 🔐️IdentitySettle

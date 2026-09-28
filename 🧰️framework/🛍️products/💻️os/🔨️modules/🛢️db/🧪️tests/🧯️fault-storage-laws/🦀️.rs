@@ -108,7 +108,7 @@ async fn explore_interleavings_every_permutation_of_disjoint_writes_converges_to
                 // deterministic single-threaded step ordering), so the now-async `submit` is
                 // driven synchronously via the same `db_actor::block_on` bridge every other
                 // test in this crate already uses — sound here because the backing storage is
-                // in-memory (`MemoryStorage`) and authz is the default `AllowAll`, so nothing
+                // in-memory (`MemoryStorage`) and the default security gate never suspends, so nothing
                 // in `submit`'s call graph ever actually suspends.
                 db_actor::block_on(engine.borrow_mut().submit(db_actor::block_on(single_envelope_batch(envelope)), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, now)).expect("submit");
             });

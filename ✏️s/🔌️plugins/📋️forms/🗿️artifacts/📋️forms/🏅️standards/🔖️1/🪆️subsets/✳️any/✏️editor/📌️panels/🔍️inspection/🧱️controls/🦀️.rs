@@ -63,7 +63,7 @@ fn property_value(question: &FormQuestion, field: &str) -> String {
 }
 
 pub fn scalar_row(question: &FormQuestion, ids: &[String], field: &str, view: &semio_framework_plugin::ViewModel, config: &crate::editor::forms::config::FormsConfig) -> UiAssemblyResult<BuiltNode> {
-    let labels = crate::editor::forms::forms_play_labels(view);
+    let labels = crate::editor::forms::terminology::forms_play_labels(view);
     let id = format!("forms-play-inspector.question.{field}");
     let label = property_label(field, labels);
     let args = arguments(vec![("field", ui_value_text(field)?), ("questionIds", question_ids(ids)?)])?;

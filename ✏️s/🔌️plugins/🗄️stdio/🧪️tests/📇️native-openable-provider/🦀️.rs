@@ -8,12 +8,14 @@ fn native_catalog_dependency_is_exactly_its_compiled_owner() {
     let rows = fixture["nativeCases"].as_array().unwrap();
     assert_eq!(rows.len(), 9);
     for row in rows {
-        let dependencies: Vec<semio_framework::PluginDependency> = serde_json::from_value(row["dependencies"].clone()).unwrap();
-        let accepted = semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&dependencies).is_ok();
-        assert_eq!(accepted, row["accepted"].as_bool().unwrap(), "{}", row["id"]);
-        let bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework::to_dsl_value(&dependencies).unwrap());
-        let decoded: Vec<semio_framework::PluginDependency> = semio_framework::from_dsl_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
-        assert_eq!(semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&decoded).is_ok(), accepted);
+        let expected = row["accepted"].as_bool().unwrap();
+        let parsed = serde_json::from_value::<Vec<semio_framework::PluginDependency>>(row["dependencies"].clone());
+        let accepted = parsed.as_ref().is_ok_and(|dependencies| semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(dependencies).is_ok());
+        assert_eq!(accepted, expected, "{}", row["id"]);
+        let bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&row["dependencies"].clone().into());
+        let decoded = semio_framework::from_dsl_value::<Vec<semio_framework::PluginDependency>>(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap());
+        assert_eq!(decoded.is_ok(), parsed.is_ok(), "{}: the wire decoder and the JSON reader refuse the same dependency pins", row["id"]);
+        assert_eq!(decoded.is_ok_and(|dependencies| semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&dependencies).is_ok()), expected, "{}", row["id"]);
     }
 }
 

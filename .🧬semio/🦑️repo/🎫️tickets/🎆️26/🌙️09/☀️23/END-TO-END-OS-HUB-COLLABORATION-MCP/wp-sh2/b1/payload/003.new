@@ -1,0 +1,784 @@
+{
+  "$schema": "../../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This owner's contribution. 🎚️config carries five typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), identity (sign-in, sign-out), the local document catalog (admit-local-document, retire-local-document), and UI preferences (the nine set-* kinds of UiPreferencesConfigMutation). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "os-config-opening-preferences-mutation-semantics",
+      "capabilities": [
+        "os-config-opening-1-mutate"
+      ],
+      "rationale": "`os.config.opening` is this operating system's own preference record — a list of `(artifact dialect, role) -> app` pins, where the dialect is a semio `ArtifactDialect` triple and the app is a semio `AppRef`. There is no third-party implementation of it and no third party could hold an opinion about it: what is under test is that a pin is an UPSERT keyed on `(dialect, role)` rather than an append, that clearing a pin nobody set is a warned no-op rather than an error, and that `set` and `clear` are exact inverses of each other on that key — statements about this repository's own preference semantics, not about JSON or key-value storage. Confidence comes instead from the two committed, independently handcrafted `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the facet itself, re-exercised end to end through `apply_opening_config_mutation_reporting`; and from the inverse law as a metamorphic property. Both vectors run against the same two-pin document — a cad viewer pin and a cad editor pin — which is what lets each kind be held to the claim that it touches ONE pin and leaves its sibling alone.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'os-config-opening-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "xdg-mime",
+            "ecosystem": "posix",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Maps MIME types to desktop files; this record maps semio artifact dialect triples and roles to semio app references, which it cannot hold."
+          }
+        ],
+        "whyNoneQualifies": "os.config.opening is this operating system's own preference record keyed by semio dialects and apps; no third party implements it, so none can adjudicate set-default-app or clear-default-app."
+      }
+    },
+    {
+      "id": "os-config-merge-policy-mutation-semantics",
+      "capabilities": [
+        "os-config-merge-policy-1-mutate"
+      ],
+      "rationale": "`os.config.merge-policy` is repository-owned authority configuration with no independent third-party implementation: what is under test is that a policy change replaces the WHOLE single-field record, that asking for the policy already active is a warned no-op which hands the unchanged record back rather than resetting it to the facet default, and that the undo carries the policy read off the pre-mutation record. Those are statements about this repository's own authority semantics, not about JSON or enums. Confidence comes instead from the committed, independently handcrafted `tightens-the-authority-to-vigilant` specification vector under `../🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/`, already unit-tested inside the facet itself and re-exercised end to end through `apply_merge_policy_config_mutation_reporting`; and from the inverse law as a metamorphic property.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'os-config-merge-policy-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "automerge",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A CRDT library with its own merge semantics; it has no record of which merge policy this operating system's authority applies, which is the only thing change-merge-policy edits."
+          }
+        ],
+        "whyNoneQualifies": "os.config.merge-policy is repository-owned authority configuration; no third party holds or edits it, so none can adjudicate change-merge-policy."
+      }
+    },
+    {
+      "id": "os-config-identity-mutation-semantics",
+      "capabilities": [
+        "os-config-identity-1-mutate"
+      ],
+      "rationale": "`os.config.identity` is repository-owned session configuration with no independent third-party implementation. `IdentitySetting` is `Option<Identity>` and nothing else, so a session is established whole or absent whole and the vocabulary closes at two kinds. What is under test is that both kinds read their undo off the PRE-MUTATION record rather than off their own payload — replacing one session must undo to the prior session and not to a sign-out, and clearing an already-cleared record must offer no undo step at all rather than inventing an account. Confidence comes from the two committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside its own leaf and re-exercised end to end through `apply_identity_config_mutation_reporting`; from the inverse law as a metamorphic property; and from the Rust and TypeScript leaves agreeing on the shared camel-case JSON projection.\n\n[C2 2026-09-02] Narrowed `capabilities` to remove 'os-config-identity-1-mutate': a mutation manifest already requires an external-oracle discharge for this capability (tracked honestly as `missing-external-oracle`), so a no-oracle decision claiming the same capability made that gap invisible to `no-oracle-covers-mutation` without discharging it. The rationale above is kept verbatim as the record of what was actually investigated; only the claim is withdrawn. See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️c2-native-artifact-oracles.md.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "independent-implementations"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "keyring",
+            "ecosystem": "pypi",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Stores credentials in the platform keychain; it has no model of this operating system's IdentitySetting session record that sign-in and sign-out establish or clear."
+          }
+        ],
+        "whyNoneQualifies": "os.config.identity is repository-owned session configuration (Option<Identity>); no third party implements it, so none can adjudicate sign-in or sign-out."
+      }
+    },
+    {
+      "id": "os-config-ui-preferences-mutation-semantics",
+      "capabilities": [
+        "os-config-ui-preferences-1-mutate"
+      ],
+      "rationale": "`os.config.ui-preferences` is this operating system's own persisted local-only UI preference record: appearance, chrome layout, driver and custom drivers, locale, terminology, theme and custom themes, and keybinding overrides, each a whole-record replace through `UiPreferencesDiff`. What is under test is that each of the nine kinds changes exactly its own preference, that re-setting a preference to the value it already holds is a warned `mutation.no-op` rather than a change, and that every kind's inverse, read off the pre-mutation record, restores it exactly. These are statements about this repository's preference semantics, not about JSON or key-value storage. Confidence comes from eighteen committed, handcrafted specification vectors (one `applied` and one `no-op` quintet per kind, under `../🧬️schema/🧬️mutations/<slug>/🧫️fixtures/`), each exercised against the implementation by its own scenario test, and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "electron-store",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A generic persisted key-value store for desktop settings; it has no model of this operating system's typed UI preference record, its keyed custom drivers and themes, or the no-op and inverse semantics each kind defines."
+          },
+          {
+            "package": "confy",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Loads and stores a whole configuration struct on disk; it neither defines typed preference mutations nor their no-op and inverse behaviour."
+          }
+        ],
+        "whyNoneQualifies": "os.config.ui-preferences is this operating system's own preference record with its own mutation vocabulary; no third party implements it, so none can adjudicate the nine set-* kinds."
+      }
+    },
+    {
+      "id": "os-config-local-catalog-mutation-semantics",
+      "capabilities": [],
+      "rationale": "`os.config.local-catalog` is this operating system's own persisted-local-only record of which documents one device keeps on its own disk — a list of `(documentId, schema, name, storage, target, admittedAtMs)` entries keyed on `documentId`, where `storage` names the device's own folder event log or single-file lane. No third party implements it and none could adjudicate it: what is under test is that `admit-local-document` is an UPSERT keyed on `documentId` that keeps the list ordered by id and leaves every sibling untouched, that `retire-local-document` unlists one id without deleting the document's own events, that both read their undo off the PRE-MUTATION record (re-admitting the prior entry, or retiring an id that was not listed), and that retiring an unlisted id is a warned no-op with no undo step. Confidence comes from the two committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧫️fixtures/<fixture>/`, each unit-tested inside its own leaf and re-exercised end to end through `apply_local_catalog_config_mutation_reporting`; from the inverse law as a metamorphic property; and from the Rust and TypeScript leaves agreeing on the shared camel-case JSON projection. The capability claim stays withdrawn (as for its siblings since C2 2026-09-02): the mutation manifest below tracks the missing external-oracle discharge honestly.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "independent-implementations"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "xdg-recent-files",
+            "ecosystem": "posix",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "The XDG recently-used list records file URIs a desktop opened; it has no model of a semio document id, its artifact schema or its folder/file event lane, which is what admit-local-document and retire-local-document edit."
+          }
+        ],
+        "whyNoneQualifies": "os.config.local-catalog is repository-owned device configuration keyed by semio document ids; no third party holds or edits it, so none can adjudicate admit-local-document or retire-local-document."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "os-config-opening-1-any",
+      "capability": "os-config-opening-1-mutate",
+      "kinds": [
+        "set-default-app",
+        "clear-default-app"
+      ],
+      "vectors": [
+        {
+          "mutationId": "set-default-app",
+          "sourceMutationDirectoryName": "📌️set-default-app",
+          "mutationDirectoryName": "📌️set-default-app",
+          "scenarios": [
+            {
+              "id": "repins-the-cad-editor-to-the-drafting-app",
+              "directoryName": "🧪️repins-the-cad-editor-to-the-drafting-app"
+            }
+          ]
+        },
+        {
+          "mutationId": "clear-default-app",
+          "sourceMutationDirectoryName": "🧹clear-default-app",
+          "mutationDirectoryName": "🧹clear-default-app",
+          "scenarios": [
+            {
+              "id": "unpins-the-cad-editor-and-keeps-the-viewer-pin",
+              "directoryName": "🧪️unpins-the-cad-editor-and-keeps-the-viewer-pin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-merge-policy-1-any",
+      "capability": "os-config-merge-policy-1-mutate",
+      "kinds": [
+        "change-merge-policy"
+      ],
+      "vectors": [
+        {
+          "mutationId": "change-merge-policy",
+          "sourceMutationDirectoryName": "🛡️change-merge-policy",
+          "mutationDirectoryName": "🛡️change-merge-policy",
+          "scenarios": [
+            {
+              "id": "tightens-the-authority-to-vigilant",
+              "directoryName": "🧪️tightens-the-authority-to-vigilant"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-identity-1-any",
+      "capability": "os-config-identity-1-mutate",
+      "kinds": [
+        "sign-in",
+        "sign-out"
+      ],
+      "vectors": [
+        {
+          "mutationId": "sign-in",
+          "sourceMutationDirectoryName": "🪪️sign-in",
+          "mutationDirectoryName": "🪪️sign-in",
+          "scenarios": [
+            {
+              "id": "replaces-the-active-session-with-a-second-account",
+              "directoryName": "🧪️replaces-the-active-session-with-a-second-account"
+            }
+          ]
+        },
+        {
+          "mutationId": "sign-out",
+          "sourceMutationDirectoryName": "🚪️sign-out",
+          "mutationDirectoryName": "🚪️sign-out",
+          "scenarios": [
+            {
+              "id": "clears-the-active-session",
+              "directoryName": "🧪️clears-the-active-session"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-ui-preferences-1-any",
+      "capability": "os-config-ui-preferences-1-mutate",
+      "kinds": [
+        "set-appearance",
+        "set-layout",
+        "set-driver",
+        "set-custom-driver",
+        "set-locale",
+        "set-terminology",
+        "set-theme",
+        "set-custom-theme",
+        "set-keybinding-override"
+      ],
+      "vectors": [
+        {
+          "mutationId": "set-appearance",
+          "sourceMutationDirectoryName": "🌗️set-appearance",
+          "mutationDirectoryName": "🌗️set-appearance",
+          "scenarios": [
+            {
+              "id": "sets-appearance",
+              "directoryName": "✏️sets-appearance"
+            },
+            {
+              "id": "keeps-appearance",
+              "directoryName": "🟰️keeps-appearance"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layout",
+          "sourceMutationDirectoryName": "📐️set-layout",
+          "mutationDirectoryName": "📐️set-layout",
+          "scenarios": [
+            {
+              "id": "sets-layout",
+              "directoryName": "✏️sets-layout"
+            },
+            {
+              "id": "keeps-layout",
+              "directoryName": "🟰️keeps-layout"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-driver",
+          "sourceMutationDirectoryName": "🕹️set-driver",
+          "mutationDirectoryName": "🕹️set-driver",
+          "scenarios": [
+            {
+              "id": "sets-driver",
+              "directoryName": "✏️sets-driver"
+            },
+            {
+              "id": "keeps-driver",
+              "directoryName": "🟰️keeps-driver"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-custom-driver",
+          "sourceMutationDirectoryName": "🚗️set-custom-driver",
+          "mutationDirectoryName": "🚗️set-custom-driver",
+          "scenarios": [
+            {
+              "id": "sets-custom-driver",
+              "directoryName": "✏️sets-custom-driver"
+            },
+            {
+              "id": "keeps-custom-driver",
+              "directoryName": "🟰️keeps-custom-driver"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-locale",
+          "sourceMutationDirectoryName": "🗣️set-locale",
+          "mutationDirectoryName": "🗣️set-locale",
+          "scenarios": [
+            {
+              "id": "sets-locale",
+              "directoryName": "✏️sets-locale"
+            },
+            {
+              "id": "keeps-locale",
+              "directoryName": "🟰️keeps-locale"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-terminology",
+          "sourceMutationDirectoryName": "📖️set-terminology",
+          "mutationDirectoryName": "📖️set-terminology",
+          "scenarios": [
+            {
+              "id": "sets-terminology",
+              "directoryName": "✏️sets-terminology"
+            },
+            {
+              "id": "keeps-terminology",
+              "directoryName": "🟰️keeps-terminology"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-theme",
+          "sourceMutationDirectoryName": "🖼️set-theme",
+          "mutationDirectoryName": "🖼️set-theme",
+          "scenarios": [
+            {
+              "id": "sets-theme",
+              "directoryName": "✏️sets-theme"
+            },
+            {
+              "id": "keeps-theme",
+              "directoryName": "🟰️keeps-theme"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-custom-theme",
+          "sourceMutationDirectoryName": "🎨️set-custom-theme",
+          "mutationDirectoryName": "🎨️set-custom-theme",
+          "scenarios": [
+            {
+              "id": "sets-custom-theme",
+              "directoryName": "✏️sets-custom-theme"
+            },
+            {
+              "id": "keeps-custom-theme",
+              "directoryName": "🟰️keeps-custom-theme"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-keybinding-override",
+          "sourceMutationDirectoryName": "⌨️set-keybinding-override",
+          "mutationDirectoryName": "⌨️set-keybinding-override",
+          "scenarios": [
+            {
+              "id": "sets-keybinding",
+              "directoryName": "✏️sets-keybinding"
+            },
+            {
+              "id": "keeps-keybinding",
+              "directoryName": "🟰️keeps-keybinding"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-local-catalog-1-any",
+      "capability": "os-config-local-catalog-1-mutate",
+      "kinds": [
+        "admit-local-document",
+        "retire-local-document"
+      ],
+      "vectors": [
+        {
+          "mutationId": "admit-local-document",
+          "sourceMutationDirectoryName": "📥️admit-local-document",
+          "mutationDirectoryName": "📥️admit-local-document",
+          "scenarios": [
+            {
+              "id": "lists-a-persisted-studio-beside-an-imported-one",
+              "directoryName": "🧪️lists-a-persisted-studio-beside-an-imported-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "retire-local-document",
+          "sourceMutationDirectoryName": "📤️retire-local-document",
+          "mutationDirectoryName": "📤️retire-local-document",
+          "scenarios": [
+            {
+              "id": "unlists-the-studio-and-keeps-its-sibling",
+              "directoryName": "🧪️unlists-the-studio-and-keeps-its-sibling"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "opening",
+      "mutations": [
+        {
+          "id": "set-default-app",
+          "capability": "os-config-opening-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-default-app",
+            "bridgeVersion": 1,
+            "variant": "SetDefaultApp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-opening-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "clear-default-app",
+          "capability": "os-config-opening-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "clear-default-app",
+            "bridgeVersion": 1,
+            "variant": "ClearDefaultApp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-opening-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "merge-policy",
+      "mutations": [
+        {
+          "id": "change-merge-policy",
+          "capability": "os-config-merge-policy-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-merge-policy",
+            "bridgeVersion": 1,
+            "variant": "ChangeMergePolicy"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-merge-policy-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "identity",
+      "mutations": [
+        {
+          "id": "sign-in",
+          "capability": "os-config-identity-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "sign-in",
+            "bridgeVersion": 1,
+            "variant": "SignIn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-identity-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "sign-out",
+          "capability": "os-config-identity-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "sign-out",
+            "bridgeVersion": 1,
+            "variant": "SignOut"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-identity-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "ui-preferences",
+      "mutations": [
+        {
+          "id": "set-appearance",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-appearance",
+            "bridgeVersion": 1,
+            "variant": "SetAppearance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-layout",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-layout",
+            "bridgeVersion": 1,
+            "variant": "SetLayout"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-driver",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-driver",
+            "bridgeVersion": 1,
+            "variant": "SetDriver"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-custom-driver",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-custom-driver",
+            "bridgeVersion": 1,
+            "variant": "SetCustomDriver"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-locale",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-locale",
+            "bridgeVersion": 1,
+            "variant": "SetLocale"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-terminology",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-terminology",
+            "bridgeVersion": 1,
+            "variant": "SetTerminology"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-theme",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-theme",
+            "bridgeVersion": 1,
+            "variant": "SetTheme"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-custom-theme",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-custom-theme",
+            "bridgeVersion": 1,
+            "variant": "SetCustomTheme"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-keybinding-override",
+          "capability": "os-config-ui-preferences-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "set-keybinding-override",
+            "bridgeVersion": 1,
+            "variant": "SetKeybindingOverride"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-ui-preferences-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "os.config",
+      "standard": "1",
+      "subset": "local-catalog",
+      "mutations": [
+        {
+          "id": "admit-local-document",
+          "capability": "os-config-local-catalog-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "admit-local-document",
+            "bridgeVersion": 1,
+            "variant": "AdmitLocalDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-local-catalog-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "retire-local-document",
+          "capability": "os-config-local-catalog-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "retire-local-document",
+            "bridgeVersion": 1,
+            "variant": "RetireLocalDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "os-config-local-catalog-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

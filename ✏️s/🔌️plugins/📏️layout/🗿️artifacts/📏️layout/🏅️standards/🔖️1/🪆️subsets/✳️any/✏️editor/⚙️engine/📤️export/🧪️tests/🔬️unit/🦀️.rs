@@ -190,6 +190,22 @@ fn pdf_export_carries_every_page_with_the_embedded_font_and_shaped_glyphs() {
     assert_eq!(single_text.matches("> Tj ET").count(), 0, "page-2 carries no text");
 }
 
+
+#[test]
+fn pdf_export_prints_a_placed_drawing_mark_and_its_kind() {
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.links[0].artifact_kind = "drawing".into();
+    snapshot.links[0].artifact_ref = "drawing-1".into();
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("0.92 0.88 0.84 rg 136.000 25.000 60.000 40.000 re f Q"), "the placed frame still fills");
+    assert!(text.contains("140.000 61.000 m 192.000 29.000 l S Q"), "a drawing prints its stroke mark inside the frame");
+    let glyphs = snapshot.stories[0].content.chars().count() + "drawing".chars().count();
+    assert_eq!(text.matches("> Tj ET").count(), glyphs, "the story and the placed kind are both shaped");
+}
+
 /// 🌐️ The browser path, natively: `exportPdf` through the registered, instance-bound app, the host's
 /// continuation turns (maintenance step → publication unit → result page ACK), the Download lane's page
 /// captured exactly where `consumeTypedOperationEffects` captures it, and the chunk drain
@@ -755,4 +771,79 @@ fn the_reserved_close_ladder_leaves_the_publication_stage_in_bounded_slices() {
     }
     drop(snapshot_owner);
     panic!("the reserved close ladder never left the publication stage");
+}
+
+#[test]
+fn pdf_export_prints_proxy_png_pixels() {
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut image = semio_s_artifact_stdio_png::PngSnapshot::default();
+    image.width = 2;
+    image.height = 2;
+    image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
+    let png = semio_s_artifact_stdio_png::io::encode_png(&image).expect("png");
+    let decoded = semio_s_artifact_stdio_png::io::decode_png(&png).expect("png round trip");
+    assert_eq!(decoded.pixels, image.pixels, "the png codec keeps the placed pixels");
+    snapshot.links[0].state = Some("ready".into());
+    snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("q 60.000 0 0 40.000 136.000 25.000 cm"), "the proxy is placed in the image frame");
+    let hex = text.split("ID\n").nth(1).unwrap_or("").split('>').next().unwrap_or("").to_string();
+    assert_eq!(hex, "FF000000FF000000FFFFFFFF", "inline image bytes were {hex}");
+}
+
+fn base64_encode(bytes: &[u8]) -> String {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::new();
+    for chunk in bytes.chunks(3) {
+        let a = chunk[0];
+        let b = chunk.get(1).copied().unwrap_or(0);
+        let c = chunk.get(2).copied().unwrap_or(0);
+        out.push(TABLE[(a >> 2) as usize] as char);
+        out.push(TABLE[((a & 3) << 4 | b >> 4) as usize] as char);
+        out.push(if chunk.len() > 1 { TABLE[((b & 15) << 2 | c >> 6) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { TABLE[(c & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
+#[test]
+fn pdf_export_rotates_a_proxy_with_its_frame() {
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut image = semio_s_artifact_stdio_png::PngSnapshot::default();
+    image.width = 2;
+    image.height = 2;
+    image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
+    let png = semio_s_artifact_stdio_png::io::encode_png(&image).expect("png");
+    snapshot.links[0].state = Some("ready".into());
+    snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
+    let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
+    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    bounds.rotation = std::f64::consts::FRAC_PI_2;
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    let matrix = LayoutExportJob::pdf_image_matrix(136.0, 435.0, 60.0, 40.0, std::f64::consts::FRAC_PI_2 as f32, 500.0);
+    assert!(text.contains(&format!("q {matrix} cm")), "the proxy turns with the frame: {matrix}");
+    assert!(!text.contains("q 60.000 0 0 40.000 136.000 25.000 cm"), "a quarter turn is not the upright box");
+    let hex = text.split("ID\n").nth(1).unwrap_or("").split('>').next().unwrap_or("");
+    assert_eq!(hex, "FF000000FF000000FFFFFFFF");
+}
+
+#[test]
+fn pdf_export_prints_a_character_style_run() {
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
+    snapshot.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("24.000 Tf"), "the styled run prints at the character size");
+    assert!(text.contains("1.0000 0.0000 0.0000 rg"), "the styled run prints its color");
+    assert!(text.contains("12.000 Tf"), "the rest of the story keeps the paragraph size");
+    assert_eq!(text.matches("> Tj ET").count(), snapshot.stories[0].content.chars().count());
 }

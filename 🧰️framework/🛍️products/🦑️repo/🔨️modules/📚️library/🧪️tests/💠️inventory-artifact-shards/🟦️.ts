@@ -152,7 +152,6 @@ test("the real inventory producer publishes locale-different violation order los
   expect(restored.sourceTreeDigest).toBe(source.sourceTreeDigest);
   expect(restored.inventoryDigest).toBe(source.inventoryDigest);
   expect(JSON.stringify(source)).toBe(before);
-  console.log("[DEBUG] Real inventory violation-order publication verified", source.entries.length, source.violations.length);
 });
 
 test("publication verifies canonical violations and rejects inconsistent replacement before writing", async () => {

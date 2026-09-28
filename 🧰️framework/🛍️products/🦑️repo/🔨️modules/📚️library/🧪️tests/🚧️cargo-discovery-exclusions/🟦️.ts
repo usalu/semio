@@ -75,7 +75,6 @@ for (const name of vector.virtualRoots) test(`Cargo discovery never touches excl
     expect(fs.reads.every((path) => !vector.opaquePaths.some((opaque) => path === opaque || path.startsWith(`${opaque}/`)))).toBe(true);
     expect(fs.fileReads.some((path) => vector.symlinks.includes(path))).toBe(false);
   }
-  console.log("[DEBUG] Cargo virtual exclusion proof", JSON.stringify({ root: name, packages: expected, independentGlobFiles: files.length }));
 });
 
 test("registry catalog filesystem excludes opaque names before metadata enumeration", () => {
@@ -101,7 +100,6 @@ test("registry catalog filesystem excludes opaque names before metadata enumerat
     expect(links.sort()).toEqual([...vector.symlinks].sort());
     for (const path of vector.opaquePaths) expect(() => view.kind(path)).toThrow("nonopaque");
     expect(fs.fileReads.some((path) => vector.symlinks.includes(path))).toBe(false);
-    console.log("[DEBUG] registry catalog virtual exclusion proof", JSON.stringify({ root: rootName, files: files.length, symlinks: links.length }));
   }
 });
 

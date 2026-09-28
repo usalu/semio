@@ -52,7 +52,7 @@ import type {
   DocumentSocketGrantReceiptV1,
   SocketGrantReceiptV1,
 } from "../../../🟦️";
-import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceInteraction, decodePresencePeer, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
+import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_BATCH_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceInteraction, decodePresencePeer, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import {
   DEV_STREAM_ROUTES,
   DirectoryClient,
@@ -175,11 +175,13 @@ import {
   parseDocumentOpenIntentV1,
   parseDocumentOpenPlanV1,
   parseDocumentPlanSocketGrantIntentV1,
+  sameExecutionTargetV1,
   sameLeaseFieldsV1,
   sealDirectoryCommandReceiptV1,
   sealDirectoryCommandRequestV1,
   surfaceOpensArtifactKindV1,
   type SurfaceArtifactKindV1,
+  type SurfaceKindAppV1,
 } from "../../📇️directory/🧬️schema/🟦️.ts";
 /** 🔏️ First-party BLAKE3 runtime module — Web Crypto supplies SHA-256 but has no BLAKE3, so a
  * verified execution-target component is hashed with the repository's own implementation. */
@@ -594,11 +596,11 @@ export type ArtifactState = {
    * stack overlapping reads. A no-op placeholder until {@link openArtifact} sees a folder binding. */
   revalidateFolder: () => Promise<void>;
   reconnectDelayMs: number;
-  /** 🗃️ Outbound mutations not yet handed to a LIVE hub socket (finding 5) — distinct from
-   * `pendingBatches`, which holds envelopes already sent and awaiting an `Ack`. Populated by
-   * {@link relayMutationsToHub} when the socket isn't open and by a dead socket's `onclose` (any
-   * batch that socket never acked moves back here), drained by {@link handleHubFrame}'s `Welcome`
-   * branch on every successful (re)connect — this is the "flushed on reconnect" half of finding 5. */
+  /** 🗃️ Outbound mutations not yet sent on a LIVE hub socket (finding 5) — distinct from
+   * `pendingBatches`, which holds the one batch already sent and awaiting its `Ack`. Every relay
+   * ({@link relayMutationsToHub}) queues here; a dead socket's `onclose` and a transient refusal put
+   * their unapplied batch back at the FRONT; {@link flushMutationsToHubIfReady} drains it one bounded
+   * batch at a time — this is the "flushed on reconnect" half of finding 5. */
   outbox: MutationEnvelope[];
   pendingMutations: MutationEnvelope[];
   /** 🪢️ Exact causal bytes retained beside bound-port mutations until their terminal Ack. */
@@ -1185,6 +1187,13 @@ class DocumentExecutionTargetLease {
     this.#browserActorGrant = Object.freeze({ actorId: parsed.actorId, reserveBeforeMs: parsed.expiresAtMs, retireAtMs });
   }
 
+  /** ⏯️ Adopts the fields a reconnect's fresh plan projects for the SAME execution target ({@link sameExecutionTargetV1}): the
+   * newer active checkpoint and revalidation witness a suspended child resumes under. Anything else is another target. */
+  refresh(token: symbol, fields: DocumentExecutionTargetLeaseFieldsV1): void {
+    if (token !== documentExecutionTargetLeaseMintToken || !this.#live || !sameExecutionTargetV1(this.#fields, fields)) throw new Error("document execution target lease: another target");
+    this.#fields = structuredClone(fields);
+  }
+
   /** 🔁️ Re-admits the SAME hub actor on a fresh socket grant after a short link loss, keeping the verified target and
    * the live child: the hub binds a session's actor to the session, so a grant naming another actor is refused. */
   readmitBrowserActor(token: symbol, receipt: DocumentSocketGrantReceiptV1, retireAtMs: number, open: DocumentBrowserActorOpen): DocumentBrowserActorGrant {
@@ -1528,7 +1537,14 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   const windowKinds = app !== undefined && Array.isArray(app.windowKinds) ? (app.windowKinds as readonly PackValue[]).map(record) : [];
   const window = windowKinds.find((window) => window.id === fields.surface.windowKindId);
   const kindPairs = (kinds: readonly Record<string, PackValue>[]): SurfaceArtifactKindV1[] => kinds.flatMap((kind) => (typeof kind.id === "string" && typeof kind.schema === "string" ? [{ id: kind.id, schema: kind.schema }] : []));
-  const appArtifactKinds = app !== undefined && Array.isArray(app.artifactKinds) ? (app.artifactKinds as readonly PackValue[]).map(record) : [];
+  const surfaceApp = (entry: Record<string, PackValue>): SurfaceKindAppV1 | null => {
+    const coordinate = entry.dialect;
+    if (coordinate === null || typeof coordinate !== "object" || Array.isArray(coordinate) || coordinate instanceof Uint8Array || isPackInteger(coordinate)) return null;
+    const { artifactKind, standard, subset } = coordinate as Readonly<Record<string, PackValue>>;
+    if ((entry.role !== "editor" && entry.role !== "viewer") || typeof artifactKind !== "string" || typeof standard !== "string" || typeof subset !== "string") return null;
+    return { role: entry.role, dialect: { artifactKind, standard, subset }, artifactKinds: kindPairs(Array.isArray(entry.artifactKinds) ? (entry.artifactKinds as readonly PackValue[]).map(record) : []) };
+  };
+  const openingApp = app === undefined ? null : surfaceApp(app);
   if (
     packUIntSafeOrNull(descriptor.descriptorVersion) !== 1 ||
     descriptor.packageId !== fields.package.packageId ||
@@ -1547,8 +1563,8 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     dialect.standard !== fields.parentDialect.standard ||
     dialect.subset !== fields.parentDialect.subset ||
     window === undefined ||
-    typeof dialect.artifactKind !== "string" ||
-    !surfaceOpensArtifactKindV1(kindPairs(artifactKinds), { artifactKinds: kindPairs(appArtifactKinds), dialectArtifactKind: dialect.artifactKind }, fields.artifact)
+    openingApp === null ||
+    !surfaceOpensArtifactKindV1(kindPairs(artifactKinds), apps.flatMap((entry) => surfaceApp(entry) ?? []), openingApp, fields.artifact)
   )
     throw new Error("document execution target: descriptor mismatch");
   const windows = verifiedWindowSurfacesV1(windowKinds);
@@ -1629,7 +1645,10 @@ async function installDocumentExecutionTargetLease(state: ArtifactState, binding
   }
 }
 
+/** 🗑️ Drops the execution-target lease with its actor child, and with them the document that child held
+ * ({@link forgetMountedDocument}). */
 function dropDocumentExecutionTargetLease(state: ArtifactState): void {
+  const mounted = state.verifiedColdPair !== null;
   dropVerifiedColdDocumentPair(state);
   const mirror = state.canonicalFolderMirror;
   state.canonicalFolderMirror = null;
@@ -1638,6 +1657,36 @@ function dropDocumentExecutionTargetLease(state: ArtifactState): void {
   state.executionTargetLease?.drop();
   state.executionTargetLease = null;
   state.browserActorBackboneBeforeReservation = [];
+  if (mounted) forgetMountedDocument(state);
+}
+
+/** 🧹️ Forgets the document an actor child held once its cold pair is gone: the pack and spr published from that pair, the frontier
+ * and resume token the child reached, and the ids it ingested — the operations still unacknowledged stay noted, since their echo
+ * must never apply twice. The next connection then opens like a first one: its `SocketHelloV1` names no frontier, the hub answers
+ * with the tail from its active checkpoint, and the next child is seeded from that checkpoint's canonical pair. A kept pack made
+ * {@link seedColdPairFromCanonicalCheckpoint} skip the seed and left the next child without a document — "verifying" forever, every
+ * edit refused `owner-mismatch` (ticket 26/09/23 C12, run `c12short5`: a 5 s link cut whose reconnect named a newer plan). */
+function forgetMountedDocument(state: ArtifactState): void {
+  state.currentPack = null;
+  state.currentSpr = null;
+  state.frontier = null;
+  state.resumeToken = null;
+  state.artifactBootstrapProgress = [];
+  state.ingestedMutationIds.clear();
+  const unacknowledged = [...[...state.pendingBatches.values()].flat(), ...state.outbox];
+  noteAuthoredEnvelopeIds(state.ingestedMutationIds, unacknowledged.map((envelope) => state.exactLocalEnvelopes.get(envelope)?.envelope.mutation_id ?? envelope.id));
+}
+
+/** 🔁️ Retires the document's actor child while the document stays open — its socket closed and the child could not be suspended, or
+ * a reconnect's plan named another execution target than the suspended child's — and, when a child was mounted, tells the Shell to
+ * discard its stale surface exactly as a rebuild does (`artifact-rebootstrap-required`): the connection that follows seeds a fresh
+ * child from the hub's active checkpoint and replays the unsent operations on top. */
+function retireMountedDocumentChild(state: ArtifactState): void {
+  const mounted = state.verifiedColdPair !== null || state.browserActorReservation !== null;
+  dropDocumentExecutionTargetLease(state);
+  if (!mounted || state.closed || state.docAbort.signal.aborted || state.artifactRebootstrapRequired) return;
+  const scope = artifactScope(state);
+  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), message: "rebootstrap-required", retryable: true });
 }
 
 export type DocumentBrowserActorChild = Awaited<ReturnType<typeof reserveBrowserActorChild>>;
@@ -3213,9 +3262,9 @@ function retireSuspendedDocumentBrowserActor(state: ArtifactState, binding: Extr
   if (!state.closed && (code === "link-expired" || code === "access-revoked")) emitExecutionTargetStatus(state, binding, code);
 }
 
-/** 🔁️ Re-admits the suspended child's actor on the fresh plan when the plan names the SAME verified target (the lease's
- * own fields), exchanging the plan for a socket grant without reinstalling or reloading anything. `null` when the target
- * changed, in which case the caller reopens. */
+/** 🔁️ Re-admits the suspended child's actor on the fresh plan when the plan names the SAME verified target
+ * ({@link sameExecutionTargetV1}: the lease adopts the plan's newer checkpoint and revalidation witness), exchanging the plan for a
+ * socket grant without reinstalling or reloading anything. `null` when the target changed, in which case the caller reopens. */
 async function resumeDocumentSocketAuthority(
   state: ArtifactState,
   binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>,
@@ -3227,6 +3276,10 @@ async function resumeDocumentSocketAuthority(
 ): Promise<BrowserDocumentSocketAuthorityV1 | null> {
   let authority: Omit<BrowserDocumentSocketAuthorityV1, "receipt">;
   try {
+    const current = suspended.lease.fields();
+    const next = receiptFreeFields(plan, { component: current.component.byteLength, descriptor: current.descriptor.byteLength, browserActor: current.browserActor.kind === "closed-browser-actor" ? current.browserActor.byteLength : undefined });
+    if (!sameExecutionTargetV1(current, next)) return null;
+    suspended.lease.refresh(documentExecutionTargetLeaseMintToken, next);
     authority = documentOpenPlanAuthority(plan, intent, state.config, suspended.lease.fields(), suspended.lease);
   } catch {
     return null;
@@ -3345,7 +3398,7 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
     if (resumed !== null) return resumed;
     assertOwner.adopt();
   }
-  dropDocumentExecutionTargetLease(state);
+  retireMountedDocumentChild(state);
   let lease: DocumentExecutionTargetLease | undefined;
   let published = false;
   try {
@@ -3988,7 +4041,7 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
         state.actor = "";
         state.hubActorReady = false;
         state.pendingSocketActorId = null;
-        if (!suspendDocumentBrowserActorLink(state, binding)) dropDocumentExecutionTargetLease(state);
+        if (!suspendDocumentBrowserActorLink(state, binding)) retireMountedDocumentChild(state);
         abortArtifactBootstrap(state);
         requeuePendingBatches(state);
       }
@@ -4021,7 +4074,7 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
  * long-healthy session from inheriting a large accumulated backoff on its next ordinary blip. */
 function connectHub(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>): void {
   if (state.closed) return;
-  void reconnectForever(state.docAbort.signal, () => connectHubOnce(state, binding).catch((error: unknown) => { console.warn("[DEBUG] c13 connectHubOnce", state.config.documentId, binding.requestedSurfaceId ?? binding.installedTarget?.surface.surfaceId, String(error)); throw error; }), HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS);
+  void reconnectForever(state.docAbort.signal, () => connectHubOnce(state, binding), HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS);
 }
 
 function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane): void {
@@ -4043,25 +4096,75 @@ function documentBackboneRelayReady(state: ArtifactState): boolean {
   return state.hubActorReady && state.socket?.readyState === WebSocket.OPEN && documentBackboneAdmissionReady(state);
 }
 
-/** 📦️ Most envelopes one `Commands` batch carries while the outbox drains (after a reconnect, behind a transient refusal): the
- * outbox goes out one bounded batch at a time, each after the previous one's `Ack`, so a queue that grew during a connection
- * shortage never reaches the hub as one oversized batch (ticket 26/09/23 C12, run `c12short3`: a whole-outbox batch was refused
- * `DB I/O aggregate admission exhausted` and every keystroke typed during the cut was lost). */
+/** 📦️ Bounds of one `Commands` batch. The outbox drains ack-clocked — one batch in flight per document, the next after its `Ack` —
+ * in batches of at most this many envelopes and {@link HUB_OUTBOX_BATCH_BYTES} wire bytes, so a queue that grew during a
+ * connection shortage never reaches the hub as one oversized batch (ticket 26/09/23 C12, run `c12short3`: a whole-outbox batch
+ * was refused `DB I/O aggregate admission exhausted` and every keystroke typed during the cut was lost), and nothing is ever sent
+ * behind a batch whose outcome is unknown: a transiently refused batch goes out again FIRST, and a later batch whose envelopes
+ * depend on it can never reach the hub before it (the hub refuses those for good: `dependency names an unknown edit`). */
 const HUB_OUTBOX_BATCH_ENVELOPES = 16;
+/** 📦️ Wire bytes of one drained batch: half the declared batch maximum, as the Rust store's `announce_history`. One envelope larger
+ * than this still goes out alone. */
+const HUB_OUTBOX_BATCH_BYTES = DOCUMENT_BACKBONE_BATCH_LIMITS.maximumBytes / 2;
 /** ⏳️ Resend delay after a transient refusal: doubled per consecutive refusal between these bounds, jittered. */
 const HUB_TRANSIENT_REFUSAL_MIN_MS = 250;
 const HUB_TRANSIENT_REFUSAL_MAX_MS = 5_000;
 
+/** 🚿️ Sends the outbox's next bounded batch once the socket is live, no batch awaits its `Ack` and no transient refusal is backing
+ * off. Called on every relay, `Ack`, authenticated `Session`, catch-up completion, link restore and refusal timer. */
 function flushMutationsToHubIfReady(state: ArtifactState): void {
   if (!documentBackboneRelayReady(state) || state.outbox.length === 0 || state.pendingBatches.size > 0 || state.transientRefusal?.timer != null) return;
-  sendCommandsBatch(state, state.outbox.splice(0, state.transientRefusal?.batchLimit ?? HUB_OUTBOX_BATCH_ENVELOPES));
+  const limit = state.transientRefusal?.batchLimit ?? HUB_OUTBOX_BATCH_ENVELOPES;
+  const envelopes: MutationEnvelope[] = [];
+  const wireEnvelopes: WireMutationEnvelope[] = [];
+  let bytes = 0;
+  for (const envelope of state.outbox) {
+    if (envelopes.length === limit) break;
+    const wire = hubWireEnvelope(state, envelope);
+    const size = wire.mutation_id.length + wire.document_id.length + wire.actor.length + wire.diff.schema.length + wire.diff.payload.length + wire.inverse.schema.length + wire.inverse.payload.length + wire.dependencies.reduce((sum, dependency) => sum + dependency.length, 0) + wire.target.reduce((sum, segment) => sum + segment.length, 0);
+    if (envelopes.length > 0 && bytes + size > HUB_OUTBOX_BATCH_BYTES) break;
+    bytes += size;
+    envelopes.push(envelope);
+    wireEnvelopes.push(wire);
+  }
+  state.outbox.splice(0, envelopes.length);
+  const batchId = state.nextBatchId;
+  state.nextBatchId += 1;
+  state.pendingBatches.set(batchId, envelopes);
+  sendWireFrame(state, { Commands: { batch_id: batchId, envelopes: wireEnvelopes } }, "command");
+}
+
+/** 🌉️ One outbound envelope as this socket's actor sends it: the exact causal envelope a bound port authored, re-stamped, or the TS
+ * twin's {@link toWireEnvelope}. */
+function hubWireEnvelope(state: ArtifactState, envelope: MutationEnvelope): WireMutationEnvelope {
+  const exact = state.exactLocalEnvelopes.get(envelope)?.envelope;
+  const timestamp = nextWireTimestamp(state);
+  if (exact === undefined) return toWireEnvelope(envelope, timestamp, state.actor);
+  return {
+    mutation_id: exact.mutation_id,
+    document_id: exact.document_id,
+    actor: state.actor,
+    dependencies: [...exact.dependencies],
+    observed: exact.observed,
+    target: [...exact.target],
+    diff: { schema: exact.diff.schema, payload: Array.from(exact.diff.payload) },
+    inverse: { schema: exact.inverse.schema, payload: Array.from(exact.inverse.payload) },
+    timestamp,
+  };
+}
+
+/** ⏮️ Puts envelopes that were sent but never applied back at the FRONT of the outbox, in their send order: they precede everything
+ * queued behind them. */
+function returnToOutboxFront(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  if (envelopes.length === 0) return;
+  const ids = new Set(envelopes.map((envelope) => envelope.id));
+  state.outbox = [...envelopes, ...state.outbox.filter((envelope) => !ids.has(envelope.id))];
 }
 
 /** ⏳️ Keeps a batch the hub refused for a transient reason: its envelopes return to the front of the outbox (nothing was applied,
  * nothing is rolled back or rebuilt), the next drain is bounded to half the refused batch and resent after a jittered backoff. */
 function resendAfterTransientRefusal(state: ArtifactState, sent: readonly MutationEnvelope[]): void {
-  const ids = new Set(sent.map((envelope) => envelope.id));
-  state.outbox = [...sent, ...state.outbox.filter((envelope) => !ids.has(envelope.id))];
+  returnToOutboxFront(state, sent);
   const previous = state.transientRefusal;
   if (previous?.timer != null) clearTimeout(previous.timer);
   const backoffMs = Math.min(HUB_TRANSIENT_REFUSAL_MAX_MS, Math.max(HUB_TRANSIENT_REFUSAL_MIN_MS, (previous?.backoffMs ?? 0) * 2));
@@ -4074,11 +4177,10 @@ function resendAfterTransientRefusal(state: ArtifactState, sent: readonly Mutati
   setStatus(state, { pendingMutations: state.pendingMutations.length });
 }
 
-/** 🧺️ Builds + sends one `Commands` batch, tracking it in `pendingBatches` for {@link handleAck}.
- * Mirrors the Rust actor's `relay_operations_to_hub`. Finding 5: a closed socket no longer no-ops
- * silently — the envelopes move into {@link ArtifactState.outbox} instead, and
- * {@link handleHubFrame}'s authenticated `Session` branch flushes that outbox (calling this
- * function again) only after the grant actor is proven, so nothing is lost or sent pre-authority. */
+/** 🧺️ Hands locally authored envelopes to the hub: they join the outbox and {@link flushMutationsToHubIfReady} drains it.
+ * Mirrors the Rust actor's `relay_operations_to_hub`. Finding 5: a closed socket no longer no-ops silently — the envelopes wait
+ * in {@link ArtifactState.outbox}, and {@link handleHubFrame}'s authenticated `Session` branch drains that outbox only after the
+ * grant actor is proven, so nothing is lost or sent pre-authority. */
 function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
   if (envelopes.length === 0) return;
   // 🔒️ A verified read-only execution target rejects publication locally, before a worker frame or
@@ -4092,37 +4194,8 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
     rejectReadOnlyExecutionTarget(state, envelopes);
     return;
   }
-  if (!documentBackboneRelayReady(state) || state.outbox.length > 0 || state.transientRefusal !== null) {
-    queueOutbox(state, envelopes);
-    flushMutationsToHubIfReady(state);
-    return;
-  }
-  sendCommandsBatch(state, envelopes);
-}
-
-/** 🧺️ Sends one `Commands` batch on the live socket and tracks it in `pendingBatches` for {@link handleAck}. */
-function sendCommandsBatch(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
-  if (envelopes.length === 0) return;
-  const batchId = state.nextBatchId;
-  state.nextBatchId += 1;
-  const wireEnvelopes = envelopes.map((envelope) => {
-    const exact = state.exactLocalEnvelopes.get(envelope)?.envelope;
-    const timestamp = nextWireTimestamp(state);
-    if (exact === undefined) return toWireEnvelope(envelope, timestamp, state.actor);
-    return {
-      mutation_id: exact.mutation_id,
-      document_id: exact.document_id,
-      actor: state.actor,
-      dependencies: [...exact.dependencies],
-      observed: exact.observed,
-      target: [...exact.target],
-      diff: { schema: exact.diff.schema, payload: Array.from(exact.diff.payload) },
-      inverse: { schema: exact.inverse.schema, payload: Array.from(exact.inverse.payload) },
-      timestamp,
-    };
-  });
-  state.pendingBatches.set(batchId, [...envelopes]);
-  sendWireFrame(state, { Commands: { batch_id: batchId, envelopes: wireEnvelopes } }, "command");
+  queueOutbox(state, envelopes);
+  flushMutationsToHubIfReady(state);
 }
 
 /** 🚨️ Local pending-mutation queue overflow (finding 5) — a mutation is NEVER silently dropped: a
@@ -4264,10 +4337,36 @@ function queueOutbox(state: ArtifactState, envelopes: readonly MutationEnvelope[
   }
 }
 
+/** ✅️ Settles this replica's own operations the hub's log already holds: a `Commands` frame (a catch-up tail or a relay) that carries
+ * an operation still in the outbox or a pending batch proves the hub committed it although its `Ack` was lost with the socket, so it
+ * leaves both (an emptied batch leaves too), its retention is released, its echo stays suppressed, and it is never resent — a
+ * resend is re-stamped and the hub refuses it as a replayed operation. TS twin of the Rust `settle_committed_envelopes`, both
+ * replaying the parity scenario `lost-ack-committed-op-settles` (`🔄️sync/⚖️parity/🧫️fixtures`). */
+function settleCommittedEnvelopes(state: ArtifactState, committedIds: readonly string[]): void {
+  const committed = new Set(committedIds);
+  const settled = new Set<MutationEnvelope>();
+  const keep = (envelope: MutationEnvelope): boolean => {
+    if (!committed.has(state.exactLocalEnvelopes.get(envelope)?.envelope.mutation_id ?? envelope.id)) return true;
+    settled.add(envelope);
+    return false;
+  };
+  state.outbox = state.outbox.filter(keep);
+  for (const [batchId, batch] of [...state.pendingBatches]) {
+    const kept = batch.filter(keep);
+    if (kept.length === 0) state.pendingBatches.delete(batchId);
+    else state.pendingBatches.set(batchId, kept);
+  }
+  if (settled.size === 0) return;
+  releaseDocumentBackboneOwnership(state, [...settled]);
+  state.pendingMutations = state.pendingMutations.filter((envelope) => !settled.has(envelope));
+  setStatus(state, { pendingMutations: state.pendingMutations.length });
+  flushMutationsToHubIfReady(state);
+}
+
 function requeuePendingBatches(state: ArtifactState): void {
   const batches = [...state.pendingBatches.entries()].sort(([left], [right]) => left - right);
   state.pendingBatches.clear();
-  for (const [, envelopes] of batches) queueOutbox(state, envelopes);
+  returnToOutboxFront(state, batches.flatMap(([, envelopes]) => envelopes));
 }
 
 function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrapProgress): void {
@@ -4557,12 +4656,7 @@ async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
   owner.assertCurrent();
   abortArtifactBootstrap(state);
   dropVerifiedColdDocumentPair(state);
-  state.currentPack = null;
-  state.currentSpr = null;
-  state.frontier = null;
-  state.resumeToken = null;
-  state.artifactBootstrapProgress = [];
-  state.ingestedMutationIds.clear();
+  forgetMountedDocument(state);
   setRemote(state, { kind: "connecting" });
   const scope = artifactScope(state);
   post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), message: "rebootstrap-required", retryable: true });
@@ -4926,6 +5020,7 @@ async function handleHubFrame(
       rejectArtifactBootstrap(state, new Error("tail arrived before artifact bootstrap completion"));
       return;
     }
+    settleCommittedEnvelopes(state, frame.Commands.envelopes.map(wireEnvelopeId));
     const fresh = admitRemoteEnvelopes(state.ingestedMutationIds, frame.Commands.envelopes, wireEnvelopeId);
     if (fresh.length > 0 && commandBatch === null) throw new Error("document backbone: exact server command batch missing");
     if (fresh.length > 0 && commandBatch !== null) {

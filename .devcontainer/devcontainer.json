@@ -36,6 +36,7 @@
     }
   },
   "workspaceFolder": "/workspaces/semio",
+  "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache"],
   "postCreateCommand": ["bun", "nx", "run", "workspace:setup"],
   "postStartCommand": "bash .devcontainer/post-start.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
@@ -88,7 +89,7 @@
     }
   },
   "mounts": [
-    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=semio-node-modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume",
     "source=${localWorkspaceFolderBasename}-claude,target=/home/vscode/.claude,type=volume",
     "source=${localWorkspaceFolderBasename}-codex,target=/home/vscode/.codex,type=volume",
     "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
@@ -105,7 +106,7 @@
     "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",
     "source=${localWorkspaceFolderBasename}-windsurf-server,target=/home/vscode/.windsurf-server,type=volume",
     "source=${localWorkspaceFolderBasename}-kiro,target=/home/vscode/.kiro,type=volume",
-    "source=${localWorkspaceFolderBasename}-semio-cache,target=${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache,type=volume"
+    "source=semio-cache-${devcontainerId},target=${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache,type=volume"
   ],
   "remoteUser": "vscode",
   "containerEnv": {

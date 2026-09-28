@@ -18,7 +18,9 @@ import {
   readStoredUiDriver,
   registerUiTranslationBundles,
   uiDataLabel,
+  UI_AVAILABLE_HEIGHT,
   UI_MOBILE_MEDIA_QUERY,
+  availableViewportHeightPx,
   useElementsSurfaceChrome,
   useLabel,
   useMediaQuery,
@@ -76,7 +78,7 @@ export const playLandingUiLabel = registerUiTranslationBundles({
 //#endregion 🌐️PlayLandingLabels
 
 //#region 🎡️PlayGridGeometry
-/** @emoji 🔢️ Columns and rows of the play grid; the strip spans `columns * 100vw` by `rows * 100vh`. */
+/** @emoji 🔢️ Columns and rows of the play grid; the strip spans `columns * 100vw` by `rows` of the available viewport height. */
 const { columns: PLAY_GRID_COLUMNS, rows: PLAY_GRID_ROWS } = playGridDimensions(PLAY_PANES.length);
 
 /** @emoji 📍️ Every pane's cell, row-major with the short trailing row centred — the single source both the
@@ -159,13 +161,18 @@ function paneAxisBounds(cellIndex: number, scrollPercent: number): PaneAxisBound
 
 type RectPx = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
+/** @emoji 📐 Available viewport in pixels — the visible area, not the screen behind the browser toolbar. */
+function playViewportPx(): { readonly width: number; readonly height: number } {
+  const visual = window.visualViewport;
+  return { width: visual && visual.width > 0 ? visual.width : window.innerWidth, height: availableViewportHeightPx({ innerHeight: window.innerHeight, visualHeight: visual?.height }) };
+}
+
 /** @emoji 👁 Visible on-screen bounds of a grid pane — the region that stays untinted while its card is hovered. */
 function playPaneRevealRect(paneIndex: number, scrollOffset: ScrollOffset): RectPx {
   const horizontal = paneAxisBounds(paneColumn(paneIndex), scrollOffset.x);
   const vertical = paneAxisBounds(paneRow(paneIndex), scrollOffset.y);
   if (!horizontal.visible || !vertical.visible) return { top: 0, left: 0, width: 0, height: 0 };
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const { width: vw, height: vh } = playViewportPx();
   const left = (horizontal.start / 100) * vw;
   const top = (vertical.start / 100) * vh;
   return { top, left, width: Math.max(0, (horizontal.end / 100) * vw - left), height: Math.max(0, (vertical.end / 100) * vh - top) };
@@ -173,8 +180,7 @@ function playPaneRevealRect(paneIndex: number, scrollOffset: ScrollOffset): Rect
 
 /** @emoji 🪟️ Full-viewport veil pieces; optional rectangular cutout leaves the hovered app pane untinted. */
 function playTintSegmentsPx(revealRect: RectPx | null): readonly RectPx[] {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const { width: vw, height: vh } = playViewportPx();
   if (!revealRect) return [{ top: 0, left: 0, width: vw, height: vh }];
   const holeLeft = Math.max(0, revealRect.left);
   const holeTop = Math.max(0, revealRect.top);
@@ -593,7 +599,12 @@ function PlayLanding() {
       else setRevealRect(null);
     };
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const visual = window.visualViewport;
+    visual?.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      visual?.removeEventListener("resize", onResize);
+    };
   }, [touchListMode, hoveredPaneId, refreshRevealRect]);
 
   // 🖱️ Mouse-follow panning only makes sense in overview — a focused pane owns the mouse.
@@ -603,7 +614,8 @@ function PlayLanding() {
       if (hoveredPaneIdRef.current) return;
       if (scrollDriveRef.current.mode !== "follow") scrollEpochRef.current += 1;
       scrollDriveRef.current = { mode: "follow" };
-      scrollTargetRef.current = clampScrollOffset({ x: (event.clientX / window.innerWidth) * PLAY_MAX_SCROLL.x, y: (event.clientY / window.innerHeight) * PLAY_MAX_SCROLL.y });
+      const viewport = playViewportPx();
+      scrollTargetRef.current = clampScrollOffset({ x: (event.clientX / viewport.width) * PLAY_MAX_SCROLL.x, y: (event.clientY / viewport.height) * PLAY_MAX_SCROLL.y });
       ensureScrollLoopRef.current();
     };
     window.addEventListener("mousemove", onMove, { passive: true });
@@ -734,10 +746,10 @@ function PlayLanding() {
           aria-label={gridLabel}
           onScroll={handleListScroll}
           className={cn("flex w-full flex-col overscroll-y-contain", listScrollLocked ? "overflow-hidden" : "snap-y snap-mandatory overflow-y-auto")}
-          style={{ height: "100dvh" }}
+          style={{ height: UI_AVAILABLE_HEIGHT }}
         >
           {PLAY_PANES.map((pane) => (
-            <section key={pane.id} className="relative w-full shrink-0 snap-start overflow-hidden" style={{ height: "100dvh", minHeight: "100dvh" }}>
+            <section key={pane.id} className="relative w-full shrink-0 snap-start overflow-hidden" style={{ height: UI_AVAILABLE_HEIGHT, minHeight: UI_AVAILABLE_HEIGHT }}>
               <PlayPane
                 pane={pane}
                 booted={bootedIds.has(pane.id)}
@@ -774,9 +786,9 @@ function PlayLanding() {
         className="grid"
         style={{
           gridTemplateColumns: `repeat(${PLAY_GRID_COLUMNS}, 100vw)`,
-          gridTemplateRows: `repeat(${PLAY_GRID_ROWS}, 100vh)`,
+          gridTemplateRows: `repeat(${PLAY_GRID_ROWS}, ${UI_AVAILABLE_HEIGHT})`,
           width: `${PLAY_GRID_COLUMNS * 100}vw`,
-          height: `${PLAY_GRID_ROWS * 100}vh`,
+          height: `calc(${PLAY_GRID_ROWS} * ${UI_AVAILABLE_HEIGHT})`,
           transform: `translate(-${scrollOffset.x}vw, -${scrollOffset.y}vh)`,
         }}
       >

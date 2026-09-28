@@ -356,7 +356,6 @@ func TestCanonicalGoTestDispatcherCancellation(t *testing.T) {
 	if !strings.Contains(stdout.String(), "Running: bun ") || !strings.Contains(stdout.String(), vector.Cancellation.TestName) {
 		t.Fatalf("selected cancellation output was not preserved:\n%s\nstderr:\n%s", stdout.String(), stderr.String())
 	}
-	t.Logf("[DEBUG] context cancellation returned in %s after observing %d descendants", elapsed, len(observed))
 }
 
 func TestCanonicalGoTestDispatcherSpawnError(t *testing.T) {

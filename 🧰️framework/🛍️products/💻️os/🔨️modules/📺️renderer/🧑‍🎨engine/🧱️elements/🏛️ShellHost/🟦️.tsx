@@ -171,11 +171,7 @@ import {
   type BrowserActorUiMountedV1,
   artifactFrontierIsEditedForV1,
   artifactFrontierIsGenesisForV1,
-  buildFileBackboneUri,
-  buildFolderBackboneUri,
   buildFrameworkSyncUtilities,
-  buildRemoteBackboneUri,
-  parseRemoteBackboneUri,
   decodeBackboneMessage,
   decodeBackboneWorkerResponse,
   decodeDocumentArchiveBytes,
@@ -225,8 +221,8 @@ import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
 import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1, subscribeLocalPresenceWindowViewsV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellHumanChangeRecoveryV1, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1, type ShellHumanV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
-import { focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
-import { causalOrderKeyV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, inputAppliedV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
+import { contributionsReceiverSessionV1, focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
+import { causalOrderKeyV1, createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputAppliedV1, inputAwaitsHubIdentityV1, inputIdentitySettleNoticeTextV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type HubIdentityGateV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
@@ -422,10 +418,11 @@ import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdminist
 import { HubWorkspace } from "../🔗️HubConnection/🏛️workspace/🟦️.tsx";
 import { createHubConnectionFetchPortV1, type HubConnectionPortV1 } from "../🔗️HubConnection/🟦️.tsx";
 import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDocumentOpeningRoleV1, type DocumentOpeningReference, type DocumentOpeningTarget } from "./🧭️opening/🟦️.ts";
+import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDocumentOpeningRoleV1, sharedDocumentRoleSwitchRefusedV1, type DocumentOpeningReference, type DocumentOpeningTarget } from "./🧭️opening/🟦️.ts";
 import {
   actionStageKey,
   type ActiveSession,
+  createLocalInteractionStoreV1,
   EMPTY_SHELL_DEFAULTS,
   EMPTY_SHELL_LOCKS,
   type ExtraWindowInstance,
@@ -451,6 +448,7 @@ import {
   type SpacePanelState,
   type SpaceProgramEntry,
   type SpawnedAppEntry,
+  type SyncCardKind,
   type ViewModel,
 } from "../🐚️Shell/🟦️.tsx";
 import {
@@ -730,7 +728,7 @@ import {
 } from "./📇️directory-bootstrap/🟦️.tsx";
 
 
-import { HubConnectionIndicator, SyncAttachCard, type HubLinkV1, type HubSessionPresenceV1 } from "../🔄️ShellSync/🟦️.tsx";
+import { HubConnectionIndicator, SyncAttachCard, syncAttachTargetV1, type HubLinkV1, type HubSessionPresenceV1, type SyncAttachTargetV1 } from "../🔄️ShellSync/🟦️.tsx";
 import { useAgentBridge, type AgentAppCommandHandler } from "../🔗️AgentBridge/🟦️.tsx";
 import { shellAppFault, type ShellAppFrameV1 } from "../../../../🌉️mcp/🐚️channel/🟦️.ts";
 import type { BridgeInstanceRef } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
@@ -2111,6 +2109,9 @@ const PENDING_WINDOW_UI_NODE: BuiltNode = pendingWindowUiNode();
  * U5 §12-1). */
 export type BuiltNodeStoreCacheV1 = {
   readonly storeFor: (key: string, node: BuiltNode) => UiDocumentStore;
+  /** 🔎️ The store already minted for `key`, without offering a node — what a render reads for a body it does not own
+   * (a spawned window's body is loaded outside render, {@link BuiltNodeStoreCacheV1.flushPendingReloads}). */
+  readonly storeOf: (key: string) => UiDocumentStore | null;
   readonly flushPendingReloads: () => void;
   readonly forceReload: (key: string, node: BuiltNode) => void;
   readonly pendingReloadKeys: () => readonly string[];
@@ -2132,6 +2133,7 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
       else pending.set(key, node);
       return existing.store;
     },
+    storeOf: (key) => stores.get(key)?.store ?? null,
     flushPendingReloads: () => {
       for (const [key, node] of pending) {
         const entry = stores.get(key);
@@ -2149,6 +2151,14 @@ export function createBuiltNodeStoreCacheV1(): BuiltNodeStoreCacheV1 {
     },
     pendingReloadKeys: () => [...pending.keys()],
   };
+}
+
+/** 📤️ Loads bodies into their stores OUTSIDE render and reloads them at once. For a body no render owns — a spawned
+ * program's window, `spawned:<windowId>` — the store is its only holder: the mounted `UiNodeView`s update in place and
+ * only a window gaining or losing its body, or a changed activity, reaches the shell reducer. */
+export function publishBuiltNodesV1(cache: BuiltNodeStoreCacheV1, entries: readonly (readonly [string, BuiltNode])[]): void {
+  for (const [key, node] of entries) cache.storeFor(key, node);
+  cache.flushPendingReloads();
 }
 //#endregion 🔖️BuiltNodeStoreCache
 
@@ -2214,6 +2224,9 @@ function FrameworkOsShellInner({
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
+  /** 🕹️ This shell's local interaction ({@link createLocalInteractionStoreV1}) — outside `shellState`, so a hover never
+   * re-renders the shell. */
+  const [localInteraction] = useState(createLocalInteractionStoreV1);
   /** 🧾️ One history projection PER PROGRAM ({@link programHistoryKeyV1}), never one for the window.
    * A spawned program is a member of this session with a document and a cursor of its own, and the
    * cursor rule below is what decides whether a patch is a step forward — taken against the wrong
@@ -2324,7 +2337,7 @@ function FrameworkOsShellInner({
       published.selectionCleared === true,
     );
     publishLeftoverWorldSelectionV1(overlay, windowId ? { kind: "window", windowId } : { kind: "document" });
-    dispatch({ type: "INTERACTION_STATE_OBSERVED", state: leftoverInteractionStateV1({ ...published, selectedIds: overlay.selectionCleared ? [] : overlay.ids }) });
+    localInteraction.observe(leftoverInteractionStateV1({ ...published, selectedIds: overlay.selectionCleared ? [] : overlay.ids }));
     leftoverInspectionHasSelectionRef.current = overlay.selectionCleared ? false : overlay.ids.length > 0;
     const selectedKey = overlay.selectionCleared ? "" : overlay.ids.join("\0");
     if (overlay.selectionCleared || (overlay.ids.length === 0 && leftoverInspectionIdsRef.current.length > 0)) {
@@ -2422,7 +2435,7 @@ function FrameworkOsShellInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHistoryPatch, session?.pluginId, session?.instanceId]);
   const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay, appCatalogue } = shellState.windowUi;
-  const { spawnedWindowUiByWindowId, spawnedWindowFault, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
+  const { spawnedWindowActivityByWindowId, spawnedWindowFault, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
@@ -2685,8 +2698,8 @@ function FrameworkOsShellInner({
     shellRouteLedgerRef.current.settle(generation, request.uri, await applyShellUriRef.current(request.uri, request.preservedViewState));
   }));
   //#region 🔖️BuiltNodeStores
-  /** 🧬️ Per-window/panel `📃️UiDocumentStore`s, keyed the same way `windowUiByWindowId`/`panelUiByKey`/
-   * `spawnedWindowUiByWindowId` already are — one stable store instance per key, reloaded via
+  /** 🧬️ Per-window/panel `📃️UiDocumentStore`s, keyed the same way `windowUiByWindowId`/`panelUiByKey` already are
+   * (a spawned window's store, `spawned:<windowId>`, is the ONLY holder of its body) — one stable store instance per key, reloaded via
    * `loadSnapshot`/`builtNodeToSnapshot` whenever that key's authored `BuiltNode` reference actually
    * changes (the reducer's own `mergeRecordPreservingIdentity` already keeps an unchanged window's
    * `BuiltNode` reference-stable across a `refreshUi` cycle, so this rarely reloads). Plain ref-backed
@@ -3228,9 +3241,22 @@ function FrameworkOsShellInner({
   const foldSpaceDirectoryRef = useRef<() => void>(() => {});
   /** 📇️ Collects directory events into every mounted space index's history of their space and folds the current
    * index's full history once per turn when it changed. */
+  /** 👁️ The surface role the signed-in human may open each shared space's documents with ({@link sharedDocumentOpeningRoleV1}),
+   * decided at every opening from the space index and kept current while an index of the space folds directory events. */
+  const sharedSpaceAccessRef = useRef<Map<string, AppRole>>(new Map());
+  const [sharedSpaceAccessVersion, setSharedSpaceAccessVersion] = useState(0);
+  const adoptSharedSpaceAccess = useCallback((spaceId: string, role: AppRole | null): void => {
+    if (role === null || sharedSpaceAccessRef.current.get(spaceId) === role) return;
+    sharedSpaceAccessRef.current.set(spaceId, role);
+    setSharedSpaceAccessVersion((version) => version + 1);
+  }, []);
   const collectSpaceDirectoryEvents = useCallback((events: readonly DirectoryEvent[]): void => {
     let changed = false;
-    for (const history of spaceDirectoryHistoriesRef.current.values()) changed = history.add(events) || changed;
+    for (const history of spaceDirectoryHistoriesRef.current.values()) {
+      if (!history.add(events)) continue;
+      changed = true;
+      if (identityRef.current) adoptSharedSpaceAccess(history.spaceId, sharedDocumentOpeningRoleV1(history.events(), history.spaceId, identityRef.current.userId));
+    }
     if (!changed || spaceDirectoryFoldPendingRef.current) return;
     spaceDirectoryFoldPendingRef.current = true;
     queueMicrotask(() => {
@@ -3372,7 +3398,6 @@ function FrameworkOsShellInner({
         const answer = (verdicts: readonly { readonly surface: string; readonly outcome: "acknowledged" | "rejected"; readonly revision: number; readonly reason?: string }[]) =>
           worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, verdicts }) });
         if (refusal !== null) {
-          console.warn("[DEBUG] c13 browser-actor-ui-patch refused", refusal, message.patches.map((patch) => patch.surface));
           answer(message.patches.map((patch) => ({ surface: patch.surface, outcome: "rejected" as const, revision: 0, reason: refusal })));
           return;
         }
@@ -3382,7 +3407,6 @@ function FrameworkOsShellInner({
           browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windows: applied.stores.windows, panels: applied.stores.panels, identity: null, actions });
         }
         if (applied.stores !== null && (retained === undefined || applied.surfacesAdded)) setBrowserActorUiVersion((current) => current + 1);
-        if (applied.verdicts.some((verdict) => verdict.outcome === "rejected")) console.warn("[DEBUG] c13 browser-actor-ui-patch verdicts", JSON.stringify(applied.verdicts).slice(0, 600), entry.session.app.id, entry.session.app.windowKinds.map((kind) => kind.id));
         answer(applied.verdicts);
         return;
       }
@@ -5077,6 +5101,14 @@ function FrameworkOsShellInner({
    * `return`. `refusalNoticeThrottleRef` folds a burst of one refusal reason into one notice (§G). */
   const inputLedgerRef = useRef(createInputLedgerV1());
   const refusalNoticeThrottleRef = useRef(createRefusalNoticeThrottleV1());
+  /** 🔐️ A user input that arrives while a just-granted hub session is still being resolved to a human waits for it
+   * (bounded, {@link inputAwaitsHubIdentityV1}) instead of reaching the guest identity-less and being refused. */
+  const hubIdentityGateRef = useRef<HubIdentityGateV1>({ capabilityHeld: false, identityKnown: false, refused: false, offline: false });
+  hubIdentityGateRef.current = { capabilityHeld: hubSessionCapability !== null, identityKnown: identity !== null, refused: hubSessionRefused, offline: identityOffline };
+  const hubIdentitySettleRef = useRef(createHubIdentitySettleV1());
+  useEffect(() => {
+    if (!inputAwaitsHubIdentityV1(hubIdentityGateRef.current)) hubIdentitySettleRef.current.settle();
+  }, [identity, hubSessionCapability, hubSessionRefused, identityOffline]);
   /** 🔢️ L3 versioned registers — the host-owned interaction state a widget renders AND stamps back
    * (`expectedGeneration`) so a stale press is refused by compare-and-set, never by a wall clock. The
    * store slices (`activeUtilityByWindowId`, `activeToolId`) stay the RENDERED value; these cells carry
@@ -5214,7 +5246,7 @@ function FrameworkOsShellInner({
     const active = sessionRef.current;
     const currentPlugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active?.pluginId)?.handle;
     if (!active || active.instanceId !== instanceId || currentPlugin !== plugin) return null;
-    dispatch({ type: "INTERACTION_STATE_OBSERVED", state: { ...capture.state, hover: shellStateRef.current.interaction.hover } });
+    localInteraction.observe({ ...capture.state, hover: localInteraction.get().hover });
     return capture.state;
   }, []);
   const observeLocalInteraction = useMemo(
@@ -5548,7 +5580,9 @@ function FrameworkOsShellInner({
     readonly targetViewState: ViewModel;
     /** 🎛️ The receiver's `consumes` row — the ONLY thing that scopes a capability pack. */
     readonly consumedTopics: readonly string[];
-    readonly dispatchDeferredEffects: (pluginId: string, instanceId: number, effects: readonly Effect[]) => void;
+    /** 🔁️ Runs an install's own re-arm effects against the RECEIVER — the program the pack was pushed into,
+     * with its own app — never against whatever session happens to be primary. */
+    readonly dispatchDeferredEffects: (receiver: ActiveSession, effects: readonly Effect[]) => void;
   };
   /**
    * 🧩️ The host→guest contributions push, owned OUTSIDE `refreshUi`'s generation race.
@@ -5608,7 +5642,7 @@ function FrameworkOsShellInner({
               const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
               const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState);
               if (contributionResponse.requestedEffects?.length) {
-                environment.dispatchDeferredEffects(pluginEntry.handle.pluginId, instanceId, contributionResponse.requestedEffects);
+                environment.dispatchDeferredEffects(isActive ? environment.session : { pluginId: pluginEntry.handle.pluginId, instanceId, app: targetApp, viewState: environment.session.viewState }, contributionResponse.requestedEffects);
               }
             } catch (error) {
               console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
@@ -5652,18 +5686,15 @@ function FrameworkOsShellInner({
         session: nextSession,
         targetViewState: resolvedTargetViewState(nextSession),
         consumedTopics: registry.find((entry) => entry.pluginId === (loaded.find((program) => program.handle.pluginId === nextSession.pluginId)?.catalogModule?.pluginId ?? nextSession.pluginId))?.consumes ?? [],
-        // 🔁️ The install's own re-arm (`flowEvalTick` per attached preview) is dispatched on a fresh
-        // microtask against the LIVE session, never inside the guest crossing that produced it.
-        dispatchDeferredEffects: (deferredPluginId, deferredInstanceId, deferredEffects) =>
+        dispatchDeferredEffects: (receiver, deferredEffects) =>
           queueMicrotask(() => {
             const live = sessionRef.current;
             if (!live) {
-              console.error(`[os-shell] ${deferredEffects.length} deferred effect(s) for "${deferredPluginId}" dropped: no live session`);
+              console.error(`[os-shell] ${deferredEffects.length} deferred effect(s) for "${receiver.pluginId}" dropped: no live session`);
               return;
             }
-            const target = { ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId };
-            const owner = captureProgramEffectOwner(target);
-            void applyHostEffects(deferredEffects, target, { kind: "full" }, owner).catch((error) => undefined);
+            const target = contributionsReceiverSessionV1(receiver, live);
+            void applyHostEffects(deferredEffects, target, { kind: "full" }, captureProgramEffectOwner(target)).catch(logUnlessRetiredV1(`[os-shell] contributions re-arm of "${receiver.pluginId}" #${receiver.instanceId} failed`));
           }),
       });
       return outcome;
@@ -6048,13 +6079,9 @@ function FrameworkOsShellInner({
       const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
       if (!plugin || !app) {
         console.warn("[os-shell] refreshSpawnedUi: plugin/app unavailable", { pluginId: spawned.pluginId, appId: spawned.appId });
-        dispatch({
-          type: "SET_SPAWNED_WINDOW_UI",
-          // 🦴 A `BuiltNode` needs its full field set (layout/style/accessibility/…) — reuse
-          // `pendingWindowUiNode()`'s already-valid defaults rather than hand-authoring them, and
-          // override just the component (a plain text node) and activity (no longer "loading").
-          value: { [spawnedWindowInstanceIdV1(spawned.id, "main")]: { ...pendingWindowUiNode(), activity: "idle", component: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}`, emphasize: null, dataAttributes: null } } satisfies BuiltNode },
-        });
+        const unavailableWindowId = spawnedWindowInstanceIdV1(spawned.id, "main");
+        publishBuiltNodesV1(builtNodeStoreCacheRef.current, [[`spawned:${unavailableWindowId}`, { ...pendingWindowUiNode(), activity: "idle", component: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}`, emphasize: null, dataAttributes: null } } satisfies BuiltNode]]);
+        dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: { [unavailableWindowId]: "idle" } });
         dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
         dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
         return;
@@ -6100,7 +6127,8 @@ function FrameworkOsShellInner({
         Object.fromEntries(Object.entries(byGuestWindowId).map(([windowId, value]) => [spawnedWindowInstanceIdV1(spawned.id, windowId), value] as const));
       const dynamicEngagements = spawnedKeyed((cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {});
       const dynamicMeasures = spawnedKeyed((cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {});
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: Readonly<Record<string, BuiltNode>>) => mergeRecordPreservingIdentity(current, Object.entries(uiByWindowId)) });
+      publishBuiltNodesV1(builtNodeStoreCacheRef.current, Object.entries(uiByWindowId).map(([windowId, node]) => [`spawned:${windowId}`, node] as const));
+      dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(uiByWindowId).map(([windowId, node]) => [windowId, node.activity] as const)) });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicEngagements)) });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)) });
       const panelBodies = programKeyedEntriesV1(
@@ -6170,21 +6198,21 @@ function FrameworkOsShellInner({
 
   useEffect(() => {
     if (!hostMode || !session) {
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
       return;
     }
     const activeSpawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
     if (!activeSpawned) {
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
       return;
     }
     void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
       const fault = liveInstanceWindowFaultV1(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId], isPluginInstanceRetiredV1);
-      if (fault !== null) dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {}, fault });
+      if (fault !== null) dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: {}, fault });
     });
     // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
     // (same reasoning as the session-refresh effect above): `refreshSpawnedUi` now reads
@@ -6812,6 +6840,7 @@ function FrameworkOsShellInner({
               const sharedSpaceId = typeof openingArgs?.spaceId === "string" ? openingArgs.spaceId : null;
               const sharedHistory = sharedSpaceId === null ? undefined : [...spaceDirectoryHistoriesRef.current.values()].find((history) => history.spaceId === sharedSpaceId);
               const accessRole = sharedHistory === undefined || !identityRef.current ? null : sharedDocumentOpeningRoleV1(sharedHistory.events(), sharedHistory.spaceId, identityRef.current.userId);
+              if (sharedSpaceId !== null) adoptSharedSpaceAccess(sharedSpaceId, accessRole);
               if (accessRole === "viewer" && actionId === "os.open-artifact-with" && (openingArgs?.role === "editor" || openingArgs?.role === 1)) {
                 refuseReplay("view-only-access", "a read-only member asked to edit", args);
                 continue;
@@ -7478,42 +7507,27 @@ function FrameworkOsShellInner({
   }, [retireBrowserActorUi]);
   closeDocumentRef.current = closeDocument;
 
-  /** @deprecated superseded by {@link openDocument}; kept as a thin URI-parsing adapter only for the
-   * existing sync-card UI (`onAction`'s `attach` handler below), which still collects a single uri
-   * from file/folder/remote pickers — translates that uri into an `OsDocumentRef` + `PersistenceBinding`. */
-  const attachSyncBackbone = useCallback(
-    async (uri: string) => {
+  /** 🔗️ Opens the sync card's typed target ({@link SyncAttachTargetV1}) through {@link openDocument}: a hub space's
+   * document, a folder, or a file's folder, as the session app's document.
+   *
+   * 🪪️ A hub binding names the surface it wants — the store worker refuses a hub binding that carries neither
+   * `requestedSurfaceId` nor a previously installed target (`socket-actor-failed … installed-target-unavailable`) — the
+   * session app's own canonical one, the same expression `openDocument` resolves bindings with.
+   *
+   * 📐️ The schema is the artifact's OWN (`AppDefinition.io.artifactSchema`), not the chrome breadcrumb: a hub plan
+   * states the document's schema and `documentOpenPlanAuthority` refuses an open that differs (the gis map answered
+   * `document open: authority mismatch` against the breadcrumb `"semio.gis.2d"`). The breadcrumb stays the fallback
+   * for an app that declares no artifact io. */
+  const openSyncTarget = useCallback(
+    async (target: SyncAttachTargetV1) => {
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
-      // 🌐️ A `remote://` uri names all THREE parts — host, space and document
-      // (`buildRemoteBackboneUri`) — and `parseRemoteBackboneUri` is the one decoder that reads them
-      // back. This adapter used to hand-roll its own split, which took everything after the host as
-      // the space id (so `remote://host/space-1/doc-a` bound space `"space-1/doc-a"`) and then threw
-      // the uri's document id away in favour of the local `pluginId-instanceId`. Two browsers
-      // attaching to the SAME hub document therefore opened two different documents in two
-      // mis-named spaces and never shared a replication session — which is why joining one shared
-      // document looked like it needed host mode. Ticket 26/09/18 slice C1c.
-      const remote = parseRemoteBackboneUri(uri);
-      const documentId = remote?.documentId ?? syncDocumentId(targetSession, panel, hostMode);
-      // 🪪️ A hub binding MUST name the surface it wants: the store worker refuses a hub binding that
-      // carries neither `requestedSurfaceId` nor a previously installed target
-      // (`👷️worker/🟦️.ts:6085`, `socket-actor-failed … installed-target-unavailable`), so this
-      // adapter's binding could never open a hub document at all. The surface is the session app's
-      // own canonical one — the same expression `openDocument` uses when it resolves bindings itself.
+      const documentId = (target.kind === "remote" ? target.documentId : null) ?? syncDocumentId(targetSession, panel, hostMode);
       const requestedSurfaceId = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
-      const bindings: PersistenceBinding[] = remote
-        ? [{ kind: "hub", dataClass: "persistedShared", baseUrl: `http://${remote.hostPort}`, spaceId: remote.spaceId, ...(requestedSurfaceId === undefined ? {} : { requestedSurfaceId }) }]
-        : uri.startsWith("folder://")
-          ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: uri.slice("folder://".length) }]
-          : uri.startsWith("file://")
-            ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: uri.slice("file://".length).replace(/\/[^/]*$/, "") }]
-            : [];
-      // 📐️ The artifact's OWN schema (`AppDefinition.io.artifactSchema`), not the chrome breadcrumb:
-      // a hub plan states the document's schema and `documentOpenPlanAuthority`
-      // (`👷️worker/🟦️.ts:2637`) refuses the open when it differs, so attaching the gis map answered
-      // `document open: authority mismatch` → "The document target changed" with
-      // `planSchema="gis.map"` against the breadcrumb's `"semio.gis.2d"`. The breadcrumb stays the
-      // fallback for an app that declares no artifact io (a viewer of nothing).
+      const bindings: PersistenceBinding[] =
+        target.kind === "remote"
+          ? [{ kind: "hub", dataClass: "persistedShared", baseUrl: `http://${target.hostPort}`, spaceId: target.spaceId, ...(requestedSurfaceId === undefined ? {} : { requestedSurfaceId }) }]
+          : [{ kind: "folder", dataClass: "persistedLocalOnly", path: target.kind === "folder" ? target.path : target.folder }];
       const appArtifactSchema = (targetSession.app as unknown as { readonly io?: { readonly artifactSchema?: string } }).io?.artifactSchema;
       await openDocument({ documentId, schema: appArtifactSchema && appArtifactSchema.length > 0 ? appArtifactSchema : targetSession.app.breadcrumb.join(".") }, bindings);
     },
@@ -7619,6 +7633,10 @@ function FrameworkOsShellInner({
         }
 
         if (!session) return refuse("no-session");
+        if (entry.provenance.origin === "user" && inputAwaitsHubIdentityV1(hubIdentityGateRef.current)) {
+          showTransientNoticeRef.current(inputIdentitySettleNoticeTextV1(uiLocaleRef.current), "info");
+          await hubIdentitySettleRef.current.wait(INPUT_IDENTITY_SETTLE_BOUND_MS_V1);
+        }
         const programOfWindow = (windowId: string): { readonly spawnedId: string | null; readonly session: ActiveSession; readonly extraInstances: readonly { readonly id: string; readonly windowKindId: string }[]; readonly guestWindowId: string } => {
           const spawnedId = spawnedIdOfWindowInstanceV1(windowId, spawnedIdsRef.current);
           const spawned = spawnedId === null ? undefined : panel?.spawnedApps.find((candidate) => candidate.id === spawnedId);
@@ -7819,13 +7837,13 @@ function FrameworkOsShellInner({
         if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
           if (action.action === "selectFile") {
             dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
-            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "" });
+            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: "" });
             void browseSyncBackbonePath("file");
             return applied();
           }
           if (action.action === "selectFolder") {
             dispatch({ type: "SET_SYNC_CARD_KIND", value: "folder" });
-            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "" });
+            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: "" });
             void browseSyncBackbonePath("folder");
             return applied();
           }
@@ -7836,26 +7854,15 @@ function FrameworkOsShellInner({
           }
           if (action.action === "selectRemote") {
             dispatch({ type: "SET_SYNC_CARD_KIND", value: "remote" });
-            const remote = syncBackboneUri?.startsWith("remote://") ? syncBackboneUri.slice("remote://".length) : "";
-            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: remote });
+            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: "" });
             return applied();
           }
           if (action.action === "attach") {
-            const path = typeof action.args === "object" && action.args != null && "path" in action.args ? String((action.args as { path?: string }).path ?? "") : syncDraftPath;
-            if (!path.trim()) return refuse("dispatch-failed", "sync attach: empty path");
-            const uri =
-              action.args && typeof action.args === "object" && "kind" in action.args
-                ? String((action.args as { kind?: string }).kind) === "remote"
-                  ? (() => {
-                      const [hostPort, ...rest] = path.split("/");
-                      const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, hostMode)];
-                      return buildRemoteBackboneUri(hostPort ?? "127.0.0.1:8787", spaceId, documentId);
-                    })()
-                  : String((action.args as { kind?: string }).kind) === "folder"
-                    ? buildFolderBackboneUri(path)
-                    : buildFileBackboneUri(path)
-                : buildFileBackboneUri(path);
-            void attachSyncBackbone(uri);
+            const args = typeof action.args === "object" && action.args != null ? (action.args as { readonly path?: unknown; readonly kind?: unknown }) : {};
+            const kind: SyncCardKind = args.kind === "remote" || args.kind === "folder" ? args.kind : "file";
+            const target = syncAttachTargetV1(kind, "path" in args ? String(args.path ?? "") : syncDraftPath);
+            if (target === null) return refuse("dispatch-failed", "sync attach: empty path");
+            void openSyncTarget(target);
             return applied();
           }
           if (action.action === "detach") {
@@ -8164,7 +8171,7 @@ function FrameworkOsShellInner({
       isCurrentEffectOwner,
       applyHistoryPatch,
       applyLeftoverInteractionView,
-      attachSyncBackbone,
+      openSyncTarget,
       browseSyncBackbonePath,
       clearAllWindowUtilities,
       detachSyncBackbone,
@@ -8177,7 +8184,6 @@ function FrameworkOsShellInner({
       writeToolRegister,
       spawnProgram,
       hostMode,
-      syncBackboneUri,
       syncCardKind,
       syncDraftPath,
       updateSpacePanel,
@@ -8298,7 +8304,7 @@ function FrameworkOsShellInner({
     appLabelsOverlay,
     terminology: uiTerminology,
     locale: uiLocale,
-    interactionSelection: () => shellStateRef.current.interaction.selection,
+    interactionSelection: () => localInteraction.get().selection,
     publishInteractionSelection: publishTutorialInteractionSelection,
   });
   uiBridgeCtxRef.current = {
@@ -8310,7 +8316,7 @@ function FrameworkOsShellInner({
     appLabelsOverlay,
     terminology: uiTerminology,
     locale: uiLocale,
-    interactionSelection: () => shellStateRef.current.interaction.selection,
+    interactionSelection: () => localInteraction.get().selection,
     publishInteractionSelection: publishTutorialInteractionSelection,
   };
 
@@ -8615,8 +8621,7 @@ function FrameworkOsShellInner({
     void publishLocalInteraction(plugin, session.instanceId).then((interaction) => {
       const active = sessionRef.current;
       if (!interaction || !active || active.pluginId !== session.pluginId || active.instanceId !== session.instanceId) return;
-      const observed = { ...shellStateRef.current, interaction: { ...interaction, hover: shellStateRef.current.interaction.hover } };
-      tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(observed, active), null);
+      tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(shellStateRef.current, localInteraction.get(), active), null);
       dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
     }).catch((captureError) => undefined).finally(() => {
       tutorialRecorderStartingRef.current = false;
@@ -8634,13 +8639,17 @@ function FrameworkOsShellInner({
   // camera sampler per registered driver (world drags bypass `onAction` entirely).
   useEffect(() => {
     if (!tutorialRecording) return;
-    tutorialRecorderRef.current?.recordUiDiff(captureTutorialUiSnapshot(shellState, session));
-  }, [tutorialRecording, shellState, session]);
+    const record = (): void => {
+      tutorialRecorderRef.current?.recordUiDiff(captureTutorialUiSnapshot(shellState, localInteraction.get(), session));
+    };
+    record();
+    return localInteraction.subscribe(record);
+  }, [tutorialRecording, shellState, session, localInteraction]);
 
   useEffect(() => {
     if (!tutorialRecording || !session || typeof window === "undefined") return;
     const interval = window.setInterval(() => {
-      tutorialRecorderRef.current?.recordSnapshot(captureTutorialUiSnapshot(shellStateRef.current, session));
+      tutorialRecorderRef.current?.recordSnapshot(captureTutorialUiSnapshot(shellStateRef.current, localInteraction.get(), session));
     }, 5000);
     return () => window.clearInterval(interval);
   }, [tutorialRecording, session]);
@@ -8968,6 +8977,11 @@ function FrameworkOsShellInner({
       const apps = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.manifest.apps ?? [];
       const target = roleSwitchTargetV1(apps, current.app.dialect, current.app.role, role);
       if (!target) return;
+      const scope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === current.pluginId && entry.session.instanceId === current.instanceId)?.scope;
+      if (scope !== undefined && sharedDocumentRoleSwitchRefusedV1(sharedSpaceAccessRef.current.get(scope.spaceId) ?? null, role)) {
+        showTransientNoticeRef.current(replayRefusalNoticeTextV1("view-only-access", uiLocaleRef.current), "warning", replayRefusalCodeV1("view-only-access"));
+        return;
+      }
       await switchToPluginApp(current.pluginId, target.id,undefined,current);
     },
     [switchToPluginApp],
@@ -10881,7 +10895,7 @@ function FrameworkOsShellInner({
                     onAction={onAction}
                     onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
                     onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
-                    onAttach={attachSyncBackbone}
+                    onAttach={openSyncTarget}
                     onDetach={detachSyncBackbone}
                     onBrowsePath={() => (syncCardKind === "folder" ? browseSyncBackbonePath("folder") : syncCardKind === "file" ? browseSyncBackbonePath("file") : undefined)}
                   />
@@ -10892,7 +10906,7 @@ function FrameworkOsShellInner({
         ],
       },
     });
-  }, [attachSyncBackbone, browseSyncBackbonePath, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
+  }, [openSyncTarget, browseSyncBackbonePath, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
   //#endregion 🔄️SyncLeaf
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
@@ -10987,6 +11001,9 @@ function FrameworkOsShellInner({
    * Shares the mode switcher's placement in both the desktop navbar cluster and the mobile "App" tab. */
   const roleSwitcherElement = useMemo(() => {
     if (!session || sessionRoleApps === null) return null;
+    const scope = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId)?.scope;
+    const access = scope === undefined ? null : (sharedSpaceAccessRef.current.get(scope.spaceId) ?? null);
+    const refused = (role: AppRole, isActive: boolean): boolean => !isActive && sharedDocumentRoleSwitchRefusedV1(access, role);
     return (
       // 🚦️ `aria-busy` on the GROUP, disabled on the items: a switch is a transaction over the whole
       // group (it quiesces, retires and mounts), never over one button, and a second press while one is
@@ -11003,7 +11020,8 @@ function FrameworkOsShellInner({
               data-state={isActive ? "on" : undefined}
               data-role={role}
               aria-pressed={isActive}
-              disabled={surfaceSwitchBusy && !isActive}
+              disabled={(surfaceSwitchBusy && !isActive) || refused(role, isActive)}
+              aria-description={refused(role, isActive) ? replayRefusalNoticeTextV1("view-only-access", uiLocale) : undefined}
               aria-keyshortcuts={ariaKeyshortcutsText(controlKeybindings.get(SURFACE_ROLE_CONTROL_IDS[role]))}
               onClick={() => void switchToSessionRole(role).catch((switchError) => console.error(`role switch to ${role} failed`, switchError))}
               icon={SURFACE_ROLE_ICON_IDS[role]}
@@ -11013,7 +11031,7 @@ function FrameworkOsShellInner({
         })}
       </ButtonGroup>
     );
-  }, [session, sessionRoleApps, surfaceSwitchBusy, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale]);
+  }, [session, sessionRoleApps, surfaceSwitchBusy, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
 
   const resolvedCommands = useMemo(() => {
     const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
@@ -12207,7 +12225,7 @@ function FrameworkOsShellInner({
         const declaredTitle = spawnedDeclaredTitles.get(guestId);
         const chrome = spawnedWindowChromeForKind(windowKind, windowId, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[windowId] ?? undefined, onActionStable);
         const spawnedUtilities = resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[windowId], windowId, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(windowId));
-        const body = spawnedWindowUiByWindowId[windowId];
+        const bodyStore = Object.hasOwn(spawnedWindowActivityByWindowId, windowId) ? builtNodeStoreCacheRef.current.storeOf(`spawned:${windowId}`) : null;
         return {
           id: windowId,
           iconId: windowIconsById[windowId] ?? windowKind.iconId ?? "app-window",
@@ -12222,14 +12240,14 @@ function FrameworkOsShellInner({
           actionPane: windowActionPaneNode(spawnedApp, windowKind, windowId, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
           actionsFolded: actionsFoldedFor(windowId, windowKind.id),
           onActionsFoldedChange: onActionsFoldedFor(windowId),
-          status: body?.activity,
+          status: spawnedWindowActivityByWindowId[windowId],
           skeleton: <WindowBodySkeleton />,
           children: (
             <ChromeAwareWindowScrollSurface id={childElementId("framework.window", windowId)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(spawnedApp, windowId)}>
               <World3dWindowViewStoreContext.Provider key={`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`} value={spawnedWorld3dViews}>
                 <WindowInstanceIdContext.Provider value={windowId}>
                   <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                    {body ? <MediaTransportOwnerContext.Provider value={spawnedMediaOwner(windowId)}><InterpretedUiNode store={builtNodeStoreFor(`spawned:${windowId}`, body)} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
+                    {bodyStore ? <MediaTransportOwnerContext.Provider value={spawnedMediaOwner(windowId)}><InterpretedUiNode store={bodyStore} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>
               </World3dWindowViewStoreContext.Provider>
@@ -12353,7 +12371,7 @@ function FrameworkOsShellInner({
     session,
     spawnedWindowEngagements,
     spawnedWindowMeasures,
-    spawnedWindowUiByWindowId,
+    spawnedWindowActivityByWindowId,
     spawnedWindowFault,
     activeSpawnedEntry,
     activeSpawnedApp,

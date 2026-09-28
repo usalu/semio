@@ -2156,6 +2156,9 @@ fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
 /// - `archive-space` emits one intrinsically demoting event; backend transactions enforce
 ///   archive ⇒ nobody-writes even when an independent writer invalidates this decision.
 /// - `remove-member` naming the space's own owner ⇒ `DirectoryError::Conflict` (never removable).
+/// - `delete-space` removes every membership (owner included) before the space: raw directory events are member-only, so
+///   `space.deleted` alone reaches no reader, while each `member.removed` owes its member's global socket an
+///   `access-changed: revoked` frame and that reader re-reads its directory from the origin without the space.
 /// - Any command naming a missing/deleted space ⇒ `DirectoryError::NotFound`.
 /// - `upsert-member` with an email that has no `UserRecord` yet emits `user.created` first, using
 ///   a freshly minted user id the following `member.upserted` also uses.
@@ -2179,7 +2182,9 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
         }
         DirectoryCommand::DeleteSpace { space_id } => {
             require_space(dir, &space_id).await?;
-            Ok(single(clock, actor, Some(space_id.clone()), None, DirectoryEventBody::SpaceDeleted { space_id }))
+            let mut events: Vec<NewDirectoryEvent> = dir.list_members(&space_id).await?.into_iter().map(|(user, _)| new_event(clock, actor, Some(space_id.clone()), Some(user.id.clone()), DirectoryEventBody::MemberRemoved { space_id: space_id.clone(), user_id: user.id })).collect();
+            events.push(new_event(clock, actor, Some(space_id.clone()), None, DirectoryEventBody::SpaceDeleted { space_id }));
+            Ok(Decision { events, result: None })
         }
         DirectoryCommand::UpsertMember { space_id, email, role } => {
             let space = require_space(dir, &space_id).await?;

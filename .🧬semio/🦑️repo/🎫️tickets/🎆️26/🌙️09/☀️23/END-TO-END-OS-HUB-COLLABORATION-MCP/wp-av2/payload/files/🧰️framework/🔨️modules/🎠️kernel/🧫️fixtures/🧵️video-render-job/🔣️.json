@@ -1,0 +1,52 @@
+{
+ "schema": "semio.video-render.job.v1",
+ "capability": "media.video-render",
+ "streams": [
+  {
+   "id": "rendered-while-another-is-cancelled",
+   "events": [
+    { "kind": "started", "job": 1, "owner": "animate", "filename": "deck.mp4", "frames": 30, "atMs": 1000 },
+    { "kind": "progressed", "job": 1, "completed": 10 },
+    { "kind": "started", "job": 2, "owner": "animate", "filename": "tile-r0-c0.mp4", "frames": 8, "atMs": 1200 },
+    { "kind": "progressed", "job": 1, "completed": 10 },
+    { "kind": "cancelRequested", "job": 2 },
+    { "kind": "progressed", "job": 2, "completed": 3 },
+    { "kind": "finished", "job": 2, "outcome": { "status": "cancelled", "completed": 3 } },
+    { "kind": "progressed", "job": 1, "completed": 30 }
+   ],
+   "running": [
+    { "job": 1, "owner": "animate", "filename": "deck.mp4", "frames": 30, "completed": 30, "cancelling": false, "startedAtMs": 1000 }
+   ],
+   "lastJob": 2
+  },
+  {
+   "id": "every-outcome-closes-its-row",
+   "events": [
+    { "kind": "started", "job": 3, "owner": "animate", "filename": "a.mp4", "frames": 2, "atMs": 5 },
+    { "kind": "started", "job": 4, "owner": "draw", "filename": "b.mp4", "frames": 0, "atMs": 6 },
+    { "kind": "finished", "job": 4, "outcome": { "status": "refused", "code": "capability" } },
+    { "kind": "started", "job": 7, "owner": "animate", "filename": "c.mp4", "frames": 4, "atMs": 7 },
+    { "kind": "finished", "job": 7, "outcome": { "status": "failed", "reason": "encoder closed" } },
+    { "kind": "progressed", "job": 3, "completed": 2 },
+    { "kind": "finished", "job": 3, "outcome": { "status": "done", "bytes": 2048, "tier": "first-party" } },
+    { "kind": "started", "job": 8, "owner": "animate", "filename": "d.mp4", "frames": 90, "atMs": 9 },
+    { "kind": "finished", "job": 8, "outcome": { "status": "done", "bytes": 91000, "tier": "platform" } },
+    { "kind": "started", "job": 9, "owner": "animate", "filename": "e.mp4", "frames": 5, "atMs": 10 }
+   ],
+   "running": [
+    { "job": 9, "owner": "animate", "filename": "e.mp4", "frames": 5, "completed": 0, "cancelling": false, "startedAtMs": 10 }
+   ],
+   "lastJob": 9
+  }
+ ],
+ "refusals": [
+  { "id": "job-reused", "error": "staleJob", "events": [ { "kind": "started", "job": 2, "owner": "animate", "filename": "a.mp4", "frames": 1, "atMs": 0 }, { "kind": "started", "job": 2, "owner": "animate", "filename": "b.mp4", "frames": 1, "atMs": 0 } ] },
+  { "id": "job-goes-back", "error": "staleJob", "events": [ { "kind": "started", "job": 5, "owner": "animate", "filename": "a.mp4", "frames": 1, "atMs": 0 }, { "kind": "started", "job": 4, "owner": "animate", "filename": "b.mp4", "frames": 1, "atMs": 0 } ] },
+  { "id": "progress-before-start", "error": "unknownJob", "events": [ { "kind": "progressed", "job": 1, "completed": 1 } ] },
+  { "id": "cancel-after-finish", "error": "unknownJob", "events": [ { "kind": "started", "job": 1, "owner": "animate", "filename": "a.mp4", "frames": 4, "atMs": 0 }, { "kind": "finished", "job": 1, "outcome": { "status": "cancelled", "completed": 0 } }, { "kind": "cancelRequested", "job": 1 } ] },
+  { "id": "finished-twice", "error": "unknownJob", "events": [ { "kind": "started", "job": 1, "owner": "animate", "filename": "a.mp4", "frames": 4, "atMs": 0 }, { "kind": "finished", "job": 1, "outcome": { "status": "failed", "reason": "x" } }, { "kind": "finished", "job": 1, "outcome": { "status": "failed", "reason": "x" } } ] },
+  { "id": "progress-goes-back", "error": "progressRegressed", "events": [ { "kind": "started", "job": 1, "owner": "animate", "filename": "a.mp4", "frames": 4, "atMs": 0 }, { "kind": "progressed", "job": 1, "completed": 3 }, { "kind": "progressed", "job": 1, "completed": 2 } ] },
+  { "id": "progress-past-the-end", "error": "progressOverrun", "events": [ { "kind": "started", "job": 1, "owner": "animate", "filename": "a.mp4", "frames": 4, "atMs": 0 }, { "kind": "progressed", "job": 1, "completed": 5 } ] },
+  { "id": "cancelled-twice", "error": "alreadyCancelling", "events": [ { "kind": "started", "job": 1, "owner": "animate", "filename": "a.mp4", "frames": 4, "atMs": 0 }, { "kind": "cancelRequested", "job": 1 }, { "kind": "cancelRequested", "job": 1 } ] }
+ ]
+}

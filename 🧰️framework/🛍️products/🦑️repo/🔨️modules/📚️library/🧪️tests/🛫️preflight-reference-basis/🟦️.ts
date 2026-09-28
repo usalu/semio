@@ -344,7 +344,6 @@ test("actual Git markers preserve nested ownership, fake markers and skipped sym
   symlinkSync("../fake/.git", join(repoRoot, "broken/.git"), "file");
   const discover = new Function(...Object.keys(dependencies), compile(compilers[0]!, code) + "\nreturn referenceCoordinateRoots;")(...Object.values(dependencies));
   expect(() => discover(repoRoot, [...paths, "broken/consumer.json"], taxonomy)).toThrow("Reference repository marker is a symlink: broken/.git");
-  console.log("[DEBUG] Actual preflight Git marker proof", JSON.stringify({ owner, roots: ["nested"], skippedSymlink: true, directSymlinkRejected: true }));
 });
 
 for (const row of vector.physicalCases) test("physical preflight publication boundary: " + row.id, async () => {
@@ -380,7 +379,6 @@ for (const row of vector.physicalCases) test("physical preflight publication bou
     for (const entry of sources) expect(readFileSync(join(fixture.repoRoot, entry.path))).toEqual(entry.bytes);
     expect(readFileSync(fixture.suitePath, "utf8")).toBe(fixture.suite);
     evidence.passed = true;
-    console.log("[DEBUG] Preflight publication boundary", JSON.stringify({ caseId: row.id, owner: fixture.owner, result: result.state, error: journal.error, sourcesUnchanged: sources.length }));
   } finally {
     const output = join(fixture.owner, "📊️outcome");
     mkdirSync(output);
@@ -411,5 +409,4 @@ test("the exercised production slices remain stable across the dedicated gate", 
   const actual = names.map((name) => tree.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name)!.getText(tree).replace(/^export /u, "")).join("\n");
   expect(actual).toBe(declarations(names));
   const hash = (value: string) => createHash("sha256").update(value).digest("hex");
-  console.log("[DEBUG] Preflight source identity", JSON.stringify({ sourceBefore: hash(source), sourceAfter: hash(current), exercisedSlices: hash(actual), stable: true }));
 });

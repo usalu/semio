@@ -344,33 +344,34 @@ impl ReplayGuard {
     }
 
     /// @emoji 🔍️ Evicts `actor`'s entries older than `window_ms` relative to `physical_ms`, then
-    /// rejects with `DbError::Conflict` if `mutation_id` is still tracked; otherwise records it
-    /// (evicting the oldest entry first if `capacity_per_actor` would be exceeded) and returns
-    /// `Ok`.
-    // 🚫️async: E1 pure accessor, no suspension in its body — same shape as `BudgetRegistry::
-    // try_consume` above, which this crate already keeps sync — see R9. Was previously `async fn`
-    // for no real reason; `SecurityGate::admit_command`'s `if lock(&self.replay).check_and_record
-    // (..).await.is_err()` needed the `MutexGuard` alive across that `.await` to make the call at
-    // all, making the enclosing future non-`Send` (R7) — removing `async` here removes the
-    // suspension point instead of working around holding the guard across it.
-    pub fn check_and_record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
+    /// rejects with `DbError::Conflict` if `mutation_id` is still tracked. Records nothing: an
+    /// operation is tracked only once its command committed ([`Self::record`]), so a batch refused
+    /// after admission (a transient refusal, a policy rejection) is resent without tripping the guard.
+    // 🚫️async: E1 pure accessor, no suspension in its body — see R9; `SecurityGate` calls it under
+    // its mutex, which must never be held across an `.await` (R7).
+    pub fn check(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
         let deque = self.order.entry(actor.clone()).or_default();
         let set = self.seen.entry(actor.clone()).or_default();
-
-        while let Some((_, timestamp)) = deque.front() {
-            if physical_ms.saturating_sub(*timestamp) > self.window_ms {
-                if let Some((expired_id, _)) = deque.pop_front() {
-                    set.remove(&expired_id);
-                }
-            } else {
-                break;
+        while deque.front().is_some_and(|(_, timestamp)| physical_ms.saturating_sub(*timestamp) > self.window_ms) {
+            if let Some((expired_id, _)) = deque.pop_front() {
+                set.remove(&expired_id);
             }
         }
-
         if set.contains(mutation_id) {
             return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}' within {}ms window", mutation_id.0, actor.0, self.window_ms)));
         }
+        Ok(())
+    }
 
+    /// @emoji 📌️ Tracks one committed operation of `actor` at `physical_ms`, evicting the oldest
+    /// entry first if `capacity_per_actor` would be exceeded; an operation already tracked stays
+    /// as it is.
+    pub fn record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) {
+        let deque = self.order.entry(actor.clone()).or_default();
+        let set = self.seen.entry(actor.clone()).or_default();
+        if set.contains(mutation_id) {
+            return;
+        }
         if deque.len() >= self.capacity_per_actor {
             if let Some((evicted_id, _)) = deque.pop_front() {
                 set.remove(&evicted_id);
@@ -378,7 +379,6 @@ impl ReplayGuard {
         }
         deque.push_back((mutation_id.clone(), physical_ms));
         set.insert(mutation_id.clone());
-        Ok(())
     }
 }
 //#endregion 🔖️Replay
@@ -499,7 +499,7 @@ async fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, docum
 /// one policy decision, via the family's shared `Emit` seam (see `Emit`'s doc for why this crate
 /// stays generic over `E: Emit` rather than depending on `db_observe` directly — dedyn-emit-runtime,
 /// O1/R11(a): a caller-supplied, stored implementation is trivially generic, exactly like
-/// `db_artifact::ArtifactEngineConfig`'s own `A: AuthzHook`/`V: VersionGraph` params).
+/// `db_artifact::ArtifactEngineConfig`'s own `V: VersionGraph` param).
 pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
     let name = if decision.is_allowed() { "security.authz_allowed" } else { "security.authz_denied" };
     let mut event = EmitEvent::new(name)
@@ -516,14 +516,14 @@ pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &Au
     emit.emit(event).await;
 }
 
-/// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_command` calls this
+/// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_commands` calls this
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
 pub async fn audit_replay_rejected<E: Emit>(emit: &E, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
     emit.emit(EmitEvent::new("security.replay_rejected").with_document(ArtifactId::from(document.0.clone())).field("actor", EmitField::Text(actor.0.clone())).field("mutation_id", EmitField::Text(mutation_id.0.clone()))).await;
 }
 
-/// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_command` calls this
+/// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_commands` calls this
 /// when `BudgetRegistry` rejects a submission.
 pub async fn audit_budget_exceeded<E: Emit>(emit: &E, key: &str, document: &protocol::ArtifactId) {
     emit.emit(EmitEvent::new("security.budget_exceeded").with_document(ArtifactId::from(document.0.clone())).field("key", EmitField::Text(key.to_string()))).await;
@@ -569,24 +569,42 @@ impl<E: Emit + 'static> SecurityGate<E> {
         decision.into_result().await
     }
 
-    /// @emoji ✅️ The admit/dedupe/authz stages for one command submission: tenant isolation,
-    /// then `Action::Write` authz on `AuthzScope::CommandKind`, then the DoS budget (keyed by
-    /// `principal.actor`), then replay-guard dedupe (keyed by the envelope's own actor/operation
-    /// id, which may differ from `principal.actor` under delegated/service submission — this
-    /// crate does not assume they're always the same identity).
+    /// @emoji ✅️ The admit/dedupe/authz stages for one command batch of `principal`: tenant
+    /// isolation, then `Action::Write` authz on `AuthzScope::CommandKind`, then the DoS budget (keyed
+    /// by `principal.actor`, charged one token per command for the whole batch at once — never
+    /// partially — so a budget whose capacity is at least a declared-legal batch never refuses one
+    /// on a full bucket), then replay-guard dedupe of every `(envelope actor, operation id)` against
+    /// committed operations and against the batch itself (an envelope's actor may differ from
+    /// `principal.actor` under delegated/service submission). Admission records nothing:
+    /// [`Self::record_committed`] tracks the operations once their batch committed. An exhausted
+    /// budget is `DbError::Unavailable` (retry later), a replay `DbError::Conflict`.
     #[allow(clippy::too_many_arguments)]
-    pub async fn admit_command(&self, principal: &Principal, resource_tenant: &TenantId, document: &protocol::ArtifactId, kind: &str, envelope_actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
+    pub async fn admit_commands(&self, principal: &Principal, resource_tenant: &TenantId, document: &protocol::ArtifactId, kind: &str, commands: &[(&protocol::ActorId, &protocol::MutationId)], physical_ms: u64) -> Result<(), DbError> {
         check_tenant(principal, resource_tenant)?;
         self.authorize(principal, &AuthzScope::CommandKind { document: document.clone(), kind: kind.to_string() }, Action::Write).await?;
-        if lock(&self.budgets).try_consume(&principal.actor.0, 1, physical_ms).is_err() {
+        let cost = u32::try_from(commands.len()).map_err(|_| DbError::LimitExceeded("dos budget batch cost"))?;
+        if lock(&self.budgets).try_consume(&principal.actor.0, cost, physical_ms).is_err() {
             audit_budget_exceeded(self.emit.as_ref(), &principal.actor.0, document).await;
-            return Err(DbError::LimitExceeded("dos budget exceeded"));
+            return Err(DbError::Unavailable("dos budget exceeded".to_string()));
         }
-        if lock(&self.replay).check_and_record(envelope_actor, mutation_id, physical_ms).is_err() {
-            audit_replay_rejected(self.emit.as_ref(), envelope_actor, mutation_id, document).await;
-            return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}'", mutation_id.0, envelope_actor.0)));
+        let mut batch = std::collections::HashSet::with_capacity(commands.len());
+        for &(envelope_actor, mutation_id) in commands {
+            let replayed = !batch.insert((envelope_actor, mutation_id)) || lock(&self.replay).check(envelope_actor, mutation_id, physical_ms).is_err();
+            if replayed {
+                audit_replay_rejected(self.emit.as_ref(), envelope_actor, mutation_id, document).await;
+                return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}'", mutation_id.0, envelope_actor.0)));
+            }
         }
         Ok(())
+    }
+
+    /// @emoji 📌️ Tracks `commands` in the replay guard as committed at `physical_ms` — called once
+    /// their batch committed, never at admission.
+    pub fn record_committed(&self, commands: &[(&protocol::ActorId, &protocol::MutationId)], physical_ms: u64) {
+        let mut replay = lock(&self.replay);
+        for &(envelope_actor, mutation_id) in commands {
+            replay.record(envelope_actor, mutation_id, physical_ms);
+        }
     }
 
     /// @emoji 🫥️ Convenience forward to the free `redact_fields` function using the gate's own

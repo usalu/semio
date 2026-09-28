@@ -9,5 +9,4 @@ export function testWindowActionContextOracle(): void {
     const result = applyPatch(structuredClone(test.args ?? {}), [{ op: "add", path: "/windowId", value: fixture.clickedWindowId }], true).newDocument;
     assert.deepEqual(result, test.expected);
   }
-  console.log(`[DEBUG] JSON Patch matched ${fixture.cases.length} concrete-window action target cases`);
 }

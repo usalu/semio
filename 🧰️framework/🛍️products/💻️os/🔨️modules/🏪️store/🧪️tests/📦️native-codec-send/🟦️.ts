@@ -24,6 +24,5 @@ export function testNativeCodecSendFixture(): void {
   }
   assert.deepEqual(fixture.slots.map((slot: { name: string }) => slot.name), ["compile_dsl", "print_mirror"]);
   for (const hostile of [{ ...fixture, snapshots: [{ n: 2147483648 }, ...fixture.snapshots.slice(1)] }, { ...fixture, snapshots: [{ n: -2147483649 }, ...fixture.snapshots.slice(1)] }, { ...fixture, snapshots: [{ n: 0.5 }, ...fixture.snapshots.slice(1)] }, { ...fixture, slots: [{ ...fixture.slots[0], send: false }, fixture.slots[1]] }, { ...fixture, invariants: { ...fixture.invariants, localExecutorFallback: true } }]) assert.equal(validate(hostile), false);
-  console.log("[DEBUG] native codec schema/Lodash/Buffer oracle: 4 exact snapshot values, 2 declared Send slots, 5 hostiles; no Rust Send or bounded serialization claim");
 }
 //#endregion 🧵️CodecSendOracle

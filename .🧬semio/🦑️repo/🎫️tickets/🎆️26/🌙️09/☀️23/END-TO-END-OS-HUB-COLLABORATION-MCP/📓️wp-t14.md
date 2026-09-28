@@ -6,6 +6,123 @@ used). Inputs + captures `wp-t14/` (`generated/` expendable); durable data + ove
 only via the `native` lane (build-fleet-b, private target `wp-t14/target`); overlay builds only via the `overlay` lane with
 a private build-dir inside the overlay. Landing rows: `📓️landing.md` § Session 14.
 
+## Session 14b
+
+Successor T14 agent (2026-09-28 12:0x, after the usage cut + app restart). Guest freeze ON since 12:02:46 (chain pid 45604).
+
+| # | item | state | evidence |
+|---|------|-------|----------|
+| 0 | reconcile: no T14 edit in the live tree | **clean** 12:1x — `git grep` finds no `content_id`/`dsl_value!`/`contentId`/`T14_F9_RECORD`/`authoring_seed`; every prepared set dry-runs as not-yet-applied on the live tree after the peer's overnight ~1 870 edits: F9 33 files / 0 problems, H9-L clean (186 sites), 5b A+B1 21 files / 0 problems (19 B1, **53** B2 sites, was 51), P8 orphan 4 files / 17 hunks, G12 refuses until F9 (130 files) | `wp-t14/generated/s14b-*-dry-1.txt` |
+| 1 | F9 content ids + carrier map (one pass) | patch dry-run clean on live (33 files) and applied in the overlay; kernel check green with all base sets (13:46); TS content-id oracle ok (hashlib + node:crypto); id-map recording hold queued (16th) | `s14b-h3-TS-ORACLE.txt`, `s14b-h3b-KERNEL.txt` |
+| 2 | G12 builder pass (same gate as F9) | applied in the overlay (129 literal files); compile proof in the same hold | `s14b-a4-g12-apply.txt` |
+| 3 | class fix + P8 orphan (one pass after G12) | SDK route written (`p8class/follow-children.py`, dry run 0 problems); orphan applied in the overlay; proof = hold 4 (class fix + 5b B2 + orphan/declared-verb laws) | `wp-t14/p8class/` |
+| 4 | H9-L kind labels (native + wasm32 proof) | patch FIXED (double edit inside `-> ArtifactKindSpec` fns): 100 sites / 94 files, dry run clean; proof in the queued hold (N1–N3, W1–W2, host/hub/wfc3d laws) | `generated/s14b-h9l-dry-2.txt` |
+| 5 | 5b `dsl_value!` + B2 codemod; renderer `serde_json` 16 | A+B1 applied in the overlay, **value law ok** (vs serde_json incl. borrowed values); B2 written (53 files, dry run clean) → hold 4 | `s14b-h3-VALUE-LAW.txt`, `generated/s14b-5b2-diff-3.txt` |
+| 6 | remove `🔌️plugin/🦀️.rs` per-app fallback wrappers | only puzzle2d's dead `selection_ids` (0 callers) remains → `item6/fallback-wrappers.py` (2 files, dry run clean), in the overlay proof | `wp-t14/item6/` |
+| 7 | verify LC F1 / T13 F4 / wfc clock laws (native lane) | **F4 ok, clock ok, wfc inferences 72/0, wfc fill 41/0**; F1 re-queued (writer test red at 14:01 from a peer docx change, fixed live 14:06) | `s14b-n1-*.txt` |
+| 8 | rule-22 test-only fix: plugin lib tests (H13) | **LANDED 12:49, native `--lib --tests` rc 0 14:01** | landing row, `s14b-n1-PLUGIN-TESTS.txt` |
+
+### Log 14b
+
+- 12:0x read preamble 14 (rules 1–21 + 14b), AGENTS.md, fleet log, this report. Predecessor's last state (from captures, the
+  log above ends 20:0x): hold 1's 105-crate native check never ran (zsh: an empty `-p` before `--features` broke the line,
+  `hold1-native.txt`); hold 2 (21:12–21:27) applied F9 + recorder + G12 + orphan + H9-L in the overlay, **kernel content-id +
+  addressing laws 3/3 ok** (`hold2-kernel-laws.txt`), everything else rc 101 upstream of T14 — the synced snapshot had a peer's
+  half-edit (`semio-framework-ui` E0432 `kernel_3d_scene::projection_spec_*`, `semio-framework-os-kernel-db` `PlannedEntries`),
+  so no id map was recorded (`hold2-map-apply.txt`: map file missing). Lanes at 12:12: overlay sh2, native g12 (+ en2, sh2 queued),
+  wasm = chain; load 43, swap 4.5/6 GB, 100 GiB free.
+- 12:1x reconcile (item 0 above). `overlay.py sync` gains `<base-commit>`: tracked files git deleted since the base are deleted
+  in the overlay too (the mtime walk cannot see a deletion of an older file). Overlay sync 3 (base 6b8089dcb21 = HEAD before
+  yesterday 19:20) running outside the lane (file clones only).
+- 12:1x–12:29 sync 3: 1 969 files re-cloned (0 deleted), 700 s (`hold3-sync.txt`). Applied in the overlay (no lane):
+  F9 33 files / 0 problems, recorder, G12, P8 orphan, H9-L, 5b A+B1 (21 files), item 6. **G12 finding:** its walk skips every
+  directory whose path contains `/.🧬semio` — with `--root <overlay>` (which lives under `.🧬semio/🌐hub/`) it silently patched 0
+  of its 129 literal files (hold 2 too: "2 file(s) … 0 with literals"). Through a symlinked root (`wp-t14/generated/ov`) it
+  patches 129 files / 0 problems (`hold3-g12-apply-2.txt`). The live tree is unaffected (root has no `.🧬semio` prefix).
+- 12:2x item 6 source: the per-app fallback wrappers are gone except puzzle2d's `selection_ids` (singular `id` fallback, **0
+  callers**); procedural's `transforms::selection_ids(ids, fallback)` is the current-selection default, not a key fallback.
+  Patch `wp-t14/item6/fallback-wrappers.py` (deletes the wrapper, rewrites the SDK doc's "keep their own fallback wrapper for
+  now"): dry run 2 files / 0 problems.
+- 12:2x lane tooling: `deadline.py` (absolute deadline, kills the whole process group incl. rustc, exit 124),
+  `overlay-hold.sh <tag>` (resumable 28-min overlay hold: OWNERS-1 recording the id map → MAP → OWNERS-2 → kernel/host/wfc3d/hub/
+  value laws → orphan verdict + laws → TS oracle → native N1 core 8 / N2 plugins 63 / N3 stdio 37 → wasm32 W1/W2 103 guest crates;
+  state `s14b-state.txt`, a killed step resumes next hold on its kept units), `native-hold.sh` (item 7, same pattern, live tree,
+  build-fleet-b + private target), `overlay-apply.sh` (sync + all sets), `s14b-groups.zsh` (crate groups from the 108 crates the
+  applied sets touch, `generated/s14b-crates-3.txt`). Queued 12:29 overlay (5th) and 12:30 native (7th).
+- 12:3x–12:4x **5b phase B2 written** (`wp-t14/5b/dsl-value-b2.py`, dry run on the overlay 53 files / 0 problems, diff
+  `generated/s14b-5b2-diff-2.txt`): deletes `action-bus::optional_json_to_dsl`; app wrappers (generation3d ×2, gis2d, lowpoly,
+  note, puzzle2d + its menu-row closure, layout menu item) and the SDK world-3d measure closures take `Option<DslValue>`; literal
+  callers → `dsl_value!`, lowpoly's 7 DslValue→JSON→DslValue round trips and puzzle3d/5d's 4 closure round trips dropped; layout
+  interaction args + infinite world action args (23 literals, scale, brush-mesh pages) built as DslValue (JSON text via
+  `pack::json::to_json_string`); wfc ×5 fill effects literal. Renderer: `scene_action` (29 callers) / `block_list_action` (8) /
+  `canvas_addressed_action` take DslValue with `dsl_value!` callers; its JSON-sourced args (parsed operations, world3d cancel maps,
+  effective staged maps, tutorial history, fixture vectors in tests) convert where they enter the descriptor via the value module's
+  `DslValue::from(serde_json::Value)` — the renderer's wider serde_json use (scene payload parsing) stays a separate debt. Macro
+  change: the fallback arm converts by method call (`(&expr).to_value()`), so `&String`/`&[String]`/`&&str` auto-deref like
+  `json!` accepts them; the law gains those cases. B2 is NOT in hold 3's overlay (a compile error in the SDK would sink the F9 map
+  recording); it goes into the next hold after the map is recorded.
+- 12:4x coordinator: T14 owns the content-addressed-child class fix too (prove F9 + class fix + P8 orphan together, reasoning
+  law green, one window-3 pass after G12). G12 fixed its `--root` walk (overlay-apply.sh uses the overlay root directly again).
+- 12:49 **LANDED (rule 22, test-only, H13 relay):** `semio-framework-plugin` lib tests compile fix — 3 files
+  (`wp-t14/plugin-tests/plugin-lib-tests.py`, landing row). Not compiled yet: native hold `n1` step PLUGIN-TESTS (6th in FIFO;
+  coordinator: no priority stamp). Also applied in the overlay.
+- 12:5x **class fix design = SDK route** (approved): `wp-t14/p8class/follow-children.py` (dry run 0 problems, live + overlay).
+  `VcsArtifactApp::follow_derivable_children` after every parent-lane change (`handle_action`, each typed-publication turn incl.
+  framework reserved commits, each backbone tick; gated by the parent store generation, deferred while a child admission is in
+  flight): opens each declared-but-unheld child `ArtifactApp::genesis_child_pack` derives (the `seed_genesis_children` restore
+  path) and retires each held child whose slot now names another derived child — member map (new backward-shift `remove`),
+  ownership graph (`remove_owns`), child-content root (new copy-on-write `without_member`; previous root → bounded content
+  retirement) → bounded member retirement (the admission-abort registry renamed to the ONE `child_member_retirements`, same
+  maintenance stage 20 + close drain). Genesis hooks: every declaring plugin of the 12 already has one; raster (`assets` map) and
+  note (`NoteTextChild` wraps the handle inside an enum variant) declare NO child in the restore projection, so the rule and the
+  orphan law do not see them — no hook needed (correcting my 12:5x message). Laws: the P8 orphan verdict case + AJV twin and the
+  reasoning/flow/architect declared-verb laws (reasoning `addNode`/`addRelationship` must stop orphaning). Not in hold 3 (an SDK
+  compile error would sink the F9 map); hold 4 = class fix + 5b B2 + orphan laws.
+- 12:5x overlay value module refreshed and 5b A re-applied (the overlay had the pre-12:40 macro without method-call conversion).
+- 13:0x B2 pre-fixes for values `ToValue` cannot take (serde `Value`s): infinite world hover `targets`, layout preflight
+  `issue_value`, renderer table `selectRow` `row` (→ `DslValue::from(row)`); B2 dry run 53 files / 0 problems
+  (`generated/s14b-5b2-diff-3.txt`).
+- 13:21 **lost overlay turn:** h3 got the lane 13:21:26 and ended in 0 s — `STEPS=(${@:-a b c})` expands the default as ONE word
+  in zsh ("unknown step", rc 2). Fixed in `overlay-hold.sh` + `native-hold.sh` (`STEPS=(a b c); (( $# )) && STEPS=("$@")`,
+  verified), state reset, re-queued 13:21:51 (~13th); asked main for a priority stamp.
+- 13:27–13:38 h3 (restored stamp 20260928122949): **red from step 1 by my own re-apply** — re-running `5b/dsl-value.py` in the
+  overlay (after the 12:5x value refresh) inserted the kernel re-export twice (`pub use protocol::dsl_value;` ×2 → E0252 in
+  `semio-framework-os-kernel`), so every crate above the kernel failed (captures `s14b-h3a-*`). Measured regardless:
+  **VALUE-LAW ok** (`dsl_value_literal_matches_serde_json_and_keeps_written_order`, incl. borrowed `&String`/`&[String]`/`&&str`,
+  `s14b-h3-VALUE-LAW.txt`), **TS-ORACLE ok** (`verify shared-artifact-addressing oracle`: `testContentIdOracle` — hashlib
+  vectors, `ContentId` schema, first-party SHA-256 == `node:crypto` incl. padding boundaries, `s14b-h3-TS-ORACLE.txt`).
+  Stopped my hold 13:38 (own pids) to free the lane. Fixed: overlay duplicate removed; `exact()` in `dsl-value.py` and
+  `dsl-value-b2.py` now treats an insertion whose full new text is present as applied. Re-queued 13:39 (14th).
+- 13:4x coordinator granted the stamp ONE last time with conditions, all met before requeueing
+  (`generated/s14b-overlay-idempotency-1.txt`, `s14b-duplicate-check-1.txt`): every set reports its applied state on the
+  overlay — F9 (new sentinel check: content_id + TS contentId + schema ContentId + TS oracle + runner → "nothing to do"), G12
+  (129/129 applied), H9-L (13/13 hunks applied, 0 literal sites; its insertion hunks no longer re-apply), 5b (0 files), item 6,
+  plugin-tests (both had the same insertion re-apply bug → fixed), P8 orphan (`wp-t14/verify-applied-p8.py`: 16/17 hunks
+  applied; the 17th is the fixture rewrite, which re-reads the fixture — the fixture holds the orphan case and its `why` rule
+  exactly once); duplicate check over the 271 touched sources vs the live tree: no `use`/`mod`/`import`/macro line and no
+  fn/struct/const definition duplicated (only expected JSON-key repeats). Hold script: KERNEL check first; stops at the first
+  compile-red step (test failures in crates that compiled continue as data); control flow simulated with a stub runner.
+  Re-queued 13:4x with stamp 20260928122949 (head of the FIFO).
+- 13:45–13:48 h3: **KERNEL ok** (`semio-framework-os-kernel` check with F9 + G12 + H9-L + 5b A/B1 + item 6 + orphan,
+  `s14b-h3-KERNEL.txt`); OWNERS-1 **compile-red → STOP-RED (by design)**: `semio-s-artifact-stdio-binary` corrupted by MY H9-L
+  patch — `LITERAL` also matched the fn signature `-> ArtifactKindSpec {`, so the function body and the struct literal inside it
+  both produced an edit at the same `name:` site; applied back-to-front they spliced the label twice
+  (`label: …native("Binary", "Binärdatei"),_plugin::LocalizedLabel::native(…),`). Every file whose kind spec lives in an
+  `-> ArtifactKindSpec` fn was hit (the predecessor's "186 sites / 94 files" was this double count). Fixed: `->` contexts
+  skipped + edits deduplicated with an overlap guard → **100 sites / 94 files**, 13/13 hunks, dry run clean on the live tree
+  (`generated/s14b-h9l-dry-2.txt`). Per the coordinator's condition I wait my turn now (no stamp). Overlay re-sync + base-set
+  re-apply running (`overlay-apply.sh s14b-a4`, detached, log `s14b-apply-4.txt`); B2 + class fix are opt-in extra sets now
+  (`overlay-apply.sh <tag> <base> [b2] [follow]`) and stay out of the F9-map hold.
+- 13:54 overlay re-sync (782 files) + base sets re-applied (`s14b-apply-4.txt`); verified: every set "nothing to do (applied)"
+  (`generated/s14b-overlay-idempotency-2.txt`), no duplicated use/mod/import/macro/fn line vs live and no spliced label line
+  among the 102 new `label:` lines (`generated/s14b-duplicate-check-2.txt`); readiness gate `s14b-overlay-ready` written; hold
+  queued 13:49 (16th, no stamp).
+- 13:57–14:16 **native hold n1 (live tree, item 7 + rule-22 gate):** PLUGIN-TESTS **rc 0** (plugin lib test type-checked, 440
+  warnings); T13 F4 **ok** (dag + raster `viewer_never_mutates`); wfc solve clock **ok** (`the_logical_clock_advances_…`);
+  wfc ×5 `inferences` **72 passed / 0 failed**; wfc ×5 `fill` with `component-app-assembly` **41 passed / 0 failed**; LC F1
+  **not measurable at 14:01**: writer lib test red (`DocxSnapshot.document` gone — peer docx change; fixed live by another slice
+  14:06:42, `project_document()`), so jack/vcs never ran. F1 re-queued alone (hold n2, 14:16). Captures `s14b-n1-*.txt`.
+
 ## Session 14
 
 | # | item | state | evidence |

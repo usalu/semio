@@ -1,0 +1,124 @@
+
+//#region 📥️ImportStaging
+#[derive(serde::Deserialize)]
+struct StagingRun {
+    name: String,
+    #[serde(default)]
+    payload: Option<String>,
+    #[serde(rename = "payloadRepeat", default)]
+    payload_repeat: Option<PayloadRepeat>,
+    #[serde(rename = "fanOut", default)]
+    fan_out: Option<FanOut>,
+}
+
+impl StagingRun {
+    fn payload(&self) -> String {
+        match (&self.payload, &self.payload_repeat) {
+            (Some(text), _) => text.clone(),
+            (None, Some(repeat)) => repeat.character.repeat(repeat.count),
+            (None, None) => panic!("staging run {} states neither `payload` nor `payloadRepeat`", self.name),
+        }
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct StagingSend {
+    run: usize,
+    chunk: usize,
+    #[serde(rename = "chunkCount", default)]
+    chunk_count: Option<usize>,
+    #[serde(rename = "payloadRepeat", default)]
+    payload_repeat: Option<PayloadRepeat>,
+}
+
+#[derive(serde::Deserialize)]
+struct StagingCase {
+    id: String,
+    runs: Vec<StagingRun>,
+    #[serde(default)]
+    extra: serde_json::Map<String, serde_json::Value>,
+    sends: Vec<StagingSend>,
+    outcomes: Vec<String>,
+    #[serde(rename = "openRunsAfter")]
+    open_runs_after: usize,
+}
+
+#[derive(serde::Deserialize)]
+struct StagingFixture {
+    #[serde(rename = "stagingCases")]
+    staging_cases: Vec<StagingCase>,
+}
+
+/// ⚖️ LAW: every staging case of the language-agnostic fixture — a chunk sequence exactly as a shell dispatches it
+/// ([`import_chunk_arguments`]) — reassembles or refuses exactly as stated; a whole file reaches the app as
+/// `payload` + `name` (+ fan-out and every other argument) byte for byte, never with its chunk envelope; and the
+/// staging keeps no run it should not (memory bound: at most [`IMPORT_STAGING_RUNS`] open runs).
+#[test]
+fn every_staging_case_reassembles_or_refuses_exactly_as_the_fixture_states() {
+    let fixture: StagingFixture = serde_json::from_str(include_str!("../../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON");
+    assert!(fixture.staging_cases.len() >= 9, "fixture rows: {}", fixture.staging_cases.len());
+    for case in &fixture.staging_cases {
+        assert_eq!(case.sends.len(), case.outcomes.len(), "{} states one outcome per send", case.id);
+        let payloads: Vec<String> = case.runs.iter().map(StagingRun::payload).collect();
+        let chunks: Vec<Vec<ImportChunk>> = payloads.iter().map(|payload| import_payload_chunks(payload)).collect();
+        let mut staging = ImportStaging::default();
+        for (send, expected) in case.sends.iter().zip(&case.outcomes) {
+            let run = &case.runs[send.run];
+            let derived = &chunks[send.run][send.chunk.min(chunks[send.run].len() - 1)];
+            let chunk = ImportChunk {
+                payload: send.payload_repeat.as_ref().map_or_else(|| derived.payload.clone(), |repeat| repeat.character.repeat(repeat.count)),
+                chunk: send.chunk,
+                chunk_count: send.chunk_count.unwrap_or(derived.chunk_count),
+            };
+            let DslValue::Object(mut entries) = import_chunk_arguments(&run.name, &chunk, run.fan_out.as_ref().map(|fan_out| (fan_out.index, fan_out.total))) else { panic!("{} must build an object", case.id) };
+            for (key, value) in &case.extra {
+                entries.push((key.clone(), DslValue::String(value.as_str().unwrap_or_else(|| panic!("{} extra {key} must be text", case.id)).to_string())));
+            }
+            let outcome = staging.admit_args(Some(&DslValue::Object(entries)));
+            let actual = match &outcome {
+                Ok(ImportArguments::NotAnImport) => "not-an-import".to_string(),
+                Ok(ImportArguments::Staged { next_chunk, chunk_count }) => format!("staged:{next_chunk}/{chunk_count}"),
+                Ok(ImportArguments::Whole(_)) => format!("whole:{}", send.run),
+                Err(refusal) => format!("refused:{}", refusal.code()),
+            };
+            assert_eq!(&actual, expected, "{} send run {} chunk {}", case.id, send.run, send.chunk);
+            if let Ok(ImportArguments::Whole(DslValue::Object(arguments))) = outcome {
+                let get = |key: &str| arguments.iter().find(|(name, _)| name == key).map(|(_, value)| value.clone());
+                assert_eq!(get(IMPORT_ARGUMENT_PAYLOAD), Some(DslValue::String(payloads[send.run].clone())), "{} reassembles run {} byte for byte", case.id, send.run);
+                assert_eq!(get(IMPORT_ARGUMENT_NAME), Some(DslValue::String(run.name.clone())), "{} names the file", case.id);
+                assert!(get(IMPORT_ARGUMENT_CHUNK).is_none() && get(IMPORT_ARGUMENT_CHUNK_COUNT).is_none(), "{} the chunk envelope never reaches the app", case.id);
+                assert_eq!(get(IMPORT_ARGUMENT_INDEX).and_then(|value| value.as_u64()), run.fan_out.as_ref().map(|fan_out| fan_out.index as u64), "{} keeps the multi-file position", case.id);
+                for (key, value) in &case.extra {
+                    assert_eq!(get(key), value.as_str().map(|text| DslValue::String(text.to_string())), "{} keeps {key}", case.id);
+                }
+            }
+        }
+        assert_eq!(staging.open_runs().len(), case.open_runs_after, "{} open runs after its last send", case.id);
+        assert!(staging.open_runs().len() <= IMPORT_STAGING_RUNS, "{} holds at most the run slots", case.id);
+    }
+}
+
+/// ⚖️ LAW: arguments that carry no chunk envelope are no import — every ordinary action passes the staging untouched.
+#[test]
+fn arguments_without_a_chunk_envelope_are_not_an_import() {
+    let mut staging = ImportStaging::default();
+    assert_eq!(staging.admit_args(None), Ok(ImportArguments::NotAnImport));
+    assert_eq!(staging.admit_args(Some(&DslValue::object([("value".to_string(), DslValue::String("x".into()))]))), Ok(ImportArguments::NotAnImport));
+    assert_eq!(staging.admit_args(Some(&DslValue::String("x".into()))), Ok(ImportArguments::NotAnImport));
+}
+
+/// ⚖️ LAW: a cancel drops every open run, and the staged bytes of a run never exceed its byte authority.
+#[test]
+fn cancel_drops_every_open_run_and_a_run_stays_within_its_byte_authority() {
+    let payload = "é".repeat(40_000);
+    let chunks = import_payload_chunks(&payload);
+    let mut staging = ImportStaging::default();
+    assert_eq!(staging.admit_args(Some(&import_chunk_arguments("a.json", &chunks[0], None))), Ok(ImportArguments::Staged { next_chunk: 1, chunk_count: 3 }));
+    let (_, _, _, bytes) = staging.open_runs()[0].clone();
+    assert!(bytes <= IMPORT_STAGING_MAXIMUM_BYTES);
+    assert_eq!(bytes, chunks[0].payload.len());
+    staging.cancel_all();
+    assert!(staging.open_runs().is_empty());
+    assert_eq!(staging.admit_args(Some(&import_chunk_arguments("a.json", &chunks[1], None))), Err(ImportStagingRefusal::Gap));
+}
+//#endregion 📥️ImportStaging

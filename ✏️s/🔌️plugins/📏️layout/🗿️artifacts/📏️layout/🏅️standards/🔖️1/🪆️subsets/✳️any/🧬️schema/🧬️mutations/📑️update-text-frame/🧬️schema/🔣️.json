@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-text-frame/schema.json",
+  "title": "UpdateTextFrame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pageId", "frameId", "storyId", "insetX", "insetY", "insetWidth", "insetHeight"],
+  "properties": {
+    "pageId": { "type": "string" },
+    "frameId": { "type": "string" },
+    "storyId": { "type": "string" },
+    "threadNext": { "type": "string" },
+    "insetX": { "type": "number" },
+    "insetY": { "type": "number" },
+    "insetWidth": { "type": "number", "minimum": 0 },
+    "insetHeight": { "type": "number", "minimum": 0 }
+  }
+}

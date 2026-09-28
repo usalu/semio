@@ -27,8 +27,6 @@ export async function testPlaygroundSiteDistDefaults(): Promise<void> {
   const catalog = generatePlaygroundRegistry();
   const withoutDist = catalog.filter((row) => !row.distDir?.startsWith("✏️s/🔌️plugins/"));
   assert.equal(withoutDist.length, 0, `every playground needs a plugin distDir: ${withoutDist.map((row) => row.variant).join(", ")}`);
-  console.log(`[DEBUG] ${catalog.length} playground variants resolve plugin CDN distDir PASS`);
-  console.log("[DEBUG] Playground CDN dist defaults match energy.semio-tech.com and 3d.fem.semio-tech.com layout PASS");
 }
 
 /** @emoji 🏗️ Every plugin playground crate gets Nx `build` / `build-<variant>-site` targets wired to framework-os-dev release builds. */
@@ -51,8 +49,6 @@ export async function testPluginSiteNxTargets(workspace: string): Promise<void> 
   }
   const releaseNames = catalog.map((row: { variant: string }) => `build-${row.variant}-react-release`);
   assert.equal(new Set(releaseNames).size, catalog.length, "each playground variant must map to one CDN release Nx target on framework-os-dev");
-  console.log(`[DEBUG] ${crates.length} plugin playground crates declare CDN site Nx targets PASS`);
-  console.log(`[DEBUG] ${catalog.length} playground CDN release targets: build-<variant>-react-release PASS`);
 }
 
 /** @emoji 🌐️ Asserts a built plugin tree is CDN-deployable (GitHub Pages / static host conventions). */

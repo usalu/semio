@@ -84,5 +84,4 @@ export function testNumericalPageOwners(): void {
     });
     assert(!validPage({ owner: row.owner, item: row.item, length: row.length, bodyBytes: row.bodyBytes }), row.id);
   }
-  console.log("[DEBUG] Numerical owners match five scalar pages, twenty entry widths, nine hostile pages, three matrix shapes, three cleanup grants, two first faults and two local retirement positions");
 }

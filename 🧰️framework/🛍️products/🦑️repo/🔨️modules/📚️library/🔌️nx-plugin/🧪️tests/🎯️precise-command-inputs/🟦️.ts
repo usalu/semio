@@ -53,7 +53,6 @@ export async function testPreciseCommandInputs(scratchRoot = process.cwd()): Pro
     const hashAfterUnrelatedEdit = hashOfListedBytes();
     assert.equal(hashAfter, hashAfterUnrelatedEdit, "unrelated.ts is outside the closure, so editing it must not change the task hash");
 
-    console.log("[DEBUG] Precise command inputs: closure excludes unrelated files, matches esbuild oracle, changes hash only for closure edits, and falls back safely when unparseable PASS");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

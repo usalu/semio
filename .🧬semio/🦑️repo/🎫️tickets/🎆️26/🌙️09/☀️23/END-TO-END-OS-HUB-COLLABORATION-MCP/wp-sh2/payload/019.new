@@ -84,49 +84,30 @@ pub async fn demo_space_projection() -> WorkflowSnapshot {
 //#endregion 🔖️Fixtures
 
 //#region 🔖️DocumentHelpers
-/// 🧬️ O1 — enum dispatch, not a trait object: os-host's own `OsBackbonePorts` (the enum its
-/// `list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`/`load_os_space_document` are now
-/// closed over, `Store(store::BackbonePorts) | Space(..)`) wraps the `store::BackbonePorts` enum this
-/// function actually builds — no `dyn` anywhere, no separate trait-object "view" variable the way the
-/// pre-O1 code kept one.
+/// 🧬️ The guest's ONE local studio catalog port, minted and seeded once per process. The catalog tracks its studio uris
+/// per port identity (`list_os_space_catalog_entries` keys them by the `Arc`) and `LocalStorageBackbonePort` keeps its
+/// fallback bytes per instance, so a port minted per call listed nothing a previous call admitted: a studio bound,
+/// persisted or imported was gone on the next listing, and every call re-parsed and re-seeded the demo studio.
+/// O1 — enum dispatch (`OsBackbonePorts::Store(store::BackbonePorts)`), no `dyn`. The demo seed is a `SpaceSnapshot`
+/// manifest named after the bundled demo fixture and owned by the `"local"` guest sentinel: it runs before any user
+/// session exists, so there is no signed-in identity to attribute it to.
+/// @see ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs
 async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
+    static PORT: OnceLock<Arc<OsBackbonePorts>> = OnceLock::new();
+    if let Some(port) = PORT.get() {
+        return port.clone();
+    }
     ensure_space_fixtures_registered().await;
-    // 🧬️ `::default()`, not `::new()`: `LocalStorageBackbonePort::new()` is `async fn` but defined to
-    // equal `Default::default()` exactly (store's own impl just forwards); using the sync constructor
-    // here avoids a pointless suspension point and keeps this line symmetric with
-    // `temp_catalog_port_concrete()` below, whose `OnceLock::get_or_init` closure cannot be async at all.
-    // 🧬️ `OsBackbonePorts::Store(..)`: os-host's O1 enum-dispatch closed the catalog-facing fns
-    // (`list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`) over its OWN `OsBackbonePorts`
-    // enum, not `store::BackbonePorts` directly — every real transport still routes through the
-    // `Store` variant's inner `store::BackbonePorts`.
     let port = Arc::new(OsBackbonePorts::Store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     if list_os_space_catalog_entries(&port).map_or(true, |entries| entries.is_empty()) {
-        // 🧬️ `parse_demo_space_document` yields a `WorkflowSnapshot` (the dissolved `OsProjection`'s
-        // workflow-graph half) — the space CATALOG this boot seed populates needs a `SpaceSnapshot`
-        // manifest instead. `demo_name` still comes from the bundled fixture's own name; the manifest
-        // itself is a fresh space with no workflow artifact wired in yet (`create_os_space`'s own doc: a
-        // space only auto-creates its default collection, never a workflow artifact — that stays a
-        // later, explicit user action).
-        let demo_name = {
-            let demo = parse_demo_space_document().await;
-            if demo.name.trim().is_empty() {
-                "Demo Studio".into()
-            } else {
-                demo.name
-            }
-        };
+        let demo = parse_demo_space_document().await;
+        let demo_name = if demo.name.trim().is_empty() { "Demo Studio".to_owned() } else { demo.name };
         let mut projection = empty_space_snapshot(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
-        // 🪪️ Deliberately NOT threaded to a real session identity (unlike
-        // `create_and_register_ephemeral_studio`'s `owner_id`/`owner_name`): this seed runs once, lazily,
-        // from a process-global `static`/`LazyLock` at first catalog access, with no `HomeConfig`/
-        // `ActionMeta` in scope — there is no user session to attribute this bootstrap fixture to.
-        // `"local"` here names the pre-ticket guest sentinel, not a real signed-in user; fabricating one
-        // would misattribute ownership of a system-seeded demo space.
         projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
         let _ = seed_os_space_catalog_if_empty(seed, &port);
     }
-    port
+    PORT.get_or_init(|| port).clone()
 }
 
 /// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()`, used by the

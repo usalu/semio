@@ -15,8 +15,13 @@ fn broken_dsl_decodes_and_fails() {
     let report = evaluate(&document);
     assert!(!report.complies(), "broken must not comply");
     assert!(report.failing().count() >= 2, "broken must yield ≥2 fails");
+    let missing: Vec<_> = report
+        .failing()
+        .filter(|c| !c.remedies.iter().any(|r| r.applicable))
+        .map(|c| c.id.as_str())
+        .collect();
     assert!(
-        report.failing().all(|c| c.remedies.iter().any(|r| r.applicable)),
-        "every broken fail needs an applicable remedy"
+        missing.is_empty(),
+        "every broken fail needs an applicable remedy; missing on: {missing:?}"
     );
 }

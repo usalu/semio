@@ -58,6 +58,9 @@ fn document_fields(document: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<Fiel
         Field { key: "name", label: labels.name, value: document.name.clone(), kind: InputKind::Text },
         Field { key: "printTarget", label: labels.print_target, value: document.print_target.clone().unwrap_or_default(), kind: InputKind::Text },
         Field { key: "dataFields", label: labels.data_fields, value: document.data_fields_json.clone().unwrap_or_default(), kind: InputKind::LongText },
+        Field { key: "baselineGrid", label: labels.baseline_grid, value: number(document.grid.baseline_grid), kind: InputKind::Number },
+        Field { key: "baselineOffset", label: labels.baseline_offset, value: number(document.grid.baseline_offset), kind: InputKind::Number },
+        Field { key: "snapToBaseline", label: labels.snap_to_baseline, value: if document.grid.snap_to_baseline { "true".into() } else { "false".into() }, kind: InputKind::Text },
     ]
 }
 
@@ -83,20 +86,35 @@ fn frame_fields(frame: &Frame, document: &LayoutSnapshot, labels: &LayoutLabels)
         Field { key: "width", label: labels.width, value: number(bounds.width), kind: InputKind::Number },
         Field { key: "height", label: labels.height, value: number(bounds.height), kind: InputKind::Number },
         Field { key: "rotation", label: labels.rotation, value: number(bounds.rotation), kind: InputKind::Number },
+        Field { key: "locked", label: labels.locked, value: if frame.locked() { "true".into() } else { "false".into() }, kind: InputKind::Text },
+        Field { key: "visible", label: labels.visible, value: if frame.visible() { "true".into() } else { "false".into() }, kind: InputKind::Text },
     ];
     match frame {
         Frame::Rect { fill, stroke, .. } => {
             rows.push(Field { key: "fill", label: labels.fill, value: rgba_to_hex(fill), kind: InputKind::Color });
             rows.push(Field { key: "stroke", label: labels.stroke, value: rgba_to_hex(stroke), kind: InputKind::Color });
         }
-        Frame::Text { columns, story_id, .. } => {
+        Frame::Text { columns, story_id, inset, .. } => {
             let content = document.stories.iter().find(|story| story.id == *story_id).map(|story| story.content.clone()).unwrap_or_default();
             rows.push(Field { key: "columns", label: labels.columns, value: number(columns), kind: InputKind::Number });
             rows.push(Field { key: "storyContent", label: labels.story, value: content, kind: InputKind::LongText });
+            rows.push(Field { key: "insetX", label: labels.inset_x, value: number(inset.x), kind: InputKind::Number });
+            rows.push(Field { key: "insetY", label: labels.inset_y, value: number(inset.y), kind: InputKind::Number });
+            rows.push(Field { key: "insetWidth", label: labels.inset_width, value: number(inset.width), kind: InputKind::Number });
+            rows.push(Field { key: "insetHeight", label: labels.inset_height, value: number(inset.height), kind: InputKind::Number });
         }
         Frame::Image { link_id, .. } => {
-            let path = document.links.iter().find(|link| link.id == *link_id).map(|link| link.path.clone()).unwrap_or_default();
+            let link = document.links.iter().find(|link| link.id == *link_id);
+            let path = link.map(|link| link.path.clone()).unwrap_or_default();
+            let width = link.map(|link| number(link.width)).unwrap_or_default();
+            let height = link.map(|link| number(link.height)).unwrap_or_default();
+            let dpi = link.map(|link| number(link.dpi)).unwrap_or_default();
+            let profile = link.and_then(|link| link.color_profile.clone()).unwrap_or_default();
             rows.push(Field { key: "linkPath", label: labels.link_path, value: path, kind: InputKind::Text });
+            rows.push(Field { key: "linkWidth", label: labels.link_width, value: width, kind: InputKind::Number });
+            rows.push(Field { key: "linkHeight", label: labels.link_height, value: height, kind: InputKind::Number });
+            rows.push(Field { key: "dpi", label: labels.dpi, value: dpi, kind: InputKind::Number });
+            rows.push(Field { key: "colorProfile", label: labels.color_profile, value: profile, kind: InputKind::Text });
         }
     }
     rows
@@ -110,13 +128,17 @@ fn field_row(command: &str, field: &Field, frame_id: Option<&str>, page_id: Opti
     };
     let (action, args) = layout_action(command, Some(args))?;
     let id = format!("layout-play-inspector.{command}.{}.input", field.key);
+    if matches!(field.key, "snapToBaseline" | "locked" | "visible") {
+        let control = ui::toggle(field.value == "true").try_id(&id).map_err(|_| admit())?.try_label(field.label.as_str()).map_err(|_| admit())?.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+        return ui::tree_item(ui::Label(text(field.label.as_str())?)).try_id(format!("layout-play-inspector.{command}.{}", field.key)).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit());
+    }
     let mut input = ui::input(field.kind).value(text(&field.value)?).try_id(&id).map_err(|_| admit())?.try_label(field.label.as_str()).map_err(|_| admit())?;
     let trigger = if matches!(field.kind, InputKind::Color) { Trigger::Change } else { Trigger::Commit };
     if !matches!(field.kind, InputKind::Color) {
         input = input.commit(text("blur")?);
     }
     if field.kind == InputKind::Number {
-        input = input.step(if matches!(field.key, "columns" | "columnsCount") { 1.0 } else { 0.1 });
+        input = input.step(if matches!(field.key, "columns" | "columnsCount" | "dpi" | "linkWidth" | "linkHeight") { 1.0 } else { 0.1 });
     }
     let control = input.try_on_with(trigger, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
     ui::tree_item(ui::Label(text(field.label.as_str())?)).try_id(format!("layout-play-inspector.{}.{}", command, field.key)).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
@@ -131,6 +153,152 @@ fn wrap_row(frame_id: &str, page_id: &str, wrap_mode: &str, labels: &LayoutLabel
     }
     let control = input.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
     ui::tree_item(ui::Label(text(labels.wrap_mode.as_str())?)).try_id("layout-play-inspector.frame.wrapMode").map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn paragraph_input(style_id: &str, key: &str, label: LabelText, value: String, kind: InputKind) -> UiAssemblyResult<BuiltNode> {
+    let field = format!("{style_id}.{key}");
+    let args = ui_value_map([("field", ui_value_text(&field)?)])?;
+    let (action, args) = layout_action("patchDocument", Some(args))?;
+    let id = format!("layout-play-inspector.patchDocument.{field}.input");
+    let mut input = ui::input(kind).value(text(&value)?).try_id(&id).map_err(|_| admit())?.try_label(label.as_str()).map_err(|_| admit())?;
+    let trigger = if matches!(kind, InputKind::Color) { Trigger::Change } else { Trigger::Commit };
+    if kind == InputKind::Number {
+        input = input.step(if key == "fontWeight" { 100.0 } else { 0.1 });
+    } else if kind != InputKind::Color {
+        input = input.commit(text("blur")?);
+    }
+    let control = input.try_on_with(trigger, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchDocument.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn paragraph_alignment(style_id: &str, alignment: &str, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+    let field = format!("{style_id}.alignment");
+    let args = ui_value_map([("field", ui_value_text(&field)?)])?;
+    let (action, args) = layout_action("patchDocument", Some(args))?;
+    let mut input = ui::select(text(alignment)?).try_id(format!("layout-play-inspector.patchDocument.{field}.input")).map_err(|_| admit())?.try_label(labels.alignment.as_str()).map_err(|_| admit())?;
+    for (value, label) in [("left", labels.align_left), ("center", labels.align_center), ("right", labels.align_right), ("justify", labels.align_justify)] {
+        input = input.try_item(text(value)?, ui::Label(text(label.as_str())?)).map_err(|_| admit())?;
+    }
+    let control = input.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(labels.alignment.as_str())?)).try_id(format!("layout-play-inspector.patchDocument.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn paragraph_rows(document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
+    let mut nodes = Vec::new();
+    for style in &document.paragraph_styles {
+        nodes.push(paragraph_input(&style.id, "name", labels.name, style.name.clone(), InputKind::Text)?);
+        nodes.push(paragraph_input(&style.id, "fontFamily", labels.font_family, style.font_family.clone(), InputKind::Text)?);
+        nodes.push(paragraph_input(&style.id, "fontSize", labels.font_size, number(style.font_size), InputKind::Number)?);
+        nodes.push(paragraph_input(&style.id, "fontWeight", labels.font_weight, number(style.font_weight), InputKind::Number)?);
+        nodes.push(paragraph_input(&style.id, "leading", labels.leading, number(style.leading), InputKind::Number)?);
+        nodes.push(paragraph_input(&style.id, "tracking", labels.tracking, number(style.tracking), InputKind::Number)?);
+        nodes.push(paragraph_alignment(&style.id, &style.alignment, labels)?);
+    }
+    ui_node_list(nodes.into_iter().map(Ok))
+}
+
+fn story_select(frame_id: &str, page_id: &str, story_id: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+    let args = ui_value_map([("field", ui_value_text("storyId")?), ("frameId", ui_value_text(frame_id)?), ("pageId", ui_value_text(page_id)?)])?;
+    let (action, args) = layout_action("patchFrame", Some(args))?;
+    let mut input = ui::select(text(story_id)?).try_id("layout-play-inspector.patchFrame.storyId.input").map_err(|_| admit())?.try_label(labels.story.as_str()).map_err(|_| admit())?;
+    for story in &document.stories {
+        input = input.try_item(text(&story.id)?, ui::Label(text(&story.id)?)).map_err(|_| admit())?;
+    }
+    let control = input.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(labels.story.as_str())?)).try_id("layout-play-inspector.patchFrame.storyId").map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+
+fn story_style_select(frame_id: &str, page_id: &str, story_id: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+    let current = document.stories.iter().find(|story| story.id == story_id).and_then(|story| story.style_runs.iter().find_map(|run| run.character_style_id.clone())).unwrap_or_default();
+    let args = ui_value_map([("field", ui_value_text("characterStyle")?), ("frameId", ui_value_text(frame_id)?), ("pageId", ui_value_text(page_id)?)])?;
+    let (action, args) = layout_action("patchFrame", Some(args))?;
+    let mut input = ui::select(text(&current)?).try_id("layout-play-inspector.patchFrame.characterStyle.input").map_err(|_| admit())?.try_label(labels.character_style.as_str()).map_err(|_| admit())?;
+    input = input.try_item(text("")?, ui::Label(text(labels.thread_none.as_str())?)).map_err(|_| admit())?;
+    for style in &document.character_styles {
+        let name = style.name.clone().unwrap_or_else(|| style.id.clone());
+        input = input.try_item(text(&style.id)?, ui::Label(text(&name)?)).map_err(|_| admit())?;
+    }
+    let control = input.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(labels.character_style.as_str())?)).try_id("layout-play-inspector.patchFrame.characterStyle").map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn thread_select(frame_id: &str, page_id: &str, thread_next: &Option<String>, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+    let current = thread_next.clone().unwrap_or_default();
+    let args = ui_value_map([("field", ui_value_text("threadNext")?), ("frameId", ui_value_text(frame_id)?), ("pageId", ui_value_text(page_id)?)])?;
+    let (action, args) = layout_action("patchFrame", Some(args))?;
+    let mut input = ui::select(text(&current)?).try_id("layout-play-inspector.patchFrame.threadNext.input").map_err(|_| admit())?.try_label(labels.thread_next.as_str()).map_err(|_| admit())?;
+    input = input.try_item(text("")?, ui::Label(text(labels.thread_none.as_str())?)).map_err(|_| admit())?;
+    for page in &document.pages {
+        for frame in &page.frames {
+            if let Frame::Text { id, .. } = frame {
+                if id != frame_id {
+                    input = input.try_item(text(id)?, ui::Label(text(id)?)).map_err(|_| admit())?;
+                }
+            }
+        }
+    }
+    let control = input.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(labels.thread_next.as_str())?)).try_id("layout-play-inspector.patchFrame.threadNext").map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn layer_name(page_id: &str, layer_id: &str, name: &str, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+    let field = format!("{layer_id}.name");
+    let args = ui_value_map([("field", ui_value_text(&field)?), ("pageId", ui_value_text(page_id)?), ("value", ui_value_text(name)?)])?;
+    let (action, args) = layout_action("patchPage", Some(args))?;
+    let control = ui::input(InputKind::Text).value(text(name)?).try_id(format!("layout-play-inspector.patchPage.{field}.input")).map_err(|_| admit())?.try_label(labels.name.as_str()).map_err(|_| admit())?.commit(text("blur")?).try_on_with(Trigger::Commit, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(&format!("{} {}", labels.group_layer.as_str(), name))?)) .try_id(format!("layout-play-inspector.patchPage.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn layer_flag(page_id: &str, layer_id: &str, key: &str, on: bool, label: LabelText) -> UiAssemblyResult<BuiltNode> {
+    let field = format!("{layer_id}.{key}");
+    let args = ui_value_map([("field", ui_value_text(&field)?), ("pageId", ui_value_text(page_id)?)])?;
+    let (action, args) = layout_action("patchPage", Some(args))?;
+    let control = ui::toggle(on).try_id(format!("layout-play-inspector.patchPage.{field}.input")).map_err(|_| admit())?.try_label(label.as_str()).map_err(|_| admit())?.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchPage.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn document_button(field: &str, value: &str, label: LabelText) -> UiAssemblyResult<BuiltNode> {
+    let args = ui_value_map([("field", ui_value_text(field)?), ("value", ui_value_text(value)?)])?;
+    let (action, args) = layout_action("patchDocument", Some(args))?;
+    let control = ui::button(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchDocument.{field}.input")).map_err(|_| admit())?.try_on_with(Trigger::Activate, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchDocument.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn document_toggle(field: &str, on: bool, label: LabelText) -> UiAssemblyResult<BuiltNode> {
+    let args = ui_value_map([("field", ui_value_text(field)?)])?;
+    let (action, args) = layout_action("patchDocument", Some(args))?;
+    let control = ui::toggle(on).try_id(format!("layout-play-inspector.patchDocument.{field}.input")).map_err(|_| admit())?.try_label(label.as_str()).map_err(|_| admit())?.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchDocument.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn parent_select(page_id: &str, parent_page_id: &Option<String>, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+    let current = parent_page_id.clone().unwrap_or_default();
+    let args = ui_value_map([("field", ui_value_text("parentPageId")?), ("pageId", ui_value_text(page_id)?)])?;
+    let (action, args) = layout_action("patchPage", Some(args))?;
+    let mut input = ui::select(text(&current)?).try_id("layout-play-inspector.patchPage.parentPageId.input").map_err(|_| admit())?.try_label(labels.parent_page.as_str()).map_err(|_| admit())?;
+    input = input.try_item(text("")?, ui::Label(text(labels.thread_none.as_str())?)).map_err(|_| admit())?;
+    for parent in &document.parent_pages {
+        input = input.try_item(text(&parent.id)?, ui::Label(text(&parent.name)?)).map_err(|_| admit())?;
+    }
+    let control = input.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(labels.parent_page.as_str())?)).try_id("layout-play-inspector.patchPage.parentPageId").map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+
+fn guide_input(page_id: &str, index: usize, key: &str, label: LabelText, value: f64) -> UiAssemblyResult<BuiltNode> {
+    let field = format!("guide.{index}.{key}");
+    let args = ui_value_map([("field", ui_value_text(&field)?), ("pageId", ui_value_text(page_id)?)])?;
+    let (action, args) = layout_action("patchPage", Some(args))?;
+    let control = ui::input(InputKind::Number).value(text(&number(value))?).try_id(format!("layout-play-inspector.patchPage.{field}.input")).map_err(|_| admit())?.try_label(label.as_str()).map_err(|_| admit())?.step(0.1).commit(text("blur")?).try_on_with(Trigger::Commit, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchPage.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn page_button(page_id: &str, field: &str, label: LabelText) -> UiAssemblyResult<BuiltNode> {
+    let args = ui_value_map([("field", ui_value_text(field)?), ("pageId", ui_value_text(page_id)?), ("value", ui_value_text("true")?)])?;
+    let (action, args) = layout_action("patchPage", Some(args))?;
+    let control = ui::button(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchPage.{field}.input")).map_err(|_| admit())?.try_on_with(Trigger::Activate, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchPage.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
 }
 
 fn rows(fields: &[Field], command: &str, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
@@ -148,8 +316,55 @@ pub fn render(document: &LayoutSnapshot, config: &LayoutWindowConfig, interactio
     ])?;
     let mut builder = PanelTreeBuilder::new("layout-play-inspector")?.section("layout-play-inspector.summary", Some(ui_label(labels.inspection.as_str())?), true, items)?;
     builder = builder.section("layout-play-inspector.document", Some(ui_label(labels.group_document.as_str())?), true, rows(&document_fields(document, labels), "patchDocument", None, None)?)?;
+    if !document.paragraph_styles.is_empty() {
+        builder = builder.section("layout-play-inspector.paragraph-style", Some(ui_label(labels.paragraph_style.as_str())?), true, paragraph_rows(document, labels)?)?;
+    }
+    let mut character_nodes = vec![document_button("addCharacterStyle", "Emphasis", labels.add_character_style)?];
+    for style in &document.character_styles {
+        character_nodes.push(paragraph_input(&style.id, "name", labels.name, style.name.clone().unwrap_or_default(), InputKind::Text)?);
+        character_nodes.push(paragraph_input(&style.id, "fontFamily", labels.font_family, style.font_family.clone().unwrap_or_default(), InputKind::Text)?);
+        character_nodes.push(paragraph_input(&style.id, "fontSize", labels.font_size, style.font_size.map(number).unwrap_or_default(), InputKind::Number)?);
+        character_nodes.push(paragraph_input(&style.id, "fontWeight", labels.font_weight, style.font_weight.map(number).unwrap_or_default(), InputKind::Number)?);
+        character_nodes.push(document_toggle(&format!("{}.italic", style.id), style.italic.unwrap_or(false), labels.italic)?);
+        character_nodes.push(paragraph_input(&style.id, "color", labels.color, rgba_to_hex(&style.color), InputKind::Color)?);
+        character_nodes.push(paragraph_input(&style.id, "tracking", labels.tracking, style.tracking.map(number).unwrap_or_default(), InputKind::Number)?);
+        character_nodes.push(document_button(&format!("{}.delete", style.id), "true", labels.delete_character_style)?);
+    }
+    builder = builder.section("layout-play-inspector.character-style", Some(ui_label(labels.character_style.as_str())?), true, ui_node_list(character_nodes.into_iter().map(Ok))?)?;
+    let mut structure = Vec::new();
+    for spread in &document.spreads {
+        structure.push(paragraph_input(&spread.id, "name", labels.spread, spread.name.clone(), InputKind::Text)?);
+    }
+    for parent in &document.parent_pages {
+        structure.push(paragraph_input(&parent.id, "name", labels.parent_page, parent.name.clone(), InputKind::Text)?);
+        structure.push(paragraph_input(&parent.id, "width", labels.width, number(parent.width), InputKind::Number)?);
+        structure.push(paragraph_input(&parent.id, "height", labels.height, number(parent.height), InputKind::Number)?);
+    }
+    if !structure.is_empty() {
+        builder = builder.section("layout-play-inspector.structure", Some(ui_label(labels.spread.as_str())?), true, ui_node_list(structure.into_iter().map(Ok))?)?;
+    }
     if let Some(page) = document.pages.iter().find(|page| page.id == config.active_page_id) {
-        builder = builder.section("layout-play-inspector.page", Some(ui_label(labels.group_page.as_str())?), true, rows(&page_fields(page, labels), "patchPage", None, Some(&page.id))?)?;
+        let mut page_rows = rows(&page_fields(page, labels), "patchPage", None, Some(&page.id))?;
+        page_rows.try_push(parent_select(&page.id, &page.parent_page_id, document, labels)?).map_err(|_| admit())?;
+        page_rows.try_push(page_button(&page.id, "addGuide", labels.add_guide)?).map_err(|_| admit())?;
+        for (index, guide) in page.guides.iter().enumerate() {
+            page_rows.try_push(guide_input(&page.id, index, "x", labels.x, guide.x)?).map_err(|_| admit())?;
+            page_rows.try_push(guide_input(&page.id, index, "y", labels.y, guide.y)?).map_err(|_| admit())?;
+            page_rows.try_push(guide_input(&page.id, index, "width", labels.width, guide.width)?).map_err(|_| admit())?;
+            page_rows.try_push(guide_input(&page.id, index, "height", labels.height, guide.height)?).map_err(|_| admit())?;
+            page_rows.try_push(page_button(&page.id, &format!("guide.{index}.delete"), labels.delete_guide)?).map_err(|_| admit())?;
+        }
+        page_rows.try_push(page_button(&page.id, "moveEarlier", labels.move_earlier)?).map_err(|_| admit())?;
+        page_rows.try_push(page_button(&page.id, "moveLater", labels.move_later)?).map_err(|_| admit())?;
+        if document.pages.len() > 1 {
+            page_rows.try_push(page_button(&page.id, "delete", labels.delete_page)?).map_err(|_| admit())?;
+        }
+        for layer in &page.layers {
+            page_rows.try_push(layer_name(&page.id, &layer.id, &layer.name, labels)?).map_err(|_| admit())?;
+            page_rows.try_push(layer_flag(&page.id, &layer.id, "visible", layer.visible, labels.visible)?).map_err(|_| admit())?;
+            page_rows.try_push(layer_flag(&page.id, &layer.id, "locked", layer.locked, labels.locked)?).map_err(|_| admit())?;
+        }
+        builder = builder.section("layout-play-inspector.page", Some(ui_label(labels.group_page.as_str())?), true, page_rows)?;
     }
     let Some(frame_id) = interaction.ids.first() else { return builder.build() };
     let Some((page_id, frame)) = locate_frame(document, frame_id) else {
@@ -158,8 +373,11 @@ pub fn render(document: &LayoutSnapshot, config: &LayoutWindowConfig, interactio
     };
     let mut frame_rows = rows(&frame_fields(frame, document, labels), "patchFrame", Some(frame_id), Some(page_id))?;
     frame_rows.try_push(tree_item_desc("layout-play-inspector.frame.kind", ui_label(labels.kind.as_str())?, Some(frame_kind_label(frame, labels).to_string()))?).map_err(|_| admit())?;
-    if let Frame::Text { wrap_mode, .. } = frame {
+    if let Frame::Text { wrap_mode, story_id, thread_next, .. } = frame {
         frame_rows.try_push(wrap_row(frame_id, page_id, wrap_mode, labels)?).map_err(|_| admit())?;
+        frame_rows.try_push(story_select(frame_id, page_id, story_id, document, labels)?).map_err(|_| admit())?;
+        frame_rows.try_push(story_style_select(frame_id, page_id, story_id, document, labels)?).map_err(|_| admit())?;
+        frame_rows.try_push(thread_select(frame_id, page_id, thread_next, document, labels)?).map_err(|_| admit())?;
     }
     if let Frame::Image { link_id, .. } = frame {
         if let Some(link) = document.links.iter().find(|link| link.id == *link_id) {

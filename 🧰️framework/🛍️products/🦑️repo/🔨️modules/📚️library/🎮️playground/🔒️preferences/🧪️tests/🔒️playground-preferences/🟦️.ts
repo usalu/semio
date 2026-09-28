@@ -13,5 +13,4 @@ export async function testPlaygroundPreferences(): Promise<void> {
   assert.deepEqual(expected, fixture.expected);
   assert.deepEqual(frameworkOsLockedPrefsEnv(fixture.environment), expected);
   assert.deepEqual(frameworkOsLockedPrefsEnv({}), {});
-  console.log("[DEBUG] Pure playground preference forwarding matches the schema fixture and lodash oracle PASS");
 }

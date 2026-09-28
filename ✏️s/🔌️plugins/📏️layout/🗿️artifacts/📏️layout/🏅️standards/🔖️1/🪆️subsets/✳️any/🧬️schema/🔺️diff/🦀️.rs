@@ -204,6 +204,12 @@ pub struct LayoutSpreadPatchEntry {
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct ParagraphStylePatch {
     pub name: Option<String>,
+    pub font_family: Option<String>,
+    pub font_size: Option<f64>,
+    pub font_weight: Option<u32>,
+    pub leading: Option<f64>,
+    pub tracking: Option<f64>,
+    pub alignment: Option<String>,
 }
 
 /// 🩹 Sparse patch for a {@link CharacterStyle}.
@@ -212,7 +218,13 @@ pub struct ParagraphStylePatch {
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct CharacterStylePatch {
-    pub name: Option<String>,
+    pub name: Option<Option<String>>,
+    pub font_family: Option<Option<String>>,
+    pub font_size: Option<Option<f64>>,
+    pub font_weight: Option<Option<u32>>,
+    pub italic: Option<Option<bool>>,
+    pub color: Option<Option<[f32; 4]>>,
+    pub tracking: Option<Option<f64>>,
 }
 
 /// 🩹 Sparse patch for a {@link ParentPage}.
@@ -222,6 +234,8 @@ pub struct CharacterStylePatch {
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct ParentPagePatch {
     pub name: Option<String>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
 }
 
 /// 🩹 Sparse patch for a {@link Spread}.

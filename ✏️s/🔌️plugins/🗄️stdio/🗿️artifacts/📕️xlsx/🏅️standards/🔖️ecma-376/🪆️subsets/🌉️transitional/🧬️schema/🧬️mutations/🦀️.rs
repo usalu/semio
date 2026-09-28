@@ -236,7 +236,7 @@ fn parts_diff(modified: Vec<(String, XlsxOpcPartDiff)>, added: Vec<OpcPart>, rem
     if modified.is_empty() && added.is_empty() && removed.is_empty() {
         return None;
     }
-    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added, order: None })
+    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added, order: Vec::new() })
 }
 
 /// 🔺️ Sparse `[Content_Types].xml` override diff, keyed by the `/`-prefixed part name the typed

@@ -29,7 +29,6 @@ it("browser animation ownership survives discarded candidates and clears on acce
     }, fixture);
     expect(observed.history).toEqual(fixture.activity.map(step => step.nextMs !== null));
     expect(observed.packets).toEqual(fixture.primitives.map(row => row.active));
-    console.log("[DEBUG] browser animation ownership validates accepted and discarded frame sequence");
   } finally {
     await browser.close();
   }
@@ -59,7 +58,6 @@ it("matches browser animation phase after long uptime and across the common wrap
       });
     }, fixture);
     for (const row of observed) expect(row.progress, `${row.id}: ${row.periodUs}`).toBeCloseTo((row.phaseUs % row.periodUs) / row.periodUs, 6);
-    console.log(`[DEBUG] browser animation clock validated ${observed.length} phases`);
   } finally {
     await browser.close();
   }

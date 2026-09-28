@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """🪞️ LB2 overlay top-up: walks the source trees (pruning build outputs) and APFS-clones every source-like file
-(.rs .json .wit .toml .ts .md .sql .graphql .proto .semio) that is missing from the overlay — the gitignored generated
+(.rs .json .wit .toml .ts .md .sql .graphql .proto .semio) that is missing from the overlay or differs from it (size/mtime) — the gitignored generated
 sources crates `include!`/`#[path]` outside `🤖️generated/` (e.g. `🎨️styling/🔤️tokens/🦀️.rs`). Usage: lb2-overlay-missing.py <overlay-root>"""
 import ctypes
 import os
@@ -22,12 +22,17 @@ for top in ("🧰️framework", "✏️s", "🌎️hub"):
             source = os.path.join(root, name)
             rel = os.path.relpath(source, REPO)
             destination = os.path.join(target, rel)
-            if os.path.lexists(destination) or os.path.islink(source):
+            if os.path.islink(source):
                 continue
+            if os.path.lexists(destination):
+                a, b = os.lstat(source), os.lstat(destination)
+                if a.st_size == b.st_size and int(a.st_mtime) == int(b.st_mtime):
+                    continue
+                os.remove(destination)
             os.makedirs(os.path.dirname(destination), exist_ok=True)
             if libc.clonefile(source.encode(), destination.encode(), 0) != 0:
                 raise OSError(ctypes.get_errno(), f"clonefile {rel}")
             added.append(rel)
 for rel in added:
     print(rel)
-print(f"lb2-overlay-missing: {len(added)} files added into {target}")
+print(f"lb2-overlay-missing: {len(added)} files added or refreshed into {target}")

@@ -689,23 +689,49 @@ pub mod part_2 {
                     &format!("H_T = Σ(A·U) = {ht:.3} W/K gegenüber Tab.3-Kapazität {ht_max:.3} W/K für Zone '{}'.", zone.id),
                 ));
             if ht > ht_max {
-                if let Some(el) = elements.iter().find(|e| e.zone_id == zone.id && e.kind != "window" && e.kind != "door") {
+                let scale = (ht_max / ht).clamp(0.0, 1.0);
+                for el in elements.iter().filter(|e| e.zone_id == zone.id && e.kind != "window" && e.kind != "door" && !e.layers.is_empty()) {
                     let (r_si, r_se) = surface_resistances_inclined(&el.kind, &el.adjacent, el.inclination_deg);
                     let mass = surface_mass_kg_m2(&el.layers);
                     let r_min = table3_r_min(&el.kind, &el.adjacent, usage, t_int_c, mass);
-                    if let Some((idx, d_req)) = required_insulation_thickness(&el.layers, r_si, r_se, r_min) {
-                        let layer = &el.layers[idx];
-                        builder = builder.remedy(Remedy::at_least(
+                    let delta = el.delta_u_g + el.delta_u_f + el.delta_u_r;
+                    let mut added_thickness = false;
+                    if r_min > 0.0 {
+                        let u_plain_cap = (1.0 / r_min - delta).max(1e-6);
+                        let r_need = 1.0 / u_plain_cap;
+                        if let Some((idx, d_req)) = required_insulation_thickness(&el.layers, r_si, r_se, r_need) {
+                            let layer = &el.layers[idx];
+                            if d_req > layer.thickness_m + 1e-12 {
+                                builder = builder.remedy(Remedy::at_least(
+                                    SubjectRef::new(
+                                        &el.id,
+                                        layer_field_path(&el.id, &layer.id, "thicknessM"),
+                                        loc(&format!("Insulation {}", layer.id), &format!("Dämmung {}", layer.id)),
+                                    ),
+                                    Quantity::length_m(layer.thickness_m),
+                                    Quantity::length_m(d_req),
+                                    loc(
+                                        &format!("Increase insulation on '{}' so zone '{}' H_T ≤ {ht_max:.3} W/K.", el.id, zone.id),
+                                        &format!("Dämmung an '{}' erhöhen, damit H_T der Zone '{}' ≤ {ht_max:.3} W/K.", el.id, zone.id),
+                                    ),
+                                ));
+                                added_thickness = true;
+                            }
+                        }
+                    }
+                    if !added_thickness && el.area_m2 > 0.0 && scale + 1e-12 < 1.0 {
+                        let area_req = el.area_m2 * scale;
+                        builder = builder.remedy(Remedy::at_most(
                             SubjectRef::new(
                                 &el.id,
-                                layer_field_path(&el.id, &layer.id, "thicknessM"),
-                                loc(&format!("Insulation {}", layer.id), &format!("Dämmung {}", layer.id)),
+                                entity_field_path("elements", &el.id, "areaM2"),
+                                loc(&format!("Element {}", el.id), &format!("Bauteil {}", el.id)),
                             ),
-                            Quantity::length_m(layer.thickness_m),
-                            Quantity::length_m(d_req),
+                            Quantity::area_m2(el.area_m2),
+                            Quantity::area_m2(area_req),
                             loc(
-                                &format!("Increase insulation on '{}' so zone '{}' H_T ≤ {ht_max:.3} W/K.", el.id, zone.id),
-                                &format!("Dämmung an '{}' erhöhen, damit H_T der Zone '{}' ≤ {ht_max:.3} W/K.", el.id, zone.id),
+                                &format!("Reduce opaque area of '{}' from {:.1} m² to ≤ {:.1} m² so zone H_T ≤ {ht_max:.3} W/K.", el.id, el.area_m2, area_req),
+                                &format!("Opake Fläche von '{}' von {:.1} m² auf ≤ {:.1} m² senken, damit H_T ≤ {ht_max:.3} W/K.", el.id, el.area_m2, area_req),
                             ),
                         ));
                     }
@@ -975,60 +1001,75 @@ pub mod part_2 {
             ),
         ));
         if s_v > s_z {
-            if let Some((wi, win)) = zone.windows.iter().enumerate().max_by(|a, b| {
-                let wa = a.1.area_m2 * a.1.g_value * a.1.shading_fc * orientation_factor_fw(&a.1.orientation) * inclination_factor_fi(a.1.inclination_deg);
-                let wb = b.1.area_m2 * b.1.g_value * b.1.shading_fc * orientation_factor_fw(&b.1.orientation) * inclination_factor_fi(b.1.inclination_deg);
-                wa.partial_cmp(&wb).unwrap_or(std::cmp::Ordering::Equal)
-            }) {
-                let fw = orientation_factor_fw(&win.orientation);
-                let fi = inclination_factor_fi(win.inclination_deg);
-                let budget = s_z * zone.floor_area_m2;
-                let other: f64 = zone
-                    .windows
-                    .iter()
-                    .enumerate()
-                    .filter(|(i, _)| *i != wi)
-                    .map(|(_, w)| w.area_m2 * w.g_value * w.shading_fc * orientation_factor_fw(&w.orientation) * inclination_factor_fi(w.inclination_deg))
-                    .sum();
-                let allowed = (budget - other).max(0.0);
-                let denom = win.area_m2 * win.g_value * fw * fi;
-                let fc_req = if denom > 0.0 {
-                    (allowed / denom).clamp(0.05, 1.0)
-                } else {
-                    win.shading_fc
-                };
-                builder = builder.remedy(Remedy::at_most(
+            let solar_sum = s_v * zone.floor_area_m2;
+            let floor_req = if s_z > 0.0 { solar_sum / s_z } else { zone.floor_area_m2 };
+            if floor_req > zone.floor_area_m2 + 1e-12 {
+                builder = builder.remedy(Remedy::at_least(
                     SubjectRef::new(
-                        &win.id,
-                        window_field_path(&zone.id, &win.id, "shadingFc"),
-                        loc(&format!("Window {}", win.id), &format!("Fenster {}", win.id)),
+                        &zone.id,
+                        entity_field_path("zones", &zone.id, "floorAreaM2"),
+                        loc(&format!("Zone {}", zone.id), &format!("Zone {}", zone.id)),
                     ),
-                    Quantity::new(QuantityKind::Dimensionless, win.shading_fc),
-                    Quantity::new(QuantityKind::Dimensionless, fc_req),
+                    Quantity::area_m2(zone.floor_area_m2),
+                    Quantity::area_m2(floor_req),
                     loc(
-                        &format!("Reduce shading factor F_c of '{}' from {:.2} to ≤ {:.2} (or reduce g / window area).", win.id, win.shading_fc, fc_req),
-                        &format!("Abminderungsfaktor F_c von '{}' von {:.2} auf ≤ {:.2} senken (oder g / Fensterfläche reduzieren).", win.id, win.shading_fc, fc_req),
+                        &format!("Increase floor area of '{}' from {:.1} m² to ≥ {:.1} m² so S_vorh ≤ S_zul.", zone.id, zone.floor_area_m2, floor_req),
+                        &format!("Nutzfläche von '{}' von {:.1} m² auf ≥ {:.1} m² erhöhen, damit S_vorh ≤ S_zul.", zone.id, zone.floor_area_m2, floor_req),
                     ),
                 ));
-                let area_denom = win.g_value * win.shading_fc * fw * fi;
-                let area_req = if area_denom > 0.0 {
-                    allowed / area_denom
-                } else {
-                    win.area_m2
-                };
-                builder = builder.remedy(Remedy::at_most(
-                    SubjectRef::new(
-                        &win.id,
-                        window_field_path(&zone.id, &win.id, "areaM2"),
-                        loc(&format!("Window {}", win.id), &format!("Fenster {}", win.id)),
-                    ),
-                    Quantity::area_m2(win.area_m2),
-                    Quantity::area_m2(area_req),
-                    loc(
-                        &format!("Reduce window area of '{}' from {:.1} m² to ≤ {:.1} m².", win.id, win.area_m2, area_req),
-                        &format!("Fensterfläche von '{}' von {:.1} m² auf ≤ {:.1} m² reduzieren.", win.id, win.area_m2, area_req),
-                    ),
-                ));
+            }
+            let scale = (s_z / s_v).clamp(0.0, 1.0);
+            for win in &zone.windows {
+                let fc_req = win.shading_fc * scale;
+                if fc_req + 1e-12 < win.shading_fc {
+                    builder = builder.remedy(Remedy::at_most(
+                        SubjectRef::new(
+                            &win.id,
+                            window_field_path(&zone.id, &win.id, "shadingFc"),
+                            loc(&format!("Window {}", win.id), &format!("Fenster {}", win.id)),
+                        ),
+                        Quantity::new(QuantityKind::Dimensionless, win.shading_fc),
+                        Quantity::new(QuantityKind::Dimensionless, fc_req),
+                        loc(
+                            &format!("Reduce shading factor F_c of '{}' from {:.2} to ≤ {:.2} (or reduce g / window area).", win.id, win.shading_fc, fc_req),
+                            &format!("Abminderungsfaktor F_c von '{}' von {:.2} auf ≤ {:.2} senken (oder g / Fensterfläche reduzieren).", win.id, win.shading_fc, fc_req),
+                        ),
+                    ));
+                }
+                let area_req = win.area_m2 * scale;
+                if area_req + 1e-12 < win.area_m2 {
+                    builder = builder.remedy(Remedy::at_most(
+                        SubjectRef::new(
+                            &win.id,
+                            window_field_path(&zone.id, &win.id, "areaM2"),
+                            loc(&format!("Window {}", win.id), &format!("Fenster {}", win.id)),
+                        ),
+                        Quantity::area_m2(win.area_m2),
+                        Quantity::area_m2(area_req),
+                        loc(
+                            &format!("Reduce window area of '{}' from {:.1} m² to ≤ {:.1} m².", win.id, win.area_m2, area_req),
+                            &format!("Fensterfläche von '{}' von {:.1} m² auf ≤ {:.1} m² reduzieren.", win.id, win.area_m2, area_req),
+                        ),
+                    ));
+                }
+            }
+            for el in elements.iter().filter(|e| e.zone_id == zone.id && (e.kind == "window" || e.kind == "door") && e.area_m2 > 0.0) {
+                let area_req = el.area_m2 * scale;
+                if area_req + 1e-12 < el.area_m2 {
+                    builder = builder.remedy(Remedy::at_most(
+                        SubjectRef::new(
+                            &el.id,
+                            entity_field_path("elements", &el.id, "areaM2"),
+                            loc(&format!("Element {}", el.id), &format!("Bauteil {}", el.id)),
+                        ),
+                        Quantity::area_m2(el.area_m2),
+                        Quantity::area_m2(area_req),
+                        loc(
+                            &format!("Reduce transparent envelope area of '{}' from {:.1} m² to ≤ {:.1} m².", el.id, el.area_m2, area_req),
+                            &format!("Transparente Hüllfläche von '{}' von {:.1} m² auf ≤ {:.1} m² reduzieren.", el.id, el.area_m2, area_req),
+                        ),
+                    ));
+                }
             }
         }
         builder.build()
@@ -1511,21 +1552,190 @@ pub mod part_6 {
             &format!("U′ = {u_prime:.3} W/(m²K) (Anteil={share:.2}) gegenüber U_max = {u_max:.3}."),
         ));
         if u_prime > u_max {
+            let bridge_add = psi_l / element.area_m2;
+            let delta = element.delta_u_g + element.delta_u_f + element.delta_u_r;
+            let u_cap = (u_max - bridge_add - delta).max(1e-6);
+            let r_need = 1.0 / u_cap;
+            let mut remedied = false;
+            if let Some((idx, d_req)) = required_insulation_thickness(&element.layers, r_si, r_se, r_need) {
+                let layer = &element.layers[idx];
+                if d_req > layer.thickness_m + 1e-12 {
+                    builder = builder.remedy(Remedy::at_least(
+                        SubjectRef::new(
+                            &element.id,
+                            layer_field_path(&element.id, &layer.id, "thicknessM"),
+                            loc(&format!("Insulation {}", layer.id), &format!("Dämmung {}", layer.id)),
+                        ),
+                        Quantity::length_m(layer.thickness_m),
+                        Quantity::length_m(d_req),
+                        loc(
+                            &format!("Increase insulation '{}' to ≥ {:.0} mm so U′ ≤ {u_max:.3} W/(m²K).", layer.id, d_req * 1000.0),
+                            &format!("Dämmstärke '{}' auf ≥ {:.0} mm erhöhen, damit U′ ≤ {u_max:.3} W/(m²K).", layer.id, d_req * 1000.0),
+                        ),
+                    ));
+                    remedied = true;
+                }
+            }
             if let Some(bridge) = bridges.iter().max_by(|a, b| a.psi.partial_cmp(&b.psi).unwrap_or(std::cmp::Ordering::Equal)) {
-                let psi_req = (bridge.psi * (u_max / u_prime).min(1.0) * 0.25).max(0.001);
-                builder = builder.remedy(Remedy::at_most(
-                    SubjectRef::new(
-                        &bridge.id,
-                        bridge_field_path(&bridge.id, "psi"),
-                        loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
-                    ),
-                    Quantity::new(QuantityKind::HeatTransferCoefficient, bridge.psi),
-                    Quantity::new(QuantityKind::HeatTransferCoefficient, psi_req),
-                    loc(
-                        &format!("Reduce ψ of '{}' from {:.3} to ≤ {:.3} W/(m·K).", bridge.id, bridge.psi, psi_req),
-                        &format!("ψ von '{}' von {:.3} auf ≤ {:.3} W/(m·K) senken.", bridge.id, bridge.psi, psi_req),
-                    ),
-                ));
+                let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
+                let psi_l_allow = ((u_max - u).max(0.0) * element.area_m2 / share.max(1e-12)).max(0.0);
+                let mut psi_req = if bridge.length_m > 0.0 {
+                    ((psi_l_allow - other_psi_l) / bridge.length_m).max(0.0)
+                } else {
+                    0.0
+                };
+                if psi_req + 1e-12 < bridge.psi {
+                    // Nudge ψ down so re-evaluation clears under float noise.
+                    let mut guard = 0u32;
+                    while guard < 64
+                        && u + (other_psi_l + psi_req * bridge.length_m) * share / element.area_m2 > u_max
+                    {
+                        psi_req = f64::from_bits(psi_req.to_bits().saturating_sub(1));
+                        guard += 1;
+                    }
+                    builder = builder.remedy(Remedy::at_most(
+                        SubjectRef::new(
+                            &bridge.id,
+                            bridge_field_path(&bridge.id, "psi"),
+                            loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
+                        ),
+                        Quantity::new(QuantityKind::HeatTransferCoefficient, bridge.psi),
+                        Quantity::new(QuantityKind::HeatTransferCoefficient, psi_req),
+                        loc(
+                            &format!("Reduce ψ of '{}' from {:.3} to ≤ {:.3} W/(m·K).", bridge.id, bridge.psi, psi_req),
+                            &format!("ψ von '{}' von {:.3} auf ≤ {:.3} W/(m·K) senken.", bridge.id, bridge.psi, psi_req),
+                        ),
+                    ));
+                    remedied = true;
+                }
+            }
+            // Always offer a bridge-length clearing bound when U′ fails. Covers the case where
+            // insulation is already thick enough (d_req ≤ current) and ψ cannot be lowered under
+            // the current bridge ψ (e.g. tb-bad at 0.4) so both primary branches skip.
+            if let Some(bridge) = bridges
+                .iter()
+                .filter(|b| b.psi > 0.0 && b.length_m > 0.0)
+                .max_by(|a, b| {
+                    (a.psi * a.length_m)
+                        .partial_cmp(&(b.psi * b.length_m))
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+            {
+                let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
+                let psi_l_allow = ((u_max - u).max(0.0) * opaque_area_m2).max(0.0);
+                let mut length_req = ((psi_l_allow - other_psi_l) / bridge.psi).max(0.0);
+                let mut guard = 0u32;
+                while guard < 64
+                    && u + (other_psi_l + bridge.psi * length_req) / opaque_area_m2 > u_max
+                {
+                    length_req = f64::from_bits(length_req.to_bits().saturating_sub(1));
+                    guard += 1;
+                }
+                if length_req + 1e-12 < bridge.length_m
+                    && u + (other_psi_l + bridge.psi * length_req) / opaque_area_m2 <= u_max
+                {
+                    builder = builder.remedy(Remedy::at_most(
+                        SubjectRef::new(
+                            &bridge.id,
+                            bridge_field_path(&bridge.id, "lengthM"),
+                            loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
+                        ),
+                        Quantity::length_m(bridge.length_m),
+                        Quantity::length_m(length_req),
+                        loc(
+                            &format!(
+                                "Shorten thermal bridge '{}' from {:.2} m to ≤ {:.2} m so U′ ≤ {u_max:.3} W/(m²K).",
+                                bridge.id, bridge.length_m, length_req
+                            ),
+                            &format!(
+                                "Wärmebrücke '{}' von {:.2} m auf ≤ {:.2} m verkürzen, damit U′ ≤ {u_max:.3} W/(m²K).",
+                                bridge.id, bridge.length_m, length_req
+                            ),
+                        ),
+                    ));
+                    remedied = true;
+                }
+            }
+            // Last resort: grow this element's opaque area so Σ(ψ·l)/A_opaque drops enough.
+            if !remedied && u + 1e-12 < u_max {
+                let opaque_req = psi_l_sum(bridges) / (u_max - u).max(1e-12);
+                let mut area_req = element.area_m2 + (opaque_req - opaque_area_m2).max(0.0);
+                let mut guard = 0u32;
+                while guard < 64 {
+                    let opaque_after = opaque_area_m2 - element.area_m2 + area_req;
+                    if opaque_after > 0.0 && u + psi_l_sum(bridges) / opaque_after <= u_max {
+                        break;
+                    }
+                    area_req = f64::from_bits(area_req.to_bits().saturating_add(1));
+                    guard += 1;
+                }
+                if area_req > element.area_m2 + 1e-12 {
+                    builder = builder.remedy(Remedy::at_least(
+                        SubjectRef::new(
+                            &element.id,
+                            entity_field_path("elements", &element.id, "areaM2"),
+                            loc(&format!("Element {}", element.id), &format!("Bauteil {}", element.id)),
+                        ),
+                        Quantity::area_m2(element.area_m2),
+                        Quantity::area_m2(area_req),
+                        loc(
+                            &format!(
+                                "Increase opaque area of '{}' from {:.1} m² to ≥ {:.1} m² so U′ ≤ {u_max:.3} W/(m²K).",
+                                element.id, element.area_m2, area_req
+                            ),
+                            &format!(
+                                "Opake Fläche von '{}' von {:.1} m² auf ≥ {:.1} m² erhöhen, damit U′ ≤ {u_max:.3} W/(m²K).",
+                                element.id, element.area_m2, area_req
+                            ),
+                        ),
+                    ));
+                    remedied = true;
+                }
+            }
+            // If U itself exceeds U_max and thickness branch was skipped, force an insulation bump.
+            if !remedied {
+                if let Some((idx, d_req)) = required_insulation_thickness(&element.layers, r_si, r_se, r_need) {
+                    let layer = &element.layers[idx];
+                    let mut d = d_req.max(layer.thickness_m);
+                    let lambda = layer.lambda;
+                    let r_other = r_si
+                        + r_se
+                        + element
+                            .layers
+                            .iter()
+                            .enumerate()
+                            .filter(|(i, _)| *i != idx)
+                            .map(|(_, l)| layer_resistance(l))
+                            .sum::<f64>();
+                    let mut guard = 0u32;
+                    while guard < 128 {
+                        let u_plain = if r_other + d / lambda > 0.0 {
+                            1.0 / (r_other + d / lambda)
+                        } else {
+                            f64::INFINITY
+                        };
+                        if u_plain + delta + bridge_add <= u_max {
+                            break;
+                        }
+                        d = f64::from_bits(d.to_bits().saturating_add(1));
+                        guard += 1;
+                    }
+                    if d > layer.thickness_m + 1e-12 {
+                        builder = builder.remedy(Remedy::at_least(
+                            SubjectRef::new(
+                                &element.id,
+                                layer_field_path(&element.id, &layer.id, "thicknessM"),
+                                loc(&format!("Insulation {}", layer.id), &format!("Dämmung {}", layer.id)),
+                            ),
+                            Quantity::length_m(layer.thickness_m),
+                            Quantity::length_m(d),
+                            loc(
+                                &format!("Increase insulation '{}' to ≥ {:.0} mm so U′ ≤ {u_max:.3} W/(m²K).", layer.id, d * 1000.0),
+                                &format!("Dämmstärke '{}' auf ≥ {:.0} mm erhöhen, damit U′ ≤ {u_max:.3} W/(m²K).", layer.id, d * 1000.0),
+                            ),
+                        ));
+                    }
+                }
             }
         }
         builder.build()
@@ -1952,30 +2162,38 @@ pub mod part_10 {
             ));
         }
         if !ok_c {
+            let compressive = ["dh", "ds", "dm", "dk", "dx"];
+            let start = compressive.iter().position(|c| class_rank_compressive(c) >= c_need).unwrap_or(0);
             builder = builder.remedy(Remedy::one_of(
                 SubjectRef::new(&layer.id, layer_field_path(&element.id, &layer.id, "compressiveClass"), loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id))),
-                vec!["dh".into(), "ds".into(), "dm".into(), "dk".into(), "dx".into()],
+                compressive[start..].iter().map(|c| (*c).to_string()).collect(),
                 loc(&format!("Raise compressive class to at least '{min_c}'."), &format!("Druckfestigkeitsklasse mindestens '{min_c}' wählen.")),
             ));
         }
         if !ok_w {
+            let water = ["wk", "wf", "wd"];
+            let start = water.iter().position(|c| class_rank_water(c) >= w_need).unwrap_or(0);
             builder = builder.remedy(Remedy::one_of(
                 SubjectRef::new(&layer.id, layer_field_path(&element.id, &layer.id, "waterClass"), loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id))),
-                vec!["wk".into(), "wf".into(), "wd".into()],
+                water[start..].iter().map(|c| (*c).to_string()).collect(),
                 loc(&format!("Raise water class to at least '{min_w}'."), &format!("Wasseraufnahmeklasse mindestens '{min_w}' wählen.")),
             ));
         }
         if !ok_t {
+            let tensile = ["tk", "tf"];
+            let start = tensile.iter().position(|c| class_rank_tensile(c) >= t_need).unwrap_or(0);
             builder = builder.remedy(Remedy::one_of(
                 SubjectRef::new(&layer.id, layer_field_path(&element.id, &layer.id, "tensileClass"), loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id))),
-                vec!["tk".into(), "tf".into()],
+                tensile[start..].iter().map(|c| (*c).to_string()).collect(),
                 loc(&format!("Raise tensile class to at least '{min_t}'."), &format!("Zugfestigkeitsklasse mindestens '{min_t}' wählen.")),
             ));
         }
         if !ok_a {
+            let acoustic = ["sh", "sm", "sg"];
+            let start = acoustic.iter().position(|c| class_rank_acoustic(c) >= a_need).unwrap_or(0);
             builder = builder.remedy(Remedy::one_of(
                 SubjectRef::new(&layer.id, layer_field_path(&element.id, &layer.id, "acousticClass"), loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id))),
-                vec!["sh".into(), "sm".into(), "sg".into()],
+                acoustic[start..].iter().map(|c| (*c).to_string()).collect(),
                 loc(&format!("Raise acoustic class to at least '{min_a}'."), &format!("Schwingungsgruppe mindestens '{min_a}' wählen.")),
             ));
         }

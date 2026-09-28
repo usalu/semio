@@ -67,3 +67,25 @@ export const elementsSurfaceDeviceIsMobile = (device: ElementsSurfaceDevice): bo
  * drop into (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `startTabDrag: mobile ? noopDrag : startTabDrag`). */
 export const elementsSurfaceDeviceSupportsTabDrag = (device: ElementsSurfaceDevice): boolean => device !== "mobile";
 // #endregion 📱️Device
+
+// #region 📐 Available viewport
+/** 📐 CSS length shells use instead of `100vh`. `100vh` is the screen (large viewport) and on mobile
+ * includes the strip the browser toolbar covers; this is the available viewport, kept live by the host
+ * boot script from `visualViewport`. */
+export const UI_AVAILABLE_HEIGHT = "var(--ui-available-height, 100dvh)";
+
+/**
+ * 📐 Pixels of the viewport the user can actually see.
+ *
+ * `innerHeight` / `100vh` is the screen. `visualHeight` is `visualViewport.height` — the available
+ * height under the browser toolbar. A missing or non-positive visual reading falls back to the screen
+ * so a host without `visualViewport` still fills the window.
+ */
+export function availableViewportHeightPx(reading: { readonly innerHeight: number; readonly visualHeight?: number | null }): number {
+  const visual = reading.visualHeight;
+  const height = typeof visual === "number" && visual > 0 ? visual : reading.innerHeight;
+  if (!(height > 0) || !Number.isFinite(height)) return 0;
+  return Math.round(height);
+}
+// #endregion 📐 Available viewport
+

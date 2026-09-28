@@ -100,7 +100,6 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     await cacheInternals.collectImportEdges(workspace, fileMapRepo.projectFileMap, repoProjects, byPackage, undefined, add);
     const fromCreate = cold.filter((edge) => /\.[cm]?[jt]sx?$/.test(edge.sourceFile ?? ""));
     assert.deepEqual([...fromCreate.map(key)].sort(), [...importOnly.values()].map(key).sort(), "createDependencies import edges must equal full collectImportEdges scan");
-    console.log(`[DEBUG] Import edge equality PASS fixture+repo cold=${cold.length} import=${importOnly.size}`);
   } finally {
     delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
     rmSync(root, { recursive: true, force: true });

@@ -20,5 +20,4 @@ assert.deepEqual(names, fixture.registeredDerives);
 assert(fixture.facadeExports.every((name: string) => names.includes(name)));
 assert(fixture.traitOnly.every((name: string) => !names.includes(name)));
 for (const mutant of [{ ...fixture, extra: true }, { ...fixture, facadeExports: ["DslRecord", "DslRecord"] }, { ...fixture, traitOnly: ["invalid-name"] }]) assert(!validate(mutant));
-console.log(`[DEBUG] DSL macro export source facade=${fixture.facadeExports.length} registered=${fixture.registeredDerives.length} hostileRejections=3 nativeOracle=Syn`);
 //#endregion 🧬️ExportRoster

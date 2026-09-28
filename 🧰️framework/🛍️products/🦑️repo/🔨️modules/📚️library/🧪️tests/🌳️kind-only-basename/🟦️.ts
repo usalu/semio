@@ -94,7 +94,6 @@ describe("kind-only implementation leaf taxonomy", () => {
       expect(observed).toEqual(expected);
       expect(await independentOracle(root)).toEqual(expected);
       expect(progress).toContain("complete");
-      console.info("[DEBUG] Kind-only taxonomy fixture", JSON.stringify({ files: fixture.files.length, findings: observed.length }));
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -143,7 +142,6 @@ describe("kind-only implementation leaf taxonomy", () => {
       expect(packages.find((entry) => entry.id === "fixture-react")).toMatchObject({ ownerRel: "🧰️web/🎯️targets/⚛️react", target: "⚛️react", packageRel: "🧰️web/🎯️targets/⚛️react/📦️packages/🟦️typescript" });
       expect(packages.some((entry) => entry.id === "inverse-wgpu")).toBe(false);
       expect(discoverPackageProblems(root, taxonomy)).toContainEqual({ kind: "target-inside-package-boundary", path: "🧰️inverse/📦️packages/🦀️rust/🎯️targets", message: '"🧰️inverse/📦️packages/🦀️rust/🎯️targets" places a target subtree inside a package boundary.' });
-      console.info("[DEBUG] Target-first package discovery", JSON.stringify({ packages: packages.map((entry) => entry.id) }));
     } finally {
       clearDiscoveryCache();
       rmSync(root, { recursive: true, force: true });
@@ -182,6 +180,5 @@ describe("kind-only implementation leaf taxonomy", () => {
         expect(existsSync(targetPath), `${manifest}: ${target}`).toBe(true);
       }
     }
-    console.info("[DEBUG] Semantic generator topology", JSON.stringify({ manifests: manifests.length, sources: sources.length }));
   }, 30_000);
 });

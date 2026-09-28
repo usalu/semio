@@ -15276,6 +15276,12 @@ pub mod app {
             self.media_export_handle.as_ref() == Some(handle)
         }
 
+        /// 🧪️ Test-only door to the media-export constructor the SDK keeps private.
+        #[cfg(test)]
+        pub(crate) fn test_from_media_export(handle: ArtifactMediaExportHandle, mime_type: impl Into<String>, chunks: ArtifactOutputChunks) -> Result<Self, Fault> {
+            Self::from_media_export(handle, mime_type, chunks)
+        }
+
         #[cfg(test)]
         fn handle_encoding(&self) -> String {
             format!("{ARTIFACT_SEGMENTED_HANDLE_ENCODING}:{}", self.encoding.as_deref().unwrap_or("identity"))
@@ -25705,6 +25711,12 @@ pub mod app {
         #[cfg(test)]
         pub(crate) async fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
             &mut self.store
+        }
+
+        /// 🧹️ Test-only probe: whether a cancelled segmented output still waits in bounded cleanup.
+        #[cfg(test)]
+        pub(crate) fn test_segmented_closure_contains(&self, operation_id: u64) -> bool {
+            self.segmented_closures.contains(operation_id)
         }
 
         /// @emoji 🧪️ The config-store twin of `test_snapshot`.

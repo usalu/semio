@@ -60,7 +60,6 @@ describe("artifact creation Ready opening", () => {
       expect(publishes, row.id).toBe(row.publish ? 1 : 0);
       expect(failures, row.id).toBe(row.failure ? 1 : 0);
     }
-    console.log("[DEBUG] Ready opening disposition: neutral=9 published=1 released-once=6");
   });
 
   it("renders the schema-owned bilingual failure and normalizes impossible empty Ready catalogs to unavailable", () => {

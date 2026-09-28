@@ -1,0 +1,169 @@
+
+//#region 📥️ImportStaging
+/// 📦️ Chunks one staged import may reassemble: 128 × [`IMPORT_CHUNK_BYTES`] = 4 MiB, the byte authority of one
+/// document archive — the largest thing a person opens from a file — so no staged run outgrows one document.
+pub const IMPORT_STAGING_MAXIMUM_CHUNKS: usize = 128;
+
+/// 📦️ The bytes one staged run may hold, implied by [`IMPORT_STAGING_MAXIMUM_CHUNKS`] chunks of at most
+/// [`IMPORT_CHUNK_BYTES`] each.
+pub const IMPORT_STAGING_MAXIMUM_BYTES: usize = IMPORT_STAGING_MAXIMUM_CHUNKS * IMPORT_CHUNK_BYTES;
+
+/// 🧵️ Runs one app instance stages at once — one per file a person is picking into this document. A new pick takes
+/// the slot of the least recently advanced run, so an abandoned or cancelled pick holds memory only until then:
+/// at most `IMPORT_STAGING_RUNS × IMPORT_STAGING_MAXIMUM_BYTES` per instance.
+pub const IMPORT_STAGING_RUNS: usize = 2;
+
+/// 🚫️ Why the staging refused one chunk — a typed code the dispatch turns into a fault, never a silent drop.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ImportStagingRefusal {
+    Envelope,
+    Chunk,
+    Gap,
+}
+
+impl ImportStagingRefusal {
+    /// 🏷️ The stable fault code.
+    pub fn code(self) -> &'static str {
+        match self {
+            Self::Envelope => "file-import.envelope",
+            Self::Chunk => "file-import.chunk",
+            Self::Gap => "file-import.gap",
+        }
+    }
+
+    /// 🗣️ What a person is told.
+    pub fn message(self) -> &'static str {
+        match self {
+            Self::Envelope => "The file arrived with an invalid chunk envelope, or is larger than one document may be.",
+            Self::Chunk => "One part of the file is larger than one import chunk.",
+            Self::Gap => "A part of the file arrived out of order; pick the file again.",
+        }
+    }
+}
+
+/// 📥️ What one action's arguments are to the staging: not an import chunk at all, a chunk of a run that is still open
+/// (`next_chunk` of `chunk_count` is its progress), or the whole file — as the arguments the app's action decodes:
+/// `payload` and `name` (plus `index`/`total` of a multi-file pick and every other argument the invocation carried),
+/// never the chunk envelope.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ImportArguments {
+    NotAnImport,
+    Staged { next_chunk: usize, chunk_count: usize },
+    Whole(DslValue),
+}
+
+struct ImportRun {
+    name: String,
+    fan_out: Option<(usize, usize)>,
+    chunk_count: usize,
+    next_chunk: usize,
+    pages: Vec<String>,
+    touched: u64,
+}
+
+/// 🧵️ One app instance's open file-import runs: the framework half of every [`Effect::RequestFileOpen`] import, so no
+/// app stages chunks itself. Instance-scoped, never process-global — two people importing into two documents of the
+/// same component never see each other's bytes, and an instance that closes takes its runs with it. Pages stay
+/// chunk-sized until the run closes.
+#[derive(Default)]
+pub struct ImportStaging {
+    runs: Vec<ImportRun>,
+    sequence: u64,
+}
+
+impl ImportStaging {
+    /// 📥️ Admits the arguments one import action was dispatched with ([`import_chunk_arguments`]). A run is keyed by
+    /// `(name, fan-out, chunk_count)`: a re-pick restarts its run at chunk 0, a chunk the run already admitted is a
+    /// retransmission acknowledged at the cursor, any other out-of-order chunk drops the run as a gap.
+    pub fn admit_args(&mut self, args: Option<&DslValue>) -> Result<ImportArguments, ImportStagingRefusal> {
+        let Some(DslValue::Object(entries)) = args else {
+            return Ok(ImportArguments::NotAnImport);
+        };
+        let field = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value);
+        let Some(count) = field(IMPORT_ARGUMENT_CHUNK_COUNT) else {
+            return Ok(ImportArguments::NotAnImport);
+        };
+        let position = |value: Option<&DslValue>| value.and_then(DslValue::as_u64).and_then(|value| usize::try_from(value).ok());
+        let chunk_count = position(Some(count)).ok_or(ImportStagingRefusal::Envelope)?;
+        let chunk = position(field(IMPORT_ARGUMENT_CHUNK)).ok_or(ImportStagingRefusal::Envelope)?;
+        let payload = field(IMPORT_ARGUMENT_PAYLOAD).and_then(DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
+        let name = field(IMPORT_ARGUMENT_NAME).and_then(DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
+        let fan_out = match (field(IMPORT_ARGUMENT_INDEX), field(IMPORT_ARGUMENT_TOTAL)) {
+            (None, None) => None,
+            (index, total) => match (position(index), position(total)) {
+                (Some(index), Some(total)) if index < total => Some((index, total)),
+                _ => return Err(ImportStagingRefusal::Envelope),
+            },
+        };
+        if chunk_count == 0 || chunk_count > IMPORT_STAGING_MAXIMUM_CHUNKS || chunk >= chunk_count {
+            return Err(ImportStagingRefusal::Envelope);
+        }
+        if payload.len() > IMPORT_CHUNK_BYTES {
+            return Err(ImportStagingRefusal::Chunk);
+        }
+        let envelope = [IMPORT_ARGUMENT_PAYLOAD, IMPORT_ARGUMENT_NAME, IMPORT_ARGUMENT_CHUNK, IMPORT_ARGUMENT_CHUNK_COUNT, IMPORT_ARGUMENT_INDEX, IMPORT_ARGUMENT_TOTAL];
+        let whole = |text: String| {
+            let uint = |value: usize| DslValue::Number(dsl::os_dsl::schema::Number::UInt(value as u64));
+            let mut arguments = vec![(IMPORT_ARGUMENT_PAYLOAD.to_string(), DslValue::String(text)), (IMPORT_ARGUMENT_NAME.to_string(), DslValue::String(name.to_string()))];
+            if let Some((index, total)) = fan_out {
+                arguments.push((IMPORT_ARGUMENT_INDEX.to_string(), uint(index)));
+                arguments.push((IMPORT_ARGUMENT_TOTAL.to_string(), uint(total)));
+            }
+            arguments.extend(entries.iter().filter(|(key, _)| !envelope.contains(&key.as_str())).cloned());
+            ImportArguments::Whole(DslValue::Object(arguments))
+        };
+        if chunk_count == 1 {
+            return Ok(whole(payload.to_string()));
+        }
+        self.sequence = self.sequence.saturating_add(1);
+        let sequence = self.sequence;
+        let held = self.runs.iter().position(|run| run.name == name && run.fan_out == fan_out && run.chunk_count == chunk_count);
+        let index = match held {
+            Some(index) if self.runs[index].next_chunk == chunk => index,
+            Some(index) if chunk != 0 && chunk < self.runs[index].next_chunk => {
+                let run = &mut self.runs[index];
+                run.touched = sequence;
+                return Ok(ImportArguments::Staged { next_chunk: run.next_chunk, chunk_count: run.chunk_count });
+            }
+            Some(index) if chunk != 0 => {
+                self.runs.swap_remove(index);
+                return Err(ImportStagingRefusal::Gap);
+            }
+            Some(index) => {
+                self.runs[index] = ImportRun { name: name.to_string(), fan_out, chunk_count, next_chunk: 0, pages: Vec::new(), touched: sequence };
+                index
+            }
+            None if chunk != 0 => return Err(ImportStagingRefusal::Gap),
+            None => {
+                if self.runs.len() >= IMPORT_STAGING_RUNS {
+                    if let Some(stalest) = self.runs.iter().enumerate().min_by_key(|(_, run)| run.touched).map(|(index, _)| index) {
+                        self.runs.swap_remove(stalest);
+                    }
+                }
+                self.runs.push(ImportRun { name: name.to_string(), fan_out, chunk_count, next_chunk: 0, pages: Vec::new(), touched: sequence });
+                self.runs.len() - 1
+            }
+        };
+        let run = &mut self.runs[index];
+        run.pages.push(payload.to_string());
+        run.next_chunk = chunk.saturating_add(1);
+        run.touched = sequence;
+        if run.next_chunk < run.chunk_count {
+            return Ok(ImportArguments::Staged { next_chunk: run.next_chunk, chunk_count: run.chunk_count });
+        }
+        let closed = self.runs.swap_remove(index);
+        Ok(whole(closed.pages.concat()))
+    }
+
+    /// 🛑️ Drops every open run — what closing the instance or a person's cancel does to picks still arriving.
+    pub fn cancel_all(&mut self) {
+        self.runs.clear();
+    }
+
+    /// 🔎️ Open runs as `(name, next_chunk, chunk_count, bytes)` — the progress census the laws read.
+    pub fn open_runs(&self) -> Vec<(String, usize, usize, usize)> {
+        self.runs.iter().map(|run| (run.name.clone(), run.next_chunk, run.chunk_count, run.pages.iter().map(String::len).sum())).collect()
+    }
+}
+//#endregion 📥️ImportStaging
+

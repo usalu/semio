@@ -38,7 +38,8 @@ const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "ðŸ§«ï
     name: string;
     options: { hub: string | null; serve: string | null };
     providers?: Partial<Record<ProvidedRequirement, "ready" | "fail">>;
-    steps: { id: string; mode: "serial" | "parallel"; gatesRest: boolean; checks: { id: string; criteria?: string[]; requires: ("hub" | "serve" | "localServe" | "backends")[]; browsers: number }[] }[];
+    adminCapability?: "published" | "missing";
+    steps: { id: string; mode: "serial" | "parallel"; gatesRest: boolean; checks: { id: string; criteria?: string[]; requires: ("hub" | "serve" | "localServe" | "backends" | "hubAdmin")[]; browsers: number }[] }[];
     exits: Record<string, number>;
     records: Record<string, AcceptanceStatus>;
     expected: { verdict: AcceptanceStatus; statuses: Record<string, AcceptanceStatus>; executed: string[]; outcomes?: Record<string, AcceptanceStatus>; provisioned?: string[]; stopped?: string[] };
@@ -76,7 +77,7 @@ describe("goal gate runs", () => {
     test(run.name, async () => {
       const dir = mkdtempSync(join(tmpdir(), "semio-goal-gate-law-"));
       try {
-        const providers = Object.fromEntries(Object.keys(run.providers ?? {}).map((requirement) => [requirement, { url: `http://127.0.0.1:${requirement === "hub" ? 8129 : requirement === "serve" ? 6629 : 6628}/`, readyPath: "/", readyBoundMs: 1000, project: "@semio-tech/framework-os-dev", target: "serve-hold", args: ["--serve", "http://127.0.0.1:6628/"], requires: requirement === "serve" ? ["hub" as const] : [] }]));
+        const providers = Object.fromEntries(Object.keys(run.providers ?? {}).map((requirement) => [requirement, { url: `http://127.0.0.1:${requirement === "hub" ? 8129 : requirement === "serve" ? 6629 : 6628}/`, readyPath: "/", readyBoundMs: 1000, project: "@semio-tech/framework-os-dev", target: "serve-hold", args: ["--serve", "http://127.0.0.1:6628/"], requires: requirement === "serve" ? ["hub" as const] : [], ...(requirement === "hub" && run.adminCapability ? { adminCapability: join(dir, "admin-capability.json") } : {}) }]));
         const plan: GoalPlan = {
           schema: "semio.acceptance.goal-plan/v1",
           id: "law-plan",
@@ -110,6 +111,7 @@ describe("goal gate runs", () => {
         const stopped: string[] = [];
         const provide: GoalGateProvisioner = async (_repoRoot, requirement) => {
           if (run.providers?.[requirement] !== "ready") throw new Error(`scripted ${requirement} provider failure`);
+          if (requirement === "hub" && run.adminCapability === "published") writeFileSync(join(dir, "admin-capability.json"), "{}\n", { mode: 0o600 });
           provisioned.push(requirement);
           return { stop: async () => void stopped.push(requirement) };
         };
@@ -121,6 +123,7 @@ describe("goal gate runs", () => {
         if (run.expected.provisioned) expect(provisioned).toEqual(run.expected.provisioned);
         if (run.expected.stopped) expect(stopped).toEqual(run.expected.stopped);
         if (run.providers && Object.values(run.providers).includes("fail")) expect(summary.steps.flatMap((step) => step.checks).find((check) => check.status === "blocked")?.summary.en).toContain("scripted");
+        if (run.adminCapability === "missing") expect(summary.steps.flatMap((step) => step.checks).find((check) => check.status === "blocked")?.summary.en).toContain("published no admin capability");
         expect(peakBrowsers).toBeLessThanOrEqual(Math.max(1, ...run.steps.flatMap((step) => step.checks.map((check) => check.browsers))));
         expect(oracle("goalSummary")(JSON.parse(readFileSync(join(dir, "out", "summary.json"), "utf8")))).toBe(true);
         expect(readFileSync(join(dir, "out", "summary.de.md"), "utf8")).toContain("Ergebnis");

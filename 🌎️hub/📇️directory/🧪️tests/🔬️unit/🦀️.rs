@@ -1303,6 +1303,27 @@ async fn owner_membership_can_never_be_removed() {
     assert!(matches!(err, DirectoryError::Conflict(_)));
 }
 
+// 🔬️ Decider law: `delete-space` revokes every membership (owner included) before it deletes the space, all under one
+// decision — the member-only readers learn the deletion through their own `member.removed`.
+#[tokio::test]
+async fn delete_space_revokes_every_membership_before_the_space() {
+    let dir = fresh_dir().await;
+    let service = DirectoryService::new(dir, 16);
+    let owner = user_actor("u-owner");
+    let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
+    service.execute(owner.clone(), DirectoryCommand::UpsertMember { space_id: space_id.clone(), email: "member@example.com".into(), role: DirectorySpaceRole::Spectator }).await.expect("upsert-member");
+    let (events, _) = service.execute(owner, DirectoryCommand::DeleteSpace { space_id: space_id.clone() }).await.expect("delete-space");
+    let (last, removals) = events.split_last().expect("delete-space events");
+    assert!(matches!(&last.body, DirectoryEventBody::SpaceDeleted { space_id: deleted } if *deleted == space_id), "the space is deleted last");
+    let mut removed: Vec<&str> = removals.iter().map(|event| match &event.body {
+        DirectoryEventBody::MemberRemoved { space_id: from, user_id } if *from == space_id && event.user_id.as_deref() == Some(user_id.as_str()) => user_id.as_str(),
+        other => panic!("only member removals precede the deletion: {other:?}"),
+    }).collect();
+    removed.sort_unstable();
+    assert_eq!(removed.len(), 2, "the owner and the added member are both removed: {removed:?}");
+    assert!(removed.contains(&"u-owner"));
+}
+
 // 🔬️ Decider law: any command naming a deleted (or otherwise missing) space is `NotFound`.
 #[tokio::test]
 async fn command_naming_a_deleted_space_is_not_found() {

@@ -7,17 +7,22 @@
  * a real note operation over its own document socket. Every lane must be relayed to the observer,
  * advance the ledger head by one, and reach a late joiner's catch-up — before and after the gate
  * restarts the hub on the same data directory. Every agent lane must also appear in the observer's
- * roster under its delegation label as an `agent` principal.
+ * roster under its delegation label as an `agent` principal, and every agent lane's fresh session must prepare against
+ * the hub's head (the edits of every lane before it), never the document's last checkpoint.
  *
- * The gate owns its hub (a restart is part of the law), its space and its document: every run creates
- * a fresh space through the directory's own `create-space` command and a fresh note through the hub's
- * server-owned creation transaction, so the document always matches the catalog generation the hub
- * serves and a freshly published catalog root needs no manual step. Configuration by environment:
+ * The gate owns its hub (a restart is part of the law), its human, its space and its document, and needs no setup
+ * (zero-touch): it boots the Nx-staged development `os-hub` on a free loopback port over a copy of the development
+ * hub's data root, whose trusted catalog it first makes current (published when absent or stale — note is in the
+ * development package set); its human is the hub's own local-bootstrap profile, issued a session over the launcher
+ * pipe, so no password exists anywhere. Every run creates a fresh space through the directory's own `create-space`
+ * command and a fresh note through the hub's server-owned creation transaction, so the document always matches the
+ * catalog generation the hub serves. It writes its acceptance record (`mcp-hub-edit-durability`, en + de) through
+ * `publishAcceptanceCheckResult`. Optional overrides by environment:
  *
- *   OS_MCP_HUB_BINARY    the `os-hub` executable to boot
- *   OS_MCP_HUB_DATA_DIR  a published catalog root (note in its generation) holding the human's credential (copied, never mutated)
- *   OS_MCP_HUB_PORT      loopback port (default 7852)
- *   OS_MCP_HUB_EMAIL / OS_MCP_HUB_PASSWORD  the human (required)
+ *   OS_MCP_HUB_BINARY    the `os-hub` executable to boot (default: `os-hub:build-dev`, staged by Nx)
+ *   OS_MCP_HUB_DATA_DIR  a published catalog root with note in its generation, used as is (copied, never mutated)
+ *                        (default: the development hub root, `OS_HUB_DATA` or `.🧬semio/🌐hub/hub-dev`, made current)
+ *   OS_MCP_HUB_PORT      loopback port (default: a free one)
  *   SEMIO_TEST_ARTIFACT_DIR  where the run copy of the data directory lives (default: tmpdir)
  */
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -25,7 +30,9 @@ import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { hubCredentialFromEnv, McpClientSession, mcpServerEntries, requireMcpBinary } from "../../🟦️.ts";
+import { McpClientSession, mcpServerEntries, requireMcpBinary } from "../../🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { devHubCatalogBootstrapPublisherV1, devHubStatusTextV1, devHubLocaleV1, devLocalHubDataDir, ensureCurrentTrustedCatalogV1 } from "../../../🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
 import { decodePresencePeer, decodeServerFrame, encodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🧬️schema/🟦️.ts";
@@ -45,14 +52,20 @@ function findRepoRoot(start: string): string {
 const repoRoot = findRepoRoot(here);
 const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🤝️hub-edit-durability/🔣️.json"), "utf8"));
 const hubRoot = join(repoRoot, readdirSync(repoRoot).find((name) => existsSync(join(repoRoot, name, "🚀️local-bootstrap", "🏃️execution", "🟦️.ts")))!);
-const { startLocalHub, waitForReadiness, finishLocalHub } = await import(join(hubRoot, "🚀️local-bootstrap", "🏃️execution", "🟦️.ts"));
+const { startLocalHub, waitForReadiness, finishLocalHub, freeLoopbackPort, hubDevBinaryPath } = await import(join(hubRoot, "🚀️local-bootstrap", "🏃️execution", "🟦️.ts"));
+const { issueLocalCredential } = await import(join(hubRoot, "🚀️local-bootstrap", "🔐️credential-issuance", "🟦️.ts"));
 
-const BINARY = process.env.OS_MCP_HUB_BINARY ?? "";
-const SOURCE = process.env.OS_MCP_HUB_DATA_DIR ?? "";
-const PORT = Number(process.env.OS_MCP_HUB_PORT ?? 7852);
+const startedAt = new Date();
+const PROFILE = { profileId: "developer", subject: "local-developer-hub-edit-durability", displayName: "Local Developer", allowedClientClasses: ["native", "mcp", "react-relay"] };
+const cancel = new AbortController();
+process.once("SIGINT", () => cancel.abort());
+process.once("SIGTERM", () => cancel.abort());
+const BINARY = process.env.OS_MCP_HUB_BINARY || hubDevBinaryPath(join(hubRoot, "📦️packages", "🦀️rust"));
+const SOURCE = process.env.OS_MCP_HUB_DATA_DIR || devLocalHubDataDir(repoRoot);
+if (!process.env.OS_MCP_HUB_DATA_DIR && (await ensureCurrentTrustedCatalogV1(SOURCE, devHubCatalogBootstrapPublisherV1(repoRoot), { signal: cancel.signal, report: (status) => console.log(devHubStatusTextV1(status, devHubLocaleV1())) })) === "cancelled") process.exit(1);
+const PORT = process.env.OS_MCP_HUB_PORT ? Number(process.env.OS_MCP_HUB_PORT) : await freeLoopbackPort();
 const ORIGIN = `http://127.0.0.1:${PORT}`;
-const credential = hubCredentialFromEnv();
-if (!existsSync(BINARY) || !existsSync(SOURCE)) throw new Error(`hub-edit-durability-check needs OS_MCP_HUB_BINARY and OS_MCP_HUB_DATA_DIR (got ${BINARY || "<unset>"}, ${SOURCE || "<unset>"})`);
+if (!existsSync(BINARY) || !existsSync(SOURCE)) throw new Error(`hub-edit-durability-check found no hub binary or data root (${BINARY}, ${SOURCE})`);
 
 type Row = { readonly step: string; readonly ok: boolean; readonly detail: string };
 const rows: Row[] = [];
@@ -75,9 +88,8 @@ const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
 mkdirSync(artifactBase, { recursive: true });
 const dataDir = join(mkdtempSync(join(artifactBase, "hub-edit-durability-")), "hub");
 cpSync(SOURCE, dataDir, { recursive: true, filter: (path) => !path.includes(".semio-wal-writer") });
-process.env.OS_HUB_CREDENTIAL_SIGN_IN = "true";
 const bootHub = async () => {
-  const run = await startLocalHub(repoRoot, join(hubRoot, "📦️packages", "🦀️rust"), [{ profileId: "developer", subject: "local-developer-hub-edit-durability", displayName: "Local Developer", allowedClientClasses: ["native", "mcp"] }], { port: PORT, dataDir, binaryPath: BINARY, capture: true });
+  const run = await startLocalHub(repoRoot, join(hubRoot, "📦️packages", "🦀️rust"), [PROFILE], { port: PORT, dataDir, binaryPath: BINARY, capture: true });
   try {
     return { run, readiness: await waitForReadiness(run, false, fixture.budgets.readinessMs) };
   } catch (error) {
@@ -140,7 +152,7 @@ async function agentLane(token: string, spaceId: string, known: string, label: s
     const capabilityId = String(((search.structuredContent?.results ?? []) as any[]).map((hit) => String(hit.capabilityId ?? hit.id)).find((id) => id.endsWith(fixture.gesture.capabilitySuffix)) ?? "");
     const prepared = await session.call("action_prepare", { capabilityId, input: fixture.gesture.input });
     const invoked = await session.call("action_invoke", { preparedActionHandle: prepared.structuredContent?.preparedHandle });
-    return { ok: opened.isError !== true && invoked.structuredContent?.status === "SUCCEEDED", detail: `${capabilityId} open=${opened.isError !== true} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent ?? prepared.structuredContent).slice(0, 200)}`, documentId, surfaceId };
+    return { ok: opened.isError !== true && invoked.structuredContent?.status === "SUCCEEDED", detail: `${capabilityId} open=${opened.isError !== true} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent ?? prepared.structuredContent).slice(0, 200)}`, documentId, surfaceId, cursor: Number(prepared.structuredContent?.expectedRevision?.cursor ?? -1) };
   } finally {
     session.stop();
     await hub("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json?.delegationId ?? ""))}/revoke`, token).catch(() => undefined);
@@ -151,9 +163,9 @@ let current = await bootHub();
 row("0 the gate's own hub is ready", current.readiness?.status === "ready" && current.readiness?.features?.mcpWorkspace === true, `${ORIGIN} status=${current.readiness?.status} data=${dataDir}`);
 const sockets: WebSocket[] = [];
 try {
-  const signIn = await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `hubeditdurability${randomBytes(8).toString("hex")}`, clientClass: "browser" });
-  const token = String(signIn.json?.token ?? "");
-  row("1 the human signs in", signIn.status === 200 && token.length > 0, `HTTP ${signIn.status}`);
+  const token = String((await issueLocalCredential(current.run, PROFILE.profileId, "react-relay")).capability ?? "");
+  const me = await hub("GET", "/auth/sessions/me", token);
+  row("1 the human holds a session issued over the hub's local-bootstrap pipe", me.status === 200 && token.length > 0, `HTTP ${me.status}`);
   const spaceName = `Hub edit durability ${randomBytes(4).toString("hex")}`;
   const spaceCommand = await fetch(`${ORIGIN}/directory/commands`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, origin: ORIGIN }, body: directoryCommandRequestJson(sealDirectoryCommandRequestV1(randomBytes(16).toString("hex"), createSpaceCommandV1(spaceName, "atelier", "private"))), signal: AbortSignal.timeout(60_000) });
   const spaceId = String((await hub("GET", "/directory/spaces", token)).json?.find((entry: any) => entry?.space?.name === spaceName && entry?.access === "author")?.space?.id ?? "");
@@ -195,6 +207,7 @@ try {
     if (lane.kind === "agent") {
       const result = await agentLane(token, spaceId, documentId || created, lane.label ?? lane.id, mark);
       row(`4 ${lane.id} commits the gesture through a fresh MCP process`, result.ok, result.detail);
+      if (fixture.expectations.freshSessionStartsAtHead) row(`4r ${lane.id}'s fresh session prepares against the hub's head, not its last checkpoint`, result.cursor === before, `first revision cursor ${result.cursor}, hub head_seq ${before}`);
     } else {
       await mark(documentId, surfaceId);
       const writer = await documentSocket(token, spaceId, documentId, surfaceId);
@@ -231,7 +244,7 @@ try {
   for (const socket of sockets.splice(0)) socket.close();
   await finishLocalHub(current.run);
   current = await bootHub();
-  const reToken = String((await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `hubeditdurability${randomBytes(8).toString("hex")}`, clientClass: "browser" })).json?.token ?? "");
+  const reToken = String((await issueLocalCredential(current.run, PROFILE.profileId, "react-relay")).capability ?? "");
   const headAfterRestart = Number((await hub("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}`, reToken)).json?.head_seq ?? -1);
   row("9 a hub restart preserves the ledger head", current.readiness?.status === "ready" && headAfterRestart === headBeforeRestart && headAfterRestart >= fixture.lanes.length, `head_seq ${headBeforeRestart}→${headAfterRestart}`);
   const rejoin = await documentSocket(reToken, spaceId, documentId, surfaceId);
@@ -245,4 +258,18 @@ try {
 }
 const red = rows.filter((entry) => !entry.ok);
 console.log(`hub-edit-durability-check: ${rows.length - red.length}/${rows.length} rows green (${ORIGIN}, data ${dataDir})`);
+const redSteps = red.map((entry) => entry.step.split(" ")[0]).join(",");
+publishAcceptanceCheckResult(
+  repoRoot,
+  acceptanceCheckResult({
+    check: "mcp-hub-edit-durability",
+    status: red.length === 0 && rows.length > 0 ? "pass" : "fail",
+    startedAt,
+    measured: { rows: rows.length, green: rows.length - red.length },
+    summary: {
+      en: `${rows.length - red.length}/${rows.length} hub-edit-durability rows green (two fresh agent sessions and a human on one hub note, across a hub restart)${red.length ? `; red: ${redSteps}` : ""}`,
+      de: `${rows.length - red.length}/${rows.length} Zeilen der Hub-Bearbeitungsdauerhaftigkeit grün (zwei frische Agentensitzungen und ein Mensch an einer Hub-Notiz, über einen Hub-Neustart)${red.length ? `; rot: ${redSteps}` : ""}`,
+    },
+  }),
+);
 process.exit(red.length === 0 ? 0 : 1);

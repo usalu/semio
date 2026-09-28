@@ -157,7 +157,6 @@ test("full current package diagnostics retain complete ordered parity without re
     expect(destination.problems.filter((problem) => problem.startsWith(prefix))).toEqual([]);
     records.push({ packageId: row.id, problems: actual.problems.length, collisions: collisions.length, digest: sha(stringify(actual)) });
   }
-  console.log("[DEBUG] Complete collision diagnostic parity", JSON.stringify({ catalogSha256: sha(catalogBytes), collisionBodySha256: production.collisionHash, membershipBodySha256: production.membershipHash, records }));
 });
 
 test("bounded alternating collision timings preserve identical outputs", () => {
@@ -171,7 +170,6 @@ test("bounded alternating collision timings preserve identical outputs", () => {
     for (const variant of round % 2 ? ["currentMs", "priorMs"] as const : ["priorMs", "currentMs"] as const) row[variant] = measure(() => variant === "priorMs" ? priorCollisions(input) : production.collisions(input));
     results.push(row);
   }
-  console.log("[DEBUG] Bounded collision timing samples", JSON.stringify({ occupiedPaths: input.occupiedPaths.length, outputPaths: new Set([...input.mappings, ...input.adapters, ...input.derived]).size, results }));
 });
 
 test("collision gate is registered through Nx and both ordered launch catalogs", () => {

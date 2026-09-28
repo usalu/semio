@@ -21,6 +21,5 @@ export function testDirectoryRuntimeIdentityFixture(): void {
   assert.equal(_.eq(owners.original, owners["foreign-equal-workers"]), false);
   assert.deepEqual(fixture.cases.map((row: { workers: number }) => row.workers), [1, 2, 3]);
   for (const hostile of [{ ...fixture, provider: "semio_framework_async::TokioHostRuntime" }, { ...fixture, cases: [] }, { ...fixture, invariants: { ...fixture.invariants, originalRuntime: false } }, { ...fixture, extra: true }]) assert.equal(validate(hostile), false);
-  console.log("[DEBUG] Directory runtime schema/Lodash oracle: 3 pool sizes, 2 reference-identity cases, 4 hostiles; native constructor identity unexecuted by this command");
 }
 //#endregion 🪪️RuntimeIdentityOracle

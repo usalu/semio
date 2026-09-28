@@ -17,10 +17,10 @@
  *
  * 🌐️ The hub lane (`OS_MCP_HUB_ORIGIN`, the verb's `--hub <url>`; `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` required):
  * every kind the hub's own creation catalog offers is created by the hub's server-owned creation transaction in one
- * fresh space, then — over ONE delegated `semio-os-mcp --hub` gateway — opened, mutated once (the hub's head advances),
+ * fresh space (at most `CREATE_WINDOW` in flight; a refused creation keeps the hub's status and answer in its row), then — over ONE delegated `semio-os-mcp --hub` gateway — opened, mutated once (the hub's head advances),
  * undone and redone (each relayed: the head advances again) and exported. A kind passes when all of that holds, or when
  * its package declares no mutation for it (then create + open + export). Rows `coverage-hub-rows.jsonl`, table
- * `coverage-hub-table.md`, record `mcp-plugin-coverage-hub`.
+ * `coverage-hub-table.md`, the gateway's stderr `coverage-hub-gateway-stderr.txt`, record `mcp-plugin-coverage-hub`.
  */
 import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -48,6 +48,9 @@ const outDir = process.env.S_OS_MCP_COVERAGE_OUT ?? join(repoRoot, "🧰️frame
 const only = new Set((process.env.S_OS_MCP_COVERAGE_PLUGINS ?? "").split(",").filter(Boolean));
 const CALL_MS = 240_000;
 const CREATE_MS = 900_000;
+/** 🪟️ How many hub creations the hub lane has in flight at once — a bounded window, so one run never floods the hub's
+ * creation workers with every kind of a large catalog at the same moment. */
+const CREATE_WINDOW = 4;
 const startedAt = new Date();
 mkdirSync(outDir, { recursive: true });
 const rowsPath = join(outDir, "coverage-rows.jsonl");
@@ -231,17 +234,22 @@ async function hubLane(hub: string): Promise<void> {
   const pluginOf = (kind: any): string => String(kind?.dialect?.artifactKind ?? "").split(".")[1] ?? "";
   const offered: any[] = (catalog?.kinds ?? []).filter((kind: any) => only.size === 0 || only.has(pluginOf(kind)));
   log(`hub ${hub} space ${spaceId}: ${offered.length} creatable kind(s)`);
-  const pending = [];
-  for (const kind of offered) {
-    const requestId = randomBytes(16).toString("hex");
-    const created = await http("POST", creations, token, JSON.stringify(sealSpaceArtifactCreateV1({ requestId, expectedCatalogGenerationId: String(catalog?.catalogGenerationId ?? ""), kindId: String(kind.kindId), name: `Coverage ${kind.kindId}` })));
-    pending.push({ kind, requestId, startedMs: Date.now(), creation: created.json });
-  }
-  for (const entry of pending) {
+  const pending: Array<{ kind: any; requestId: string; startedMs: number; creation: any; refusal: string }> = [];
+  const settle = async (entry: (typeof pending)[number]) => {
     while (["accepted", "preparing"].includes(entry.creation?.phase) && Date.now() - entry.startedMs < CREATE_MS) {
       await new Promise((resolve) => setTimeout(resolve, 1_000));
       entry.creation = (await http("GET", `${creations}/${entry.requestId}`, token)).json;
     }
+  };
+  for (let start = 0; start < offered.length; start += CREATE_WINDOW) {
+    const window = offered.slice(start, start + CREATE_WINDOW).map((kind) => ({ kind, requestId: randomBytes(16).toString("hex"), startedMs: Date.now(), creation: undefined as any, refusal: "" }));
+    for (const entry of window) {
+      const created = await http("POST", creations, token, JSON.stringify(sealSpaceArtifactCreateV1({ requestId: entry.requestId, expectedCatalogGenerationId: String(catalog?.catalogGenerationId ?? ""), kindId: String(entry.kind.kindId), name: `Coverage ${entry.kind.kindId}` })));
+      entry.creation = created.json;
+      if (!created.json?.phase) entry.refusal = `HTTP ${created.status} ${JSON.stringify(created.json).slice(0, 200)}`;
+    }
+    await Promise.all(window.map(settle));
+    pending.push(...window);
   }
   const delegation = await http("POST", "/auth/agent-delegations", token, JSON.stringify({ schema: "semio.hub.auth.agent-delegation-create/v1", spaceId, agentLabel: "Coverage agent", audience: "edit", ttlSecs: 3_600 }));
   if (delegation.status !== 201) throw new Error(`the agent delegation was refused: HTTP ${delegation.status}`);
@@ -267,7 +275,7 @@ async function hubLane(hub: string): Promise<void> {
     for (const entry of pending) {
       const artifactKind = String(entry.kind?.dialect?.artifactKind ?? "");
       const documentId = String(entry.creation?.ready?.artifactId ?? "");
-      const row: Record<string, unknown> = { kindId: entry.kind.kindId, artifactKind, create: documentId ? "ok" : String(entry.creation?.phase ?? "refused"), createMs: Date.now() - entry.startedMs };
+      const row: Record<string, unknown> = { kindId: entry.kind.kindId, artifactKind, create: documentId ? "ok" : String(entry.creation?.phase ?? `refused ${entry.refusal}`), createMs: Date.now() - entry.startedMs };
       if (documentId) {
         const opened = await session.call("artifact_open", { artifactId: documentId }, CALL_MS);
         row.open = opened.isError ? `${opened.structuredContent?.code}` : "ok";
@@ -323,6 +331,7 @@ async function hubLane(hub: string): Promise<void> {
     }
   } finally {
     session.stop();
+    writeFileSync(join(outDir, "coverage-hub-gateway-stderr.txt"), `${session.stderrLines().join("\n")}\n`);
     await http("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json.delegationId))}/revoke`, token).catch(() => undefined);
   }
   const header = "| kind id | artifact kind | create | open | mutate | undo | redo | export |\n|---|---|---|---|---|---|---|---|";

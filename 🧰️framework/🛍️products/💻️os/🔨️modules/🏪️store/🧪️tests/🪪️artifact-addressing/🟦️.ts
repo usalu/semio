@@ -28,7 +28,6 @@ export function testSharedArtifactAddressingOracle(): void {
     assert.equal(validateLink(row), false, JSON.stringify(row));
     assert.throws(() => parseArtifactLink(row));
   }
-  console.log(`[DEBUG] shared link identities matched ${fixture.validLinks.length} pin variants and rejected ${fixture.invalidLinks.length} foreign or malformed records with independent Ajv`);
   const validate = ajv.compile(childSchema);
   const opening = ajv.compile(openingSchema);
   const setDefault = ajv.compile(setDefaultSchema);
@@ -54,5 +53,4 @@ export function testSharedArtifactAddressingOracle(): void {
   }
   for (const coordinate of fixture.invalidCoordinates) assert.throws(() => parseDialectCoordinate(coordinate));
   for (const uri of fixture.invalidUris) assert.throws(() => parseArtifactRefUri(uri));
-  console.log(`[DEBUG] shared artifact addressing: ${fixture.valid.length} canonical identities, ${fixture.invalidChildren.length} rejected child records, coordinate/URI codec parity with independent Ajv`);
 }

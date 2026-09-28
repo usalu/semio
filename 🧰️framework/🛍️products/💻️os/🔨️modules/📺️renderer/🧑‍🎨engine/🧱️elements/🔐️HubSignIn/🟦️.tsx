@@ -127,6 +127,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
   const title = useLabel(hubUiLabel("os.hub.signIn.title"));
   const description = useLabel(hubUiLabel("os.hub.signIn.description"));
   const hubLabel = useLabel(hubUiLabel("os.hub.signIn.hub"));
+  const thisDeviceLabel = useLabel(hubUiLabel("os.hub.signIn.thisDevice"));
   const forgetLabel = useLabel(hubUiLabel("os.hub.signIn.forgetHub"));
   const emailLabel = useLabel(hubUiLabel("os.hub.signIn.email"));
   const passwordLabel = useLabel(hubUiLabel("os.hub.signIn.password"));
@@ -180,7 +181,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
             className="w-full min-w-0 rounded-sm border px-single py-1 text-sm sm:flex-1"
           >
             {book.connections.map((entry) => (
-              <option key={entry.id} value={entry.id}>{`${entry.label} — ${entry.origin}`}</option>
+              <option key={entry.id} value={entry.id}>{`${entry.kind === "local-bootstrap" ? thisDeviceLabel : entry.label} — ${entry.origin}`}</option>
             ))}
           </select>
           {book.selectedId === LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1 ? null : (

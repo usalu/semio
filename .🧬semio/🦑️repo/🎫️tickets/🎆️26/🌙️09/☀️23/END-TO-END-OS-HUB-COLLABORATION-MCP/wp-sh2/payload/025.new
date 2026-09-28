@@ -574,12 +574,14 @@ pub mod host {
         let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let (pack, spr) = resolve_kernel_future(store::decode_document_pack_bytes(&inner))?;
         let parsed: store::ParsedDocumentText<P, Op> = resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        if parsed.envelope.schema != expected_schema {
+        let envelope = parsed.into_envelope();
+        if envelope.schema != expected_schema {
+            envelope.retire_unadopted();
             return Err(VcsError::Deserialize(format!("expected schema {expected_schema}")));
         }
         // 🧺️ Consume the shell: its `Drop` asserts the owners were detached, so reading fields off it
         // and letting it fall out of scope aborts the guest at runtime.
-        let owners = parsed.envelope.into_owners();
+        let owners = envelope.into_owners();
         let edit_messages = owners.edit_messages.iter().cloned().collect();
         Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, transitions: owners.transitions, edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
     }
@@ -1141,29 +1143,21 @@ pub mod host {
     pub fn import_os_space_from_dsl(dsl: &str, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
         let name = snapshot.name.trim().to_owned();
-        let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs.clone();
-        admit_os_space_document(BackboneDocument {
-                schema: space::S_SPACE_SCHEMA.into(),
-                id: String::new(),
-                name,
-                vcs,
-                transitions: Vec::new(),
-                edit_messages: Vec::new(),
-                conflicts: Vec::new(),
-                backbone: None,
-            }, port)
+        admit_os_space_document(create_backbone_document(space::S_SPACE_SCHEMA, "", &name, snapshot), port)
     }
 
-    /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
+    /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`: admits the pair under its own document id and the head
+    /// manifest's name (the catalog lists a studio by its document name).
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let name = parsed.snapshot.name.trim().to_owned();
         // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
-        let owners = parsed.envelope.into_owners();
+        let owners = parsed.into_envelope().into_owners();
         let edit_messages = owners.edit_messages.iter().cloned().collect();
         let document = BackboneDocument {
             schema: owners.schema,
             id: owners.id,
-            name: String::new(),
+            name,
             vcs: owners.vcs,
             transitions: owners.transitions,
             edit_messages,
@@ -1415,8 +1409,8 @@ pub mod backbone {
                             match crate::host::resolve_kernel_future(storage.read(document_id, extension))? {
                                 Some(text_files) => {
                                     let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
-                                    let envelope = store::create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, document_id, snapshot, None);
-                                    let pack_files = crate::host::resolve_kernel_future(store::print_document_pack(&envelope))?;
+                                    let document: crate::host::OsSpaceDocument = crate::host::create_backbone_document(space::S_SPACE_SCHEMA, document_id, "", snapshot);
+                                    let pack_files = crate::host::export_backbone_pack(&document)?;
                                     (pack_files.pack, pack_files.spr)
                                 }
                                 None => return Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
@@ -1444,7 +1438,7 @@ pub mod backbone {
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
                         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                        let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.envelope.vcs.initial_snapshot);
+                        let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.into_snapshot());
                         let pack_files = store::ArtifactPackFiles { pack, spr, ops: String::new() };
                         return crate::host::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
                     }

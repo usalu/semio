@@ -31,15 +31,19 @@ EDITS = {
             """        self.input.pointer_x = x;
         self.input.pointer_y = y;
         self.input.pointer_down = down;
-        let target = match self.pointer_capture.holder(pointer_id) {""",
+        let target = match self.pointer_capture.holder(pointer.id) {""",
             """        self.input.pointer_x = x;
         self.input.pointer_y = y;
         self.input.pointer_down = down;
         self.shell.presence_pointer = Some((x, y));
-        let target = match self.pointer_capture.holder(pointer_id) {""",
+        let target = match self.pointer_capture.holder(pointer.id) {""",
         ),
     ],
     INPUT_LAWS: [
+        (
+            "\nfn mouse_pointer(id: u64) -> ui_render::PointerInfo {",
+            "\npub(super) fn mouse_pointer(id: u64) -> ui_render::PointerInfo {",
+        ),
         (
             "\nfn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor>) -> crate::AppInteractionState {",
             "\npub(super) fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor>) -> crate::AppInteractionState {",
@@ -91,7 +95,7 @@ fn a_pointer_the_renderer_routes_over_a_painted_board_is_the_presence_pointer_it
         if interaction.shell.scene_pointer_target_at(x, y, &interaction.input, &interaction.theme).is_some() {
             claimed += 1;
         }
-        semio_framework_async::block_on(interaction.handle_pointer_move(ui_render::PointerId(1), x, y, false, 0, PointerModifiers::default()));
+        semio_framework_async::block_on(interaction.handle_pointer_move(shell_input_tests::mouse_pointer(1), x, y, false, 0, PointerModifiers::default()));
         let (views, _) = interaction.shell.board_presence_views();
         assert_eq!(views.iter().map(window_view_json).map(|view| numeric(&view)).collect::<Vec<_>>(), vec![numeric(&case["expected"])], "{}", case["id"]);
     }

@@ -103,7 +103,6 @@ describe("GraphTimeline styled layout", () => {
           descriptionInert: description.closest('[role="button"]') === null,
         };
       }, fixture.expected.mutationLevel);
-      console.info("[DEBUG] GraphTimeline styled reference", JSON.stringify(observed));
       expect(observed.hostPaddingLeft).toBeCloseTo(fixture.expected.hostPaddingPx, 3);
       expect(observed.contentLeft).toBeCloseTo(fixture.expected.hostPaddingPx, 1);
       expect(observed.rowHeight).toBeCloseTo(fixture.expected.rowHeightPx, 3);

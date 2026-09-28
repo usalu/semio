@@ -10,7 +10,8 @@ slotsfile="/tmp/semio-$name-build.slots"
 mkdir -p "$queue"
 ticket="$queue/${FLEET_TICKET_STAMP:-$(date '+%Y%m%d%H%M%S')}-$$-$slice~v2"
 echo $$ > "$ticket"
-trap 'rm -f "$ticket"' EXIT INT TERM
+trap 'rm -f "$ticket"' EXIT
+trap 'rm -f "$ticket"; exit 143' INT TERM
 held=""
 while [ -z "$held" ]; do
   for t in "$queue"/*(N); do
@@ -36,7 +37,8 @@ while [ -z "$held" ]; do
 done
 echo $$ > "$held/pid"; echo "$slice $(date '+%H:%M:%S')" > "$held/owner"
 rm -f "$ticket"
-trap 'rm -rf "$held"' EXIT INT TERM
+trap 'rm -rf "$held"' EXIT
+trap 'rm -rf "$held"; exit 143' INT TERM
 case "$name" in native|overlay) export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" ;; esac
 "$@"
 rc=$?

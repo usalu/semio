@@ -111,7 +111,4 @@ export async function testInferredNativeInputs(workspace: string, output: string
   const reload = Bun.spawn(["node", join(root, "reload/📜️script.ts"), feature], { cwd: root, stdout: "pipe", stderr: "pipe" });
   const [reloadOut, reloadError, reloadCode] = await Promise.all([new Response(reload.stdout).text(), new Response(reload.stderr).text(), reload.exited]);
   assert.equal(reloadCode, 0, reloadOut + reloadError);
-  console.log("[DEBUG] Inferred Rust cases cover Cargo packages, mounted sources and generator prerequisites; oracle phases exclude subject compilation PASS");
-  console.log("[DEBUG] Native Nx cold/warm, deleted-output restoration, unrelated-source reuse and transitive-source and shared-router invalidation execute the expected Rust consumer PASS");
-  console.log("[DEBUG] Resident test inference rejects changed invalid helper code and recovers after correction without a graph/cache reset PASS");
 }

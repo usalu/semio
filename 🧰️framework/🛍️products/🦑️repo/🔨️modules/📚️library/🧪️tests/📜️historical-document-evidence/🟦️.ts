@@ -157,7 +157,6 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
       expect(row.message).toContain(source);
     }
   }
-  console.log("[DEBUG] Historical document evidence fixture", JSON.stringify({ repoRoot, unresolved: plan.unresolved.length, moves: plan.moves.length, blocked: [...blocked] }));
   rmSync(repoRoot, { recursive: true, force: true });
 }, 20_000);
 

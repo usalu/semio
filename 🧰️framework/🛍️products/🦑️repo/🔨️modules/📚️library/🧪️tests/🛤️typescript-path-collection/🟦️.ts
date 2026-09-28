@@ -136,7 +136,6 @@ test("ordered-word precheck stays bounded on large neutral source buffers", () =
       expect(result, name + ":" + row.id).toBe(row.expected);
       expect(milliseconds, name + ":" + row.id).toBeLessThan(row.maxMilliseconds);
       expect(digest(content)).toBe(before);
-      console.log("[DEBUG] Bounded for-of precheck", JSON.stringify({ compiler: name, case: row.id, bytes: Buffer.byteLength(content), milliseconds, result }));
     }
   }
 });
@@ -146,7 +145,6 @@ test("neutral immutable-reader vectors agree with an independent TypeScript bind
   const validate = new Ajv().compile(vector.caseSchema);
   for (const row of vector.cases) { expect(validate(row), JSON.stringify(validate.errors)).toBe(true); expect(oracle(row.source), row.id).toEqual(row.expected); }
   expect(validate({ ...vector.cases[0], undeclared: true })).toBe(false);
-  console.log("[DEBUG] Independent immutable collection oracle", JSON.stringify({ cases: vector.cases.length, positives: vector.cases.filter((row: any) => row.expected.length).length }));
 });
 
 test("opaque expressions and typed shadow bindings cannot authorize collection leaves", () => {

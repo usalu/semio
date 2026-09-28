@@ -460,7 +460,7 @@ export function hubForwardingProxy(upstream: string, forwardedHost?: string): Hu
   const target = new URL(upstream);
   const upstreamSocketOrigin = `${target.protocol === "https:" ? "wss" : "ws"}://${target.host}`;
   let requests = 0;
-  type Relay = { upstream: WebSocket; backlog: (string | ArrayBuffer)[]; client?: BunServerWebSocket<Relay> };
+  type Relay = { upstream: WebSocket; backlog: (string | ArrayBuffer)[]; client?: { send(message: string | ArrayBuffer): unknown; close(code?: number, reason?: string): void } };
   const closeCode = (code: number): number => (code === 1000 || code === 1001 || (code >= 1007 && code <= 1014 && code !== 1010) || (code >= 3000 && code <= 4999) ? code : 1011);
   const server = Bun.serve<Relay>({
     hostname: "127.0.0.1",

@@ -2853,12 +2853,12 @@ mod plugin_builder_contract_tests {
         assert_eq!(chunks.push(vec![1; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
         assert_eq!(chunks.push(vec![2; 17]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
         assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
-        let output = ArtifactDownloadOutput::from_media_export(handle.clone(), "audio/mpeg", chunks.clone()).expect("exact media output");
+        let output = ArtifactDownloadOutput::test_from_media_export(handle.clone(), "audio/mpeg", chunks.clone()).expect("exact media output");
         app.segmented_downloads.insert_admitted(operation_id.0, output);
 
         app.cancel_media_export(&handle).await.expect("completed output cancellation");
         assert!(!app.segmented_downloads.contains(operation_id.0));
-        assert!(app.segmented_closures.contains(operation_id.0));
+        assert!(app.test_segmented_closure_contains(operation_id.0));
         assert_eq!(chunks.chunks_remaining(), 2, "cancellation only transfers ownership");
         assert_eq!(chunks.bytes_remaining(), ARTIFACT_OUTPUT_CHUNK_BYTES + 17, "cancellation performs no synchronous output destruction");
 
@@ -2870,7 +2870,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(chunks.bytes_remaining(), 0);
         app.maintenance_stage = 2;
         assert_eq!(app.maintenance_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("terminal cleanup"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        assert!(!app.segmented_closures.contains(operation_id.0));
+        assert!(!app.test_segmented_closure_contains(operation_id.0));
         artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 

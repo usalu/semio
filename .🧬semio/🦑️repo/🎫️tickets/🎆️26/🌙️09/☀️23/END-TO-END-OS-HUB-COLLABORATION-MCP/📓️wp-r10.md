@@ -6,6 +6,222 @@ Durable data: `.🧬semio/🌐hub/s14-r10-*/`. Private cargo: `CARGO_TARGET_DIR=
 
 ## Session 14
 
+### Session 14b
+
+Successor agent (2026-09-28 12:0x). Guest freeze ON (chain launched 12:02:46); window 3 FROZEN — nothing kernel-derive lands before "WINDOW 3 OPEN".
+
+| # | Item | State | Evidence |
+|---|---|---|---|
+| R1 | Reconcile predecessor in-flight: docstring census (orchestration module) | DONE — scanner fixed (206 oracle disagreements → 0), law 52/52, tsc clean for R10 files, live gate end to end | §14b log 12:1x |
+| R2 | Reconcile predecessor in-flight: dead deprecated TS removals (20:3x) | DONE — no importer left, tsc shows no error from them, rule-20 boot PASS (Home, `ready:s`, 0 pageerrors) | §14b log, `s14-r10-logs/serve-boot-probe-s14b-1.txt` |
+| R3 | `[DEBUG]`→`[TRACE]` retirement | open + decoupled part LANDED 12:4x (413 sites, 143 files); gate `verify debug-tags` (5.12) + plan check LANDED 13:2x; frozen/coupled part (1 940 lines, 645 files) = window-3 codemod `wp-r10/debug-trace.ts --scope all`, dry-run clean | §14b log |
+| R4 | Window-3 input re-dry-run vs the live tree (peer edited ~1 870 files overnight) + missing relay specs | READY — every relay recorded (S20, G12, Z4, SH2, ST2, WG11, C13, F3, S18; pending: none); apply tool extended; dry runs on the live tree: targets 14 in 4 project.json + 1 edit, seed clean, plan valid (11 steps, 69 checks); `@emoji` 0 unresolved, comment-hoist 0 need emoji, `[DEBUG]` 0 stale; runbook below | §14b log 12:5x–13:2x |
+| R5 | png/zip owned codecs (+ classify three, image, typescript/nx) | png/zip patches dry-run clean, overlay zip test queued (detached); classification done; typescript/nx policy row LANDED 13:2x; `image` surface-enum fix prepared (`surface-image-error.py`, dry-run + scratch apply idempotent); `three` → owner/renderer refactor (documented, not started) | §14b log 13:0x–13:2x |
+| R6 | Goal gate runnable end to end once 7800 on ALL | zero-touch `hubAdmin` LANDED (dev-hub provider publishes the admin capability; live PASS); live plan 48 checks (docstrings ×2, debug-tags, G12 ×2 added), 69 after window 3; end-to-end run waits for 7800 on ALL (runbook step 13) | §14b log 13:1x–13:2x |
+| R7 | `three` behind the ui module's interface (coordinator 13:3x) | LANDED 13:5x — 5 host importers routed, explicit re-exports + explicit scene-port bindings, gate `verify interface-owners` PASS (0 imports, oracle agrees), dependency policy row; manifests → window 3 | §14b log 13:3x–13:5x |
+
+#### Window-3 runbook (14b — supersedes the session-14 list; strictly serial, each step gated, start on "WINDOW 3 OPEN")
+
+Gate per step = `bun wp-coord/taxonomy-load-probe.ts` + (discovery/render) the registry launch laws + ONE boot
+(`bun wp-r10/serve-boot-probe.ts --port 6620`); a red step → `bun wp-r10/window3-apply.ts revert <step> --apply` and stop.
+All inputs: `wp-r10/window3-spec.json` (pending: none).
+1. `zsh wp-r10/window3-run.sh refresh` (read-only kinds re-probe incl. every relayed dir) → 2. `taxonomy` (S18's
+   `🗂️set-named-layout` FIRST — cross-shell preference loss until its Rust twin lands; then all passes) → S18 applies its twin.
+3. `discovery` (R9 patch + law) → 4. `targets` (14 targets in 4 project.json incl. WG11 journey configurations, C13, SH2,
+   F3 + the Z4 `test-diff` quote edit) → 5. `seed` (5 rows, 8 edits, input default, Z4 `bun x` inspector row) → 6. `render`.
+7. `plan` (new step `frontend-journeys`; 69 checks, schema-valid in dry run).
+8. ST2 `--part code` (ST2) → R10 `python3 wp-st2/st2-apply.py --dry-run --part r10` → `--write --part r10` → refresh + taxonomy
+   + render (158 stdio playground rows return).
+9. Z4 `b123-fresh-clone.py` (after the taxonomy pass) → native `cargo check -p semio-framework-os-infinite`; Z4
+   `devcontainer-lifecycle/apply.py` → refresh + taxonomy for its `🐳️containers/*/🔁️lifecycle` dirs; tell Z4.
+10. R10 guest patches: `owned-png-host.py --apply`, `owned-zip.py --apply`, `surface-image-error.py --apply` → native checks
+    (deflate, os-kernel, os, surface `--lib --tests`) + `zip_archive` tests + host raster law + surface unit tests → refresh +
+    taxonomy (`🎒️zip`, `🎒️zip-archive-cases`, `🔬️media-export-raster-unit`).
+11. `[DEBUG]` retirement, frozen/coupled part: `bun wp-r10/debug-trace.ts --scope all` (dry, 0 stale) → `--apply` →
+    `bun wp-r10/syntax-check.ts generated/debug-trace-all-files.txt` (baseline 646/646 clean: TS parser, rustfmt, gofmt,
+    JSON) → native `cargo check --tests` per touched crate + wasm32 for guest crates (lanes) + plugin host law (asserts the
+    guest trace sites) + demonstrator/play acceptance filters + boot. Then a `[DEBUG]` census gate (root `verify`) and its
+    plan check (5.x).
+11b. `python3 wp-r10/three-manifests.py` (dry) → `--apply` (r3f + renderer-react: `three` → devDependencies in package.json and
+    their `bun.lock` blocks, textual) → `bun install --frozen-lockfile --dry-run` clean → `verify dependencies literal-external`.
+12. LAST: `comment-hoist.ts --apply` wave 1 (`🔌️plugin`, `🏪️store`, `📺️renderer/🧑‍🎨engine`, `♾️infinite`; dry run today
+    1 338 blocks, 0 need an emoji) → checks → `at-emoji-strip.ts --apply` (818 files, 9 108 tokens, 11 picks, 0 unresolved;
+    census fixture now excluded) → `verify docstrings at-emoji` must PASS → laws → boot.
+13. Goal gate end to end once 7800 is on ALL: `bun nx run @semio-tech/repo-test-domain:acceptance-goal` (zero-touch
+    providers; 7800 variant with `--hub-admin-capability .🧬semio/🌐hub/s13-w3-state-7800/admin-capability.json`).
+
+#### Session 14b log
+
+- 12:1x read preamble 14 (rules 1–21 + 14b), AGENTS.md, fleet tail, this report. Predecessor's last in-flight step = the docstring
+  census: `docstringHitsOfText` / `runDocstringCensus` (orchestration module), fixture + law (source-census), root `📜️script.ts`
+  verb `verify docstrings <at-emoji|emoji-first>` (landed 20:39; live run 20:41 `generated/verify-docstrings-1.txt`: oracle
+  DISAGREES). Re-measured on today's tree (`wp-r10/docstring-census-probe.ts`): 206 disagreements, all oracle-only — Rust
+  `/** … */` block docstrings were never scanned, and `@emoji` paragraphs inside a `///` run (not the opener) were missed.
+  Fix (orchestration module only; exported API unchanged): `at-emoji` = every doc line whose opener (`///`, `//!`, `/**`) or
+  block continuation (` * `) is followed by the token (the oracle's definition, incl. generator-emitted doc lines);
+  `no-emoji` = openers only, `/** */` blocks scanned in Rust too, `/**/` + `/***` banners and `/**` behind `//` or a quote are
+  not docstrings. Fixture: 1 case corrected (mid-run residue), 3 cases added. Results: probe **0 disagreements**, at-emoji 9 089,
+  no-emoji 4 619 over 30 923 sources in 33 s (`generated/docstring-census-probe-2.txt`); laws source-census + goal-gate +
+  hub-freshness **52/52** (`generated/acceptance-laws-s14b-1.txt`); tsc (`tsconfig-r10.json`: orchestration, 3 laws, os-dev
+  script) → only `🌎️hub/🤝️integration-harness/🟦️.ts(463)` `BunServerWebSocket` unknown (Z4's forwarding proxy, not R10;
+  relayed) (`generated/tsc-r10-s14b-1.txt`); live gate `bun ./📜️script.ts verify docstrings emoji-first` → FAIL as expected,
+  oracle agrees, record published (`generated/verify-docstrings-s14b-1.txt`, 32 s).
+- 12:1x goal plan (`🎯️acceptance/🎚️config/🔣️.json`, not a derive input): compliance step += `docstring-at-emoji`,
+  `docstring-emoji-first` (criterion **5.11** = "every docstring starts with its emoji", AGENTS.md; `workspace:verify` +
+  args, no new nx target). `readGoalPlan` accepts it (45 checks, 9 steps); `plan-targets-check.ts`: 46/48 declared, only the
+  two `serve-hold` providers wait for window 3.
+- 12:1x predecessor's deprecation removals (20:3x): `git grep` finds no importer of any removed symbol outside `.cursor/plans`
+  prose; `s14-r10-logs/tc-deprecations-1.txt` (framework, framework-os, ui-react, renderer-react, repo-lib) lists only peers'
+  errors (layout `FramePatch`, `UiLabel`, hub harness), none from a removal.
+
+
+- 12:2x rule-20 boot for the predecessor's removals: PASS (`s14-r10-logs/serve-boot-probe-s14b-1.txt`: Home seated, `ready:s`,
+  0 pageerrors, 32 s, 6620 freed). Landing rows written for the predecessor's three landed sets (goal gate 19:1x, removals 20:3x,
+  docstring census) — none had one.
+- 12:2x relays handled: S20 (io-matrix now ONE record; plan criteria 1.7+1.8(+5.2) in the spec), Z4 (row texts, dirs; fixed the
+  `BunServerWebSocket` tsc error), G12 (`mcp-plugin-coverage-hub` landed in the goal plan now — existing target; durability check
+  kept out: the gate has no catalog-root/free-port token), SH2 (`verify-home` target + 3 plan checks), ST2 (its `--part r10`
+  becomes one serialized window-3 step after its part code), WG11 (target with 7 journey configurations, self-provisioning its
+  serves → checks need only hub (+localServe); en ×7 + de for wasm32). All in `wp-r10/window3-spec.json`.
+- 12:3x–12:4x **`[DEBUG]` retirement** (decision GO). Census on the tree: 2 356 tagged lines (1 868 in test files). Codemod
+  `wp-r10/debug-trace.ts` classifies every line: `error` (thrown / expect-message → prefix dropped), `test-print` (a one-line
+  print in a test file → deleted), `test-note` (such a print whose deletion would orphan a binding it reads — a Go compile error,
+  a Rust warning → tag dropped), `script-print` (`📜️script.ts` status line → tag dropped), `trace` (runtime diagnostics, their
+  consumers — WASI classifier, acceptance filters, asserted lines, comments, fixtures → `[TRACE]`), `manual` (multi-statement /
+  multi-line format strings → tag dropped in tests, `[TRACE]` elsewhere, window 3 only). Coupling: every tagged line matching the
+  literal skeleton of an error/print site follows its action (e.g. the retired-instance fixture quoting PluginRuntime's
+  `program … no actor for instance …` error, which is thrown by the frozen plugin bridge too → the whole group waits).
+  Safety guards: a deletion never leaves its predecessor dangling (arrow, brace-less if/else, open call) or its successor
+  continuing (`.then`, operators); no deleted print had a side effect (`await`, mutation calls: 0); deleted print texts are quoted
+  nowhere else (357 keys, 0 real foreign quotes).
+  **Landed now (open during the freeze + decoupled): 413 sites in 143 files** (29 error prefixes, 383 test prints, 1 test-note;
+  TS 140 files incl. `🔌️PluginRuntime/🟦️.tsx`, Go 3). Backups `generated/debug-trace-backup-now-*`. Go: the first pass deleted
+  two `t.Logf` breach lines inside `for _, v := range` → `v` unused (Go compile error) → restored untagged by hand; that case
+  is what the `test-note` class now catches. Proof: TypeScript parser 0 syntactic diagnostics over all 143 files + gofmt;
+  `go vet` codebase package clean (the two cli test files are emoji-path packages staged by their script; change there = one
+  untagged restored line + one deleted `t.Logf` whose operands stay used); renderer-react `typecheck` 1 error, a peer's
+  (`🎬️MediaTransportHost/🧪️tests/♻️lifecycle` 04:59, untouched by me) (`generated/tsc-renderer-react-s14b-1.txt`); vitest
+  engine-contract, the two tests whose error text changed: 2/2 pass (`generated/vitest-engine-contract-s14b-1.txt`); rule-20
+  boot PASS (`s14-r10-logs/serve-boot-probe-s14b-2.txt`, 14 s, 0 faults).
+  **Window 3 (frozen or coupled):** `bun debug-trace.ts --scope all --apply` = 1 953 sites / 646 files (47 error, 1 310 test
+  prints, 36 test-notes, 57 script lines, 413 trace, 90 manual), dry run 0 stale (`generated/debug-trace-all.{json,diff}`); then
+  per-crate native + wasm32 checks, the plugin host law (asserts guest trace sites) and the acceptance filters move with it.
+
+- 12:5x–13:0x window-3 input kept current: `window3-apply.ts` learned `configurations` (WG11 journeys), exact-once
+  `projectJsonEdits` (Z4 process3d `test-diff` quotes) and `seedTextEdits` (Z4 MCP inspector `bun x`), skips plan checks that
+  already landed; the S20 + SH2 checks moved into a new plan step `frontend-journeys` (the frontend step hit the schema's
+  16-check ceiling). Dry runs on the live tree: targets 13 new in 4 project.json + 1 edit; seed 5 rows + 8 edits + 1 input;
+  plan **valid, 11 steps, 67 checks**. Landed directly in the goal plan (existing targets): G12 `mcp-plugin-coverage-hub` and
+  `mcp-hub-edit-durability` (self-provisioning, criteria 3.12 + 4.4) → live plan 47 checks, `plan-targets-check` 48/50
+  declared (only the `serve-hold` providers wait). New relays recorded: C13 `two-human-viewer` / `two-human-cross-undo` (need
+  `hubAdmin`, which the gate only takes from `--hub-admin-capability` → zero-touch needs the provider to name the launcher's
+  `admin-capability.json`; asked), Z4 `b123-fresh-clone.py` + `devcontainer-lifecycle/apply.py` and ST2 `--part r10` as
+  serialized window-3 steps.
+- 13:0x owned png/zip: both prepared patches still dry-run clean on the live tree; the zipcheck copy = live deflate + the one
+  `mod` line. The overlay run queued at 12:48 (8 waiters ahead) was relaunched detached with its own queue stamp
+  (`FLEET_TICKET_STAMP=20260928124843`, pid 27394, log `.🧬semio/🌐hub/s14-r10-logs/zipcheck-2.txt`).
+- 13:0x **dependency classification (item 2, measured by `git grep`):**
+  - `three` — NOT compliant as is. Owner = ui React target; it re-exports the whole namespace (`export * as THREE`, not an
+    explicit re-export) plus named types, and public functions take `THREE.Object3D`/`THREE.Camera`. Four production modules
+    import `"three"` directly instead of through the owner (renderer React target, `🌐️World3dHost` ×2, `🗺️WorldTerrainLayer`,
+    infinite `🎨️r3f`), and the fem TS package declares it as a production dependency for probes/generators only. Its oracle
+    use (fem 2d/3d, stdio step/obj/gltf loaders vs our Rust parsers) is independent of the React rendering, but the gate
+    flags any overlap. Fix: named re-exports only in the owner, the four modules import from the owner, drop their direct
+    declarations, fem → devDependencies; gate policy row "production declarations = the registered interface owner only".
+  - `image` — partly compliant. Dev-only oracle in intrinsic-size and pixels (correct). Private use in infinite (world
+    reference images) and the wgpu renderer (Scenes/Interpreter). **Violation:** surface's public error enums
+    `FrameworkSurfacePaintError::Image(image::ImageError)` and `FrameworkSurfaceTiledMapError::Image(image::ImageError)`
+    expose the external type (same shape as the `ZipError` fix; their `Json(serde_json::Error)` arms are T14's `serde_json`
+    scope). Root fix = decode through the first-party stdio codecs behind the existing interfaces (as png/zip), making
+    `image` dev-only and dissolving the oracle conflict (stdio jpg/bmp/tiff oracles). Guest-linked → window 3+ (owner:
+    surface/infinite/renderer).
+  - `typescript` / `nx` / `@nx/js` — declared as `dependencies` of the bootstrap tools manifest
+    (`⚡️caching/🚀️bootstrap/🛠️tools/package.json`), which sits outside the root `bun.lock` workspaces → the truth module
+    counts them unauthorized (`lock-owned=false`) and `typescript` as an oracle conflict (it is the `🗣️languages` oracle).
+    Policy row needed in `🕸️dependencies/⚖️truth`: the bootstrap manifest is an authorized toolchain manifest owned by its own
+    lock, its rows `repository-tooling`. Not landed (library code imported by chain scripts) → window 3.
+
+- 13:0x–13:1x **zero-touch `hubAdmin` (coordinator: "make the hub provider zero-touch, law included"; C13's viewer /
+  cross-undo checks and `mcp-security` need it).** Hub side (`🌎️hub/🚀️local-bootstrap`, open): schema-first
+  `LocalAdminCapabilityV1` (`🧬️schema/🔣️.json`, `semio.hub.local-admin-capability/v1`: loopback origin, session-token
+  capability, sessionId, expiresAt) + parser `parseLocalAdminCapabilityV1`; `startLocalSessionBroker(…, adminProfileId?)`
+  keeps `admin-capability.json` `0600` in the data root — issued through the broker's own serialized pipe sequence at start
+  and again whenever a caller creates `admin-request` (consumed; 5 s poll), removed on `stop`; exported
+  `LOCAL_HUB_ADMINISTRATOR_PROFILE` / `_SUBJECT` (the os-hub script's secure-admin path now uses them instead of its inline
+  literal). os-dev `local-hub` declares the administrator + admin subject and starts the broker with it. Gate: a hub
+  provider's optional `adminCapability` path (schema + type); when the checks need `hubAdmin`, the command line names none
+  and the gate's own hub provider is the hub, it waits ≤ min(readyBound, 60 s) for the file and hands it to
+  `{hubAdminCapability}`; otherwise only the `hubAdmin` checks are blocked with the reason. Plan: hub provider
+  `adminCapability: .🧬semio/🌐hub/hub-dev/admin-capability.json`; for 7800 runs pass
+  `--hub-admin-capability .🧬semio/🌐hub/s13-w3-state-7800/admin-capability.json`.
+  Proof: fixture `🎫️session-broker-v1` +6 admin cases, Ajv (hub schema) and the parsers agree on all 20
+  (`wp-r10/broker-fixture-agreement.ts`); goal-gate law +2 runs (capability handed over / missing → only hubAdmin blocked)
+  → acceptance laws **54/54** (`generated/acceptance-laws-s14b-2.txt`); tsc (gate, 3 laws, os-dev script, os-hub script,
+  broker): only 6 pre-existing os-hub script errors at l.14433+ / lodash typings, none from these edits
+  (`generated/tsc-r10-admin-1.txt`); **live** (`wp-r10/admin-capability-probe.ts`, hub on 8120 = B3 binary over an APFS
+  clone of the B3 root, removed after): ready 12 s, file issued `600`, `/admin/api/documents` 200 with it vs 401 without,
+  `admin-request` → fresh session + request consumed, developer broker session still issued, file removed on stop —
+  PASS (`.🧬semio/🌐hub/s14-r10-logs/admin-capability-probe-1.txt`); rule-20 boot PASS (`serve-boot-probe-s14b-3.txt`).
+  A dev hub on 8787 started before this change has no file → its hubAdmin checks stay blocked until it restarts.
+
+- 13:2x **`[DEBUG]` gate (criterion 5.12 "no temporary-log tag in tracked sources")**: `debugTagHitsOfText` /
+  `runDebugTagCensus` (orchestration; scope = tracked text files minus ticket tree, Markdown, `.cursor` and
+  `DEBUG_TAG_CENSUS_EXEMPT` = the census's own module + the source-census fixture, which name the tag), cross-checked per
+  file against `git grep -c`; root `📜️script.ts` verb `verify debug-tags` (no tag literal in the script); plan compliance
+  step += `debug-tags` (live plan 48 checks; window-3 preview 69). The window-3 codemod excludes the same exempt files, so
+  its site set = the census (1 940 lines / 645 files, 0 stale). Proof: source-census law +2 cases, acceptance laws **56/56**
+  (`generated/acceptance-laws-s14b-3.txt`); live gate FAIL as expected, oracle agrees, 13 s
+  (`generated/verify-debug-tags-1.txt`); tsc of the root script + census law: only the peers' layout `FramePatch` error
+  (`generated/tsc-r10-root-1.txt`). The `@emoji` codemod now also excludes the source-census fixture (its `@emoji` openers
+  are law inputs): dry run 818 files / 9 108 tokens / 11 picks / **0 unresolved**; comment-hoist wave 1 dry run 1 338
+  blocks, 0 need an emoji.
+
+- 13:2x **typescript / nx bootstrap policy row LANDED** (`📚️library/🕸️dependencies`, only root `📜️script.ts` imports it — no
+  chain path): `DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS` (inventory) = the Nx bootstrap recipe
+  `⚡️caching/🚀️bootstrap/🛠️tools/package.json` → its own `bun.lock`; every section of the recipe is `repository-tooling`
+  (so `typescript`, the `🗣️languages` oracle, is no longer a production declaration → its oracle conflict dissolves), the
+  recipe is an authorized toolchain manifest, and its rows are audited against its OWN lock (`dependencies` +
+  `devDependencies` of its root workspace) → nx/@nx/js become mandated-toolchain instead of the 2 toolchain-owner conflicts.
+  Proof: 2 new self-test cases (recipe row excepted against its lock; a row its lock does not own fails the audit), `verify
+  dependencies self-test` clean, direct check `{okMandated:[nx], okConflicts:0, staleFailures:1}`; tsc root script + truth:
+  only the peers' layout error (`generated/tsc-r10-root-2.txt`). Live `literal-external` re-measure (~20 min scan) runs in
+  the goal gate's compliance step (expected: oracle conflicts 6 → 5 now, → 3 after png/zip; toolchain conflicts 2 → 0).
+
+- 13:2x `image` violation prepared (guest-linked → window 3): `wp-r10/surface-image-error.py` — both surface error enums
+  carry the decoder message (`Image(String)`), `Display` prints it, `source` ends there, the `From<image::ImageError>`
+  conversions stay (they only feed `?`); the one consumer (`matches!(…, Image(_))` in the paint unit test) is unchanged.
+  Dry run clean on the live tree; applied to a scratch copy: exactly the intended 8 hunks, second run "unchanged".
+
+- 13:3x–13:5x **`three` behind the ui module (coordinator: route the direct importers, no external types, law, rule 20).**
+  Census first: 67 tracked files import `three`; outside the ui module every one is test domain (tests, oracles, probes,
+  generators) except **5 host modules, all open** (no `🔌️plugin/`): infinite `🎨️r3f`, renderer React target,
+  `🌐️World3dHost`, its `⏯️tool-run-trace`, `🗺️WorldTerrainLayer` (+ `import("three").Camera/Texture` type references in
+  World3dHost ×10 and r3f ×1). Changes: ui React target — `export * as THREE` replaced by named re-exports of exactly the 31
+  classes/constants the host modules use + `GLTFLoader`, `OBJLoader`, `ThreeOrbitControls` (the three addon) and the types
+  `ThreeCamera`, `ThreeScene`, `ThreeTexture`, `NormalBufferAttributes`, `Ray`; the scene port's `three` member is no longer
+  `typeof THREE` but `SCENE_THREE_BINDINGS` (`🔌️Ports`), the 36 named constructors/constants its consumers read (cad
+  renderer, r3f, two tests); the ui icon-camera test imports three itself (oracle inside the owner) instead of the removed
+  namespace export. Consumers: codemod `wp-r10/three-route.py` moved every three specifier into the file's existing
+  `@semio-tech/ui-react` import; the type references became `ThreeCamera` / `ThreeTexture`. The cad plugin (frozen) needed no
+  edit: it reads `sceneHostPort.three`, whose explicit bindings cover all 16 members it uses.
+  Law/lint: `INTERFACE_OWNED_PACKAGES` ← `DEPENDENCY_INTERFACE_OWNERS` (dependency policy, `📇️inventory`: three → ui
+  directory + its manifest), `interfaceImportHitsOfText` / `runInterfaceImportCensus` (orchestration; value, type, addon,
+  dynamic and `require` imports; test domain from the taxonomy) cross-checked against `git grep`; fixture +3 cases; root
+  `verify interface-owners` + plan check `interface-owned-imports` (1.10, 5.9) → live plan 50 checks. Policy: the interface
+  owner's own production declaration is no oracle conflict (self-test +2: owner-only → none; owner + bypass manifest →
+  only the bypass counts).
+  Proof: census before the type-reference fix 11 hits (the lint catches), after **0, oracle agrees** (`verify
+  interface-owners` PASS, `generated/verify-interface-owners-1.txt`); tsc ui-react 1 / renderer-react 1 / r3f+cad 319 /
+  root+orchestration+deps 1 error = exactly the pre-existing peer errors (layout `FramePatch`, MediaTransportHost, cad
+  spatial-kernel test typings), none in a touched file (`generated/tsc-three-*`, `tsc-r10-root-4.txt`); vitest ui icon-camera
+  9/9 (`vitest-ui-icon-camera-2.txt`); acceptance laws 59/59 (`acceptance-laws-s14b-5.txt`); dependency self-test clean;
+  **rule 20: `serve s react dev` on 6620 + program matrix `--only lowpoly,cad`: boot `ready:s`, 60/60 plugins loaded, both
+  3D editors PASS (rendered, verb, edit/undo/redo, 0 faults)** — lowpoly = World3dHost, cad = the scene port
+  (`.🧬semio/🌐hub/s14-r10-logs/matrix-three-1.txt`, screenshots `generated/matrix/r10-three/`), serve stopped.
+  Window 3: `wp-r10/three-manifests.py` (r3f + renderer-react keep `three` for tests only → devDependencies in package.json
+  and their `bun.lock` blocks, textual so node_modules stays untouched): dry run clean; scratch apply = exactly 3 files, JSON
+  valid, lock parses, second run "nothing to do". Not in scope: `three-mesh-bvh` (r3f, production) — same pattern later.
+
 | # | Item | State | Evidence |
 |---|---|---|---|
 | 1 | Kernel-derive inputs (window 3, serial): V1 taxonomy directory registration, R9 launch-inputs discovery patch, launch rows regenerated by the generator | in progress | §log |

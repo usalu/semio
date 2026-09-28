@@ -22,7 +22,6 @@ export async function testArtifactOverlapIndex(workspace: string): Promise<void>
     };
     assert.deepEqual(createArtifactRegistry(scale).findings, []);
   } finally { String.prototype.normalize = normalize; }
-  console.log(`[DEBUG] Artifact overlap index matches Python for parent, sibling, duplicate, case and Unicode paths; ${fixture.count} owners use ${calls} normalizations PASS`);
 }
 
 /** 📇️ Verifies artifact ownership and retained-byte accounting against JSON Schema and native Python. */
@@ -71,5 +70,4 @@ export async function testArtifactRegistry(workspace: string, output: string): P
   await assert.rejects(measureArtifactRegistry(workspaceRoot, registry, { signal: cancelling.signal, onProgress: () => cancelling.abort(new Error("cancel during accounting")) }), /cancel during accounting/);
   writeFileSync(join(root, "registry.json"), JSON.stringify(registry, null, 2) + "\n");
   writeFileSync(join(root, "measurement.json"), JSON.stringify(measurement, null, 2) + "\n");
-  console.log("[DEBUG] Artifact registry paths, overlaps, links, cancellation and native Python byte accounting PASS");
 }

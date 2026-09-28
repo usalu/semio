@@ -20,5 +20,4 @@ export async function testCiEnvironment(): Promise<void> {
   for (const row of fixture.invalid) assert.throws(() => ciBaselineEnvironment({ ...fixture.environment, ...row }, fixture.event, fixture.head, false), /Invalid|Unsupported/);
   assert.throws(() => ciBaselineEnvironment({ ...fixture.environment, GITHUB_EVENT_NAME: "pull_request" }, { ...fixture.event, pull_request: { base: { ref: "foreign", repo: { id: 99 } } } }, fixture.head, false), /Invalid/);
   assert.throws(() => ciBaselineEnvironment({}, null, "--HEAD", true), /Invalid/);
-  console.log("[DEBUG] CI checkout/event identity, PR destination branch, schedule/tag/local full modes and Ajv/lodash contract PASS");
 }

@@ -40,7 +40,6 @@ export function testFemAssemblyPhysicalOwners(): void {
       assert.equal(after.releasedBytes + after.backings.reduce((sum, value) => sum + value, 0), capacities.reduce((sum, value) => sum + value, 0));
     }
   }
-  console.log(`[DEBUG] FEM assembly physical owners: ${fixture.inlineOwners.length} inline owners, ${fixture.cases.length} backing cases and ${fixture.grants.length} grants match fast-json-patch ${fixture.oracle.version}`);
 }
 
 if (import.meta.main) testFemAssemblyPhysicalOwners();

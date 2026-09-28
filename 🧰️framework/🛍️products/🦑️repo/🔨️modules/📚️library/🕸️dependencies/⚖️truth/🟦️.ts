@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { DEPENDENCY_BASELINE_REL_PATH, DEPENDENCY_ECOSYSTEMS, dependencyCollectGo, dependencyDiscoverScriptTsFiles, dependencyFreezeCheck, dependencyFreezeCurrentThirdParty, dependencyFreezeWriteBaseline, dependencyJsParity, dependencyReadFileSafe, type DependencyBaselineEntry, type DependencyDeclaration, type DependencyEcosystem, type DependencyJsParityReport, type DependencyKind } from "../📇️inventory/🟦️.ts";
+import { DEPENDENCY_BASELINE_REL_PATH, DEPENDENCY_ECOSYSTEMS, DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS, dependencyCollectGo, dependencyDiscoverScriptTsFiles, dependencyFreezeCheck, dependencyFreezeCurrentThirdParty, dependencyFreezeWriteBaseline, dependencyJsParity, dependencyReadFileSafe, type DependencyBaselineEntry, type DependencyDeclaration, type DependencyEcosystem, type DependencyJsParityReport, type DependencyKind } from "../📇️inventory/🟦️.ts";
 
 export type DependencyTruthDisposition = "literal-external" | "first-party" | "composition-scoped" | "mandated-toolchain";
 export type DependencyTruthEntry = DependencyBaselineEntry & { disposition: DependencyTruthDisposition; rationale: string; literalExternalUsers?: string[]; mandatedToolchainUsers?: string[] };
@@ -18,7 +18,7 @@ export type DependencyTruthReport = {
 };
 
 const DEPENDENCY_MANDATED_NX_PACKAGES = new Set(["nx", "@nx/devkit", "@nx/js"]);
-const DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS = new Set(["package.json"]);
+const DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS = new Set(["package.json", ...DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS.keys()]);
 export const DEPENDENCY_REPO_POLICY_ROOT = "🧰️framework/🛍️products/🦑️repo";
 const DEPENDENCY_REPO_POLICY_LIBRARY = `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts`;
 export const DEPENDENCY_REPO_POLICY_ROUTERS = [`${DEPENDENCY_REPO_POLICY_ROOT}/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/💻️client/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📜️script.ts`] as const;
@@ -88,24 +88,30 @@ function dependencyTruthDeclarations(entry: DependencyBaselineEntry): Dependency
   return entry.declarations ?? entry.users.map((user) => ({ user, version: entry.version, kind: entry.kinds[0] ?? "repository-tooling" }));
 }
 
-function dependencyToolchainLockVersions(content: string): Map<string, string> {
+/** 🔒️ `${manifest}\0${name}` → locked version: the root lock's workspaces (their `devDependencies`) and each toolchain
+ * recipe's own lock (its root workspace, every section — the recipe is tooling throughout). */
+function dependencyToolchainLockVersions(content: string, recipeLocks: Readonly<Record<string, string>> = {}): Map<string, string> {
   const versions = new Map<string, string>();
-  try {
-    const workspaces = (Bun.JSONC.parse(content) as { workspaces?: Record<string, { devDependencies?: Record<string, string> }> }).workspaces ?? {};
-    for (const [workspace, snapshot] of Object.entries(workspaces)) {
-      const user = workspace === "" ? "package.json" : `${workspace}/package.json`;
-      for (const [name, version] of Object.entries(snapshot.devDependencies ?? {})) versions.set(`${user}\0${name}`, version);
+  const read = (text: string, userOf: (workspace: string) => string | null, sections: readonly ("dependencies" | "devDependencies")[]): void => {
+    try {
+      const workspaces = (Bun.JSONC.parse(text) as { workspaces?: Record<string, Partial<Record<"dependencies" | "devDependencies", Record<string, string>>>> }).workspaces ?? {};
+      for (const [workspace, snapshot] of Object.entries(workspaces)) {
+        const user = userOf(workspace);
+        if (user) for (const section of sections) for (const [name, version] of Object.entries(snapshot[section] ?? {})) versions.set(`${user}\0${name}`, version);
+      }
+    } catch {
+      return;
     }
-  } catch {
-    return versions;
-  }
+  };
+  read(content, (workspace) => (workspace === "" ? "package.json" : `${workspace}/package.json`), ["devDependencies"]);
+  for (const [manifest, lock] of Object.entries(recipeLocks)) read(lock, (workspace) => (workspace === "" ? manifest : null), ["dependencies", "devDependencies"]);
   return versions;
 }
 
 /** 🔒️Classifies only the narrow audited exceptions; every other third-party identity remains literal external inventory. */
-export function dependencyTruthReportFromEntries(thirdParty: readonly DependencyBaselineEntry[], firstParty: readonly DependencyBaselineEntry[], rootPackageContent: string, lockContent = ""): DependencyTruthReport {
+export function dependencyTruthReportFromEntries(thirdParty: readonly DependencyBaselineEntry[], firstParty: readonly DependencyBaselineEntry[], rootPackageContent: string, lockContent = "", recipeLocks: Readonly<Record<string, string>> = {}): DependencyTruthReport {
   const toolchain = dependencyTruthRootToolchain(rootPackageContent);
-  const lockVersions = dependencyToolchainLockVersions(lockContent);
+  const lockVersions = dependencyToolchainLockVersions(lockContent, recipeLocks);
   const authorizedRows: DependencyToolchainRow[] = [];
   const unauthorizedRows: DependencyToolchainRow[] = [];
   const classifiedThirdParty: DependencyTruthEntry[] = thirdParty.map((entry) => {
@@ -179,7 +185,7 @@ function dependencyTruthReport(repoRoot: string, thirdParty = dependencyFreezeCu
       existing.productionReachable ||= entry.productionReachable;
     }
   });
-  return dependencyTruthReportFromEntries(thirdParty, [...firstPartyByKey.values()], dependencyReadFileSafe(repoRoot, "package.json"), dependencyReadFileSafe(repoRoot, "bun.lock"));
+  return dependencyTruthReportFromEntries(thirdParty, [...firstPartyByKey.values()], dependencyReadFileSafe(repoRoot, "package.json"), dependencyReadFileSafe(repoRoot, "bun.lock"), Object.fromEntries([...DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS].map(([manifest, lock]) => [manifest, dependencyReadFileSafe(repoRoot, lock)])));
 }
 
 function dependencyTruthSummaryText(report: DependencyTruthReport): string {

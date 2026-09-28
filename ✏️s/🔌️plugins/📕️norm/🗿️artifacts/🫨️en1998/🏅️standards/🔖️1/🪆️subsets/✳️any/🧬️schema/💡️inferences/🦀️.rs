@@ -733,29 +733,35 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
 
                 let sti = building.storeys.iter().position(|s| s.id == storey.id).unwrap_or(0);
                 let weight = part_1::storey_seismic_action_n(storey, sti + 1 == building.storeys.len());
-                let k = if system.direction == "y" { storey.stiffness_y } else { storey.stiffness_x };
                 let theta = if shear_above * storey.height_m > 1e-9 { remaining_weight * drift / (shear_above * storey.height_m) } else { 0.0 };
-                let kpath = format!("{}.storeys[id={}].{}", bpath, storey.id, if system.direction == "y" { "stiffnessY" } else { "stiffnessX" });
+                let dpath_pd = format!("{}.storeys[id={}].{}", bpath, storey.id, dfield);
                 let mut pdelta = CheckResult::assess(
                     format!("en1998.1.{bid}.{}.pdelta.{}", system.id, storey.id),
                     "DIN EN 1998-1",
                     ClauseId::new("EN 1998-1", "1", "4.4.2.2"),
-                    SubjectRef::new(bid, kpath.clone(), lc(&storey.id, &storey.id)),
+                    SubjectRef::new(bid, dpath_pd.clone(), lc(&storey.id, &storey.id)),
                     lc("P-Δ sensitivity θ", "P-Δ-Empfindlichkeit θ"),
                 )
                 .utilization(q_dim(theta), q_dim(0.3))
                 .annex(annex)
                 .explanation(lc(
-                    &format!("P-Δ sensitivity θ={theta:.3}, k={k:.0}, kx={:.0}, ky={:.0}", storey.stiffness_x, storey.stiffness_y),
-                    &format!("P-Δ-Empfindlichkeit θ={theta:.3}, Steifigkeit k={k:.0}, kx={:.0}, ky={:.0}", storey.stiffness_x, storey.stiffness_y),
+                    &format!("P-Δ sensitivity θ={theta:.3} (d={drift:.4} m, V={shear_above:.0} N, P={remaining_weight:.0} N)"),
+                    &format!("P-Δ-Empfindlichkeit θ={theta:.3} (d={drift:.4} m, V={shear_above:.0} N, P={remaining_weight:.0} N)"),
                 ));
                 if theta > 0.3 {
-                    let req_k = remaining_weight * drift / (0.3 * storey.height_m).max(1e-9);
-                    pdelta = pdelta.remedy(Remedy::at_least(
-                        SubjectRef::new(bid, kpath, lc("Stiffness", "Steifigkeit")),
-                        Quantity::new(QuantityKind::Dimensionless, k),
-                        Quantity::new(QuantityKind::Dimensionless, req_k),
-                        lc(&format!("Increase storey stiffness to at least {req_k:.0}.",), &format!("Geschosssteifigkeit auf mindestens {req_k:.0} erhöhen.")),
+                    let req_drift = if remaining_weight > 1e-9 {
+                        0.3 * shear_above * storey.height_m / remaining_weight
+                    } else {
+                        0.0
+                    };
+                    pdelta = pdelta.remedy(Remedy::at_most(
+                        SubjectRef::new(bid, dpath_pd, lc("Interstorey drift", "Stockwerksverschiebung")),
+                        q_len(drift),
+                        q_len(req_drift),
+                        lc(
+                            &format!("Reduce interstorey drift to at most {req_drift:.4} m so θ≤0.3 (EN 1998-1 §4.4.2.2)."),
+                            &format!("Stockwerksverschiebung auf höchstens {req_drift:.4} m reduzieren, damit θ≤0.3 (EN 1998-1 §4.4.2.2)."),
+                        ),
                     ));
                 }
                 report.push(pdelta.build());

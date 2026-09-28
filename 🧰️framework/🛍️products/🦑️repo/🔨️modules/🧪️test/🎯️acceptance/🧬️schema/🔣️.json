@@ -55,7 +55,8 @@
         "target": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
         "args": { "type": "array", "maxItems": 16, "items": { "type": "string", "minLength": 1, "maxLength": 256 } },
         "env": { "type": "object", "maxProperties": 16, "additionalProperties": { "type": "string", "maxLength": 512 } },
-        "requires": { "type": "array", "uniqueItems": true, "items": { "enum": ["hub"] } }
+        "requires": { "type": "array", "uniqueItems": true, "items": { "enum": ["hub"] } },
+        "adminCapability": { "type": "string", "minLength": 1, "maxLength": 512 }
       }
     },
     "planProviders": {

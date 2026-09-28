@@ -107,7 +107,6 @@ test("all current schema member prefixes retain native and independent segmentat
       expect(actual.split(value), `${compiler.id}:${id}:${value}`).toEqual(expected);
     }
   }
-  console.info(`[DEBUG] Leading-grapheme corpus: ${names.length} current member occurrences; Bun/TypeScript and independent Lodash first-boundary parity`);
 });
 
 test("actual leading-grapheme declaration closure remains strictly typed without a replacement parser", () => {
@@ -131,7 +130,6 @@ for (const compiler of compilers) test(`${compiler.id} actual helper advances on
     observations.push({ id: `${round}:${row.id}`, nextCalls: observation.nextCalls, iteratorCalls: observation.iteratorCalls });
   }
   const violations = observations.filter((row) => row.nextCalls !== vector.semantics.iteratorAdvancesPerRequest || row.iteratorCalls !== 1);
-  console.info(`[DEBUG] Leading-grapheme ${compiler.id}: ${observations.length} requests, ${violations.length} iteration violations, maximum ${Math.max(...observations.map((row) => row.nextCalls))}; N ${createHash("sha256").update(sourceBytes).digest("hex")}`);
   expect(violations.length, JSON.stringify(violations.slice(0, 3))).toBe(0);
 });
 

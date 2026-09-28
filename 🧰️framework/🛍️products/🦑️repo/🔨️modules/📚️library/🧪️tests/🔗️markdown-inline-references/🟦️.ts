@@ -197,7 +197,6 @@ async function stress(compiler: typeof compilers[number]) {
   const outcome = { compiler: compiler.id, declarationSha256: sha(closure), compiledSha256: sha(code), driverSha256: sha(driver), pid: child.pid, ...terminal, timedOut, overflow, spawnError, bytes, elapsedMs, alive, stdout: out, stderr: err };
   const fence = String.fromCharCode(96).repeat(3);
   writeNew(join(run, "📝️.md"), "# Markdown Inline Compiler Child\n\nNew run, not reconstructed historical evidence. The driver imports only node:path and the extracted production closure has no process/import escape capability. No child descendants are created by this closed execution path.\n\n" + fence + "json\n" + JSON.stringify(outcome, null, 2) + "\n" + fence + "\n");
-  console.info("[DEBUG] Markdown inline bounded child " + JSON.stringify({ ...outcome, stdout: undefined, stderr: undefined, report: join(run, "📝️.md") }));
   expect(alive).toBe(false);
   expect({ timedOut, overflow, spawnError, code: terminal.code, signal: terminal.signal }, err).toEqual({ timedOut: false, overflow: false, spawnError: null, code: 0, signal: null });
   expect(bytes).toBeLessThanOrEqual(vector.limits.childOutputBytes);
@@ -283,5 +282,4 @@ for (const compiler of compilers) test(compiler.id + " failed-label and failed-t
 afterAll(() => {
   expect(declarations(snapshot(normalizerPath).toString("utf8"))).toEqual(bodies);
   for (const [path, bytes] of inputBytes) expect(snapshot(path), path + " changed during the packet").toEqual(bytes);
-  console.info("[DEBUG] Markdown inline declaration closure " + JSON.stringify({ sha256: sha(closure), declarations: Object.fromEntries(Object.entries(bodies).map(([name, body]) => [name, body === null ? null : sha(body)])), inputSha256: Object.fromEntries([...inputBytes].map(([path, bytes]) => [path, sha(bytes)])) }));
 });

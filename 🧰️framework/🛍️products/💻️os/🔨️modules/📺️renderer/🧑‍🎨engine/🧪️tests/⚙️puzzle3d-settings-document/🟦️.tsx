@@ -119,7 +119,6 @@ describe("Puzzle3D Settings Component document", () => {
     if (gesture.terminal !== "release-inside") fireEvent.mouseLeave(target);
     fireEvent.mouseUp(gesture.terminal === "release-inside" ? target : document.body);
     expect(intents).toHaveLength(gesture.pressActions + gesture.terminalActions);
-    console.log(`[DEBUG] stepper pointer ${gesture.id}: press=${gesture.pressActions} terminal=${gesture.terminalActions}`);
   });
 
   it("mounts four uniform steppers and each increment dispatches its authored Change intent", () => {

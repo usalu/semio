@@ -369,6 +369,46 @@ fn a_concurrent_edit_between_prepare_and_commit_is_a_revision_conflict() {
 }
 //#endregion 🔖️GenerationMismatch
 
+/// 📮️ A hub-bound commit whose relay the hub did not acknowledge — silent past its wait, or refused by a terminal link —
+/// is reverted in the session and answered as an error; only an acknowledged relay is a write the agent is told
+/// succeeded (measured 2026-09-28 by H13: a spectator's addBlock answered SUCCEEDED while the hub head stayed 0).
+#[test]
+fn a_commit_the_hub_did_not_acknowledge_is_reverted_and_never_reported_as_a_write() {
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let catalog = real_fixture_catalog();
+    let session = SessionHandle::new("sess_1");
+    let principal = principal(&["artifact.write"]);
+    let invoke = |outcome: HubRelayOutcome, at: u64| {
+        let prepared = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, at).unwrap();
+        channel.force_relay(0, outcome);
+        adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, at + 1)
+    };
+    let silent = invoke(HubRelayOutcome { acknowledged: false, detail: "remote=backoff pending=1".into(), refused: None }, 0).expect_err("a silent hub is never a write");
+    assert_eq!((silent.code, silent.retryable), (GatewayErrorCode::PluginUnavailable, true));
+    assert!(silent.message.contains("reverted") && silent.message.contains("remote=backoff pending=1"), "{}", silent.message);
+    let revoked = store::sync::DocumentLinkStatus::AccessRevoked.code().to_string();
+    let refused = invoke(HubRelayOutcome { acknowledged: false, detail: "access was withdrawn".into(), refused: Some(revoked) }, 10).expect_err("a refused relay is never a write");
+    assert_eq!(refused.code, GatewayErrorCode::PermissionDenied);
+    assert!(refused.message.contains("reverted"), "{}", refused.message);
+    let acknowledged = invoke(HubRelayOutcome { acknowledged: true, detail: "the hub acknowledged every relayed envelope".into(), refused: None }, 20).expect("an acknowledged relay is a write");
+    assert_eq!(acknowledged.status, InvocationStatus::Succeeded);
+    assert!(acknowledged.postconditions.iter().any(|condition| condition == "relay:acknowledged") && acknowledged.warnings.is_empty(), "{acknowledged:?}");
+}
+
+/// 👁️ A spectator's edit and an edit with no live hub document are refused by name: `PERMISSION_DENIED` with an en + de
+/// remedy, and `PRECONDITION_FAILED`.
+#[test]
+fn a_hub_edit_that_cannot_reach_the_hub_is_refused_by_name() {
+    let spectator = map_fault(&Fault { code: VIEWER_READ_ONLY_FAULT_CODE.into(), message: "spectator".into() });
+    assert_eq!(spectator.code, GatewayErrorCode::PermissionDenied);
+    assert_eq!(spectator.details["faultCode"], VIEWER_READ_ONLY_FAULT_CODE);
+    assert_ne!(spectator.details["remedy"]["en"], spectator.details["remedy"]["de"], "de is a translation, not a copy");
+    let unbound = map_fault(&Fault { code: HUB_EDIT_UNBOUND_FAULT_CODE.into(), message: "no document".into() });
+    assert_eq!((unbound.code, unbound.retryable), (GatewayErrorCode::PreconditionFailed, false));
+    let silent = map_fault(&Fault { code: HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE.into(), message: "silent".into() });
+    assert_eq!((silent.code, silent.retryable), (GatewayErrorCode::PluginUnavailable, true));
+}
+
 //#region 🔖️BudgetExceeded
 #[test]
 fn budget_exceeded_fault_maps_to_budget_exceeded_code() {

@@ -19,5 +19,4 @@ export async function testCiResolution(): Promise<void> {
     assert.equal(result.baseline.base, row.mode === "affected" ? fixture.base : null);
     assert.equal(result.historyIssue, row.status === 403 ? "history-unavailable" : null);
   }
-  console.log("[DEBUG] CI environment, paginated provider and ancestor selector compose into a schema-valid fail-closed baseline PASS");
 }

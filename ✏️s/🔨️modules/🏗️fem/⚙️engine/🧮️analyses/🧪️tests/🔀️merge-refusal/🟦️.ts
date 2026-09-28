@@ -28,7 +28,6 @@ export function testFemAssemblyMergeRefusalOracle(): void {
     const available = applyPatch(structuredClone(refused), retirement, true, false).newDocument as State;
     assert.deepEqual(attempt(available, row.destinationCapacity), row.retried, `${row.lane} retry publishes once and advances once`);
   }
-  console.log(`[DEBUG] FEM assembly merge refusal retains and retries both exact candidates under fast-json-patch ${fixture.oracle.version}`);
 }
 
 if (import.meta.main) testFemAssemblyMergeRefusalOracle();

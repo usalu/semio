@@ -27,19 +27,19 @@ import { directoryCommandRequestJson, sealDirectoryCommandRequestV1, type Direct
 
 //#region 🔖️Sessions
 /** 🔑️ One human: a hub credential. */
-type Human = Readonly<{ label: string; email: string; password: string }>;
+export type Human = Readonly<{ label: string; email: string; password: string }>;
 
 /** 🌐️ One human's isolated browser profile on one serve, with its console and hub traffic lines. */
-type Session = { human: Human; url: string; context: BrowserContext; page: Page; lines: string[] };
+export type Session = { human: Human; url: string; context: BrowserContext; page: Page; lines: string[] };
 
 const started = Date.now();
 const ms = (): number => Date.now() - started;
 const pause = (session: Session, duration: number): Promise<void> => session.page.waitForTimeout(duration);
 const originOf = (session: Session): string => new URL(session.url).origin;
-const faultsSince = (session: Session, cursor: number): string[] => session.lines.slice(cursor).filter((line) => FAULT.test(line) && !NOISE.test(line)).map((line) => line.slice(0, 240));
+export const faultsSince = (session: Session, cursor: number): string[] => session.lines.slice(cursor).filter((line) => FAULT.test(line) && !NOISE.test(line)).map((line) => line.slice(0, 240));
 const short = (text: string): string => (text.length <= 160 ? text : `${text.slice(0, 80)}…${text.slice(-70)}`);
 
-async function openSessions(browser: Browser, urls: readonly string[], humans: readonly Human[], locale: string): Promise<Session[]> {
+export async function openSessions(browser: Browser, urls: readonly string[], humans: readonly Human[], locale: string): Promise<Session[]> {
   const sessions: Session[] = [];
   for (const [index, human] of humans.entries()) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale });
@@ -70,12 +70,12 @@ async function until<T>(probe: () => Promise<T | null>, deadlineMs: number, step
   return value;
 }
 
-async function boot(session: Session): Promise<void> {
+export async function boot(session: Session): Promise<void> {
   await session.page.goto(session.url, { waitUntil: "domcontentloaded", timeout: 180_000 });
   await session.page.locator('[data-ui-node-key="s-home-create-space"]').first().waitFor({ state: "attached", timeout: 180_000 });
 }
 
-async function signIn(session: Session): Promise<void> {
+export async function signIn(session: Session): Promise<void> {
   const page = session.page;
   await page.locator('[data-semio-hub-sign-in=""]').first().click();
   const form = page.locator("[data-semio-hub-workspace]");
@@ -89,22 +89,22 @@ async function signIn(session: Session): Promise<void> {
 }
 
 /** ⌨️ Keyboard activation of a UI node by its stable `data-ui-node-key`. */
-async function activate(page: Page, key: string): Promise<void> {
+export async function activate(page: Page, key: string): Promise<void> {
   const node = page.locator(`[data-ui-node-key="${key}"]`).first();
   await node.waitFor({ state: "attached", timeout: 30_000 });
   await node.focus();
   await node.press("Enter");
 }
 
-const dialog = (page: Page) => page.locator('[role="dialog"][data-slot="dialog-content"]');
+export const dialog = (page: Page) => page.locator('[role="dialog"][data-slot="dialog-content"]');
 
-async function selectOption(page: Page, triggerId: string, option: RegExp): Promise<void> {
+export async function selectOption(page: Page, triggerId: string, option: RegExp): Promise<void> {
   await page.locator(`[id="${triggerId}"]`).click();
   await page.getByRole("option", { name: option }).first().click();
   await page.waitForTimeout(200);
 }
 
-async function submitDialog(page: Page): Promise<void> {
+export async function submitDialog(page: Page): Promise<void> {
   await page.locator('[id="ui.dialog.submit"]').click();
   await dialog(page).waitFor({ state: "hidden", timeout: 20_000 });
 }
@@ -123,7 +123,7 @@ async function waitNewRow(page: Page, prefix: string, before: ReadonlySet<string
 }
 
 /** 🧭️ Pages every windowed table (`table-window-scroll`) top to bottom, as a human scrolls, until `found` answers. */
-async function pageWindowedTables<T>(page: Page, found: () => Promise<T | null>): Promise<T | null> {
+export async function pageWindowedTables<T>(page: Page, found: () => Promise<T | null>): Promise<T | null> {
   let hit = await found();
   const scrollers = page.locator('[data-slot="table-window-scroll"]');
   for (let index = 0, count = await scrollers.count(); index < count && hit === null; index += 1) {
@@ -154,7 +154,7 @@ async function waitRow(page: Page, prefix: string, id: string, deadlineMs: numbe
   throw new Error(`timeout waiting for [data-ui-node-key="${prefix}:${id}"] (${deadlineMs} ms, windowed tables paged)`);
 }
 
-async function waitNamedRow(page: Page, prefix: string, name: string, deadlineMs: number): Promise<string> {
+export async function waitNamedRow(page: Page, prefix: string, name: string, deadlineMs: number): Promise<string> {
   const find = (): Promise<string | null> => page.locator(`[data-ui-node-key^="${prefix}:"]`).evaluateAll((elements, wanted) => elements.find((element) => (element.textContent ?? "").includes(wanted))?.getAttribute("data-ui-node-key") ?? null, name);
   const deadline = Date.now() + deadlineMs;
   while (Date.now() < deadline) {
@@ -165,7 +165,7 @@ async function waitNamedRow(page: Page, prefix: string, name: string, deadlineMs
   throw new Error(`no ${prefix} row named ${JSON.stringify(name)} within ${deadlineMs} ms (windowed tables paged)`);
 }
 
-async function clickRowAction(page: Page, prefix: string, id: string, pattern: RegExp): Promise<string> {
+export async function clickRowAction(page: Page, prefix: string, id: string, pattern: RegExp): Promise<string> {
   const buttons = page.locator(`[data-ui-node-key="${prefix}:${id}"] button`);
   for (let index = 0, count = await buttons.count(); index < count; index += 1) {
     const button = buttons.nth(index);
@@ -239,7 +239,7 @@ async function settleAfterLoad(session: Session, cursor: number, quietMs = 12_00
 
 /** 🏠️ Sign-in re-bootstraps Home's directory seconds later (a second `event-page/v1?after=0` under a new socket grant), and a
  * dialog opened before that is closed by it: waits until Home has been quiet for `quietMs` and is mounted. */
-async function settleHome(session: Session, quietMs = 8_000, deadlineMs = 60_000): Promise<boolean> {
+export async function settleHome(session: Session, quietMs = 8_000, deadlineMs = 60_000): Promise<boolean> {
   const create = session.page.locator('[data-ui-node-key="s-home-create-space"]').first();
   const begun = Date.now();
   let quietSince = Date.now();
@@ -513,7 +513,7 @@ async function attemptViewerEdits(session: Session, verb: string): Promise<strin
 }
 
 /** 👁️ B is a Spectator of the space: B's open lands on the kind's viewer surface and the navbar says so in B's language, B is
- * offered no edit control, every edit B attempts leaves both views and the hub head unchanged, B still sees A's edit live,
+ * offered no edit control (neither the kind's verbs nor Undo/Redo nor the navbar's switch to the editor), every edit B attempts leaves both views and the hub head unchanged, B still sees A's edit live,
  * and a write crafted with B's own credential straight onto the document socket is refused by the hub (the viewer's plan
  * grants no write) while A's view stays put. */
 async function viewerJourney({ A, B, check, plugin, pins, options, spaceId, artifactId }: JourneyContext): Promise<void> {
@@ -521,7 +521,7 @@ async function viewerJourney({ A, B, check, plugin, pins, options, spaceId, arti
   const chipText = options.locale === "de" ? "Betrachter" : "Viewer";
   const readingB = await surfaceReading(B.page);
   check("B holds the viewer surface", readingB.surfaces.length > 0 && readingB.surfaces.every((id) => id.endsWith("#viewer")) && readingB.chips.includes(`viewer:${chipText}`), { b: readingB, a: (await surfaceReading(A.page)).surfaces });
-  const offered = await pressableControls(B.page, [`action.${verb}`, "action.undo", "action.redo"]);
+  const offered = await pressableControls(B.page, [`action.${verb}`, "action.undo", "action.redo", "playground.navbar.roles.editor"]);
   check("viewer offers no edit control", offered.length === 0, { offered, actions: (await readShell(B.page)).actions.slice(0, 16) });
   const before = [await docText(A), await docText(B)] as const;
   const head0 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);

@@ -1,6 +1,7 @@
 {
   "bun": "1.3.14",
   "node": "24.15.0",
+  "workspaceVolumeTargets": ["/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache"],
   "postCreateCommand": ["bun", "nx", "run", "workspace:setup"],
   "postCreateDependsOn": [
     "deps-javascript",
@@ -23,6 +24,7 @@
     { "architecture": "arm64", "bunArchive": "aarch64", "bunSha256": "a27ffb63a8310375836e0d6f668ae17fa8d8d18b88c37c821c65331973a19a3b", "nodeArchive": "arm64", "nodeSha256": "f3d5a797b5d210ce8e2cb265544c8e482eaedcb8aa409a8b46da7e8595d0dda0" }
   ],
   "rejectedArchitectures": ["i386", "riscv64", "", "arm64; touch injected"],
+  "uvFeature": { "id": "ghcr.io/jsburckhardt/devcontainer-features/uv:1", "version": "0.11.6" },
   "dockerDaemonFeature": { "id": "ghcr.io/devcontainers/features/docker-in-docker:2", "options": { "moby": false } },
   "forwardedLaunchRows": ["🛠️dev🗄️os-hub", "🛠️dev🪐️space⚛️react", "🛠️dev🪐️space👤️1⚛️react", "🛠️dev🪐️space👤️2⚛️react", "🛠️dev🪐️space🧊️wgpu🌐️wasm", "🛠️dev🪐️space👤️1🧊️wgpu🌐️wasm", "🛠️dev🪐️space👤️2🧊️wgpu🌐️wasm", "🛠️dev📖️storybook"],
   "forwardedToolPorts": [6274, 6277]

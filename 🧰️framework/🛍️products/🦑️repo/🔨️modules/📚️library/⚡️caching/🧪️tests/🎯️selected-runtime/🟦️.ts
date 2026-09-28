@@ -19,7 +19,6 @@ export function testSelectedPackageIdentities(workspace: string): void {
     delete unassigned.nx?.name;
     assert.equal(buildProjectConfigurationFromPackageJson(unassigned, workspace, path, {}, true, manager).name, row.package);
   }
-  console.log("[DEBUG] Selected package imports and installed Nx project identities PASS");
 }
 
 /** 🎯️ Checks selected app prerequisites against neutral cases and the installed Nx scheduler. */
@@ -43,7 +42,6 @@ export function testSelectedRuntimeDependencies(targets: Record<string, any>, gr
     assert.ok(!ids.some(id => /^semio-framework-os-infinite:(?:build|font-tool)$/.test(id)), name + ": fonts must not compile Infinite");
     for (const forbidden of row.forbiddenProjects) assert.ok(!ids.some(id => id === forbidden + ":wasm" || id === forbidden + ":wasm-release"), name + ": unwanted engine " + forbidden);
   }
-  console.log("[DEBUG] Selected runtime prerequisites match neutral app/renderer cases" + (graph ? " and installed Nx task closures" : "") + " PASS");
 }
 
 /** 🔤️ Verifies the font producer's complete Cargo closure independently of the renderer graph. */
@@ -64,5 +62,4 @@ export async function testSelectedFontDependencies(workspace: string): Promise<v
     assert.ok(!inputs.some((path: string) => path.includes(forbidden)), "Font command hashes unrelated source: " + forbidden);
     assert.ok(!oracle.some(path => path.includes(forbidden)), "Font command loads unrelated source: " + forbidden);
   }
-  console.log("[DEBUG] Native Cargo font producer contains only the asset dumper and pinned font assets PASS");
 }

@@ -6,7 +6,7 @@ import openingScopeFixture from "../../🧱️elements/🏛️ShellHost/🧭️o
 import { AppRouter, type AppRouterManifest, type OpeningPreferences } from "@semio-tech/framework";
 import { resolveArtifactOpeningRelay, type DirectoryEvent } from "@semio-tech/framework-os";
 import { describe, expect, it } from "vitest";
-import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDocumentOpeningRoleV1 } from "../../🧱️elements/🏛️ShellHost/🧭️opening/🟦️.ts";
+import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDocumentOpeningRoleV1, sharedDocumentRoleSwitchRefusedV1 } from "../../🧱️elements/🏛️ShellHost/🧭️opening/🟦️.ts";
 import openPlanFixture from "../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🔣️.json";
@@ -70,6 +70,15 @@ describe("shared document opening access", () => {
       expect(validate(row), `${row.id}: ${JSON.stringify(validate.errors)}`).toBe(true);
       expect(sharedDocumentOpeningRoleV1(row.events as unknown as readonly DirectoryEvent[], row.spaceId, row.userId), row.id).toBe(row.role);
     }
+  });
+
+  it("refuses a read-only member's switch to the editor, and only that switch", () => {
+    for (const row of openingScopeFixture.accessCases) {
+      const access = row.role as "editor" | "viewer" | null;
+      expect(sharedDocumentRoleSwitchRefusedV1(access, "editor"), `${row.id} → editor`).toBe(access === "viewer");
+      expect(sharedDocumentRoleSwitchRefusedV1(access, "viewer"), `${row.id} → viewer`).toBe(false);
+    }
+    expect(openingScopeFixture.accessCases.some((row) => row.role === "viewer") && openingScopeFixture.accessCases.some((row) => row.role === "editor") && openingScopeFixture.accessCases.some((row) => row.role === null)).toBe(true);
   });
 
   it("agrees with the hub's open-plan contract for every session role it names (the hub's own laws run the same cases)", () => {

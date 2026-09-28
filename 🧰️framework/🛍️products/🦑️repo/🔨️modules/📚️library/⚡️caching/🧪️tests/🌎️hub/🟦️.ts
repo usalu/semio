@@ -35,5 +35,4 @@ export async function testHubBuild(workspace: string): Promise<void> {
   const define = Object.fromEntries(properties.map((node: any) => [node.name.text, node.initializer.text]));
   const browser = await require("esbuild").build({ stdin: { contents: fixture.browserProbe, sourcefile: "browser-probe.ts", loader: "ts" }, define, bundle: true, write: false, platform: "browser", format: "esm", logLevel: "silent" });
   assert.equal((await import("data:text/javascript;base64," + Buffer.from(browser.outputFiles[0].text).toString("base64"))).value, 42);
-  console.log("[DEBUG] Hub build uses one native producer, one outer admin prerequisite and one deliverable owner PASS");
 }

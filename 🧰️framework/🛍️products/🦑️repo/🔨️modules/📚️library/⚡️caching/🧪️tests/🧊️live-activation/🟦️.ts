@@ -134,6 +134,5 @@ if (operation === "materialize") {
   assert.equal(existsSync(join(root, "modules", fixture.profile, "reload.json")), false, "Activation cannot mutate the shared compiler/materializer outputs");
   assert.equal(existsSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules")), false);
   await run(["run", "fixture:cancel"]);
-  console.log("[DEBUG] Native Nx preserves warm receipts, reconstructs deleted live state and publishes eight renderer/variant/profile installations independently; lodash/Ajv contracts agree PASS");
   rmSync(root, { recursive: true, force: true });
 }

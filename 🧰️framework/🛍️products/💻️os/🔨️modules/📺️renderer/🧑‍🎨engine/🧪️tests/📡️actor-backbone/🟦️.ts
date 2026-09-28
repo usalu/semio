@@ -47,7 +47,6 @@ describe("actor-owned document backbone", () => {
       expect(deepEqual(events, row.sequence), row.result).toBe(true);
       expect(binding.port.send(binding.port.uri, Uint8Array.of(1))).toBe(false);
     }
-    console.log("[DEBUG] Binding retirement: refused-local=1 uncertain-retired=2 replaced-retired=1");
   });
 
   it("publishes only after Bound and waits for exact Retired before releasing the binding", async () => {
@@ -124,7 +123,6 @@ describe("actor-owned document backbone", () => {
     expect(() => encodeDocumentBackboneControlV1({ ...maximum, bindingGeneration: maximum.bindingGeneration + 1n })).toThrow();
     expect(() => encodeDocumentBackboneControlV1({ ...maximum, uri: "界".repeat(427) })).toThrow();
     expect(() => decodeDocumentBackboneControlV1(new Uint8Array(bindingFixture.limits.controlBytes + 1))).toThrow();
-    console.log("[DEBUG] Actor document control: exact bounded bind/retire receipts and UInt authority PASS");
   });
 
   it("matches the canonical native OpBinary vectors and rejects hostile records", () => {
@@ -152,7 +150,6 @@ describe("actor-owned document backbone", () => {
     for (const hex of ["01020001000cffffffffffffffffff01", "0102ffffffffffffffffff01", "01020001000c010701ff", "010201016101000c010601"]) {
       expect(() => decodeBackboneMessage(fromHex(hex))).toThrow();
     }
-    console.log("[DEBUG] Backbone OpBinary: native golden bytes and hostile bounded record vectors PASS");
   });
 
   it("validates neutral ownership rows and admits only exact current sources", async () => {
@@ -176,7 +173,6 @@ describe("actor-owned document backbone", () => {
       expect(deepEqual(received, row.inbound ? [[2]] : []), row.id).toBe(true);
       await port.retire();
     }
-    console.log("[DEBUG] Actor document port: eight exact owner/source/activation retirement rows PASS");
   });
 
   it("retires admission immediately and drains the admitted turn before exact cleanup", async () => {

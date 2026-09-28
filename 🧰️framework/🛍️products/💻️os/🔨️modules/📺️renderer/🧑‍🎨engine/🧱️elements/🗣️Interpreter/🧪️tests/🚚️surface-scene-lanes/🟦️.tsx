@@ -95,14 +95,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(world3dSceneLaneForBodyKey(lane.bodyKey)).toEqual(lane);
       }
       expect(world3dSceneLaneForBodyKey("puzzle3d-main-top")).toBeUndefined();
-      console.info(`[DEBUG] ${WORLD3D_SCENE_LANES.length} world-3d scene lanes pinned against the neutral declaration`);
     });
 
     it("reassembles a spine and its lane carriers back into the scene the host reads", () => {
       const { spine, laneTexts, assembled } = contract.roundTrip;
       const collected = new Map<string, string>(Object.entries(laneTexts));
       expect(world3dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
-      console.info(`[DEBUG] round-tripped ${collected.size} lanes back onto the spine`);
     });
 
     it("walks each lane's retained carrier back to its exact payload", () => {
@@ -112,7 +110,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const collected = world3dSurfaceLaneTexts(record, store.getState(), spine.lanes);
       expect(Object.fromEntries(collected)).toEqual(laneTexts);
       expect(world3dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
-      console.info(`[DEBUG] ${collected.size} lane carriers walked out of the retained document`);
     });
 
     it("pages one oversized lane instead of faulting, and still reproduces it byte-exactly", () => {
@@ -142,7 +139,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(leafDepth).toBe(expectedLeafDepth);
       const collected = world3dSurfaceLaneTexts(record, state, [{ lane, bytes: payloadBytes, hash: "0000000000000000" }]);
       expect(collected.get(declared.bodyKey)).toBe(payload);
-      console.info(`[DEBUG] oversized ${lane} lane paged into ${leaves} leaves at depth ${leafDepth}, ${payloadBytes} bytes reproduced`);
     });
 
     it("keeps the last complete text for a lane that has not finished arriving", () => {
@@ -160,7 +156,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       surfaceSceneLaneCache.clear();
       const cold = world3dSurfaceLaneTexts(partial.record, partial.store.getState(), [{ lane: "instances", bytes: 999, hash: "bbbbbbbbbbbbbbbb" }]);
       expect(cold.has(declared.bodyKey)).toBe(false);
-      console.info("[DEBUG] a successor hash that has not finished arriving is omitted; the previous complete text is kept only for the same hash");
     });
 
     it("reassembles a Nakagin-scale multi-lane carrier without dropping a leaf", () => {
@@ -188,7 +183,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(Object.fromEntries(collected)).toEqual(laneTexts);
       const spine = { cameraJson: "{}", meshesJson: "", instancesJson: "", selectionJson: "", lanes: declared };
       expect(world3dSceneFromLanes(spine, collected).instancesJson).toBe(laneTexts["framework.scene.world3d.instances"]);
-      console.info(`[DEBUG] Nakagin-scale ${total} lane bytes reassembled from ${collected.size} carriers`);
     });
 
     it("a completed successor hash replaces the previous lane on the same surface node", () => {
@@ -201,7 +195,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const next = surfaceWithLanes({ [declared.bodyKey]: nakagin });
       const collected = world3dSurfaceLaneTexts({ ...next.record, id: first.record.id }, next.store.getState(), [{ lane: "instances", bytes: utf8ByteLength(nakagin), hash: "nakagin-hash00000" }]);
       expect(collected.get(declared.bodyKey)).toBe(nakagin);
-      console.info("[DEBUG] a completed successor hash replaced the previous instance lane on the same surface node");
     });
 
     it("a hover-only interaction change republishes only that lane", () => {
@@ -215,7 +208,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(next.selectionJson).toBe(assembled.selectionJson);
       const changed = Object.keys(hovered).filter((key) => hovered[key] !== (laneTexts as Record<string, string>)[key]);
       expect(changed).toEqual(["framework.scene.world3d.interaction"]);
-      console.info("[DEBUG] hover republished only the interaction lane");
     });
 
     it("counts lane bytes in UTF-8 so a non-ASCII payload still settles", () => {
@@ -228,7 +220,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { store, record } = surfaceWithLanes({ [declared.bodyKey]: payload });
       const collected = world3dSurfaceLaneTexts(record, store.getState(), [{ lane: "references", bytes, hash: "cccccccccccccccc" }]);
       expect(collected.get(declared.bodyKey)).toBe(payload);
-      console.info(`[DEBUG] a ${bytes}-byte UTF-8 lane payload settled against its declared byte length`);
     });
 
     /** 🚚️ The joint neither half's laws covered: a window body arrives at the shell as a `BuiltNode`
@@ -308,7 +299,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const leaves = (instancesRoot.children as readonly number[]).map((id: number) => state.nodes.get(id)! as AnyRecord).filter((child: AnyRecord) => child.component.type === "text");
       expect(leaves).toHaveLength(Math.ceil(Math.ceil(utf8ByteLength(laneTexts["framework.scene.world3d.instances"]!) / leafBytes) / packChunks));
       expect(leaves.every((packed: AnyRecord) => Object.keys(packed.component.dataAttributes ?? {}).length <= packChunks - 1)).toBe(true);
-      console.info(`[DEBUG] a ${utf8ByteLength(laneTexts["framework.scene.world3d.instances"]!)}-byte instances lane in ${leaves.length} packed leaves projected to ${assembled.length} instances across ${collected.size} lanes`);
     });
   it("keeps a spine brush preview when no lane text arrives", () => {
       const preview = JSON.stringify({ targetVortexFullId: "seed-left-001:v0", objectKindId: "Capsule", origin: [0, 0, 0], orientation: [0, 0, 0, 1] });

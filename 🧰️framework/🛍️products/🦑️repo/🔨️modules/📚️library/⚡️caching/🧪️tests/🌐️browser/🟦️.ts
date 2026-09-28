@@ -114,10 +114,5 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     await new Promise<void>((resolve, reject) => { rebound.once("error", reject); rebound.listen(Number(new URL(url!).port), lifecycle.server.host, resolve); });
     await new Promise<void>((resolve, reject) => rebound.close(error => error ? reject(error) : resolve()));
     await assert.rejects(() => serveVite({ root: app, config, host: lifecycle.server.host, port: 0, signal: abort.signal, ready: () => assert.fail("Cancelled server became ready") }), /abort/i);
-    console.log("[DEBUG] Vite serves HTTP and real HMR updates on one allocated listener, rejects occupied ports and closes live sockets on cancellation PASS");
-    console.log("[DEBUG] Vite config compilation and dependency optimization use the private fixture's module directory PASS");
-    console.log("[DEBUG] Vite publication owns the complete file inventory, preserves prior bytes after build failure and cleans private staging PASS");
-    console.log("[DEBUG] Real Vite production build emits owned runtime bytes and rejects a mismatched producer PASS");
-    console.log(`[DEBUG] Browser distribution copies ${count} owned files, relocates module imports, excludes ambient metadata, rejects corrupt ownership/paths and pre-cancellation PASS`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

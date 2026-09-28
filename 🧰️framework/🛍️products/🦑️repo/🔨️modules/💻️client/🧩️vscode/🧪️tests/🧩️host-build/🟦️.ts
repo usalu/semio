@@ -21,5 +21,4 @@ export async function testExtensionHostBuild(generated: string): Promise<void> {
     assert.deepEqual(JSON.parse(result.stdout), fixture.expected);
     assert.ok(!readFileSync(path, "utf8").includes("unavailable-vitest-suite"));
   }
-  console.log("[DEBUG] Extension CommonJS host build excludes Vitest registration, preserves Node modules and matches esbuild/native Node PASS");
 }

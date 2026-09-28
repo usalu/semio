@@ -1,0 +1,11 @@
+{
+  "schema": "semio.os.shell-host.identity-gate/v1",
+  "description": "Language-agnostic law of the input funnel's identity gate: a user input waits (bounded) for the held hub session's identity only while the hub granted a session the shell has not resolved to a human yet — not without a session, not once the identity is known, not for a refused session, not during a shortage (an unreachable hub keeps the last identity and never blocks). Measured cause: the first Create Space within ~2 s of signing in was refused `s.home.session-identity-required` (ticket 26/09/23, S18 §14b).",
+  "cases": [
+    { "name": "no session, no wait", "gate": { "capabilityHeld": false, "identityKnown": false, "refused": false, "offline": false }, "awaits": false },
+    { "name": "a just-granted session not yet resolved waits", "gate": { "capabilityHeld": true, "identityKnown": false, "refused": false, "offline": false }, "awaits": true },
+    { "name": "a resolved session does not wait", "gate": { "capabilityHeld": true, "identityKnown": true, "refused": false, "offline": false }, "awaits": false },
+    { "name": "a refused session does not wait", "gate": { "capabilityHeld": true, "identityKnown": false, "refused": true, "offline": false }, "awaits": false },
+    { "name": "a shortage never blocks", "gate": { "capabilityHeld": true, "identityKnown": false, "refused": false, "offline": true }, "awaits": false }
+  ]
+}

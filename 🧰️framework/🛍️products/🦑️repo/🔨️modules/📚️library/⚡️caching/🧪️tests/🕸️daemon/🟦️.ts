@@ -35,7 +35,6 @@ export function testWorkspaceWatchIgnores(workspace: string, output: string): vo
   `;
   const result = spawnSync("node", ["--eval", source], { cwd: workspace, encoding: "utf8", timeout: 15000 });
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  console.log("[DEBUG] Native Nx watcher observes source edits and excludes compiler/map cache writes PASS");
 }
 
 /** ⏳️ Uses Nx's own readiness output to verify progress, long startup and process cancellation. */
@@ -93,7 +92,6 @@ export async function testWatcherReadiness(workspace: string): Promise<void> {
   void exports.watch({ all: true, includeGlobalWorkspaceFiles: true, verbose: true, command: "fixture" });
   await Promise.resolve();
   assert.ok(output.includes(fixture.cases[0].chunks.join("").trim().replace(/^NX /, "")), "Fixture must match the installed Nx watcher readiness output");
-  console.log(`[DEBUG] Nx watcher readiness: ${fixture.cases.length} lifecycle cases, including 150-second startup, pass against installed Nx output`);
 }
 
 /** 🧵️ Exercises the installed Nx scheduler at controlled native discovery boundaries. */
@@ -174,6 +172,5 @@ export async function testGraphCoalescing(workspace: string, source?: string): P
     const warm: any = await bounded(exported.getCachedSerializedProjectGraphPromise());
     assert.equal(warm.projectGraph, results[0].projectGraph);
     assert.equal(calls, vector.computations, vector.name + ": warm graph recomputed");
-    console.log(`[DEBUG] Nx graph ${vector.name}: ${calls} computations, concurrency ${maximum}, fresh result for ${results.length} callers PASS`);
   }
 }

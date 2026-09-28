@@ -1,0 +1,14 @@
+{
+  "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/tsconfig.json",
+  "compilerOptions": { "rootDir": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay", "types": ["node", "bun"], "noEmit": true },
+  "include": [
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/🧊️mutate-gltf-2-0/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🔀️mutate-bcf-2-1/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/👁️viewpoint/🧪️tests/🔀️mutate-bcf-2-1-viewpoint/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/📸️snapshot/🧪️tests/🔀️mutate-bcf-2-1-snapshot/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/📜️mutate-docx-ecma-376/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📜️script.ts"
+  ]
+}

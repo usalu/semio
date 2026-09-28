@@ -86,8 +86,6 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
       assert.match(result.stdout, /\bbuild: Build \{[\s\S]*?\blocked: true,/);
     }
   }
-  console.log(`[DEBUG] Finite Trunk locked configuration matches Bun/smol-toml${native ? " and native Trunk config" : ""} PASS`);
-  console.log("[DEBUG] Trunk prerequisite graph is explicit; ready, stale and missing tooling follow the pinned preparation contract PASS");
 }
 
 /** 🔬️ Proves stale-lock rejection before compilation, including subsequent native watch rebuilds. */
@@ -137,7 +135,6 @@ export async function testNativeTrunkLockfile(workspace: string, generated: stri
     await until("hook call to", offset);
     assert.equal(readFileSync(join(root, "Cargo.lock"), "utf8"), fixture.probe.files["Cargo.lock"]);
     assert.equal(digest(), before, "Rejected watch rebuild must preserve the previous deliverables");
-    console.log("[DEBUG] Native Trunk build/watch reject stale lock bytes before compilation and retain prior deliverables PASS");
   } finally {
     stop();
     const force = setTimeout(() => { if (!exited && watch.pid && process.platform !== "win32") try { process.kill(-watch.pid, "SIGKILL"); } catch {} }, 2000);

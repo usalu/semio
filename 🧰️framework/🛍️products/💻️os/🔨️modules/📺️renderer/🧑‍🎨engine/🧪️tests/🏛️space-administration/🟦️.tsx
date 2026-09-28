@@ -117,7 +117,6 @@ describe("ShellHost space administration state", () => {
       expect(directoryAdministrationCommandAllowedV1(authorPage(), SPACE, command as DirectoryCommand)).toBe(false);
     }
     for (const command of admissionFixture.malformed) expect(directoryAdministrationCommandAllowedV1(authorPage(), SPACE, command as DirectoryCommand)).toBe(false);
-    console.info(`[DEBUG] administration command admission: ${admissionFixture.allowed.length} scoped capabilities with ${admissionFixture.refused.length} refusals each`);
   });
 
   it("maps the neutral space-property commands only under exact current page capability", () => {
@@ -142,7 +141,6 @@ describe("ShellHost space administration state", () => {
       }
     }
     for (const name of propertiesFixture.invalidNames) expect(shellSpaceAdministrationRequest(state(authorPage()), { kind: "rename-space", name } as SpaceAdministrationIntentV1, "1".repeat(32))).toBeNull();
-    console.info(`[DEBUG] space administration properties: ${propertiesFixture.cases.length} canonical commands, ${propertiesFixture.refused.length} authority refusals each`);
   });
 
   it("maps only the exact Home manage-space effect into one canonical administration opening", () => {
@@ -265,7 +263,6 @@ describe("SpaceAdministrationPane", () => {
     expect((screen.getByRole("textbox", { name: "Space name" }) as HTMLInputElement).value).toBe("Server confirmed");
     expect((screen.getByRole("combobox", { name: "Visibility" }) as HTMLSelectElement).value).toBe("public");
     expect(intents).toEqual([]);
-    console.info("[DEBUG] space properties: drafts stayed local through refresh and replaced only by a new receipt");
   });
 
   it("edits properties in both locales without optimistic publication and withdraws controls with authority", async () => {

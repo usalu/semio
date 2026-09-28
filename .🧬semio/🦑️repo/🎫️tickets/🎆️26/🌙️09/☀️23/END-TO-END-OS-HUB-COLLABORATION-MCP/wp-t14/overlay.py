@@ -5,7 +5,9 @@ repo's working tree — every top-level entry except `.git`, `.🧬semio` and th
 `sync` brings an existing overlay back to the live tree incrementally: every file newer than the overlay's stamp on EITHER
 side (live edits, and files a patch wrote in the overlay) is re-cloned from the live tree, files deleted live are deleted,
 then the stamp moves — no rmtree of whole trees, and every earlier patch is undone so patch scripts re-apply cleanly.
-usage: overlay.py create <overlay> | overlay.py sync <overlay> | overlay.py refresh <overlay> <rel>…"""
+`sync <overlay> <base-commit>` also deletes every tracked file git removed since that commit (a deleted file older than the
+stamp is invisible to the mtime walk).
+usage: overlay.py create <overlay> | overlay.py sync <overlay> [<base-commit>] | overlay.py refresh <overlay> <rel>…"""
 import ctypes
 import os
 import shutil
@@ -55,6 +57,10 @@ elif mode == "sync":
             if rel.split(os.sep)[0] in SKIP or rel.startswith(".t14-"):
                 continue
             stale.add(rel)
+    base = sys.argv[3] if len(sys.argv) > 3 else None
+    if base:
+        for listing in (["git", "diff", "--no-renames", "--name-only", "--diff-filter=D", base, "HEAD"], ["git", "ls-files", "--deleted"]):
+            stale.update(filter(None, subprocess.run(listing + ["-z"], cwd=ROOT, capture_output=True).stdout.decode("utf-8", "replace").split("\0")))
     removed = 0
     for rel in sorted(stale):
         source, destination = os.path.join(ROOT, rel), os.path.join(overlay, rel)

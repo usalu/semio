@@ -7153,6 +7153,40 @@ async function runSourceCensusGate(root: string, which: "placeholders" | "comman
   }
 }
 
+/** 🏷️ The docstring census as gates (acceptance ledger 5.11): `at-emoji` fails on any docstring that opens with the `@emoji`
+ * residue token instead of its emoji; `emoji-first` fails on any docstring that opens with neither an emoji nor a symbol
+ * glyph. Both scan every tracked Rust / TypeScript source, cross-check the `@emoji` openers against `git grep`, print the
+ * findings and publish the acceptance record.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runDocstringCensus` */
+async function runDocstringCensusGate(root: string, rule: string | undefined): Promise<void> {
+  if (rule !== "at-emoji" && rule !== "emoji-first") throw new Error("usage: verify docstrings <at-emoji|emoji-first>");
+  const { acceptanceCheckResult, publishAcceptanceCheckResult, runDocstringCensus } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+  const controller = new AbortController();
+  const cancel = (): void => controller.abort();
+  process.once("SIGINT", cancel);
+  const startedAt = new Date();
+  try {
+    const census = runDocstringCensus(root, controller.signal, (line) => console.error(`[verify docstrings] ${line}`));
+    const atEmoji = census.hits.filter((hit) => hit.rule === "at-emoji");
+    const noEmoji = census.hits.filter((hit) => hit.rule === "no-emoji");
+    const failing = rule === "at-emoji" ? atEmoji : census.hits;
+    for (const hit of failing.slice(0, 200)) console.log(`[verify docstrings] ${hit.rule} ${hit.path}:${hit.line} ${hit.text}`);
+    for (const disagreement of census.disagreements) console.log(`[verify docstrings] oracle disagreement ${disagreement}`);
+    const status = failing.length === 0 && census.disagreements.length === 0 ? "pass" : "fail";
+    console.log(`[verify docstrings] rule=${rule} files=${census.files} at-emoji=${atEmoji.length} no-emoji=${noEmoji.length} oracle=${census.disagreements.length === 0 ? "agrees" : "DISAGREES"}`);
+    publishAcceptanceCheckResult(root, acceptanceCheckResult({
+      check: rule === "at-emoji" ? "docstring-at-emoji" : "docstring-emoji-first",
+      status,
+      startedAt,
+      measured: { files: census.files, atEmoji: atEmoji.length, noEmoji: noEmoji.length, oracleAgrees: census.disagreements.length === 0 },
+      summary: { en: `${failing.length} docstrings break the ${rule} rule in ${census.files} Rust/TypeScript sources (@emoji ${atEmoji.length}, no emoji ${noEmoji.length})`, de: `${failing.length} Docstrings verletzen die Regel ${rule} in ${census.files} Rust-/TypeScript-Quellen (@emoji ${atEmoji.length}, ohne Emoji ${noEmoji.length})` },
+    }));
+    if (status !== "pass") process.exitCode = 1;
+  } finally {
+    process.removeListener("SIGINT", cancel);
+  }
+}
+
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "taxonomy") {
@@ -7185,6 +7219,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "production-placeholders") {
       await runSourceCensusGate(this.root, "placeholders");
+      return;
+    }
+    if (segments[0] === "docstrings") {
+      await runDocstringCensusGate(this.root, segments[1]);
       return;
     }
     if (segments[0] === "interactivity" && segments[1] === "commands") {

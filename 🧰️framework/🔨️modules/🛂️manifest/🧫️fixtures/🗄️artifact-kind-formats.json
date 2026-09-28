@@ -2,7 +2,7 @@
   "id": "s.fixture.document",
   "name": "Format Roundtrip",
   "sourceFormat": "fixture.document",
-  "componentKind": "fixture",
+  "componentKind": "hostSnapshot",
   "dimension": "2d",
   "mediaCapability": "meshOnly",
   "mediaType": { "class": "twoD", "form": "vector" },

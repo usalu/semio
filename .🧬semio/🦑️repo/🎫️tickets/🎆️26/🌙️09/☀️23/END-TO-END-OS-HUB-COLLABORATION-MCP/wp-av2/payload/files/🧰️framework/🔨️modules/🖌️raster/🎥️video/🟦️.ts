@@ -1,7 +1,8 @@
 /** @emoji 🎥️ The video tier of the raster module — TypeScript twin of `🦀️.rs` beside this file: RGBA8 frames → H.264
- * (AVC) access units → ISO-BMFF (MP4) bytes, first-party and dependency-free. `AvcIntraPcmEncoder` is the exact
- * all-`I_PCM` IDR encoder; `writeAvcMp4` muxes any encoder's AVCC samples (this one's, or WebCodecs' `VideoEncoder`
- * chunks on the browser host) into a progressive MP4. Both twins answer `🧫️fixtures/🔣️.json` byte for byte.
+ * (AVC) access units → ISO-BMFF (MP4) bytes, first-party and dependency-free. `AvcPcmEncoder` writes every new picture
+ * as an exact all-`I_PCM` IDR and every repeat as an all-`P_Skip` P picture; `writeAvcMp4` muxes any encoder's AVCC
+ * samples (this one's, or WebCodecs' `VideoEncoder` chunks on the browser host) into a progressive MP4. Both twins answer
+ * `🧫️fixtures/🔣️.json` byte for byte, and `🧪️tests/🎞️ffmpeg-decode` decodes every fixture stream with FFmpeg.
  * <https://www.itu.int/rec/T-REC-H.264> · <https://www.iso.org/standard/83102.html> · <https://www.iso.org/standard/83529.html> */
 
 //#region 🔖️Parameters
@@ -60,7 +61,7 @@ export function avcLevelIdc(parameters: VideoStreamParameters): number {
 /** 🚨️ Everything the video tier refuses, in the Rust twin's vocabulary. */
 export class VideoEncodeError extends Error {
   constructor(
-    readonly code: "dimensions" | "frameRate" | "frameBytes" | "containerTooLarge" | "empty" | "cancelled",
+    readonly code: "dimensions" | "frameRate" | "frameBytes" | "containerTooLarge" | "empty" | "nothingToRepeat" | "cancelled",
     message: string,
   ) {
     super(message);
@@ -131,6 +132,20 @@ class BitWriter {
     else this.bits(value, 8);
   }
 
+  append(bytes: Uint8Array): void {
+    if (this.used !== 0) {
+      for (const value of bytes) this.bits(value, 8);
+      return;
+    }
+    if (this.length + bytes.length > this.bytes.length) {
+      const grown = new Uint8Array(Math.max(this.bytes.length * 2, this.length + bytes.length));
+      grown.set(this.bytes.subarray(0, this.length));
+      this.bytes = grown;
+    }
+    this.bytes.set(bytes, this.length);
+    this.length += bytes.length;
+  }
+
   trailing(): Uint8Array {
     this.bit(1);
     this.alignZero();
@@ -144,7 +159,8 @@ function nalUnit(nalRefIdc: number, nalUnitType: number, rbsp: Uint8Array): Uint
   let length = 0;
   out[length++] = (nalRefIdc << 5) | nalUnitType;
   let zeros = 0;
-  for (const byte of rbsp) {
+  for (let index = 0; index < rbsp.length; index += 1) {
+    const byte = rbsp[index]!;
     if (zeros >= 2 && byte <= 3) {
       out[length++] = 3;
       zeros = 0;
@@ -171,12 +187,17 @@ export interface EncodedVideoSample {
   readonly sync: boolean;
 }
 
-/** 🔌️ The interface every H.264 encoder of this tier answers to (the first-party one below, WebCodecs on the browser). */
+/** 🔌️ The interface every H.264 encoder of this tier answers to (the first-party one below; the browser host plugs WebCodecs in
+ * behind its own port): one sample per new picture, one per repeat of the previous picture. */
 export interface VideoEncoderPort {
   readonly parameters: VideoStreamParameters;
   configuration(): AvcDecoderConfiguration;
   encode(rgba: Uint8Array | Uint8ClampedArray): EncodedVideoSample;
+  repeat(): EncodedVideoSample;
 }
+
+/** 📐️ `frame_num` is 4 bits in every SPS this tier writes (`log2_max_frame_num_minus4 = 0`). */
+const AVC_FRAME_NUM_MODULUS = 16;
 
 /** 🎨️ BT.601 limited-range luma (integer form, identical in the Rust twin). */
 export function bt601Luma(r: number, g: number, b: number): number {
@@ -243,10 +264,47 @@ function pictureParameterSet(): Uint8Array {
   return nalUnit(3, 8, bits.trailing());
 }
 
-function idrPcmSlice(parameters: VideoStreamParameters, rgba: Uint8Array | Uint8ClampedArray, idrPicId: number): Uint8Array {
+/** 🎨️ The BT.601 planes of one picture padded to whole macroblocks (edge pixels repeated): luma per pixel, each chroma
+ * sample the rounded mean of its 2×2 block — the Rust twin's per-macroblock arithmetic, computed once per plane. */
+function pcmPlanes(parameters: VideoStreamParameters, rgba: Uint8Array | Uint8ClampedArray): { readonly luma: Uint8Array; readonly cb: Uint8Array; readonly cr: Uint8Array; readonly stride: number } {
   const { width, height } = parameters;
   const mbs = videoMacroblocks(parameters);
-  const offset = (x: number, y: number): number => (Math.min(y, height - 1) * width + Math.min(x, width - 1)) * 4;
+  const stride = mbs.width * 16;
+  const rows = mbs.height * 16;
+  const luma = new Uint8Array(stride * rows);
+  const cbFull = new Int16Array(stride * rows);
+  const crFull = new Int16Array(stride * rows);
+  for (let y = 0; y < rows; y += 1) {
+    const source = Math.min(y, height - 1) * width;
+    for (let x = 0; x < stride; x += 1) {
+      const index = (source + Math.min(x, width - 1)) * 4;
+      const r = rgba[index]!;
+      const g = rgba[index + 1]!;
+      const b = rgba[index + 2]!;
+      const at = y * stride + x;
+      luma[at] = ((66 * r + 129 * g + 25 * b + 128) >> 8) + 16;
+      cbFull[at] = ((-38 * r - 74 * g + 112 * b + 128) >> 8) + 128;
+      crFull[at] = ((112 * r - 94 * g - 18 * b + 128) >> 8) + 128;
+    }
+  }
+  const chromaStride = stride / 2;
+  const cb = new Uint8Array(chromaStride * (rows / 2));
+  const cr = new Uint8Array(chromaStride * (rows / 2));
+  for (let y = 0; y < rows / 2; y += 1) {
+    for (let x = 0; x < chromaStride; x += 1) {
+      const top = 2 * y * stride + 2 * x;
+      const bottom = top + stride;
+      cb[y * chromaStride + x] = (cbFull[top]! + cbFull[top + 1]! + cbFull[bottom]! + cbFull[bottom + 1]! + 2) >> 2;
+      cr[y * chromaStride + x] = (crFull[top]! + crFull[top + 1]! + crFull[bottom]! + crFull[bottom + 1]! + 2) >> 2;
+    }
+  }
+  return { luma, cb, cr, stride };
+}
+
+function idrPcmSlice(parameters: VideoStreamParameters, rgba: Uint8Array | Uint8ClampedArray, idrPicId: number): Uint8Array {
+  const mbs = videoMacroblocks(parameters);
+  const { luma, cb, cr, stride } = pcmPlanes(parameters, rgba);
+  const chromaStride = stride / 2;
   const bits = new BitWriter(mbs.width * mbs.height * 386 + 16);
   bits.ue(0);
   bits.ue(7);
@@ -257,47 +315,49 @@ function idrPcmSlice(parameters: VideoStreamParameters, rgba: Uint8Array | Uint8
   bits.bit(0);
   bits.se(0);
   bits.ue(1);
-  const cb = new Uint8Array(64);
-  const cr = new Uint8Array(64);
   for (let mbY = 0; mbY < mbs.height; mbY += 1) {
     for (let mbX = 0; mbX < mbs.width; mbX += 1) {
       bits.ue(25);
       bits.alignZero();
-      for (let y = 0; y < 16; y += 1) {
-        for (let x = 0; x < 16; x += 1) {
-          const index = offset(mbX * 16 + x, mbY * 16 + y);
-          bits.byte(bt601Luma(rgba[index]!, rgba[index + 1]!, rgba[index + 2]!));
-        }
+      for (let y = 0; y < 16; y += 1) bits.append(luma.subarray((mbY * 16 + y) * stride + mbX * 16, (mbY * 16 + y) * stride + mbX * 16 + 16));
+      for (const plane of [cb, cr]) {
+        for (let y = 0; y < 8; y += 1) bits.append(plane.subarray((mbY * 8 + y) * chromaStride + mbX * 8, (mbY * 8 + y) * chromaStride + mbX * 8 + 8));
       }
-      for (let y = 0; y < 8; y += 1) {
-        for (let x = 0; x < 8; x += 1) {
-          let sumCb = 0;
-          let sumCr = 0;
-          for (const [dx, dy] of [
-            [0, 0],
-            [1, 0],
-            [0, 1],
-            [1, 1],
-          ] as const) {
-            const index = offset(mbX * 16 + x * 2 + dx, mbY * 16 + y * 2 + dy);
-            sumCb += bt601Cb(rgba[index]!, rgba[index + 1]!, rgba[index + 2]!);
-            sumCr += bt601Cr(rgba[index]!, rgba[index + 1]!, rgba[index + 2]!);
-          }
-          cb[y * 8 + x] = (sumCb + 2) >> 2;
-          cr[y * 8 + x] = (sumCr + 2) >> 2;
-        }
-      }
-      for (const value of cb) bits.byte(value);
-      for (const value of cr) bits.byte(value);
     }
   }
   return nalUnit(3, 5, bits.trailing());
 }
 
-/** 🧱️ First-party H.264 encoder: every picture one IDR slice of `I_PCM` macroblocks. */
-export class AvcIntraPcmEncoder implements VideoEncoderPort {
+/** ⏯️ A P slice whose one `mb_skip_run` covers every macroblock — it decodes to its reference exactly (Rust `p_skip_slice`). */
+function pSkipSlice(parameters: VideoStreamParameters, frameNum: number): Uint8Array {
+  const mbs = videoMacroblocks(parameters);
+  const bits = new BitWriter(16);
+  bits.ue(0);
+  bits.ue(5);
+  bits.ue(0);
+  bits.bits(frameNum, 4);
+  bits.bit(0);
+  bits.bit(0);
+  bits.bit(0);
+  bits.se(0);
+  bits.ue(1);
+  bits.ue(mbs.width * mbs.height);
+  return nalUnit(2, 1, bits.trailing());
+}
+
+function avccSample(nal: Uint8Array, sync: boolean): EncodedVideoSample {
+  const data = new Uint8Array(nal.length + 4);
+  new DataView(data.buffer).setUint32(0, nal.length);
+  data.set(nal, 4);
+  return { data, sync };
+}
+
+/** 🧱️ First-party H.264 encoder: every new picture one IDR slice of `I_PCM` macroblocks, every repeat one P slice of
+ * `P_Skip` macroblocks referencing the picture before it. */
+export class AvcPcmEncoder implements VideoEncoderPort {
   private readonly config: AvcDecoderConfiguration;
   private idrPicId = 0;
+  private frameNum: number | null = null;
 
   constructor(readonly parameters: VideoStreamParameters) {
     validateVideoStreamParameters(parameters);
@@ -313,10 +373,14 @@ export class AvcIntraPcmEncoder implements VideoEncoderPort {
     if (rgba.length !== expected) throw new VideoEncodeError("frameBytes", `video frame carries ${rgba.length} RGBA bytes, the stream needs ${expected}`);
     const slice = idrPcmSlice(this.parameters, rgba, this.idrPicId);
     this.idrPicId = (this.idrPicId + 1) % 2;
-    const data = new Uint8Array(slice.length + 4);
-    new DataView(data.buffer).setUint32(0, slice.length);
-    data.set(slice, 4);
-    return { data, sync: true };
+    this.frameNum = 0;
+    return avccSample(slice, true);
+  }
+
+  repeat(): EncodedVideoSample {
+    if (this.frameNum === null) throw new VideoEncodeError("nothingToRepeat", "video frame repeats a picture before any picture was encoded");
+    this.frameNum = (this.frameNum + 1) % AVC_FRAME_NUM_MODULUS;
+    return avccSample(pSkipSlice(this.parameters, this.frameNum), false);
   }
 }
 //#endregion 🔖️Encoder
@@ -383,9 +447,9 @@ function moov(parameters: VideoStreamParameters, configuration: AvcDecoderConfig
   const stsd = fullBox("stsd", 0, be32(1), avc1);
   const stts = fullBox("stts", 0, be32(1, frames, 1));
   const sync = samples.flatMap((sample, index) => (sample.sync ? [index + 1] : []));
-  const stss = sync.length === samples.length ? [] : fullBox("stss", 0, be32(sync.length), be32(...sync));
+  const stss = sync.length === samples.length ? [] : fullBox("stss", 0, be32(sync.length), sync.flatMap((number) => be32(number)));
   const stsc = fullBox("stsc", 0, be32(1, 1, frames, 1));
-  const stsz = fullBox("stsz", 0, be32(0, frames), be32(...samples.map((sample) => sample.data.length)));
+  const stsz = fullBox("stsz", 0, be32(0, frames), samples.flatMap((sample) => be32(sample.data.length)));
   const stco = fullBox("stco", 0, be32(1, chunkOffset));
   const stbl = boxed("stbl", stsd, stts, stss, stsc, stsz, stco);
   const minf = boxed("minf", vmhd, dinf, stbl);
@@ -421,15 +485,15 @@ export interface VideoFrameRun {
   readonly frames: number;
 }
 
-/** 📈️ Encodes `runs` with `encoder` and muxes the result, reporting `(done, total)` after every frame and stopping with a
- * `cancelled` error as soon as `signal` aborts. */
-export function encodeVideoRuns(encoder: VideoEncoderPort, runs: readonly VideoFrameRun[], progress: (done: number, total: number) => void, signal?: AbortSignal): Uint8Array {
+/** 📈️ Encodes `runs` with `encoder` (each run's picture once, then a repeat per further frame) and muxes the result,
+ * reporting `(done, total)` after every frame and stopping with a `cancelled` error as soon as `cancelled()` answers true. */
+export function encodeVideoRuns(encoder: VideoEncoderPort, runs: readonly VideoFrameRun[], progress: (done: number, total: number) => void, cancelled: () => boolean = () => false): Uint8Array {
   const total = runs.reduce((sum, run) => sum + run.frames, 0);
   const samples: EncodedVideoSample[] = [];
   for (const run of runs) {
     for (let frame = 0; frame < run.frames; frame += 1) {
-      if (signal?.aborted) throw new VideoEncodeError("cancelled", "video encoding was cancelled");
-      samples.push(encoder.encode(run.rgba));
+      if (cancelled()) throw new VideoEncodeError("cancelled", "video encoding was cancelled");
+      samples.push(frame === 0 ? encoder.encode(run.rgba) : encoder.repeat());
       progress(samples.length, total);
     }
   }

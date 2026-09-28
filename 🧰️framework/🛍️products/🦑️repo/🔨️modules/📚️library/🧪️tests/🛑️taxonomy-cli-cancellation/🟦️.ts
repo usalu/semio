@@ -99,7 +99,6 @@ test("the real CLI options cancel incoming-reference planning without changing s
       if (!observed && event.phase === vector.phase) {
         observed = true;
         put(vector.cancelPath, "cancel\n");
-        console.log("[DEBUG] CLI incoming-plan cancellation requested");
       }
     });
     expect(() => planTaxonomy(inventory, options)).toThrow(/cancel/iu);

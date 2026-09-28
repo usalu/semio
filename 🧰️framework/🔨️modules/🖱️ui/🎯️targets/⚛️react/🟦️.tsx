@@ -110,14 +110,14 @@ import i18next from "i18next";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import * as THREE from "three";
-// 🚧️W8-interim: explicit re-export of the raw React/react-dom/three runtime values and types that
-// s plugins previously imported straight from those packages — plugins depend on this package
-// already, so they no longer need "react"/"react-dom"/"three" in their own `dependencies`.
+// 🚧️W8-interim: explicit re-export of the raw React/react-dom runtime values and types that s plugins
+// previously imported straight from those packages — plugins depend on this package already, so they no
+// longer need "react"/"react-dom" in their own `dependencies`. three.js is re-exported by name in 📰️Three.js.
 export { Fragment, createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 export type { CSSProperties, FC, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode, RefObject } from "react";
 export { createRoot } from "react-dom/client";
 export type { Root } from "react-dom/client";
-export type { BufferGeometry, Camera as ThreeCamera, Group, MeshStandardMaterial, Object3D, Ray, Scene as ThreeScene, Vector3 } from "three";
+export type { Camera as ThreeCamera, NormalBufferAttributes, Ray, Scene as ThreeScene, Texture as ThreeTexture } from "three";
 
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -137,7 +137,7 @@ import { TransformControls } from "@react-three/drei/core/TransformControls.js";
 import { useGLTF } from "@react-three/drei/core/Gltf.js";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from "@react-three/fiber";
 import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "../../🔨️modules/🔎️fuzzy-ranking/🟦️.ts";
-import { UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForMatches, elementsSurfaceDeviceIsMobile, type ElementsSurfaceDevice } from "../../📱️device/🟦️.ts";
+import { UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, availableViewportHeightPx, elementsSurfaceDeviceForMatches, elementsSurfaceDeviceIsMobile, type ElementsSurfaceDevice } from "../../📱️device/🟦️.ts";
 import {
   applyNodeChanges,
   Background,
@@ -1672,10 +1672,12 @@ export type ElementsSurfaceAppearance = "system" | "light" | "dark";
 // once for both renderer targets (the wgpu dock compares the same thresholds against its own `screen_w`),
 // so React cannot drift from wgpu about what width is a phone, a tablet or a desktop.
 export {
+  UI_AVAILABLE_HEIGHT,
   UI_MOBILE_MAX_WIDTH_PX,
   UI_MOBILE_MEDIA_QUERY,
   UI_TABLET_MAX_WIDTH_PX,
   UI_TABLET_MEDIA_QUERY,
+  availableViewportHeightPx,
   elementsSurfaceDeviceForMatches,
   elementsSurfaceDeviceForWidth,
   elementsSurfaceDeviceIsMobile,
@@ -1807,7 +1809,7 @@ function chromeRevealRegionRevealed(region: HTMLElement, x: number, y: number): 
   }
   const regionName = region.dataset.uiRevealRegion;
   if (regionName === "navbar" && y <= CHROME_REVEAL_EDGE_BAND_PX) return true;
-  if (regionName === "footer" && typeof window !== "undefined" && y >= window.innerHeight - CHROME_REVEAL_EDGE_BAND_PX) return true;
+  if (regionName === "footer" && typeof window !== "undefined" && y >= availableViewportHeightPx({ innerHeight: window.innerHeight, visualHeight: window.visualViewport?.height }) - CHROME_REVEAL_EDGE_BAND_PX) return true;
   if (regionName === "window-cap") {
     const stack = chromeRevealStackAncestor(region);
     if (stack) {
@@ -2926,6 +2928,7 @@ export const uiChromeTranslationBundles = {
           focus: { label: { normal: "Fokussieren", beginner: "Fokussieren" } },
           unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
           newWindow: { label: { normal: "Neues Fenster", beginner: "Neues Fenster" } },
+          tabs: { label: { normal: "Fensterreiter", beginner: "Fensterreiter" } },
         },
         contextMenu: {
           more: { label: { normal: "Mehr", beginner: "Mehr" } },
@@ -3851,6 +3854,7 @@ export const uiChromeTranslationBundles = {
           focus: { label: { normal: "Focus", beginner: "Focus" } },
           unfocus: { label: { normal: "Unfocus", beginner: "Unfocus" } },
           newWindow: { label: { normal: "New Window", beginner: "New Window" } },
+          tabs: { label: { normal: "Window tabs", beginner: "Window tabs" } },
         },
         contextMenu: {
           more: { label: { normal: "More", beginner: "More" } },
@@ -6066,7 +6070,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
       setViewport({ width: overlayHost.clientWidth, height: overlayHost.clientHeight });
       return;
     }
-    setViewport({ width: window.innerWidth, height: window.innerHeight });
+    const visual = window.visualViewport;
+    setViewport({ width: visual && visual.width > 0 ? visual.width : window.innerWidth, height: availableViewportHeightPx({ innerHeight: window.innerHeight, visualHeight: visual?.height }) });
   }, [overlayHost]);
 
   reactHostPort.useEffect(() => {
@@ -6081,6 +6086,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     measureOverlayViewport();
     const onResize = () => measureOverlayViewport();
     window.addEventListener("resize", onResize);
+    const visual = window.visualViewport;
+    visual?.addEventListener("resize", onResize);
     let observer: ResizeObserver | null = null;
     if (overlayHost && typeof ResizeObserver !== "undefined") {
       observer = new ResizeObserver(measureOverlayViewport);
@@ -6088,6 +6095,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     }
     return () => {
       window.removeEventListener("resize", onResize);
+      visual?.removeEventListener("resize", onResize);
       observer?.disconnect();
     };
   }, [measureOverlayViewport, overlayHost]);
@@ -11691,7 +11699,7 @@ export {
 
 if (import.meta.vitest) {
   const { registerIconRenderCameraTests } = await import("../../🧪️tests/🖼️icon-render-camera/🟦️.tsx");
-  await registerIconRenderCameraTests(import.meta.vitest, { THREE, buildIconCamera, finalizeIconSvgMarkup, iconRenderCameraPose });
+  await registerIconRenderCameraTests(import.meta.vitest, { buildIconCamera, finalizeIconSvgMarkup, iconRenderCameraPose });
   const { registerTests1 } = await import("../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
   await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, searchSpaceConfirmsLine, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
 }
@@ -11717,8 +11725,42 @@ export { Line } from "@react-three/drei/core/Line.js";
 export { Sphere } from "@react-three/drei/core/shapes.js";
 export { useFBX } from "@react-three/drei/core/Fbx.js";
 export { Canvas as ThreeCanvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-export * as THREE from "three";
+export {
+  Box3,
+  BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
+  CanvasTexture,
+  ClampToEdgeWrapping,
+  Color,
+  ConeGeometry,
+  CylinderGeometry,
+  DoubleSide,
+  DynamicDrawUsage,
+  EdgesGeometry,
+  Group,
+  IcosahedronGeometry,
+  InstancedBufferAttribute,
+  InstancedMesh,
+  LineBasicMaterial,
+  LineDashedMaterial,
+  LineSegments,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  OrthographicCamera,
+  PlaneGeometry,
+  PointsMaterial,
+  Quaternion,
+  ShaderMaterial,
+  SphereGeometry,
+  TextureLoader,
+  TorusGeometry,
+  Vector3,
+} from "three";
+export { GLTFLoader };
 export { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+export { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
 // #endregion 📰️Three.js
 
 // #region 🎽️XY Flow (additions not already exported inline)

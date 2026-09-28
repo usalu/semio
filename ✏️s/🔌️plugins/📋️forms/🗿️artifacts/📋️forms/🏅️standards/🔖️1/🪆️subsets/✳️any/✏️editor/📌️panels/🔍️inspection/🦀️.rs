@@ -69,7 +69,7 @@ pub fn render(
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use controls::*;
     use crate::editor::forms::{ui_value_map, ui_value_text};
-    let labels = crate::editor::forms::forms_play_labels(view);
+    let labels = crate::editor::forms::terminology::forms_play_labels(view);
     const ROOT: &str = "forms-play-inspector";
     let steps = forms_steps(spec);
     let model = inspection_model(&steps, selected);

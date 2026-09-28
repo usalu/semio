@@ -104,7 +104,6 @@ describe("extension Cargo installation owner", () => {
     const bad = structuredClone(fixture);
     bad.cases[0].directoryName = "rust";
     expect(validate(bad)).toBe(false);
-    console.log("[DEBUG] extension Cargo installation owner: neutral=3 TOML=3 hostile=1");
   });
 });
 
@@ -1439,7 +1438,6 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
         rmSync(root, { recursive: true, force: true });
       }
     }
-    console.log("[DEBUG] Child-kind metadata agrees with independent Ajv grammar for " + fixture.cases.length + " neutral cases; same-kind declarations preserve distinct instance ownership");
   });
 
   test("child-kind metadata ignores Rust comments and strings but reads inline attributes", () => {
@@ -6978,7 +6976,6 @@ describe("direct mutation ownership", () => {
     const sourceStable = readFileSync(sourcePath, "utf8") === source;
     const inputsStable = inputs.every((entry) => createHash("sha256").update(readFileSync(entry.path)).digest("hex") === entry.sha256);
     writeFileSync(join(run, "🔣️.json"), JSON.stringify({ sourceHash: createHash("sha256").update(source).digest("hex"), helperHash: createHash("sha256").update(code).digest("hex"), sourceStable, inputs, inputsStable, observations }, null, 2) + "\n");
-    console.log(`[DEBUG] mutation root discovery virtual ${observations.filter((row) => row.passed).length}/${observations.length}: ${run}`);
     expect(sourceStable).toBe(true);
     expect(inputsStable).toBe(true);
     expect(observations.filter((row) => !row.passed)).toEqual([]);
@@ -7012,7 +7009,6 @@ describe("direct mutation ownership", () => {
     const sourceStable = readFileSync(sourcePath, "utf8") === source;
     const inputsStable = inputs.every((entry) => createHash("sha256").update(readFileSync(entry.path)).digest("hex") === entry.sha256);
     writeFileSync(join(run, "🔣️.json"), JSON.stringify({ sourceHash: createHash("sha256").update(source).digest("hex"), sourceStable, inputs, inputsStable, expected, oracle, observed }, null, 2) + "\n");
-    console.log(`[DEBUG] mutation root discovery physical ${observed.map((roots: string[]) => roots.length).join(",")}/${expected.length}: ${run}`);
     expect(sourceStable).toBe(true);
     expect(inputsStable).toBe(true);
     expect(oracle).toEqual(expected);

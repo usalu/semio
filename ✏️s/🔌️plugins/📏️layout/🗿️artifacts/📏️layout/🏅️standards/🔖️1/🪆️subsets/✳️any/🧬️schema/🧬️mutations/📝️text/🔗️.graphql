@@ -29,5 +29,17 @@ input ChangeFrameWrapMode { pageId: String! frameId: String! newWrapMode: String
 input ChangeFrameColumns { pageId: String! frameId: String! newColumns: Float! }
 input UpdateGrid { baselineGrid: Float! baselineOffset: Float! snapToBaseline: Boolean! }
 input SetFrameFlags { pageId: String! frameId: String! locked: Boolean visible: Boolean }
+input UpdateParagraphStyle { id: String! name: String! fontFamily: String! fontSize: Float! fontWeight: Int! leading: Float! tracking: Float! alignment: String! }
+input UpdateTextFrame { pageId: String! frameId: String! storyId: String! threadNext: String insetX: Float! insetY: Float! insetWidth: Float! insetHeight: Float! }
+input UpdateLayer { pageId: String! layerId: String! name: String! visible: Boolean! locked: Boolean! }
+input CreateCharacterStyle { id: String! }
+input DeleteCharacterStyle { id: String! }
+input UpdateCharacterStyle { id: String! }
+input UpdateParentPage { id: String! }
+input UpdateSpread { id: String! }
+input SetPageParent { id: String! }
+input SetPageGuides { id: String! }
+input SetStoryRuns { id: String! }
+input UpdateLink { id: String! }
 
-union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | RotateFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns | UpdateGrid | SetFrameFlags
+union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | RotateFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns | UpdateGrid | SetFrameFlags | UpdateParagraphStyle | UpdateTextFrame | UpdateLayer | CreateCharacterStyle | DeleteCharacterStyle | UpdateCharacterStyle | UpdateParentPage | UpdateSpread | SetPageParent | SetPageGuides | SetStoryRuns | UpdateLink

@@ -564,7 +564,7 @@ async fn forms_io_declares_dictionary_out_port() {
 /// 🌐️ Contributed field labels resolve from the same explicit axes as built-in fields.
 #[semio_framework_async_macros::async_test]
 async fn contributed_question_labels_follow_selected_axes() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../❓️questions/🧩️extensions/🧫️fixtures/🔣️contribution.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../❓️questions/🧩️extensions/🧫️fixtures/🔣️contribution.json")).unwrap();
     let payload = dsl::json::from_json_str(&vectors["payload"].to_string()).unwrap();
     let contributions = vec![ProgramContributionEntry { plugin_id: "playbook-module-procedural".into(), topic_contribution: Some(semio_framework_plugin::TopicContribution::new("forms.questionKind", payload)) }];
     for case in vectors["cases"].as_array().unwrap() {

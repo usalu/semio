@@ -53,7 +53,6 @@ appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\
   const run = () => execute(["node", cli, "run", "styling:build", "--outputStyle=static"]);
   const runs = () => readFileSync(join(root, ".runs"), "utf8").trim().split("\n").length;
   const published = join(root, packagePath, fixture.output), assembly = join(published, fixture.assembly);
-  console.log("[DEBUG] Styling assembly fixture: compiling its independent reflection consumer");
   await execute(["dotnet", "build", "consumer/consumer.csproj", "--output", "consumer/bin", "--nologo"]);
   const value = (path: string) => execute(["dotnet", join(root, "consumer/bin/consumer.dll"), path]);
   const check = async (expected: string) => {
@@ -75,6 +74,5 @@ appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\
   put(sourcePath, readFileSync(join(root, sourcePath), "utf8").replace(fixture.values[0], fixture.values[1]));
   await run(); assert.equal(runs(), 2); await check(fixture.values[1]);
   assert.equal(readFileSync(join(root, ".deps"), "utf8").trim().split("\n").length, 4);
-  console.log("[DEBUG] Styling .NET native Nx cold/warm/restoration/source-change outputs execute and match direct MSBuild bytes; preparation remains uncached PASS");
   rmSync(root, { recursive: true, force: true });
 }

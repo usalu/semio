@@ -43,7 +43,6 @@ export async function testDependencyBootstrap(workspace: string, output: string)
     assert.equal(readFileSync(join(root, "node_modules", fixture.dependency.name, "index.js"), "utf8"), expected);
     assert.equal(readFileSync(join(root, "bun.lock"), "utf8"), lock);
   }
-  console.log("[DEBUG] Native Nx runs uncached frozen Bun synchronization without application imports and restores removed dependencies twice PASS");
 }
 
 /** 🛠️ Acquires only pinned Nx tooling into an empty checkout and compares its CLI to native Nx. */
@@ -122,7 +121,6 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   writeFileSync(join(root, ".nx/installation/source.txt"), "foreign installation");
   await assert.rejects(activateNxTools(root, installation, new AbortController().signal), /another owner/);
   assert.equal(readFileSync(join(root, ".nx/installation/source.txt"), "utf8"), "foreign installation");
-  console.log("[DEBUG] Empty checkout keeps native graph/cache storage private, preserves foreign storage, acquires only frozen Nx tooling; public Nx uses repository plugins to synchronize application dependencies, preserves the lock, rejects overrides, reuses tooling and protects foreign directories PASS");
 }
 
 /** 🛑️ Cancels a real installer tree whose two processes deliberately ignore graceful termination. */
@@ -154,6 +152,5 @@ setInterval(() => {}, 1000);
       const oracle = Bun.spawnSync(["ps", "-p", String(pids[actor]), "-o", "pid="], { stdout: "pipe", stderr: "pipe" });
       assert.equal(oracle.stdout.toString().trim(), "", `${actor} remains in the native process table`);
     }
-    console.log("[DEBUG] Real installer and child ignore SIGTERM, then owned process-tree cancellation removes both from the native process table PASS");
   } finally { controller.abort(); await result; }
 }

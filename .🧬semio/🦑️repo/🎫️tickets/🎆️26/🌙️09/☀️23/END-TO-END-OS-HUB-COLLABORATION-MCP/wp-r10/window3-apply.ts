@@ -7,9 +7,10 @@
  *   discovery  R9's registry catalog content-input patch (`wp-r9/launch-manifest-inputs.discovery.patch`) + the law that
  *              every launch-projected manifest is a registry catalog content input (re-derived: R9's law patch no
  *              longer applies because its type hunk already landed)
- *   targets    the nx targets slices handed over (`window3-spec.json` `targets`) into their `📋️project.json`,
- *              inserted textually after the last target so each file keeps its own formatting
- *   seed       curated launch rows (`seedRows`) and row edits (`seedRowEdits`) in `.vscode/🧩️launch.seed.jsonc`
+ *   targets    the nx targets slices handed over (`window3-spec.json` `targets`, with `configurations`) into their
+ *              `📋️project.json`, inserted textually after the last target so each file keeps its own formatting, plus the
+ *              exact-once command edits (`projectJsonEdits`)
+ *   seed       curated launch rows (`seedRows`), row edits (`seedRowEdits`, `seedTextEdits`) in `.vscode/🧩️launch.seed.jsonc`
  *   render     `.vscode/launch.json` rendered by the registry's own generator (never hand-spliced)
  *   plan       goal-plan checks (`planChecks`) into the acceptance plan
  *   revert     `revert <step> --apply` restores the files the newest applied run of that step changed
@@ -30,11 +31,13 @@ const DISCOVERY_PATCH = join(ROOT, ".tmp-ticket/wp-r9/launch-manifest-inputs.dis
 const KINDS = ["generated/tax-kinds-2.json", "generated/tax-kinds-3.json", "generated/tax-kinds-4.json", "generated/tax-kinds-5.json", "generated/tax-kinds-window3.json"].map((path) => join(HERE, path));
 
 type Spec = {
-  targets: { project: string; projectJson: string; name: string; command: string; forwardAllArgs: boolean; cache: boolean; dependsOn?: string[] }[];
+  targets: { project: string; projectJson: string; name: string; command: string; forwardAllArgs: boolean; cache: boolean; dependsOn?: string[]; configurations?: Record<string, { args: string }> }[];
+  projectJsonEdits?: { projectJson: string; target: string; before: string; after: string }[];
+  seedTextEdits?: { row: string; before: string; after: string }[];
   seedRows: { after: string; row: { name: string } & Record<string, unknown> }[];
   seedRowEdits: { name: string; command: string }[];
   seedInputEdits: { id: string; default: string }[];
-  planChecks: { step: string; check: { id: string } & Record<string, unknown> }[];
+  planChecks: { step: string; landed?: string; check: { id: string } & Record<string, unknown> }[];
   planSteps: { after: string; step: { id: string } & Record<string, unknown> }[];
 };
 const spec = JSON.parse(readFileSync(join(HERE, "window3-spec.json"), "utf8")) as Spec;
@@ -155,7 +158,7 @@ function stepTargets(): void {
     const end = objectEnd(text, open) - 1;
     const lastBrace = text.lastIndexOf("}", end - 1);
     const block = missing.map((target) => {
-      const body = { executor: "nx:run-commands", cache: target.cache, ...(target.dependsOn ? { dependsOn: target.dependsOn } : {}), options: { cwd: dirname(relative), command: target.command, ...(target.forwardAllArgs ? { forwardAllArgs: true } : {}) } };
+      const body = { executor: "nx:run-commands", cache: target.cache, ...(target.dependsOn ? { dependsOn: target.dependsOn } : {}), options: { cwd: dirname(relative), command: target.command, ...(target.forwardAllArgs ? { forwardAllArgs: true } : {}) }, ...(target.configurations ? { configurations: target.configurations } : {}) };
       return `    ${JSON.stringify(target.name)}: ${JSON.stringify(body, null, 2).replaceAll("\n", "\n    ")}`;
     }).join(",\n");
     text = `${text.slice(0, lastBrace + 1)},\n${block}${text.slice(lastBrace + 1)}`;
@@ -163,6 +166,32 @@ function stepTargets(): void {
     for (const target of missing) if (!(target.name in reparsed.targets)) throw new Error(`insertion of ${target.name} failed`);
     if (apply) save(path, text);
     else writeFileSync(join(HERE, "generated", `preview-${parsed.name.replaceAll("/", "_")}.json`), text);
+  }
+}
+
+/** ✏️ Exact-once textual replacements (`before` → `after`) in one file; an edit already applied is reported, a missing or
+ * ambiguous `before` refuses the whole step. */
+function replaceExactlyOnce(text: string, edits: { label: string; before: string; after: string }[]): string {
+  for (const edit of edits) {
+    if (text.split(edit.after).length === 2 && !text.includes(edit.before)) {
+      console.log(`${edit.label}: already applied`);
+      continue;
+    }
+    if (text.split(edit.before).length !== 2) throw new Error(`${edit.label}: before-text found ${text.split(edit.before).length - 1}× (need exactly 1)`);
+    text = text.replace(edit.before, edit.after);
+    console.log(`${edit.label}: replaced`);
+  }
+  return text;
+}
+
+function stepProjectEdits(): void {
+  const byFile = new Map<string, NonNullable<Spec["projectJsonEdits"]>>();
+  for (const edit of spec.projectJsonEdits ?? []) byFile.set(edit.projectJson, [...(byFile.get(edit.projectJson) ?? []), edit]);
+  for (const [relative, edits] of byFile) {
+    const path = join(ROOT, relative);
+    const text = replaceExactlyOnce(readFileSync(path, "utf8"), edits.map((edit) => ({ label: `${relative.split("/").at(-4)}:${edit.target}`, before: edit.before, after: edit.after })));
+    JSON.parse(text);
+    if (apply) save(path, text);
   }
 }
 
@@ -203,6 +232,7 @@ function stepSeed(): void {
     text = `${text.slice(0, defaultAt)}      "default": ${JSON.stringify(edit.default)}${trailing}${text.slice(lineEnd)}`;
     console.log(`seed input ${edit.id}: default → ${edit.default}`);
   }
+  text = replaceExactlyOnce(text, (spec.seedTextEdits ?? []).map((edit) => ({ label: `seed row ${edit.row}`, before: edit.before, after: edit.after })));
   Bun.JSONC.parse(text);
   if (apply) save(SEED, text);
   else writeFileSync(join(HERE, "generated", "preview-launch.seed.jsonc"), text);
@@ -238,7 +268,8 @@ async function stepPlan(): Promise<void> {
     console.log(`plan step ${planStep.id}: added after ${after}`);
   }
   const plan = JSON.parse(text) as { steps: { id: string; checks: { id: string }[] }[] };
-  for (const { step: stepId, check } of spec.planChecks) {
+  for (const { step: stepId, check, landed } of spec.planChecks) {
+    if (landed) continue;
     if (plan.steps.some((candidate) => candidate.checks.some((existing) => existing.id === check.id))) {
       console.log(`plan check ${check.id}: present`);
       continue;
@@ -258,7 +289,7 @@ async function stepPlan(): Promise<void> {
   if (apply) save(PLAN, text);
 }
 
-const steps: Record<string, () => void | Promise<void>> = { taxonomy: stepTaxonomy, discovery: stepDiscovery, targets: stepTargets, seed: stepSeed, render: stepRender, plan: stepPlan, revert: stepRevert };
+const steps: Record<string, () => void | Promise<void>> = { taxonomy: stepTaxonomy, discovery: stepDiscovery, targets: () => { stepTargets(); stepProjectEdits(); }, seed: stepSeed, render: stepRender, plan: stepPlan, revert: stepRevert };
 if (!step || !steps[step]) throw new Error(`usage: bun window3-apply.ts <${Object.keys(steps).join("|")}> [--apply]`);
 console.log(`[window3] ${step} ${apply ? "APPLY" : "dry run"}`);
 await steps[step]();

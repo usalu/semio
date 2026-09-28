@@ -118,7 +118,7 @@ export function configureEmojiFonts(host: LifecycleHost): boolean {
 
 //#region 🔒️Ownership
 /** 🔒️ The home directories the devcontainer persists in named volumes, which Docker creates owned by root. */
-export const PERSISTED_HOME_DIRECTORIES = [".cache", ".claude", ".codex", ".config", ".codeium", ".gitkraken", ".local/share/GitKrakenCLI", ".local/share/gk", ".config/F3D", ".cursor-server", ".antigravity-server", ".vscode-server", ".windsurf-server"] as const;
+export const PERSISTED_HOME_DIRECTORIES = [".cache", ".claude", ".codex", ".config", ".codeium", ".gitkraken", ".local/share/GitKrakenCLI", ".local/share/gk", ".config/F3D", ".cursor-server", ".antigravity-server", ".vscode-server", ".windsurf-server", ".kiro"] as const;
 
 /** 🧭️ The submodule paths `.gitmodules` declares, from git's own configuration parser. */
 export function submodulePaths(host: LifecycleHost, workspace: string): string[] {

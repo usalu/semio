@@ -423,7 +423,6 @@ describe("AgentBridge protected connection ownership", () => {
       hook.rerender({ config: null });
       expect(opened.every((socket) => socket.closed)).toBe(true);
       expect(hook.result.current.status).toBe("disabled");
-      console.log("[DEBUG] AgentBridge protected config lifetime: opened=2 retired=2 disabled=1");
     } finally {
       hook.unmount();
       vi.unstubAllGlobals();

@@ -1188,7 +1188,7 @@ export interface DocumentOpenCatalogV1 {
   generationId: string;
 }
 
-export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 18;
+export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 19;
 
 export interface DocumentExecutionProtocolV1 {
   appChannelVersion: typeof DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1;
@@ -1581,23 +1581,47 @@ export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { r
 /** 🗂️ One artifact kind a descriptor declares, reduced to the pair a document open is admitted on. */
 export type SurfaceArtifactKindV1 = { readonly id: string; readonly schema: string };
 
+/** 🎯️ One surface app of a verified descriptor as the pairing rule reads it: its role, its full dialect coordinate and the
+ * artifact kinds it declares itself. */
+export type SurfaceKindAppV1 = {
+  readonly role: "editor" | "viewer";
+  readonly dialect: { readonly artifactKind: string; readonly standard: string; readonly subset: string };
+  readonly artifactKinds: readonly SurfaceArtifactKindV1[];
+};
+
 /** 🗂️ The one surface ↔ artifact-kind pairing rule, the browser twin of the hub's `app_opens_kind`
- * (`🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`) that publishes and verifies every open target: a surface
- * app opens a kind it declares itself (a plugin on the declaration tree stitches its spec onto the app), or a
- * plugin-level kind (`PluginBuilder::artifact_kind`) whose id the app's own dialect names — never a sibling
- * surface's. Replayed from `🔏️trusted-catalog/🧫️fixtures/🗂️surface-opens-kind/🔣️.json`.
+ * (`🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`) that publishes and verifies every open target: a plugin-level
+ * kind (`PluginBuilder::artifact_kind`) is opened only by the surfaces whose own dialect names it, even when a sibling app
+ * lists it as an input; any other kind is opened by the editor that declares it itself (a plugin on the declaration tree
+ * stitches its spec onto the app) and by the viewers of that editor's dialect — the read-only surface of the same
+ * documents. Replayed from `🔏️trusted-catalog/🧫️fixtures/🗂️surface-opens-kind/🔣️.json` and from the hub's own
+ * `🔏️trusted-catalog/🧫️fixtures/🎯️descriptor-open-targets/🔣️.json`.
  *
  * 🧯️ The browser used to admit on the plugin-level list alone, so every document of a plugin migrated onto the
  * declaration tree (note, draw, writer, puzzle, …: `manifest.artifactKinds = []`) was refused after its
  * verified download with "The document component could not be verified" (measured inside `s` against hub 7800,
- * ticket 26/09/23 S15). */
+ * ticket 26/09/23 S15). It then still refused every viewer the hub issued (a viewer declares no kinds of its own), so a
+ * Spectator's open ended in "The document target changed" and an unmounted viewer (ticket 26/09/23 C13, row 3.4). */
 export function surfaceOpensArtifactKindV1(
   pluginArtifactKinds: readonly SurfaceArtifactKindV1[],
-  app: { readonly artifactKinds: readonly SurfaceArtifactKindV1[]; readonly dialectArtifactKind: string },
+  apps: readonly SurfaceKindAppV1[],
+  app: SurfaceKindAppV1,
   artifact: { readonly kind: string; readonly schema: string },
 ): boolean {
   const declares = (kinds: readonly SurfaceArtifactKindV1[]): boolean => kinds.some((kind) => kind.id === artifact.kind && kind.schema === artifact.schema);
-  return declares(app.artifactKinds) || (declares(pluginArtifactKinds) && app.dialectArtifactKind === artifact.kind);
+  if (declares(pluginArtifactKinds)) return app.dialect.artifactKind === artifact.kind;
+  return (
+    declares(app.artifactKinds) ||
+    (app.role === "viewer" &&
+      apps.some(
+        (editor) =>
+          editor.role === "editor" &&
+          editor.dialect.artifactKind === app.dialect.artifactKind &&
+          editor.dialect.standard === app.dialect.standard &&
+          editor.dialect.subset === app.dialect.subset &&
+          declares(editor.artifactKinds),
+      ))
+  );
 }
 
 /** ⚖️ The one shared full-field lease relation. Every transport compares every field through it; a
@@ -1654,6 +1678,33 @@ export function sameLeaseFieldsV1(left: DocumentExecutionTargetLeaseFieldsV1, ri
     left.revalidation.membershipGeneration === right.revalidation.membershipGeneration &&
     left.revalidation.sessionGeneration === right.revalidation.sessionGeneration &&
     left.revalidation.shareGeneration === right.revalidation.shareGeneration
+  );
+}
+
+/** ⏯️ Whether `next` — the fields a reconnect's fresh plan projects — names the SAME execution target under the SAME grant as `current`,
+ * the lease of a child a link shortage suspended, so that child resumes instead of reopening. Two fields legitimately advance while a
+ * document stays open and are adopted, only ever forward: the active `checkpoint` (the hub cut a newer one; the child is already
+ * past it) and the `revalidation` witness (its `directoryRevision` is the hub directory's global head, which any directory event on
+ * the hub moves). Every other field goes through {@link sameLeaseFieldsV1} — the full-field relation plus an explicit monotone
+ * freshness rule, never a subset comparison. Before, a resume demanded the old witness verbatim, so on a shared hub every short
+ * link cut reopened the document (ticket 26/09/23 C12, run `c12short5`).
+ * @see ../../../🧫️fixtures/📇️directory/⏯️execution-target-resume-v1.json */
+export function sameExecutionTargetV1(current: DocumentExecutionTargetLeaseFieldsV1, next: DocumentExecutionTargetLeaseFieldsV1): boolean {
+  const forward = (from: number | undefined, to: number | undefined): boolean => (from === undefined ? to === undefined : to !== undefined && to >= from);
+  const checkpointForward =
+    current.checkpoint === undefined || next.checkpoint === undefined
+      ? current.checkpoint === next.checkpoint
+      : next.checkpoint.descriptorDigestV1 === current.checkpoint.descriptorDigestV1 &&
+        next.checkpoint.baselineFrontier.documentId === current.checkpoint.baselineFrontier.documentId &&
+        forward(current.checkpoint.baselineFrontier.headEditOrdinal, next.checkpoint.baselineFrontier.headEditOrdinal) &&
+        forward(current.checkpoint.baselineFrontier.lastCommitSeq, next.checkpoint.baselineFrontier.lastCommitSeq);
+  return (
+    checkpointForward &&
+    forward(current.revalidation.directoryRevision, next.revalidation.directoryRevision) &&
+    forward(current.revalidation.membershipGeneration, next.revalidation.membershipGeneration) &&
+    forward(current.revalidation.sessionGeneration, next.revalidation.sessionGeneration) &&
+    forward(current.revalidation.shareGeneration, next.revalidation.shareGeneration) &&
+    sameLeaseFieldsV1(current, { ...next, checkpoint: current.checkpoint, revalidation: current.revalidation })
   );
 }
 

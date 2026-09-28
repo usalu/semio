@@ -27,6 +27,5 @@ export function testBackboneDetachFixture(): void {
     assert.deepEqual(observed, row.expected);
   }
   for (const hostile of [{ ...fixture, generationMaximum: "18446744073709551616" }, { ...fixture, capacity: 1025 }, { ...fixture, cases: fixture.cases.map((row: object) => ({ ...row, expected: {} })) }, { ...fixture, extra: true }]) assert.equal(validate(hostile), false);
-  console.log("[DEBUG] backbone detach schema/Lodash/Buffer oracle: 2 refusal models, 4 hostiles; 5 pending lifecycle boundaries remain unimplemented/unexecuted");
 }
 //#endregion ✂️BackboneDetachOracle

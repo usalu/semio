@@ -398,12 +398,10 @@ test("Draw destination observation has the closed default-budget canonical regis
   } finally {
     const after = capture();
     expect(after).toEqual(before);
-    console.log("[DEBUG] Draw destination registration input closure " + JSON.stringify({ pid: process.pid, inputs: after }));
   }
 });
 
 afterAll(() => {
   const afterInputs = identities();
   expect(afterInputs).toEqual(beforeInputs);
-  console.log("[DEBUG] Draw destination observation input closure " + JSON.stringify({ pid: process.pid, inputs: afterInputs }));
 });

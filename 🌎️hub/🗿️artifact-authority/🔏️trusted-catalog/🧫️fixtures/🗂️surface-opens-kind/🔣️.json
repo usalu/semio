@@ -1,12 +1,415 @@
 {
-  "why": "The one surface <-> artifact-kind pairing rule (hub `app_opens_kind`, browser `surfaceOpensArtifactKindV1`): a surface app opens a kind it declares itself, or a plugin-level kind whose id the app's own dialect names; never a sibling surface's plugin-level kind, never a kind with another schema.",
-  "liveDefect": "Ticket 26/09/23 S15, measured inside `s` against hub 7800 on 2026-09-25: the browser admitted on the plugin-level list alone, so a note document (declaration-tree plugin, `manifest.artifactKinds = []`, `apps[0].artifactKinds = [s.note.note / note.document]`) downloaded and hashed its 14.9 MB component and was then refused with `The document component could not be verified`.",
+  "why": "The one surface <-> artifact-kind pairing rule (hub `app_opens_kind`, browser `surfaceOpensArtifactKindV1`): a plugin-level kind is opened only by the surfaces whose own dialect names it, even where a sibling app lists it as an input; any other kind is opened by the editor that declares it itself and by the viewers of that editor's exact dialect (kind, standard, subset); never a kind with another schema. `app` indexes `apps`, the descriptor's surface apps.",
+  "liveDefects": [
+    "Ticket 26/09/23 S15, measured inside `s` against hub 7800 on 2026-09-25: the browser admitted on the plugin-level list alone, so a note document (declaration-tree plugin, `manifest.artifactKinds = []`, `apps[0].artifactKinds = [s.note.note / note.document]`) downloaded and hashed its 14.9 MB component and was then refused with `The document component could not be verified`.",
+    "Ticket 26/09/23 C13, measured inside `s` against hub 7800 on 2026-09-28: the hub issued a Spectator the block viewer (`s.block.block2d@1/*#viewer`, which declares no kinds of its own) while the browser twin still required the opening app to declare the kind, so the verified descriptor failed (`document execution target: descriptor mismatch`), the worker dropped the hub session and the viewer window showed `The document target changed. Reopen the document.` without ever mounting."
+  ],
   "cases": [
-    { "name": "declaration-tree plugin: the app declares the kind", "pluginArtifactKinds": [], "app": { "artifactKinds": [{ "id": "s.note.note", "schema": "note.document" }], "dialectArtifactKind": "s.note.note" }, "artifact": { "kind": "s.note.note", "schema": "note.document" }, "opens": true },
-    { "name": "plugin-level kind named by the app's own dialect", "pluginArtifactKinds": [{ "id": "s.gis.gismap", "schema": "gis.map" }], "app": { "artifactKinds": [], "dialectArtifactKind": "s.gis.gismap" }, "artifact": { "kind": "s.gis.gismap", "schema": "gis.map" }, "opens": true },
-    { "name": "plugin-level kind of a sibling dialect is never opened", "pluginArtifactKinds": [{ "id": "s.gis.gismap", "schema": "gis.map" }], "app": { "artifactKinds": [], "dialectArtifactKind": "s.gis.gisterrain" }, "artifact": { "kind": "s.gis.gismap", "schema": "gis.map" }, "opens": false },
-    { "name": "an app-declared kind opens even under a sibling dialect id", "pluginArtifactKinds": [], "app": { "artifactKinds": [{ "id": "s.gis.gismap", "schema": "gis.map" }], "dialectArtifactKind": "s.gis.gisterrain" }, "artifact": { "kind": "s.gis.gismap", "schema": "gis.map" }, "opens": true },
-    { "name": "same kind, other schema", "pluginArtifactKinds": [{ "id": "s.note.note", "schema": "note.legacy" }], "app": { "artifactKinds": [{ "id": "s.note.note", "schema": "note.legacy" }], "dialectArtifactKind": "s.note.note" }, "artifact": { "kind": "s.note.note", "schema": "note.document" }, "opens": false },
-    { "name": "nothing declared (a viewer with no kinds)", "pluginArtifactKinds": [], "app": { "artifactKinds": [], "dialectArtifactKind": "s.note.note" }, "artifact": { "kind": "s.note.note", "schema": "note.document" }, "opens": false }
+    {
+      "name": "declaration-tree plugin: the app declares the kind",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.note.note",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "s.note.note",
+              "schema": "note.document"
+            }
+          ]
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "s.note.note",
+        "schema": "note.document"
+      },
+      "opens": true
+    },
+    {
+      "name": "plugin-level kind named by the app's own dialect",
+      "pluginArtifactKinds": [
+        {
+          "id": "s.gis.gismap",
+          "schema": "gis.map"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.gis.gismap",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "s.gis.gismap",
+        "schema": "gis.map"
+      },
+      "opens": true
+    },
+    {
+      "name": "plugin-level kind of a sibling dialect is never opened",
+      "pluginArtifactKinds": [
+        {
+          "id": "s.gis.gismap",
+          "schema": "gis.map"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.gis.gisterrain",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "s.gis.gismap",
+        "schema": "gis.map"
+      },
+      "opens": false
+    },
+    {
+      "name": "a plugin-level kind stays with its own dialect even where a sibling app lists it as an input",
+      "pluginArtifactKinds": [
+        {
+          "id": "s.gis.gismap",
+          "schema": "gis.map"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.gis.gismap",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        },
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.gis.gisterrain",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "s.gis.gismap",
+              "schema": "gis.map"
+            }
+          ]
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "s.gis.gismap",
+        "schema": "gis.map"
+      },
+      "opens": false
+    },
+    {
+      "name": "a plugin-level kind is opened by its own dialect's viewer",
+      "pluginArtifactKinds": [
+        {
+          "id": "s.gis.gismap",
+          "schema": "gis.map"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.gis.gismap",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        },
+        {
+          "role": "viewer",
+          "dialect": {
+            "artifactKind": "s.gis.gismap",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "s.gis.gismap",
+        "schema": "gis.map"
+      },
+      "opens": true
+    },
+    {
+      "name": "an app-declared kind opens even under a sibling dialect id",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.gis.gisterrain",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "s.gis.gismap",
+              "schema": "gis.map"
+            }
+          ]
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "s.gis.gismap",
+        "schema": "gis.map"
+      },
+      "opens": true
+    },
+    {
+      "name": "same kind, other schema",
+      "pluginArtifactKinds": [
+        {
+          "id": "s.note.note",
+          "schema": "note.legacy"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.note.note",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "s.note.note",
+              "schema": "note.legacy"
+            }
+          ]
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "s.note.note",
+        "schema": "note.document"
+      },
+      "opens": false
+    },
+    {
+      "name": "nothing declared (a viewer with no kinds and no editor of its dialect)",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "viewer",
+          "dialect": {
+            "artifactKind": "s.note.note",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "s.note.note",
+        "schema": "note.document"
+      },
+      "opens": false
+    },
+    {
+      "name": "a viewer opens the kinds its own dialect's editor declares",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "2d.block",
+              "schema": "block.2d"
+            }
+          ]
+        },
+        {
+          "role": "viewer",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "2d.block",
+        "schema": "block.2d"
+      },
+      "opens": true
+    },
+    {
+      "name": "a viewer never opens what only a sibling dialect's editor declares",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.block.block3d",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "3d.block",
+              "schema": "block.3d"
+            }
+          ]
+        },
+        {
+          "role": "viewer",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "3d.block",
+        "schema": "block.3d"
+      },
+      "opens": false
+    },
+    {
+      "name": "a viewer of another subset never opens the editor's kinds",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "2d.block",
+              "schema": "block.2d"
+            }
+          ]
+        },
+        {
+          "role": "viewer",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "1",
+            "subset": "lite"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "2d.block",
+        "schema": "block.2d"
+      },
+      "opens": false
+    },
+    {
+      "name": "a viewer of another standard never opens the editor's kinds",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "2d.block",
+              "schema": "block.2d"
+            }
+          ]
+        },
+        {
+          "role": "viewer",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "2",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "2d.block",
+        "schema": "block.2d"
+      },
+      "opens": false
+    },
+    {
+      "name": "an editor never opens a kind only its sibling editor declares",
+      "pluginArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "2d.block",
+              "schema": "block.2d"
+            }
+          ]
+        },
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.block.block2d",
+            "standard": "2",
+            "subset": "*"
+          },
+          "artifactKinds": []
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "2d.block",
+        "schema": "block.2d"
+      },
+      "opens": false
+    }
   ]
 }

@@ -5,7 +5,7 @@ export const BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
 export const BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM = 4_096;
 export const BROWSER_ACTOR_ACTION_HOST_EFFECT_MAXIMUM = 1;
 export const BROWSER_ACTOR_ACTION_HISTORY_PATCH_MAXIMUM = 8;
-export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 18;
+export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 19;
 
 export type BrowserActorActionScopeV1 = { readonly spaceId: string; readonly documentId: string };
 

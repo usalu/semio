@@ -68,6 +68,124 @@ fn rotate_mark_points(mark: &mut Value, cx: f64, cy: f64, rotation: f64) {
     }
 }
 
+
+fn rotated_proxy_layer(image: &crate::editor::layout::engine::scene::DisplayImage) -> Option<Value> {
+    let data_url = image.proxy_data_url.as_deref()?;
+    let payload = data_url.strip_prefix("data:image/png;base64,")?;
+    let bytes = decode_base64(payload).ok()?;
+    let source = semio_s_artifact_stdio_png::io::decode_png(&bytes).ok()?;
+    let expected = (source.width as usize).checked_mul(source.height as usize)?.checked_mul(4)?;
+    if source.width == 0 || source.height == 0 || source.pixels.len() != expected {
+        return None;
+    }
+    let x = image.x as f64;
+    let y = image.y as f64;
+    let width = image.width as f64;
+    let height = image.height as f64;
+    if width < 1.0e-6 || height < 1.0e-6 {
+        return None;
+    }
+    let rotation = image.rotation as f64;
+    let (sin, cos) = rotation.sin_cos();
+    let cx = x + width * 0.5;
+    let cy = y + height * 0.5;
+    let corners = [(x, y), (x + width, y), (x + width, y + height), (x, y + height)];
+    let mapped: Vec<(f64, f64)> = corners.iter().map(|(px, py)| {
+        let dx = px - cx;
+        let dy = py - cy;
+        (cx + dx * cos - dy * sin, cy + dx * sin + dy * cos)
+    }).collect();
+    let min_x = mapped.iter().map(|point| point.0).fold(f64::INFINITY, f64::min);
+    let min_y = mapped.iter().map(|point| point.1).fold(f64::INFINITY, f64::min);
+    let max_x = mapped.iter().map(|point| point.0).fold(f64::NEG_INFINITY, f64::max);
+    let max_y = mapped.iter().map(|point| point.1).fold(f64::NEG_INFINITY, f64::max);
+    let box_width = (max_x - min_x).max(1.0e-6);
+    let box_height = (max_y - min_y).max(1.0e-6);
+    let out_width = ((source.width as f64) * box_width / width).round().clamp(1.0, 128.0) as u32;
+    let out_height = ((source.height as f64) * box_height / height).round().clamp(1.0, 128.0) as u32;
+    let mut pixels = vec![0u8; (out_width as usize) * (out_height as usize) * 4];
+    for row in 0..out_height {
+        for column in 0..out_width {
+            let sample_x = min_x + (column as f64 + 0.5) / out_width as f64 * box_width;
+            let sample_y = min_y + (row as f64 + 0.5) / out_height as f64 * box_height;
+            let local_x = (sample_x - cx) * cos + (sample_y - cy) * sin;
+            let local_y = -(sample_x - cx) * sin + (sample_y - cy) * cos;
+            let u = (local_x + width * 0.5) / width;
+            let v = (local_y + height * 0.5) / height;
+            if !(0.0..1.0).contains(&u) || !(0.0..1.0).contains(&v) {
+                continue;
+            }
+            let source_x = (u * source.width as f64).min(source.width as f64 - 1.0) as u32;
+            let source_y = (v * source.height as f64).min(source.height as f64 - 1.0) as u32;
+            let from = ((source_y * source.width + source_x) * 4) as usize;
+            let to = ((row * out_width + column) * 4) as usize;
+            pixels[to..to + 4].copy_from_slice(&source.pixels[from..from + 4]);
+        }
+    }
+    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    encoded.width = out_width;
+    encoded.height = out_height;
+    encoded.pixels = pixels;
+    let png = semio_s_artifact_stdio_png::io::encode_png(&encoded).ok()?;
+    Some(json!({
+        "id": format!("{}.image", image.object_id),
+        "kind": "image",
+        "x": min_x,
+        "y": min_y,
+        "width": box_width,
+        "height": box_height,
+        "dataUrl": format!("data:image/png;base64,{}", base64_encode(&png)),
+    }))
+}
+
+fn decode_base64(value: &str) -> Result<Vec<u8>, ()> {
+    if value.len() % 4 != 0 {
+        return Err(());
+    }
+    let mut result = Vec::with_capacity(value.len() / 4 * 3);
+    for quartet in value.as_bytes().chunks_exact(4) {
+        let a = base64_value(quartet[0])?;
+        let b = base64_value(quartet[1])?;
+        let c = base64_value(quartet[2])?;
+        let d = base64_value(quartet[3])?;
+        result.push(a << 2 | b >> 4);
+        if c != 64 {
+            result.push(b << 4 | c >> 2);
+        }
+        if d != 64 {
+            result.push(c << 6 | d);
+        }
+    }
+    Ok(result)
+}
+
+fn base64_value(byte: u8) -> Result<u8, ()> {
+    match byte {
+        b'A'..=b'Z' => Ok(byte - b'A'),
+        b'a'..=b'z' => Ok(byte - b'a' + 26),
+        b'0'..=b'9' => Ok(byte - b'0' + 52),
+        b'+' => Ok(62),
+        b'/' => Ok(63),
+        b'=' => Ok(64),
+        _ => Err(()),
+    }
+}
+
+fn base64_encode(bytes: &[u8]) -> String {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::new();
+    for chunk in bytes.chunks(3) {
+        let a = chunk[0];
+        let b = chunk.get(1).copied().unwrap_or(0);
+        let c = chunk.get(2).copied().unwrap_or(0);
+        out.push(TABLE[(a >> 2) as usize] as char);
+        out.push(TABLE[((a & 3) << 4 | b >> 4) as usize] as char);
+        out.push(if chunk.len() > 1 { TABLE[((b & 15) << 2 | c >> 6) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { TABLE[(c & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
 fn line_segments(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
     json!([
         { "kind": "move", "to": [x0, y0] },
@@ -151,8 +269,8 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
     for image in &list.images {
         let rotation = image.rotation as f64;
         let upright = rotation.abs() < 1.0e-6;
-        if upright {
-            if let Some(data_url) = &image.proxy_data_url {
+        if let Some(data_url) = &image.proxy_data_url {
+            if upright {
                 layers.push(json!({
                     "id": format!("{}.image", image.object_id),
                     "kind": "image",
@@ -162,6 +280,10 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
                     "height": image.height,
                     "dataUrl": data_url,
                 }));
+                continue;
+            }
+            if let Some(layer) = rotated_proxy_layer(image) {
+                layers.push(layer);
                 continue;
             }
         }

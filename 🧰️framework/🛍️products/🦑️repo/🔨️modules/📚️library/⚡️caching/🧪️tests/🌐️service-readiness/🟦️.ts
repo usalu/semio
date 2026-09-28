@@ -73,6 +73,5 @@ export async function testServiceReadiness(workspace: string, output: string): P
     assert.equal(existsSync(join(sessionRoot, String(current.pid), "session.json")), false);
     const hostile = join(root, "hostile", String(fixture.pids[0])); mkdirSync(hostile, { recursive: true }); writeFileSync(join(hostile, "unowned"), "preserve");
     await assert.rejects(() => api.openServiceSession(join(root, "hostile"), fixture.owner, fixture.pids[0]), /unowned/i);
-    console.log("[DEBUG] Service generation ownership, schema validation, real HTTP identity, cancellation and selective cleanup PASS");
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

@@ -706,7 +706,6 @@ export async function testSurfaceSwitch(): Promise<void> {
   ];
   assert.deepEqual(twin, expectedTwin, "the node twin must answer the fixture identically");
 
-  console.log(`[DEBUG] surface-switch boot=${fixture.boot.length} group=${fixture.group.length} roleTargets=${fixture.roleTargets.length} switch=${fixture.switch.length} work=${fixture.work.length} quiesce=${fixture.quiesce.length} sealed=${fixture.sealed.seal.length} busyLabel=${fixture.busyLabel.length} modeSteps=${fixture.modeSteps.length} keybindings=${fixture.keybindings.length} twin=${twin.length} PASS`);
 }
 
 describe("surface switch", () => {

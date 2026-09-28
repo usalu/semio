@@ -73,6 +73,5 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
       await assert.rejects(() => fetch(url));
     }
     successful = true;
-    console.log("[DEBUG] WGPU serves completed dev/release artifacts with native Vite byte parity, 404 boundaries, reload, strict port ownership and cancellation PASS");
   } finally { if (successful) rmSync(root, { recursive: true, force: true }); }
 }

@@ -77,7 +77,6 @@ print("released", flush=True)
           await until(second, "held"); await release(second);
         }
       }
-      console.log(`[DEBUG] Resource leases ${row.name}: ${row.first.runtime}/${row.second.runtime} ${row.action} PASS`);
     }
     const files = readdirSync(directory).sort(), before = files.map(file => statSync(join(directory, file)).size);
     for (let index = 0; index < fixture.repetitions; index++) (await api.acquireResourceLease({ directory, resource: resources[0], mode: "exclusive", signal: new AbortController().signal })).release();
@@ -86,7 +85,6 @@ print("released", flush=True)
     const abort = new AbortController(); abort.abort();
     await assert.rejects(() => api.acquireResourceLease({ directory, resource: "cancelled-before-open", mode: "shared", signal: abort.signal }), /abort/i);
     assert.deepEqual(readdirSync(directory).sort(), files);
-    console.log(`[DEBUG] Resource leases: ${fixture.repetitions} repeated acquisitions retain exactly ${files.length} constant-size resource databases PASS`);
     const heldController = new AbortController(), owner = await api.acquireResourceLease({ directory, resource: "deadline", mode: "exclusive", signal: heldController.signal });
     try {
       heldController.abort();
@@ -142,7 +140,6 @@ print("released", flush=True)
     blocker.release();
     assert.deepEqual(readdirSync(queue), []);
     console.log("Resource lease queue: arrival order served, a crashed waiter's ticket swept, a cancelled waiter leaves no ticket PASS");
-    console.log("[DEBUG] Resource lease deadlines, cancellation while held, progress failure, ordered multi-resource access, consumer failure, identity/journal and path guards PASS");
   } finally {
     for (const child of children) if (child.process.exitCode === null) child.process.kill("SIGKILL");
     await Promise.all(children.map(child => child.done));

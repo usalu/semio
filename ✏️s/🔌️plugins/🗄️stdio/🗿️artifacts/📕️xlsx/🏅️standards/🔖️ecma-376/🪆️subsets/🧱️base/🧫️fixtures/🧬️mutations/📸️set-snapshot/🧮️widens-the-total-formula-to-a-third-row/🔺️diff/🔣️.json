@@ -1,29 +1,67 @@
 {
-  "workbook": {
-    "sheets": {
-      "modified": [
-        {
-          "key": "Sheet1",
-          "diff": {
-            "cells": {
-              "modified": [
-                {
-                  "key": [
-                    4,
-                    1
-                  ],
-                  "diff": {
-                    "value": {
-                      "kind": "formula",
-                      "expr": "SUM(B1:B3)"
-                    }
+  "xmlParts": {
+    "modified": [
+      {
+        "diff": {
+          "document": {
+            "root": {
+              "children": {
+                "modified": [
+                  {
+                    "diff": {
+                      "children": {
+                        "modified": [
+                          {
+                            "diff": {
+                              "children": {
+                                "modified": [
+                                  {
+                                    "diff": {
+                                      "children": {
+                                        "modified": [
+                                          {
+                                            "diff": {
+                                              "children": {
+                                                "modified": [
+                                                  {
+                                                    "diff": {
+                                                      "kind": "text",
+                                                      "text": "SUM(B1:B3)"
+                                                    },
+                                                    "index": 0
+                                                  }
+                                                ]
+                                              },
+                                              "kind": "element"
+                                            },
+                                            "index": 0
+                                          }
+                                        ]
+                                      },
+                                      "kind": "element"
+                                    },
+                                    "index": 0
+                                  }
+                                ]
+                              },
+                              "kind": "element"
+                            },
+                            "index": 0
+                          }
+                        ]
+                      },
+                      "kind": "element"
+                    },
+                    "index": 0
                   }
-                }
-              ]
+                ]
+              },
+              "kind": "element"
             }
           }
-        }
-      ]
-    }
+        },
+        "key": "xl/worksheets/sheet1.xml"
+      }
+    ]
   }
 }

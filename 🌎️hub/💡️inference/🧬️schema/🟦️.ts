@@ -262,7 +262,7 @@ export function parseInferenceApprovalReceiptV1(value: unknown): InferenceApprov
  * WAL witness reconciles. Both corpora describe ONE approval of one job, so this literal is also
  * what `🧾️inference-wal-proof-v1`'s command carries as its diff payload. */
 export const INFERENCE_APPROVAL_OUTBOX_PROPOSAL_V1 =
-  '{"CreateRegion":{"index":0,"item":{"id":"inference-4f454b8464c9e51bf4128f5f178bf20e","data":{"id":"inference-4f454b8464c9e51bf4128f5f178bf20e","kind":"inference-bounds","ring":[[7.0,46.0],[9.0,46.0],[9.0,48.0],[7.0,48.0],[7.0,46.0]]}}}}';
+  '{"CreateRegion":{"index":0,"item":{"id":"inference-9c02ee2c201322544da0b0987b8d3d9e","data":{"id":"inference-9c02ee2c201322544da0b0987b8d3d9e","kind":"inference-bounds","ring":[[7.0,46.0],[9.0,46.0],[9.0,48.0],[7.0,48.0],[7.0,46.0]]}}}}';
 
 /** 📤️ The ledger-only outbox row a prepared approval reconciles exactly once. */
 export type InferenceApprovalOutboxV1 = {
@@ -622,10 +622,10 @@ export function parseInferenceCatalogSelectionV1(value: unknown): InferenceCatal
   return { scope: { spaceId: scope.spaceId as string, documentId: scope.documentId as string }, descriptor: parseInferenceCatalogDescriptorV1(row.descriptor), package: parseInferenceCatalogPackageV1(row.package), services: row.services.map(parseInferenceCatalogServiceV1) };
 }
 
-export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 18 };
+export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 19 };
 export function parseGisMapFrozenExecutionProtocolV1(value: unknown): GisMapFrozenExecutionProtocolV1 {
   const row = rows(value, ["appChannelVersion"], "hub.inference/GisMapFrozenExecutionProtocolV1");
-  return row.appChannelVersion === 18 ? { appChannelVersion: 18 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
+  return row.appChannelVersion === 19 ? { appChannelVersion: 19 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
 }
 
 export type GisMapFrozenPackageV1 = {

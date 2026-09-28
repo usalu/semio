@@ -33,7 +33,19 @@ line = rename layout
      | change frame wrap mode
      | change frame columns
      | update grid
-     | set frame flags ;
+     | set frame flags
+     | update paragraph style
+     | update text frame
+     | update layer
+     | create character style
+     | delete character style
+     | update character style
+     | update parent page
+     | update spread
+     | set page parent
+     | set page guides
+     | set story runs
+     | update link ;
 rename layout = 'rename-layout', space, text ;
 change print target = 'change-print-target', space, [ text ] ;
 change data fields = 'change-data-fields', space, [ text ] ;
@@ -61,6 +73,15 @@ change frame stroke = 'change-frame-stroke', space, id, space, id, space, [ bloc
 change frame wrap mode = 'change-frame-wrap-mode', space, id, space, id, space, text ;
 change frame columns = 'change-frame-columns', space, id, space, id, space, number ;
 update grid = 'update-grid', space, number, space, number, space, boolean ;
+update paragraph style = 'update-paragraph-style', space, id, space, text, space, text, space, number, space, number, space, number, space, number, space, text ;
+update text frame = 'update-text-frame', space, id, space, id, space, text, space, text, space, number, space, number, space, number, space, number ;
+update layer = 'update-layer', space, id, space, id, space, text, space, boolean, space, boolean ;
+create character style = 'create-character-style', space, id ;
+delete character style = 'delete-character-style', space, id ;
+update character style = 'update-character-style', space, id ;
+update parent page = 'update-parent-page', space, id ;
+update spread = 'update-spread', space, id ;
+set page parent = 'set-page-parent', space, id ;
 set frame flags = 'set-frame-flags', space, id, space, id, space, [ boolean ], space, [ boolean ] ;
 id = octet, { octet } ;
 number = octet, { octet } ;
@@ -74,3 +95,6 @@ block = '{', newline, octet, { octet }, '}' ;
 newline = [ '\r' ], '\n' ;
 octet = ? any single raw byte ? ;
 space = ' ' ;
+set page guides = 'set-page-guides', space, id ;
+set story runs = 'set-story-runs', space, id ;
+update link = 'update-link', space, id ;

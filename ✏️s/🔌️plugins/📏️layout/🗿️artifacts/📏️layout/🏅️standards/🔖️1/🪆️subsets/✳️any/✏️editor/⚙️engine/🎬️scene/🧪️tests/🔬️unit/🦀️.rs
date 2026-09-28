@@ -267,3 +267,31 @@ async fn package_zip_rejects_invalid_document_json() {
     let error = export_package_zip_headless_batch("not json", "[]").expect_err("invalid json must fail");
     assert!(matches!(error, LayoutError::Json(_)));
 }
+
+#[semio_framework_async_macros::async_test]
+async fn placed_drawing_shapes_its_kind_and_keeps_a_stroke_mark() {
+    let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[{"id":"link-drawing","path":"plan.dwg","hash":"h","width":1,"height":1,"dpi":72,"state":"missing","artifactKind":"drawing","artifactRef":"drawing-1"}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["img-drawing"]}],"frames":[{"id":"img-drawing","layerId":"layer-1","kind":"image","bounds":{"x":10,"y":20,"w":80,"h":50,"rotation":0},"linkId":"link-drawing"}],"overrides":[]}]}"#;
+    let doc = parse_layout_document(json).expect("doc");
+    let page = doc.pages.first().expect("page");
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &doc, page, "page-1", &[], None, false);
+    let image = list.images.iter().find(|image| image.object_id == "img-drawing").expect("image");
+    assert_eq!(image.preview, "stroke");
+    let run = list.text_runs.iter().find(|run| run.content == "drawing").expect("kind label");
+    assert_eq!(run.glyphs.len(), "drawing".chars().count());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn character_style_run_changes_glyph_size_and_color() {
+    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    doc.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
+    let story = doc.stories.iter_mut().find(|story| story.id == "story-1").unwrap();
+    story.style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    let page = doc.pages.iter().find(|page| page.id == "page-1").unwrap().clone();
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &doc, &page, "page-1", &[], None, false);
+    let run = list.text_runs.iter().find(|run| run.content == "Hello layout").expect("story");
+    assert_eq!(run.glyphs.len(), "Hello layout".chars().count());
+    assert!(run.glyphs[..5].iter().all(|glyph| glyph.font_size == 24.0 && glyph.color.0[0] == 1.0));
+    assert!(run.glyphs[5..].iter().all(|glyph| glyph.font_size == 12.0 && glyph.color.0 == [0.0, 0.0, 0.0, 1.0]));
+}

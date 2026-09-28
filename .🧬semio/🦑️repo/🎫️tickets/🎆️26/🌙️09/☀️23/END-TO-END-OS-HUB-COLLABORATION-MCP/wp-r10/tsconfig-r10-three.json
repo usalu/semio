@@ -1,0 +1,27 @@
+{
+ "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+ "compilerOptions": {
+  "incremental": false,
+  "noEmit": true,
+  "lib": [
+   "DOM",
+   "DOM.Iterable",
+   "ESNext"
+  ],
+  "types": [
+   "bun-types",
+   "node"
+  ],
+  "typeRoots": [
+   "/Users/ueli/Documents/semio/node_modules/@types",
+   "/Users/ueli/Documents/semio/node_modules"
+  ],
+  "jsx": "react-jsx"
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx",
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🧪️chunkkey/🟦️.tsx"
+ ]
+}

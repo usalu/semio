@@ -262,7 +262,7 @@ fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String
         semio_framework_plugin::IoPayload::Text(_) => return Err("s.stdio.semio/v1/drawing -> s.stdio.svg dispatch returned Text, expected Binary (ArtifactPack)".into()),
     };
     let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string())?;
-    Ok(write_svg_xml(&svg_snapshot.doc))
+    write_svg_xml(&svg_snapshot.doc)
 }
 
 /// 🖼️ Renders the active shot as a real SVG scene — shot shape as a filled background path, the

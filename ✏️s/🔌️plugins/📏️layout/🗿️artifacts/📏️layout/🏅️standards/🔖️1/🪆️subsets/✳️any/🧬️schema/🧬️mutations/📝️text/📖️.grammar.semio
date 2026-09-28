@@ -31,6 +31,18 @@ line = rename-layout
      / change-frame-columns
      / update-grid
      / set-frame-flags
+     / update-paragraph-style
+     / update-text-frame
+     / update-layer
+     / create-character-style
+     / delete-character-style
+     / update-character-style
+     / update-parent-page
+     / update-spread
+     / set-page-parent
+     / set-page-guides
+     / set-story-runs
+     / update-link
 
 rename-layout = "rename-layout" SP text
 change-print-target = "change-print-target" SP text?
@@ -60,6 +72,18 @@ change-frame-wrap-mode = "change-frame-wrap-mode" SP id SP id SP text
 change-frame-columns = "change-frame-columns" SP id SP id SP number
 update-grid = "update-grid" SP number SP number SP boolean
 set-frame-flags = "set-frame-flags" SP id SP id SP boolean? SP boolean?
+update-paragraph-style = "update-paragraph-style" SP id SP text SP text SP number SP number SP number SP number SP text
+update-text-frame = "update-text-frame" SP id SP id SP text SP text SP number SP number SP number SP number
+update-layer = "update-layer" SP id SP id SP text SP boolean SP boolean
+create-character-style = "create-character-style" SP id
+delete-character-style = "delete-character-style" SP id
+update-character-style = "update-character-style" SP id
+update-parent-page = "update-parent-page" SP id
+update-spread = "update-spread" SP id
+set-page-parent = "set-page-parent" SP id
+set-page-guides = "set-page-guides" SP id
+set-story-runs = "set-story-runs" SP id
+update-link = "update-link" SP id
 
 id = OCTET+
 number = OCTET+

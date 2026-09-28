@@ -6,6 +6,8 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { spawnSync } from "node:child_process";
 
+import { connect, createServer, type AddressInfo, type Socket } from "node:net";
+
 import { tmpdir } from "node:os";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -76,6 +78,8 @@ import { devHubCatalogBootstrapPublisherV1, devHubLocaleV1, devHubStatusTextV1, 
 
 import { decodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+
 
 
 
@@ -133,7 +137,82 @@ const COLLAB_E2E_STEP_NAMES = [
   "a short connection loss does not freeze user2's shell; the edit typed offline lands once the link returns",
   "two simultaneous writers converge: both shells settle on the SAME text, ordered by the hub's own sequence",
   "writer/draw/puzzle3d surfaces show peer-cursor overlay markers that move when the peer pointer moves",
+  "real link cuts (5 s / 15 s / 60 s) while user1 types: no shell freezes, nothing is rebuilt, every keystroke typed during a cut reaches the hub and user2",
 ] as const;
+
+/** ⏱️ STEP 15's link cuts in milliseconds (`S_COLLAB_LINK_CUTS_MS`, comma-separated): a 5 s blip, a 15 s shortage and a 60 s one at
+ * the link-shortage policy's bound. */
+const COLLAB_E2E_LINK_CUTS_MS = (process.env.S_COLLAB_LINK_CUTS_MS ?? "5000,15000,60000").split(",").map(Number);
+
+/** 🔌️ A TCP relay between one shell and the hub that STEP 15 cuts for real: every relayed connection is destroyed and new ones are
+ * refused until the cut ends (`setOffline` leaves an open WebSocket silently black-holed instead). Transparent otherwise, so every
+ * other step runs through it unchanged. */
+type CollabLinkRelay = { readonly url: string; cut(ms: number): void; close(): Promise<void> };
+
+async function collabStartLinkRelay(hubBaseUrl: string): Promise<CollabLinkRelay> {
+  const upstream = new URL(hubBaseUrl);
+  const pairs = new Set<readonly [Socket, Socket]>();
+  let cutUntil = 0;
+  const server = createServer((client) => {
+    if (Date.now() < cutUntil) {
+      client.destroy();
+      return;
+    }
+    const hub = connect(Number(upstream.port), upstream.hostname);
+    const pair = [client, hub] as const;
+    pairs.add(pair);
+    const drop = (): void => {
+      pairs.delete(pair);
+      client.destroy();
+      hub.destroy();
+    };
+    for (const socket of pair) {
+      socket.on("error", drop);
+      socket.on("close", drop);
+    }
+    client.pipe(hub);
+    hub.pipe(client);
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const cutAll = (): void => {
+    for (const [client, hub] of pairs) {
+      client.destroy();
+      hub.destroy();
+    }
+    pairs.clear();
+  };
+  return {
+    url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
+    cut: (ms) => {
+      cutUntil = Date.now() + ms;
+      cutAll();
+    },
+    close: () =>
+      new Promise<void>((resolve) => {
+        cutAll();
+        server.close(() => resolve());
+      }),
+  };
+}
+
+/** 🎞️ One animation frame's latency on `page`, in ms: a frozen shell answers late or not at all. */
+async function collabFrameMs(page: import("playwright").Page): Promise<number> {
+  return Math.round(await page.evaluate(() => new Promise<number>((resolve) => { const started = performance.now(); requestAnimationFrame(() => resolve(performance.now() - started)); })));
+}
+
+/** 🔁️ Whether `page` shows the rebuild notice ("fresh authoritative restore", en or de): the document was discarded and rebuilt. */
+async function collabShowsRebuild(page: import("playwright").Page): Promise<boolean> {
+  return (await page.getByText(/fresh authoritative restore|autoritative Wiederherstellung/u).count()) > 0;
+}
+
+/** 🌍️ The language both humans' browser contexts run in (`--locale`), and the dialog option labels STEP 1/2 pick in it — the
+ * Space app's own `LocalizedLabel`s (`🪐️space/…/🏠️home/…/✏️editor/🦀️.rs`). */
+type CollabLocale = "en" | "de";
+
+const COLLAB_E2E_LOCALES: Readonly<Record<CollabLocale, { readonly browser: string; readonly studio: string; readonly public: string; readonly author: string }>> = {
+  en: { browser: "en-US", studio: "Studio", public: "Public", author: "Author" },
+  de: { browser: "de-DE", studio: "Studio", public: "Öffentlich", author: "Autor" },
+};
 
 /** 🧾️ One step's verdict: `true` PASS, `false` FAIL, `null` SKIP (the run does not own what the step needs). */
 type CollabStepOutcome = { readonly step: number; readonly name: string; readonly pass: boolean | null; readonly detail: string };
@@ -164,8 +243,7 @@ function collabExternalAdminCapability(hub: CollabExternalHub): string {
   return typeof parsed.capability === "string" ? parsed.capability : "";
 }
 
-function collabExternalHub(): CollabExternalHub | null {
-  const baseUrl = process.env.S_COLLAB_HUB_URL;
+function collabExternalHub(baseUrl: string | undefined): CollabExternalHub | null {
   if (!baseUrl) return null;
   const user1 = process.env.S_COLLAB_USER1_PASSWORD;
   const user2 = process.env.S_COLLAB_USER2_PASSWORD;
@@ -630,11 +708,11 @@ const collabSpaceReopenedAt = new WeakMap<import("playwright").Page, number>();
 /** ⏳️ A hard load mounts the Space app, then the restored identity re-establishes the session and the route re-opens the
  * space ~5–7 s later ("space index opening failed: document closed", routed to U5 on 26/09/26), closing whatever was opened
  * in between: waits until the page has been quiet for `quietMs` and the Space app is mounted again. */
-async function collabSettleAfterLoad(page: import("playwright").Page, quietMs = 12_000, deadlineMs = 90_000, appKey: "s-space-create-artifact" | "s-home-create-space" = "s-space-create-artifact"): Promise<boolean> {
+async function collabSettleAfterLoad(page: import("playwright").Page, quietMs = 12_000, deadlineMs = 90_000): Promise<boolean> {
   const started = Date.now();
   while (Date.now() - started < deadlineMs) {
     const quietSince = Math.max(started, collabSpaceReopenedAt.get(page) ?? 0);
-    if (Date.now() - quietSince >= quietMs && (await page.locator(`[data-ui-node-key="${appKey}"]`).count()) > 0) return true;
+    if (Date.now() - quietSince >= quietMs && (await page.locator('[data-ui-node-key="s-space-create-artifact"]').count()) > 0) return true;
     await page.waitForTimeout(500);
   }
   return false;
@@ -896,6 +974,7 @@ async function collabRunScenario(
   user2Commands: CollabCommandFrameCounter,
   adminCapability: () => string,
   user1Sent: CollabSentCommands,
+  locale: CollabLocale,
 ): Promise<{ readonly spaceId: string | undefined; readonly artifactId: string | undefined }> {
   let spaceId: string | undefined;
   let artifactId: string | undefined;
@@ -906,8 +985,8 @@ async function collabRunScenario(
     await collabClickToolbarButton(user1, "s-home-create-space");
     await collabWaitForDialog(user1);
     await user1.locator("#name").fill(spaceName);
-    await collabSelectOption(user1, "kind", "Studio");
-    await collabSelectOption(user1, "visibility", "Public");
+    await collabSelectOption(user1, "kind", COLLAB_E2E_LOCALES[locale].studio);
+    await collabSelectOption(user1, "visibility", COLLAB_E2E_LOCALES[locale].public);
     await collabSubmitDialog(user1);
     spaceId = await collabWaitForNamedRow(user1, "space", spaceName, 30_000);
     record(1, true, `space ${spaceId} created; user1's Home lists it`);
@@ -923,7 +1002,7 @@ async function collabRunScenario(
       await collabRowAction(user1, "space", spaceId, "share");
       await collabWaitForDialog(user1);
       await user1.locator("#email").fill(COLLAB_E2E_USER2_EMAIL);
-      await collabSelectOption(user1, "role", "Author");
+      await collabSelectOption(user1, "role", COLLAB_E2E_LOCALES[locale].author);
       await collabSubmitDialog(user1);
       const live = await collabWaitForRow(user2, "space", spaceId, 60_000).then(() => true).catch(() => false);
       if (!live) {
@@ -1289,9 +1368,10 @@ async function collabRunCollaborationBehaviours(opts: {
   readonly user2: import("playwright").Page;
   readonly spaceId: string | undefined;
   readonly artifactId: string | undefined;
+  readonly relays: readonly [CollabLinkRelay, CollabLinkRelay];
 }): Promise<void> {
   if (!opts.spaceId || !opts.artifactId) {
-    for (const step of [11, 12, 13, 14]) opts.record(step, false, "skipped — no space/artifact id from earlier steps");
+    for (const step of [11, 12, 13, 14, 15]) opts.record(step, false, "skipped — no space/artifact id from earlier steps");
     return;
   }
   const editor1 = collabTextEditor(opts.user1);
@@ -1425,15 +1505,61 @@ async function collabRunCollaborationBehaviours(opts: {
     await collabScreenshot(opts.user2, "step14-user2");
     opts.record(14, false, error instanceof Error ? error.message : String(error));
   }
+
+  try {
+    const rounds: string[] = [];
+    for (const outageMs of COLLAB_E2E_LINK_CUTS_MS) {
+      const settled = await collabAwaitConvergence(opts.user1, editor1, editor2, 30_000);
+      spaceE2eAssert(settled.converged, `the editors disagreed before the ${outageMs} ms cut`);
+      const noticeBefore = (await collabShowsRebuild(opts.user1)) || (await collabShowsRebuild(opts.user2));
+      const cutAt = Date.now();
+      for (const relay of opts.relays) relay.cut(outageMs);
+      const markers: string[] = [];
+      let worstFrameMs = 0;
+      let rebuilt = false;
+      while (Date.now() < cutAt + Math.min(outageMs - 1_000, 20_000)) {
+        const marker = `cut${outageMs / 1_000}k${markers.length}`;
+        await editor1.focus();
+        await opts.user1.keyboard.press("End");
+        await opts.user1.keyboard.type(` ${marker}`, { delay: 35 });
+        markers.push(marker);
+        worstFrameMs = Math.max(worstFrameMs, await collabFrameMs(opts.user1), await collabFrameMs(opts.user2));
+        rebuilt ||= (await collabShowsRebuild(opts.user1)) || (await collabShowsRebuild(opts.user2));
+      }
+      const remaining = cutAt + outageMs - Date.now();
+      if (remaining > 0) await opts.user1.waitForTimeout(remaining);
+      const restoredAt = Date.now();
+      let recovered = await collabAwaitConvergence(opts.user1, editor1, editor2, 120_000);
+      while (Date.now() - restoredAt < 120_000 && !markers.every((marker) => recovered.first.includes(marker) && recovered.second.includes(marker))) {
+        await opts.user1.waitForTimeout(500);
+        recovered = await collabAwaitConvergence(opts.user1, editor1, editor2, 10_000);
+      }
+      rebuilt ||= (await collabShowsRebuild(opts.user1)) || (await collabShowsRebuild(opts.user2));
+      const missing = markers.filter((marker) => !recovered.first.includes(marker) || !recovered.second.includes(marker));
+      spaceE2eAssert(worstFrameMs < 1_000, `a shell froze during the ${outageMs} ms cut (worst frame ${worstFrameMs} ms)`);
+      spaceE2eAssert(noticeBefore || !rebuilt, `the ${outageMs} ms cut rebuilt the document instead of resuming it`);
+      spaceE2eAssert(
+        recovered.converged && missing.length === 0,
+        `keystrokes typed during the ${outageMs} ms cut were lost: ${JSON.stringify(missing)} (user1: ${JSON.stringify(recovered.first.slice(-160))}, user2: ${JSON.stringify(recovered.second.slice(-160))})`,
+      );
+      rounds.push(`${outageMs / 1_000} s: ${markers.length} markers in both shells ${Date.now() - restoredAt} ms after the link returned, worst frame ${worstFrameMs} ms`);
+    }
+    opts.record(15, true, rounds.join("; "));
+  } catch (error) {
+    await collabScreenshot(opts.user1, "step15-user1");
+    await collabScreenshot(opts.user2, "step15-user2");
+    opts.record(15, false, error instanceof Error ? error.message : String(error));
+  }
 }
 
 /** 🎬️ Orchestrates the full harness: port scan, temp data dirs, hub boot, plugin prebuild, two `s`
  * react dev servers, two independent Playwright browser contexts, the 10-step scenario, and teardown of
  * every spawned process (hub + both dev servers + browser) even on failure. Writes `STEP n: PASS/FAIL`
  * lines plus a final summary, and sets a non-zero exit code if any step failed. */
-async function runCollabE2eVerify(): Promise<void> {
+async function runCollabE2eVerify(opts: { readonly hub: string | undefined; readonly locale: CollabLocale; readonly check: string }): Promise<void> {
+  const startedAt = new Date();
   const outDir = collabOutDir();
-  const external = collabExternalHub();
+  const external = collabExternalHub(opts.hub);
   const taken = new Set<number>();
   const hubPort = external ? Number(new URL(external.baseUrl).port) : collabScanPort("S_COLLAB_HUB_PORT", taken);
   const user1Port = collabScanPort("S_COLLAB_USER1_PORT", taken);
@@ -1452,6 +1578,7 @@ async function runCollabE2eVerify(): Promise<void> {
   let user1Daemon: SpawnDaemonHandle | undefined;
   let user2Daemon: SpawnDaemonHandle | undefined;
   let browser: import("playwright").Browser | undefined;
+  let relays: readonly [CollabLinkRelay, CollabLinkRelay] | undefined;
   const results: CollabStepOutcome[] = [];
   const record = collabRecorder(results);
 
@@ -1461,6 +1588,7 @@ async function runCollabE2eVerify(): Promise<void> {
     } catch {
       // 🏁️ Best-effort.
     }
+    for (const relay of relays ?? []) await relay.close();
     for (const daemon of [user1Daemon, user2Daemon, hubDaemon]) {
       try {
         daemon?.kill();
@@ -1508,9 +1636,10 @@ async function runCollabE2eVerify(): Promise<void> {
     }
 
     try {
+      relays = [await collabStartLinkRelay(hubBaseUrl), await collabStartLinkRelay(hubBaseUrl)];
       [user1Daemon, user2Daemon] = await Promise.all([
-        collabStartUserDevServer({ port: user1Port, hubUrl: hubBaseUrl, user: COLLAB_E2E_USER1_EMAIL, dataDir: user1DataDir, logPath: join(outDir, "🧪️3-c-user1-dev.txt") }),
-        collabStartUserDevServer({ port: user2Port, hubUrl: hubBaseUrl, user: COLLAB_E2E_USER2_EMAIL, dataDir: user2DataDir, logPath: join(outDir, "🧪️3-c-user2-dev.txt") }),
+        collabStartUserDevServer({ port: user1Port, hubUrl: relays[0].url, user: COLLAB_E2E_USER1_EMAIL, dataDir: user1DataDir, logPath: join(outDir, "🧪️3-c-user1-dev.txt") }),
+        collabStartUserDevServer({ port: user2Port, hubUrl: relays[1].url, user: COLLAB_E2E_USER2_EMAIL, dataDir: user2DataDir, logPath: join(outDir, "🧪️3-c-user2-dev.txt") }),
       ]);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -1531,8 +1660,8 @@ async function runCollabE2eVerify(): Promise<void> {
     // out of its narrow/mobile layout, where the presence bar and the toolbar ids STEP 1/3/5 click are
     // collapsed behind an overflow chip.
     browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
-    const context1 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-    const context2 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const context1 = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: COLLAB_E2E_LOCALES[opts.locale].browser });
+    const context2 = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: COLLAB_E2E_LOCALES[opts.locale].browser });
     const user1Page = await context1.newPage();
     const user2Page = await context2.newPage();
     const pageErrors: string[] = [];
@@ -1581,16 +1710,13 @@ async function runCollabE2eVerify(): Promise<void> {
     await collabSignIn(user1Page, COLLAB_E2E_USER1_EMAIL, passwords[COLLAB_E2E_USER1_EMAIL]!);
     await collabSignIn(user2Page, COLLAB_E2E_USER2_EMAIL, passwords[COLLAB_E2E_USER2_EMAIL]!);
     console.log(`[collab-e2e] both humans hold a verified session authority on ${hubBaseUrl}`);
-    // ⏳️ A sign-in re-establishes Home and re-bootstraps its directory a few seconds later; a dialog opened in between is
-    // closed with it (26/09/27 C11 runs b3-2/b3-3, routed to the shell owner) — act once Home has been quiet for 8 s.
-    await Promise.all([collabSettleAfterLoad(user1Page, 8_000, 60_000, "s-home-create-space"), collabSettleAfterLoad(user2Page, 8_000, 60_000, "s-home-create-space")]);
 
-    const scenario = await collabRunScenario(record, user1Page, user2Page, hubBaseUrl, user2Commands, () => (external ? collabExternalAdminCapability(external) : hubDaemon!.adminCapability), user1Sent);
+    const scenario = await collabRunScenario(record, user1Page, user2Page, hubBaseUrl, user2Commands, () => (external ? collabExternalAdminCapability(external) : hubDaemon!.adminCapability), user1Sent, opts.locale);
 
     if (hubDaemon) hubDaemon = await collabRunRestartStep({ record, hubDaemon, hubPort, hubDataDir, user1: user1Page, user2: user2Page, user2Commands, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
     else for (const step of [9, 10]) record(step, null, `skipped — the external hub ${hubBaseUrl} is not owned by this run, so it is not restarted`);
 
-    await collabRunCollaborationBehaviours({ record, user1: user1Page, user2: user2Page, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
+    await collabRunCollaborationBehaviours({ record, user1: user1Page, user2: user2Page, spaceId: scenario.spaceId, artifactId: scenario.artifactId, relays: relays! });
 
     const ignorableGpuFragments = ["NoCompatibleDevice"];
     const criticalErrors = pageErrors.filter((message) => !ignorableGpuFragments.some((fragment) => message.includes(fragment)));
@@ -1604,7 +1730,36 @@ async function runCollabE2eVerify(): Promise<void> {
   console.log(`[collab-e2e] summary: ${passed}/${results.length} steps passed, ${skipped} skipped, ${results.length - passed - skipped} failed`);
   console.log(`[collab-e2e] /spaces/<id> loads that did not mount the Space app: ${collabRouteMisses.length}${collabRouteMisses.length > 0 ? ` — ${collabRouteMisses.join(" | ")}` : ""}`);
   for (const outcome of [...results].sort((left, right) => left.step - right.step)) console.log(`  STEP ${outcome.step}: ${collabVerdict(outcome.pass)}: ${outcome.name}`);
-  if (passed !== results.length) process.exitCode = 1;
+  const failing = results.filter((outcome) => outcome.pass === false).map((outcome) => outcome.step).sort((left, right) => left - right);
+  const status = results.length === COLLAB_E2E_STEP_NAMES.length && failing.length === 0 ? "pass" : "fail";
+  publishAcceptanceCheckResult(
+    repoRoot,
+    acceptanceCheckResult({
+      check: opts.check,
+      status,
+      startedAt,
+      measured: { locale: opts.locale, steps: COLLAB_E2E_STEP_NAMES.length, recorded: results.length, passed, skipped, failed: failing.length, routeMisses: collabRouteMisses.length, externalHub: external !== null },
+      summary: {
+        en: `${passed}/${COLLAB_E2E_STEP_NAMES.length} collaboration steps pass in ${opts.locale} (${skipped} skipped)${failing.length ? `; failing: STEP ${failing.join(", ")}` : ""}`,
+        de: `${passed}/${COLLAB_E2E_STEP_NAMES.length} Zusammenarbeitsschritte bestehen in ${opts.locale} (${skipped} übersprungen)${failing.length ? `; fehlgeschlagen: SCHRITT ${failing.join(", ")}` : ""}`,
+      },
+      evidence: [outDir],
+    }),
+  );
+  if (status !== "pass") process.exitCode = 1;
 }
 
-export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, type CollabCommandFrameCounter, type CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabPresenceColors, collabPresenceRows, collabRowIds, collabAwaitConvergence, collabEditorText, collabProvisionCredentials, collabRunCollaborationBehaviours, collabRunRestartStep, collabRunScenario, collabSignIn, collabUndo, collabScanPort, collabActivateShellRuntime, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForPresenceRoster, collabWaitForRow, runCollabE2eVerify };
+/** 🚪️ `verify collab [--hub <url>] [--locale en|de]` — the two-human React collaboration journey against the hub `--hub` names
+ * (`S_COLLAB_HUB_URL` otherwise; neither: this run boots its own hub), both humans in `--locale`; the goal-gate record is
+ * `react-collaboration-e2e-<locale>`, `blocked` when the hub cannot be reached. Credentials only via env. */
+async function runCollabE2eCli(segments: readonly string[]): Promise<void> {
+  const flag = (name: string): string | undefined => {
+    const value = segments[segments.indexOf(name) + 1];
+    return segments.includes(name) && value !== undefined && !value.startsWith("--") ? value : undefined;
+  };
+  const locale: CollabLocale = flag("--locale") === "de" ? "de" : "en";
+  const check = `react-collaboration-e2e-${locale}`;
+  await withAcceptanceRecord(repoRoot, check, () => runCollabE2eVerify({ hub: flag("--hub") ?? process.env.S_COLLAB_HUB_URL, locale, check }), (error) => /ECONNREFUSED|ERR_CONNECTION_REFUSED|Unable to connect|hub never became ready|needs S_COLLAB_USER1_PASSWORD/u.test(String(error instanceof Error ? error.message : error)));
+}
+
+export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, type CollabCommandFrameCounter, type CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabPresenceColors, collabPresenceRows, collabRowIds, collabAwaitConvergence, collabEditorText, collabProvisionCredentials, collabRunCollaborationBehaviours, collabRunRestartStep, collabRunScenario, collabSignIn, collabUndo, collabScanPort, collabActivateShellRuntime, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForPresenceRoster, collabWaitForRow, runCollabE2eCli, runCollabE2eVerify };

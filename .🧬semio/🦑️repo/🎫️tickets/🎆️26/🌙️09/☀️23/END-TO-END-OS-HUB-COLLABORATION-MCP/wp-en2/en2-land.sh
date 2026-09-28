@@ -1,19 +1,22 @@
 #!/bin/zsh
-# 🛬️ EN2 window-3 landing of the prepared sets, compile-atomic: every set's dry run must be clean on the live tree, then
-# all sets are written, then the native lane checks/tests every touched crate (private target dir, fleet build-dir).
+# 🛬️ EN2 window-3 landing of the prepared sets, compile-atomic: the sets are chained in order (a later set builds on an
+# earlier one's result), the whole chain must dry-run clean on the live tree, then all sets are written in one go, then the
+# native lane checks/tests every touched crate (private target dir, fleet build-dir).
 # usage: zsh en2-land.sh dry|write|native
-#   dry     — dry-run every set on the live tree (no writes)
-#   write   — apply every set (refuses on the first set with problems; nothing of that set is written)
+#   dry     — chained dry run of every set on the live tree (no writes)
+#   write   — chained apply of every set (refuses if any set has a problem; then nothing is written)
 #   native  — the native proof, meant to run inside `📜️fleet-mutex.sh native en2 -- zsh en2-land.sh native`
+# After `write`: the draw descriptor (`✏️s/🔌️plugins/🖍️draw/🔣️.json`) must be re-described before any live MCP check —
+# the three verb descriptions live in the editor source until then.
 set -u
 ROOT="/Users/ueli/Documents/semio"
 HERE="$ROOT/.tmp-ticket/wp-en2"
-SETS=(test-raw-routing energy-epjson draw-verb-descriptions gltf-production-inverse gltf-create-material-fixture gltf-create-material-manifest gltf-probe-glb)
+SETS=(test-raw-routing energy-epjson energy-epjson-fixtures draw-verb-descriptions gltf-production-inverse gltf-create-material-fixture gltf-create-material-manifest gltf-probe-glb gltf-any-reader energy-oracle-translator bcf-reader docx-reader)
 case "${1:-dry}" in
   dry)
-    for s in $SETS; do python3 "$HERE/en2-patch.py" apply "$s" || exit 1; done ;;
+    python3 "$HERE/en2-patch.py" apply $SETS ;;
   write)
-    for s in $SETS; do python3 "$HERE/en2-patch.py" apply "$s" --write || exit 1; done ;;
+    python3 "$HERE/en2-patch.py" apply $SETS --write ;;
   native)
     export CARGO_BUILD_BUILD_DIR="$ROOT/.🧬semio/🦑️repo/⚡️cache/cargo/build-fleet-b" CARGO_TARGET_DIR="$HERE/target" CARGO_INCREMENTAL=0
     cd "$ROOT" || exit 90

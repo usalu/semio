@@ -1790,6 +1790,86 @@ export function treeWindowBodyRequestsV1(containers: readonly TreeWindowContaine
   return capTreeWindowRequests(requests, visible, TREE_WINDOW_BODY_NODE_BUDGET);
 }
 
+/** 🧠️ What the observer keeps of one windowed container between two measures: the window it last asked for, the
+ * most rows the guest has proven it serves at the container's current `total` (`null` until an answer came back
+ * short), which edge of the viewport a short window is pinned to, and the first row the viewport showed. */
+export type TreeWindowServedMemoryV1 = {
+  readonly asked: TreeWindowRequest;
+  readonly capacity: number | null;
+  readonly anchor: "start" | "end";
+  readonly firstVisible: number | null;
+  readonly total: number;
+};
+
+/**
+ * 🧠️ {@link treeWindowBodyRequestsV1}, spent where the guest can actually answer it.
+ *
+ * 🧯️ The body's node ledger is not the guest's only ceiling: `TreeWindows` also prices every materialised row
+ * against the reconciler's ITEM budget and ends a window early — a shorter run from the SAME offset — once a row's
+ * subtree would overdraw it (`TREE_WINDOW_BODY_ITEM_BUDGET`, region `🔖️PanelWindowing` of `🔌️plugin/🦀️.rs`). Home's
+ * spaces rows carry five row actions each, so 27 of them spend it. The viewport rule asks `visible + 2 × overscan`
+ * rows starting `overscan` rows above the viewport, which for a list shorter than that is `{offset: 0, rows: total}`
+ * wherever the reader scrolls: the guest answered rows 0–26 of 42 forever, the re-measure recomputed the same
+ * question, and every row past the 27th was unreachable — a newly created space included (ticket 26/09/23, S18/SH2
+ * finding W1).
+ *
+ * So a window the guest answered SHORT (it began where it was asked and holds fewer rows than were asked and
+ * exist) teaches the container's capacity, and from then on the container's window is placed for that capacity:
+ * centred on the visible rows when it covers them, else pinned to the edge the reader is scrolling towards (the
+ * bottom edge while scrolling down, the top edge while scrolling up; the end of the list when the viewport opens
+ * there), so every row of the list is reachable and a keyboard move into the edge row is served. Only the
+ * placement moves — the window still asks the viewport rule's rows — so a guest that really stops at the capacity
+ * answers the same short window again and the question never changes (silence), a capacity learned from the answer
+ * to an older, smaller window is corrected by the very next answer, and a guest whose rows got cheaper simply
+ * serves more. A changed `total` forgets the capacity — a different list is priced again.
+ */
+export function treeWindowServedRequestsV1(
+  containers: readonly TreeWindowContainerMeasure[],
+  viewportHeight: number,
+  memory: ReadonlyMap<string, TreeWindowServedMemoryV1>,
+): { readonly requests: readonly TreeWindowRequest[]; readonly memory: ReadonlyMap<string, TreeWindowServedMemoryV1> } {
+  const visible = treeWindowVisibleRowsForViewport(containers, 0, viewportHeight);
+  const measured = new Map(containers.map((container) => [container.key, container] as const));
+  const next = new Map<string, TreeWindowServedMemoryV1>();
+  const requests = treeWindowBodyRequestsV1(containers, viewportHeight).map((request) => {
+    const container = measured.get(request.key);
+    const total = Math.max(0, Math.floor(container?.total ?? 0));
+    const offset = Math.max(0, Math.floor(container?.offset ?? 0));
+    const length = Math.max(0, Math.floor(container?.length ?? 0));
+    const known = memory.get(request.key);
+    const priced = known !== undefined && known.total === total ? known : undefined;
+    const short = priced !== undefined && length > 0 && offset === priced.asked.offset && length < Math.min(priced.asked.rows, total - offset);
+    const capacity = short ? length : priced?.capacity == null ? null : Math.max(priced.capacity, length);
+    const metrics = visible.get(request.key);
+    const firstVisible = metrics?.firstVisibleRow ?? null;
+    const lastVisible = metrics === undefined ? null : metrics.firstVisibleRow + metrics.visibleRows - 1;
+    const previous = known?.firstVisible ?? null;
+    const anchor: "start" | "end" =
+      firstVisible === null || lastVisible === null
+        ? (known?.anchor ?? "start")
+        : previous === null
+          ? firstVisible > 0 && lastVisible >= total - 1
+            ? "end"
+            : "start"
+          : firstVisible > previous
+            ? "end"
+            : firstVisible < previous
+              ? "start"
+              : known!.anchor;
+    const asked =
+      capacity === null || request.rows <= capacity || metrics === undefined || lastVisible === null
+        ? request
+        : (() => {
+            const start = capacity >= metrics.visibleRows ? metrics.firstVisibleRow - Math.floor((capacity - metrics.visibleRows) / 2) : anchor === "end" ? lastVisible - capacity + 1 : metrics.firstVisibleRow;
+            const placed = Math.min(Math.max(0, start), Math.max(0, total - capacity));
+            return { key: request.key, offset: placed, rows: Math.max(1, Math.min(request.rows, total - placed)) };
+          })();
+    next.set(request.key, { asked, capacity, anchor, firstVisible: firstVisible ?? previous, total });
+    return asked;
+  });
+  return { requests, memory: next };
+}
+
 /** 🔑️ A duplicate `data-tree-window-key` inside one body is an authoring fault, not a host one: two
  * containers would share one open state and one window, and each other's measurements would silently
  * overwrite the other's in the report (📓️s3-review-streaming-loop.md §4). The host cannot repair it — the
@@ -1822,6 +1902,7 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
   windowsRef.current = windows;
   const lastReportRef = useRef<string>("");
   const duplicateKeysRef = useRef<Set<string>>(new Set());
+  const servedRef = useRef<ReadonlyMap<string, TreeWindowServedMemoryV1>>(new Map());
   const frameRef = useRef<number | null>(null);
   const bodyKey = windows?.bodyKey ?? null;
   useEffect(() => {
@@ -1841,7 +1922,9 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
       const viewportHeight = treeWindowViewportMetrics(viewport).height;
       const containers = treeWindowContainersUnder(live, viewport);
       reportDuplicateTreeWindowKeys(containers, channel.bodyKey, duplicateKeysRef.current);
-      const requests = [...treeWindowBodyRequestsV1(containers, viewportHeight).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows })), ...tableColumnWindowRequestsUnder(live)];
+      const served = treeWindowServedRequestsV1(containers, viewportHeight, servedRef.current);
+      servedRef.current = served.memory;
+      const requests = [...served.requests.map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows })), ...tableColumnWindowRequestsUnder(live)];
       const viewportRows = Math.max(1, Math.ceil(viewportHeight / rowHeight));
       const signature = treeWindowReportSignatureV1(requests, viewportRows);
       if (signature === lastReportRef.current) return;
@@ -2688,7 +2771,7 @@ if (import.meta.vitest) {
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
   await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
   const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");
-  await registerTreeWindowTests(import.meta.vitest, { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1, treeWindowBodyRequestsV1, treeWindowContainersUnder, treeWindowRowHeightPx, treeWindowScrollViewport, treeWindowViewportMetrics }, { url: import.meta.url });
+  await registerTreeWindowTests(import.meta.vitest, { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1, treeWindowBodyRequestsV1, treeWindowContainersUnder, treeWindowRowHeightPx, treeWindowScrollViewport, treeWindowServedRequestsV1, treeWindowViewportMetrics }, { url: import.meta.url });
   const { registerTests1: registerTableWindowTests } = await import("./🧪️tests/📊️table/🟦️.tsx");
   await registerTableWindowTests(
     import.meta.vitest,

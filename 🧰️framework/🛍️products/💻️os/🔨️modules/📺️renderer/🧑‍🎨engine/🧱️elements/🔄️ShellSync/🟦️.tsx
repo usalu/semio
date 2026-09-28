@@ -17,12 +17,33 @@
 import { type ReactElement } from "react";
 import { Button, Icon, Input, Popover, PopoverAnchor, PopoverContent, useLabel, type IconName } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type Conflict, type UtilityNode } from "@semio-tech/framework";
-import { type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf, buildFileBackboneUri, buildFolderBackboneUri, buildRemoteBackboneUri } from "@semio-tech/framework-os";
+import { type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf } from "@semio-tech/framework-os";
 import { type SyncCardKind } from "../🐚️Shell/🟦️.tsx";
 import { UtilityTree, groupUtilityNodesByCategory } from "../🎛️UtilityTree/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️sync-attach-card
+
+/** 🎯️ What the sync card attaches, typed end to end (never a URI the host parses back): a folder, a file (its folder
+ * backs the document), or a hub space's document — `documentId: null` names the session's own document. */
+export type SyncAttachTargetV1 =
+  | { readonly kind: "folder"; readonly path: string }
+  | { readonly kind: "file"; readonly path: string; readonly folder: string }
+  | { readonly kind: "remote"; readonly hostPort: string; readonly spaceId: string; readonly documentId: string | null };
+
+/** ✍️ The card's draft as a {@link SyncAttachTargetV1}, `null` for an empty draft. A local path is made absolute; a
+ * remote draft is `host:port/space/document`, and a bare `host:port/document` names that document in the `default`
+ * space. Law: `🧫️fixtures/🎯️sync-attach-target.json`. */
+export function syncAttachTargetV1(kind: SyncCardKind, draftPath: string): SyncAttachTargetV1 | null {
+  const draft = draftPath.trim();
+  if (!draft) return null;
+  if (kind === "remote") {
+    const [hostPort = "", ...rest] = draft.split("/");
+    return rest.length >= 2 ? { kind, hostPort, spaceId: rest[0]!, documentId: rest.slice(1).join("/") } : { kind, hostPort, spaceId: "default", documentId: rest[0] || null };
+  }
+  const path = draft.startsWith("/") ? draft : `/${draft}`;
+  return kind === "folder" ? { kind, path } : { kind, path, folder: path.replace(/\/[^/]*$/u, "") || "/" };
+}
 
 type SyncAttachCardProps = {
   readonly activeUri: string | null;
@@ -37,7 +58,7 @@ type SyncAttachCardProps = {
   readonly onAction: (action: ActionDescriptor) => void;
   readonly onDraftPathChange: (value: string) => void;
   readonly onClose: () => void;
-  readonly onAttach: (uri: string) => void;
+  readonly onAttach: (target: SyncAttachTargetV1) => void;
   readonly onDetach: () => void;
   readonly onBrowsePath?: () => void | Promise<void>;
 };
@@ -108,14 +129,8 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
   const placeholder = cardKind === "remote" ? "127.0.0.1:8787/studio-1/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
 
   const attachFromDraft = () => {
-    if (!cardKind || !draftPath.trim()) return;
-    if (cardKind === "remote") {
-      const [hostPort, ...rest] = draftPath.split("/");
-      const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || "document"];
-      onAttach(buildRemoteBackboneUri(hostPort || draftPath, spaceId, documentId));
-      return;
-    }
-    onAttach(cardKind === "folder" ? buildFolderBackboneUri(draftPath) : buildFileBackboneUri(draftPath));
+    const target = cardKind ? syncAttachTargetV1(cardKind, draftPath) : null;
+    if (target) onAttach(target);
   };
 
   return (
@@ -133,7 +148,7 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
       {open ? (
         <PopoverContent side="top" align="center" className="w-80 space-y-3 p-3">
           <div className="space-y-1">
-            <p className="text-sm font-medium">{cardKind ? backboneTitles[cardKind] : null}</p>
+            <p id={`framework.sync.${cardKind}.title`} className="text-sm font-medium">{cardKind ? backboneTitles[cardKind] : null}</p>
             {activeUri ? <p className="break-all text-xs text-muted-foreground">{activeUri}</p> : null}
             {activeUri && statusLine ? (
               <p role="status" aria-live="polite" aria-label={statusAccessibleLabel} data-semio-sync-status="" className="text-xs text-muted-foreground">
@@ -147,10 +162,10 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
             ) : null}
           </div>
           {cardKind === "remote" ? (
-            <Input id={`framework.sync.${cardKind}.path`} value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
+            <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
           ) : (
             <div className="flex items-center gap-2">
-              <Input id={`framework.sync.${cardKind}.path`} className="min-w-0 flex-1" value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
+              <Input id={`framework.sync.${cardKind}.path`} aria-labelledby={`framework.sync.${cardKind}.title`} className="min-w-0 flex-1" value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
               <Button icon="folder-open" type="button" data-semio-sync-browse="" aria-label={browseLabel} title={browseLabel} onClick={() => void onBrowsePath?.()} />
             </div>
           )}

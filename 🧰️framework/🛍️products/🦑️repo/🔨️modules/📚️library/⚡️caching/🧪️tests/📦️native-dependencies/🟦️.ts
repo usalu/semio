@@ -66,7 +66,6 @@ export async function testNativeDependencies(workspace: string, output: string):
     writeFileSync(join(root, "Cargo.lock"), fixture.cargo.invalidLock);
     await assert.rejects(run("node", [require.resolve("nx/bin/nx.js"), "run", "workspace:deps-cargo", "--output-style=stream"]));
     assert.equal(readFileSync(join(root, "Cargo.lock"), "utf8"), fixture.cargo.invalidLock);
-    console.log("[DEBUG] Native dependency leaves: nine command/environment contracts, application-free esbuild closure, Cargo metadata parity, two uncached Nx executions and immutable stale-lock rejection PASS");
     passed = true;
   } finally {
     controller.abort(); clearTimeout(timer); process.off("SIGINT", stop); process.off("SIGTERM", stop);

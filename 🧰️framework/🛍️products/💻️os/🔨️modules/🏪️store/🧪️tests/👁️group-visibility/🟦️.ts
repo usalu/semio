@@ -65,6 +65,5 @@ export function testGroupVisibilityFixtures(): void {
     { ...groupCursor, laws: [1] },
   ]) assert.equal(validateCursor(hostile), false, "group cursor hostile is refused");
 
-  console.log(`[DEBUG] group visibility oracle: AJV=2 read-cases=${groupRead.cases.length} laws=${groupCursor.laws.length} hostiles=6; native retained-group execution remains a separate gate`);
 }
 //#endregion 📏️GroupVisibilityOracle

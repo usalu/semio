@@ -1,6 +1,2 @@
-# 📌️ Overlay paths the sync never overwrites: the workspace root (emitter member) and the files pinned to HEAD while a peer is mid-edit.
+# 📌️ Overlay paths the sync never overwrites: the workspace root (emitter member). The 2026-09-27 value-derive pins are gone (peer green since 19:16).
 Cargo.toml
-🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs
-🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml
-🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs
-🧰️framework/🔨️modules/🌱️value/🦀️.rs

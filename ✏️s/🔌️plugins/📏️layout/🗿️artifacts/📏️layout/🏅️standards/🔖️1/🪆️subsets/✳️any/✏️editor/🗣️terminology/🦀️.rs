@@ -81,6 +81,10 @@ semio_framework_plugin::app_labels! {
         wrap_box: native_en "Box", native_de "Rechteck", reuse_en "Box", reuse_de "Rechteck";
         wrap_contour: native_en "Contour", native_de "Kontur", reuse_en "Contour", reuse_de "Kontur";
         link_path: native_en "Link Path", native_de "Verknüpfungspfad", reuse_en "Link Path", reuse_de "Verknüpfungspfad";
+        link_width: native_en "Pixel Width", native_de "Pixelbreite", reuse_en "Pixel Width", reuse_de "Pixelbreite";
+        link_height: native_en "Pixel Height", native_de "Pixelhöhe", reuse_en "Pixel Height", reuse_de "Pixelhöhe";
+        dpi: native_en "Resolution", native_de "Auflösung", reuse_en "Resolution", reuse_de "Auflösung";
+        color_profile: native_en "Color Profile", native_de "Farbprofil", reuse_en "Color Profile", reuse_de "Farbprofil";
         group_page: native_en "Page", native_de "Seite", reuse_en "Page", reuse_de "Seite";
         group_frame: native_en "Frame", native_de "Rahmen", reuse_en "Frame", reuse_de "Rahmen";
         selection_not_found: native_en "Selection not found in document.", native_de "Auswahl im Dokument nicht gefunden.", reuse_en "Selection not found in document.", reuse_de "Auswahl im Dokument nicht gefunden.";
@@ -103,6 +107,42 @@ semio_framework_plugin::app_labels! {
         preflight_font_missing: native_en "Font {} used by {} is not available", native_de "Schriftart {} verwendet von {} ist nicht verfügbar", reuse_en "Font {} used by {} is not available", reuse_de "Schriftart {} verwendet von {} ist nicht verfügbar";
         preflight_text_overset: native_en "Text in {} overflows its frame", native_de "Text in {} läuft über den Rahmen hinaus", reuse_en "Text in {} overflows its frame", reuse_de "Text in {} läuft über den Rahmen hinaus";
         preflight_asset_rgb_in_print: native_en "Linked asset {} uses RGB in a print document", native_de "Verknüpftes Element {} verwendet RGB in einem Druckdokument", reuse_en "Linked asset {} uses RGB in a print document", reuse_de "Verknüpftes Element {} verwendet RGB in einem Druckdokument";
+        locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
+        baseline_grid: native_en "Baseline Grid", native_de "Grundlinienraster", reuse_en "Baseline Grid", reuse_de "Grundlinienraster";
+        baseline_offset: native_en "Baseline Offset", native_de "Grundlinienversatz", reuse_en "Baseline Offset", reuse_de "Grundlinienversatz";
+        snap_to_baseline: native_en "Snap to Baseline", native_de "An Grundlinie ausrichten", reuse_en "Snap to Baseline", reuse_de "An Grundlinie ausrichten";
+        delete_page: native_en "Delete Page", native_de "Seite löschen", reuse_en "Delete Page", reuse_de "Seite löschen";
+        move_earlier: native_en "Move Earlier", native_de "Nach vorne", reuse_en "Move Earlier", reuse_de "Nach vorne";
+        move_later: native_en "Move Later", native_de "Nach hinten", reuse_en "Move Later", reuse_de "Nach hinten";
+        paragraph_style: native_en "Paragraph Style", native_de "Absatzformat", reuse_en "Paragraph Style", reuse_de "Absatzformat";
+        font_family: native_en "Font Family", native_de "Schriftfamilie", reuse_en "Font Family", reuse_de "Schriftfamilie";
+        font_size: native_en "Font Size", native_de "Schriftgröße", reuse_en "Font Size", reuse_de "Schriftgröße";
+        font_weight: native_en "Font Weight", native_de "Schriftstärke", reuse_en "Font Weight", reuse_de "Schriftstärke";
+        leading: native_en "Leading", native_de "Zeilenabstand", reuse_en "Leading", reuse_de "Zeilenabstand";
+        tracking: native_en "Tracking", native_de "Laufweite", reuse_en "Tracking", reuse_de "Laufweite";
+        alignment: native_en "Alignment", native_de "Ausrichtung", reuse_en "Alignment", reuse_de "Ausrichtung";
+        align_left: native_en "Left", native_de "Links", reuse_en "Left", reuse_de "Links";
+        align_center: native_en "Center", native_de "Zentriert", reuse_en "Center", reuse_de "Zentriert";
+        align_right: native_en "Right", native_de "Rechts", reuse_en "Right", reuse_de "Rechts";
+        align_justify: native_en "Justify", native_de "Blocksatz", reuse_en "Justify", reuse_de "Blocksatz";
+        inset_x: native_en "Inset X", native_de "Einzug X", reuse_en "Inset X", reuse_de "Einzug X";
+        inset_y: native_en "Inset Y", native_de "Einzug Y", reuse_en "Inset Y", reuse_de "Einzug Y";
+        inset_width: native_en "Inset Width", native_de "Einzugsbreite", reuse_en "Inset Width", reuse_de "Einzugsbreite";
+        inset_height: native_en "Inset Height", native_de "Einzugshöhe", reuse_en "Inset Height", reuse_de "Einzugshöhe";
+        thread_next: native_en "Next Frame", native_de "Nächster Rahmen", reuse_en "Next Frame", reuse_de "Nächster Rahmen";
+        thread_none: native_en "None", native_de "Keiner", reuse_en "None", reuse_de "Keiner";
+        group_layer: native_en "Layer", native_de "Ebene", reuse_en "Layer", reuse_de "Ebene";
+        character_style: native_en "Character Style", native_de "Zeichenformat", reuse_en "Character Style", reuse_de "Zeichenformat";
+        add_character_style: native_en "Add Character Style", native_de "Zeichenformat hinzufügen", reuse_en "Add Character Style", reuse_de "Zeichenformat hinzufügen";
+        delete_character_style: native_en "Delete Character Style", native_de "Zeichenformat löschen", reuse_en "Delete Character Style", reuse_de "Zeichenformat löschen";
+        italic: native_en "Italic", native_de "Kursiv", reuse_en "Italic", reuse_de "Kursiv";
+        parent_page: native_en "Parent Page", native_de "Mustervorlage", reuse_en "Parent Page", reuse_de "Mustervorlage";
+        spread: native_en "Spread", native_de "Druckbogen", reuse_en "Spread", reuse_de "Druckbogen";
+        color: native_en "Color", native_de "Farbe", reuse_en "Color", reuse_de "Farbe";
+        guide: native_en "Guide", native_de "Hilfslinie", reuse_en "Guide", reuse_de "Hilfslinie";
+        add_guide: native_en "Add Guide", native_de "Hilfslinie hinzufügen", reuse_en "Add Guide", reuse_de "Hilfslinie hinzufügen";
+        delete_guide: native_en "Delete Guide", native_de "Hilfslinie löschen", reuse_en "Delete Guide", reuse_de "Hilfslinie löschen";
     }
 }
 //#endregion 🔖️Labels

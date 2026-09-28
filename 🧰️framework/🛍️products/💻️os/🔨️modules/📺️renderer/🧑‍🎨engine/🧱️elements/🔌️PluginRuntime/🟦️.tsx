@@ -977,7 +977,7 @@ function retainedSurfaceToBuiltNode(surface: RetainedSurface): BuiltNode | null 
   if (surface.root === null) return null;
   const build = (id: number): BuiltNode => {
     const record = surface.nodes.get(id);
-    if (!record) throw new Error(`[DEBUG] retained UI surface ${surface.surface} references missing node ${id}`);
+    if (!record) throw new Error(`retained UI surface ${surface.surface} references missing node ${id}`);
     return {
       key: record.key,
       component: record.component,
@@ -1312,7 +1312,7 @@ function getThunkScheduler(): TurnScheduler<ThunkTurnPayload, undefined> {
 export function serializePerActor<T>(actorId: string, run: () => Promise<T>, lane: "Interactive" | "UserVisible" | "Background" | "Maintenance" = "Interactive", order?: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const backpressure = getThunkScheduler().enqueue(actorId, { lane, order, payload: { run, resolve: resolve as (value: unknown) => void, reject } });
-    if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] serializePerActor: actor ${actorId}'s queue is full (>${SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} pending turns) — rejected rather than growing unbounded`));
+    if (backpressure.kind === "rejected") reject(new Error(`serializePerActor: actor ${actorId}'s queue is full (>${SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} pending turns) — rejected rather than growing unbounded`));
   });
 }
 
@@ -2946,7 +2946,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         if (last.status !== "running") break;
       }
       const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
-      if (outcome.status === "running") throw new Error(`[DEBUG] reserved-tool job ${job} still running after ${step} Isolated steps`);
+      if (outcome.status === "running") throw new Error(`reserved-tool job ${job} still running after ${step} Isolated steps`);
       await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
     } finally {
       endIsolatedJobDrive();
@@ -2981,7 +2981,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           if (last.status !== "running") break;
         }
         const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
-        if (outcome.status === "running") throw new Error(`[DEBUG] reserved-tool job ${job} still running after ${step} Isolated steps`);
+        if (outcome.status === "running") throw new Error(`reserved-tool job ${job} still running after ${step} Isolated steps`);
         if (live()) await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
       });
     } catch (error) {
@@ -3096,7 +3096,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           }
           if (terminal !== "command-complete") {
             const cause = commandIngressUnownedV1(terminal, lastTurnStatus) ? "plugin.command-ingress-unowned: the reactor retains no ingress owner for this command" : `plugin.command-ingress-stalled: the reactor still owns this command and never completed it (last status ${terminal ?? "missing"}, actor ${lastTurnStatus})`;
-            throw new Error(`[DEBUG] plugin ${pluginId}: command ingress ${cause} (action=${inspected.actionId ?? "none"}, seq=${inspected.seq ?? "none"}, pages=${pages.length}, continuations=${continuations}/${ceiling}, observed statuses: ${[...observedStatuses].join(", ")})`);
+            throw new Error(`plugin ${pluginId}: command ingress ${cause} (action=${inspected.actionId ?? "none"}, seq=${inspected.seq ?? "none"}, pages=${pages.length}, continuations=${continuations}/${ceiling}, observed statuses: ${[...observedStatuses].join(", ")})`);
           }
         }
         const settled = await settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
@@ -3636,7 +3636,7 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     return bytes;
   }
-  throw new Error(`[DEBUG] coerceWireBytes: unsupported payload ${JSON.stringify(raw)?.slice(0, 120)}`);
+  throw new Error(`coerceWireBytes: unsupported payload ${JSON.stringify(raw)?.slice(0, 120)}`);
 }
 
 /** 🎯️ Shared by `handleAction`/`handleCommand`: encodes `envelope` + `viewState`, sends one
@@ -3843,7 +3843,7 @@ async function readHistoryWithBoundedRetryV1(
     if (!errorFrame || !isPluginInstanceBusyFaultV1(refusal)) break;
     if (attempt + 1 < PLUGIN_INSTANCE_BUSY_MAX_ATTEMPTS) await delay(PLUGIN_INSTANCE_BUSY_BACKOFF_MS * 2 ** attempt);
   }
-  throw new Error(`[DEBUG] readHistory(${instanceId}) failed: ${refusal}`);
+  throw new Error(`readHistory(${instanceId}) failed: ${refusal}`);
 }
 //#endregion 🔖️HistorySnapshotRetry
 
@@ -3939,7 +3939,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const envelopes = decodeMutationEnvelopesPack(mutationsPack);
       const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] applyMutations failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`applyMutations failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
       const mergeFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly MergeReport: unknown }> => "MergeReport" in frame);
       const conflictsFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Conflicts: unknown }> => "Conflicts" in frame);
       return {
@@ -3950,7 +3950,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     readAppDocumentPack: async (instanceId) => {
       const frames = await requireChannel(instanceId).readDocument();
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] readAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`readAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
       const documentFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Document: unknown }> => "Document" in frame);
       return documentFrame
         ? { pack: new Uint8Array(documentFrame.Document.pack), spr: new Uint8Array(documentFrame.Document.spr), ops: documentFrame.Document.ops }
@@ -3987,7 +3987,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     readAppDocumentArchive: (instanceId) => requireChannel(instanceId).readDocumentArchive(),
     loadAppDocumentArchive: (instanceId, archive, signal, progress) => requireChannel(instanceId).loadDocumentArchive(archive, signal, progress),
@@ -4007,7 +4007,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
           ? await requireChannel(instanceId).transactionPrepareOwner(txnId, request.mutationId, request.payload)
           : await requireChannel(instanceId).transactionPreparePlanned(txnId, request.preparedOps, request.label, request.origin);
       const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly transactionPrepared: unknown }> => "transactionPrepared" in candidate);
-      if (!frame) throw new Error(`[DEBUG] program ${pluginId}: transactionPrepare(${instanceId}): missing transactionPrepared frame`);
+      if (!frame) throw new Error(`program ${pluginId}: transactionPrepare(${instanceId}): missing transactionPrepared frame`);
       return {
         foreign: frame.transactionPrepared.foreign.map((bytes) => new Uint8Array(bytes)),
         rejection: frame.transactionPrepared.rejection.length > 0 ? new Uint8Array(frame.transactionPrepared.rejection) : null,
@@ -4019,7 +4019,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (committed) return { editId: committed.transactionCommitted.edit_id };
       const errorFrame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in candidate);
       if (errorFrame) return { rejection: new Uint8Array(errorFrame.Error.fault) };
-      throw new Error(`[DEBUG] program ${pluginId}: transactionCommit(${instanceId}): missing transactionCommitted/Error frame`);
+      throw new Error(`program ${pluginId}: transactionCommit(${instanceId}): missing transactionCommitted/Error frame`);
     },
     transactionRollback: async (instanceId, txnId) => {
       await requireChannel(instanceId).transactionRollback(txnId);
@@ -4034,12 +4034,12 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     setMergePolicy: async (instanceId, policy) => {
       const frames = await requireChannel(instanceId).setMergePolicy(policy);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: setMergePolicy failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`program ${pluginId}: setMergePolicy failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     resolveConflict: async (instanceId, conflictId, resolution) => {
       const frames = await requireChannel(instanceId).resolveConflict(conflictId, resolution);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: resolveConflict failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`program ${pluginId}: resolveConflict failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
       const mergeFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly MergeReport: unknown }> => "MergeReport" in frame);
       const conflictsFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Conflicts: unknown }> => "Conflicts" in frame);
       return {
@@ -4050,7 +4050,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     readConflicts: async (instanceId) => {
       const frames = await requireChannel(instanceId).readConflicts();
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: readConflicts failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`program ${pluginId}: readConflicts failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
       const conflictsFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Conflicts: unknown }> => "Conflicts" in frame);
       return conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : [];
     },
@@ -4549,13 +4549,13 @@ export async function loadPluginModulesInDependencyOrder(
       const blockedDependency = (entry.dependencies ?? []).find((dependency) => failedPluginIds.has(dependency.pluginId));
       if (!blockedDependency) return true;
       failedPluginIds.add(entry.pluginId);
-      loadFailures.push({ pluginId: entry.pluginId, error: new Error(`[DEBUG] loadPluginModulesInDependencyOrder: ${entry.pluginId} skipped — dependency ${blockedDependency.pluginId} failed to load`) });
+      loadFailures.push({ pluginId: entry.pluginId, error: new Error(`loadPluginModulesInDependencyOrder: ${entry.pluginId} skipped — dependency ${blockedDependency.pluginId} failed to load`) });
       return false;
     });
     await runBounded(loadable, limit, async (entry) => {
       if (signal?.aborted) {
         failedPluginIds.add(entry.pluginId);
-        loadFailures.push({ pluginId: entry.pluginId, error: new Error(`[DEBUG] loadPluginModulesInDependencyOrder: ${entry.pluginId} skipped — boot aborted`) });
+        loadFailures.push({ pluginId: entry.pluginId, error: new Error(`loadPluginModulesInDependencyOrder: ${entry.pluginId} skipped — boot aborted`) });
         return;
       }
       try {

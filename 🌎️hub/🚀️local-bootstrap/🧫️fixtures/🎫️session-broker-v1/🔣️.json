@@ -1,6 +1,6 @@
 {
   "schema": "semio.hub.local-session-broker-cases/v1",
-  "description": "🎫️ Accepted and refused shapes of the local development session broker's record, request and issued session; every implementation (the hub's JSON Schema through Ajv, the TypeScript parsers) must agree case by case.",
+  "description": "🎫️ Accepted and refused shapes of the local development session broker's record, request, issued session and admin capability file; every implementation (the hub's JSON Schema through Ajv, the TypeScript parsers) must agree case by case.",
   "cases": [
     {
       "id": "record-valid",
@@ -183,6 +183,79 @@
         "profileId": "developer",
         "token": "session.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
         "userId": ""
+      },
+      "valid": false
+    },
+    {
+      "id": "admin-capability-valid",
+      "def": "LocalAdminCapabilityV1",
+      "value": {
+        "schema": "semio.hub.local-admin-capability/v1",
+        "origin": "http://127.0.0.1:8787",
+        "capability": "session.v1.00000000000000000000000000000000.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sessionId": "admin-session-01",
+        "expiresAt": 1790000000000
+      },
+      "valid": true
+    },
+    {
+      "id": "admin-capability-non-loopback-origin",
+      "def": "LocalAdminCapabilityV1",
+      "value": {
+        "schema": "semio.hub.local-admin-capability/v1",
+        "origin": "http://10.0.0.2:8787",
+        "capability": "session.v1.00000000000000000000000000000000.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sessionId": "admin-session-01",
+        "expiresAt": 1790000000000
+      },
+      "valid": false
+    },
+    {
+      "id": "admin-capability-foreign-token",
+      "def": "LocalAdminCapabilityV1",
+      "value": {
+        "schema": "semio.hub.local-admin-capability/v1",
+        "origin": "http://127.0.0.1:8787",
+        "capability": "admin.00000000000000000000000000000000",
+        "sessionId": "admin-session-01",
+        "expiresAt": 1790000000000
+      },
+      "valid": false
+    },
+    {
+      "id": "admin-capability-empty-session",
+      "def": "LocalAdminCapabilityV1",
+      "value": {
+        "schema": "semio.hub.local-admin-capability/v1",
+        "origin": "http://127.0.0.1:8787",
+        "capability": "session.v1.00000000000000000000000000000000.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sessionId": "",
+        "expiresAt": 1790000000000
+      },
+      "valid": false
+    },
+    {
+      "id": "admin-capability-zero-expiry",
+      "def": "LocalAdminCapabilityV1",
+      "value": {
+        "schema": "semio.hub.local-admin-capability/v1",
+        "origin": "http://127.0.0.1:8787",
+        "capability": "session.v1.00000000000000000000000000000000.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sessionId": "admin-session-01",
+        "expiresAt": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "admin-capability-extra-field",
+      "def": "LocalAdminCapabilityV1",
+      "value": {
+        "schema": "semio.hub.local-admin-capability/v1",
+        "origin": "http://127.0.0.1:8787",
+        "capability": "session.v1.00000000000000000000000000000000.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sessionId": "admin-session-01",
+        "expiresAt": 1790000000000,
+        "profileId": "administrator"
       },
       "valid": false
     }

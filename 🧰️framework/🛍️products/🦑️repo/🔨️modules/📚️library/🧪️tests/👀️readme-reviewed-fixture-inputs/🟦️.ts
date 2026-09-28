@@ -87,7 +87,6 @@ function runOwner(): string {
   owner = join(parent, "🔖️" + randomUUID());
   mkdirSync(owner);
   writeFileSync(join(owner, "📝️.md"), "# Self-Contained Reviewed Fixture Proof\n\nExact authored inputs and active or failed results are retained. No cleanup, production moves, producer execution or Git mutation occurs here.\n", { flag: "wx" });
-  console.log("[DEBUG] README reviewed fixture owner", owner);
   return owner;
 }
 
@@ -293,7 +292,6 @@ test("the unchanged copied revision gate runs with absent raw source and edited 
     const result = { id: "absent-raw-edited-canonical", ...execution, copiedTestSha256: copiedTest.sha256, canonicalSha256: canonical.sha256 };
     put(runOwner(), "📊️execution/🔣️.json", JSON.stringify(result, null, 2) + "\n");
     outcomes.push(result);
-    console.log("[DEBUG] README isolated revision result", JSON.stringify({ exitCode: result.exitCode, reason: result.reason, milliseconds: result.milliseconds }));
     expect({ reason: result.reason, errors: result.errors, pidAbsent: result.pidAbsent, groupAbsent: result.groupAbsent }).toEqual({ reason: null, errors: [], pidAbsent: true, groupAbsent: true });
     expect(result.exitCode, result.stdout + result.stderr).toBe(0);
     expect(result.stdout + result.stderr).toMatch(new RegExp("\\b" + vector.isolation.expectedPasses + " pass\\b", "u"));

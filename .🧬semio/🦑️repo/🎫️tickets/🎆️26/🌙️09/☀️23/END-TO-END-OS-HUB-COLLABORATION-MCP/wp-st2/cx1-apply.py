@@ -9,6 +9,7 @@ Every hunk is anchored on text that must occur exactly `count` times; a hunk who
 whose anchor is gone reports `applied` (idempotent re-run). New files are created from `payload/` and must not exist
 with other content. Nothing is written unless every hunk and file of the whole set is clean."""
 import argparse
+import hashlib
 import json
 import pathlib
 import sys
@@ -26,11 +27,12 @@ TRUSTED = f"{HUB}/🗿️artifact-authority/🔏️trusted-catalog"
 PROVIDER = f"{HUB}/🗿️artifact-authority/📇️native-openable-provider"
 PLUGIN_REG = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"
 
-BOOTSTRAP_GENERATION_OLD = "0ca2d589b7e23e7e34d423b848ac16a88283f59aba23866ab4aba478c1b4126b"
+BOOTSTRAP_GENERATION_OLD = "bda0b90f3ef9a8e253c4ee54c6e7ea2595b8377330d4044f7e9d6400abbead51"
 BOOTSTRAP_GENERATION_NEW = (PAYLOAD / "bootstrap-generation.txt").read_text().strip() if (PAYLOAD / "bootstrap-generation.txt").exists() else None
 
 EDITS = []
 NEW_FILES = []
+PROTOCOL_DIGESTS = []
 
 
 def edit(path, old, new, count=1):
@@ -39,6 +41,7 @@ def edit(path, old, new, count=1):
 
 def artifact(slug, directory, standard, schema_fn_path, dsl_const, snapshot, mutation, protocol, digest, kind_prefix):
     root = f"{ART}/{directory}"
+    PROTOCOL_DIGESTS.append((f"{root}/{protocol}", digest))
     fq = "" if slug == "txt" else "semio_framework_plugin::"
     edit(
         f"{root}/🦀️.rs",
@@ -459,6 +462,10 @@ def main():
     texts = {}
     problems = []
     report = []
+    for path, digest in PROTOCOL_DIGESTS:
+        actual = hashlib.sha256((root / path).read_bytes()).hexdigest() if (root / path).exists() else None
+        if actual != digest:
+            problems.append(f"snapshot protocol {path} hashes to {actual}, the pinned codec digest is {digest}: recompute it")
     for path, old, new, count in EDITS:
         file = root / path
         if not file.exists():

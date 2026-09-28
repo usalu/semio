@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import * as THREE from "three";
+import { Box3, BoxGeometry, BufferAttribute, BufferGeometry, Camera, CanvasTexture, Color, DoubleSide, EdgesGeometry, Float32BufferAttribute, Group, HalfFloatType, LineBasicMaterial, LineSegments, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, OrthographicCamera as ThreeOrthographicCamera, PerspectiveCamera as ThreePerspectiveCamera, Plane, PlaneGeometry, Quaternion, RGBAFormat, Ray, Raycaster, Scene, ShaderMaterial, Texture, Vector2, Vector3, WebGLRenderTarget } from "three";
 import { Clone } from "@react-three/drei/core/Clone.js";
 import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
 import { GizmoViewport } from "@react-three/drei/core/GizmoViewport.js";
@@ -90,6 +90,13 @@ export function setReactHostPort(port: ReactHostPort): ReactHostPort {
 
 export { interactiveJobPort, setInteractiveJobPort, type InteractiveJobDescriptor, type InteractiveJobLease, type InteractiveJobPage, type InteractiveJobPort, type InteractiveJobPortSnapshot, type InteractiveJobTerminal } from "./📡️interactive-jobs/🟦️.ts";
 
+/** 🧊️ The three.js constructors and constants the scene port hands its consumers, each one named — an external library
+ * only behind this interface, re-exported explicitly, never its whole namespace (AGENTS.md). */
+export const SCENE_THREE_BINDINGS = Object.freeze({ Box3, BoxGeometry, BufferAttribute, BufferGeometry, Camera, CanvasTexture, Color, DoubleSide, EdgesGeometry, Float32BufferAttribute, Group, HalfFloatType, LineBasicMaterial, LineSegments, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, OrthographicCamera: ThreeOrthographicCamera, PerspectiveCamera: ThreePerspectiveCamera, Plane, PlaneGeometry, Quaternion, RGBAFormat, Ray, Raycaster, Scene, ShaderMaterial, Texture, Vector2, Vector3, WebGLRenderTarget });
+
+/** 🧊️ The shape of {@link SCENE_THREE_BINDINGS}: what a test double of the scene port's `three` member provides. */
+export type SceneThreeBindings = typeof SCENE_THREE_BINDINGS;
+
 /** @emoji 🧊️ Scene host surface for puzzle/cad R3F + three.js (implemented by 🔌️Adapters). */
 export interface SceneHostPort {
   readonly fiber: {
@@ -114,7 +121,7 @@ export interface SceneHostPort {
     readonly useGLTF: typeof useGLTF;
     readonly Grid: typeof Grid;
   };
-  readonly three: typeof THREE;
+  readonly three: SceneThreeBindings;
 }
 
 /** @emoji 🔌️ Default scene host port wired to fiber/drei/three adapters — inject a test double via
@@ -142,7 +149,7 @@ export let sceneHostPort: SceneHostPort = {
     useGLTF,
     Grid,
   },
-  three: THREE,
+  three: SCENE_THREE_BINDINGS,
 };
 
 /** @emoji 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only

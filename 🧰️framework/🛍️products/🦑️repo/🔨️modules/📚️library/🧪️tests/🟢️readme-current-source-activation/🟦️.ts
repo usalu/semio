@@ -128,7 +128,6 @@ function runOwner(): string {
   retainedOwner = join(parent, "🔖️" + randomUUID());
   mkdirSync(retainedOwner);
   writeFileSync(join(retainedOwner, "📝️.md"), "# Reviewed README Activation Fixture\n\nThis fresh owner retains loader/planner inputs and failures. No producer, apply or cleanup runs. Fixture Git commits are isolated and distinct from the independently verified original baseline lineage.\n", { flag: "wx" });
-  console.log("[DEBUG] README activation owner", retainedOwner);
   return retainedOwner;
 }
 
@@ -307,7 +306,6 @@ for (const row of vector.cases) test("real reviewed README loader and planner: "
   put(setup.holder, "📊️outcome/🔣️.json", JSON.stringify(result, null, 2) + "\n");
   if (plan) put(setup.holder, "🧾️plan/🔣️.json", normalization.canonicalJson(plan) + "\n");
   outcomes.push(result);
-  console.log("[DEBUG] README activation case", JSON.stringify({ id: row.id, milliseconds: result.milliseconds, error: result.error, moves: result.moves, unresolved: result.unresolved?.length }));
   expect(error, row.id).toBeUndefined();
   expect(plan!.regenerations, row.id).toEqual([]);
   if (row.expected === "revised-move") expect(plan!.edits.filter((edit) => edit.path === vector.taxonomyPath && edit.oldValue === revision.sourcePath)).toEqual([]);

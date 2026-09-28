@@ -152,7 +152,6 @@ describe("retained resident refresh budget", () => {
       });
     }
     for (const slot of live) if (slot !== null) ledger.release(slot);
-    console.log(`[DEBUG] ${JSON.stringify({ surfaces: fixture.surfaces.length, refreshes: fixture.refreshes, peakRoots, peakBytes, faults })}`);
     assert.equal(faults, fixture.permitFaults);
     assert.equal(peakRoots, fixture.peakResidentRoots);
     assert.equal(peakRoots, fixture.surfaces.length);
@@ -173,7 +172,6 @@ describe("retained resident refresh budget", () => {
       assert.equal(typeof slot, "number", "both full sets are admitted against an otherwise empty ledger");
       ledger.release(slot as number);
     }
-    console.log(`[DEBUG] ${JSON.stringify({ singleRoots, singleBytes, doubledRoots, doubledBytes })}`);
     assert.equal(doubledRoots, fixture.doubleBufferedPeakRoots);
     assert.equal(doubledBytes, fixture.doubleBufferedPeakBytes);
     assert.equal(doubledRoots, 2 * singleRoots);
@@ -191,7 +189,6 @@ describe("retained resident refresh budget", () => {
       else refusal = slot;
     }
     for (const slot of admitted) ledger.release(slot);
-    console.log(`[DEBUG] ${JSON.stringify({ admitted: admitted.length, refusal, surfaceBytes: fixture.surfaceBytes, aggregateBytes: fixture.aggregateBytes })}`);
     assert.equal(admitted.length, fixture.ceilingSizedRoots);
     assert.equal(refusal, "capacity");
   });
@@ -222,7 +219,6 @@ describe("retained resident refresh budget", () => {
 
   it("carries the measured six-surface census the wgpu shell reported", () => {
     const { measured } = fixture;
-    console.log(`[DEBUG] ${JSON.stringify(measured)}`);
     assert.equal(measured.capacityFaults, 0);
     assert.equal(measured.residentRoots, fixture.peakResidentRoots);
     assert.equal(measured.surfaces, fixture.surfaces.length);

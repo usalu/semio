@@ -504,12 +504,14 @@ type WindowUiState = {
 };
 
 type SpawnedWindowState = {
-  /** 🪟️ The focused spawned program's window bodies, keyed by the SHELL window instance id
-   * (`${spawnedId}::${windowKindId}`) — one entry per window kind the spawned app declares, so a
-   * spawned program projects every window it owns onto the canvas exactly as the session's own app
-   * does. It was a single `BuiltNode` while a spawned app was allowed only its canvas body. */
-  readonly spawnedWindowUiByWindowId: Readonly<Record<string, BuiltNode>>;
-  /** 🩺️ Why `spawnedWindowUiByWindowId` went empty, when it went empty because the guest faulted
+  /** 🪟️ Which of the focused spawned program's windows have a body, and that body's activity, keyed by the SHELL
+   * window instance id (`${spawnedId}::${windowKindId}`) — one entry per window kind the spawned app declares. The
+   * bodies themselves live only in the shell's per-window `📃️UiDocumentStore`s (`BuiltNodeStoreCacheV1`), loaded
+   * outside render, so a refresh that changes body CONTENT alone updates the mounted `UiNodeView`s and never
+   * re-renders the shell (ticket 26/09/23 F3: a puzzle3d hover re-rendered the whole shell twice, 69 ms per
+   * transition). */
+  readonly spawnedWindowActivityByWindowId: Readonly<Record<string, BuiltNode["activity"]>>;
+  /** 🩺️ Why `spawnedWindowActivityByWindowId` went empty, when it went empty because the guest faulted
    * rather than because the windows legitimately have nothing to draw — the difference an empty body
    * cannot show. */
   readonly spawnedWindowFault: WindowFault | null;
@@ -700,7 +702,6 @@ export type ShellState = {
   readonly layout: ShellLayoutState;
   readonly overlays: OverlayState;
   readonly tutorial: TutorialState;
-  readonly interaction: InteractionState;
   readonly uiPrefs: UiPrefsState;
   readonly sync: SyncState;
   readonly inference: InferenceState;
@@ -738,7 +739,7 @@ export type ShellAction =
   | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
   | { readonly type: "SET_APP_CATALOGUE"; readonly value: Updatable<AppCatalogue> }
-  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>>; readonly fault?: WindowFault | null }
+  | { readonly type: "SET_SPAWNED_WINDOW_ACTIVITY"; readonly value: Updatable<Readonly<Record<string, BuiltNode["activity"]>>>; readonly fault?: WindowFault | null }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_ACTION_PANE_FOLDED"; readonly windowId: string; readonly value: boolean }
@@ -784,7 +785,6 @@ export type ShellAction =
   | { readonly type: "SET_TUTORIAL_RECORDING"; readonly value: boolean }
   | { readonly type: "SET_TUTORIAL_DEVIATED"; readonly value: boolean }
   | { readonly type: "APPLY_TUTORIAL_UI_SNAPSHOT"; readonly snapshot: TutorialShellUiSnapshot }
-  | { readonly type: "INTERACTION_STATE_OBSERVED"; readonly state: InteractionState }
   | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
   | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
   | { readonly type: "SET_UI_DRIVER_ID"; readonly value: Updatable<string> }
@@ -860,10 +860,10 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
 
 function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
   switch (action.type) {
-    case "SET_SPAWNED_WINDOW_UI": {
-      const spawnedWindowUiByWindowId = resolveUpdatable(action.value, state.spawnedWindowUiByWindowId);
+    case "SET_SPAWNED_WINDOW_ACTIVITY": {
+      const spawnedWindowActivityByWindowId = resolveUpdatable(action.value, state.spawnedWindowActivityByWindowId);
       const spawnedWindowFault = action.fault ?? null;
-      return Object.is(spawnedWindowUiByWindowId, state.spawnedWindowUiByWindowId) && Object.is(spawnedWindowFault, state.spawnedWindowFault) ? state : { ...state, spawnedWindowUiByWindowId, spawnedWindowFault };
+      return Object.is(spawnedWindowActivityByWindowId, state.spawnedWindowActivityByWindowId) && Object.is(spawnedWindowFault, state.spawnedWindowFault) ? state : { ...state, spawnedWindowActivityByWindowId, spawnedWindowFault };
     }
     case "SET_SPAWNED_WINDOW_ENGAGEMENTS":
       return withField(state, "spawnedWindowEngagements", resolveUpdatable(action.value, state.spawnedWindowEngagements));
@@ -1164,19 +1164,41 @@ function tutorialReducer(state: TutorialState, action: ShellAction): TutorialSta
   }
 }
 
-/** 🕹️ Own local interaction state used by renderer surfaces and typed tutorial capture/replay. An observation is a
- * freshly decoded guest read, so it is structurally shared with the current state: an unchanged observation keeps the
- * slice (and the shell) identical, a hover-only change keeps every other field's identity (ticket 26/09/23 F3: every
- * world-3d hover re-rendered the whole shell twice). */
-function interactionReducer(state: InteractionState, action: ShellAction): InteractionState {
-  switch (action.type) {
-    case "INTERACTION_STATE_OBSERVED":
-      return mergeRecordPreservingIdentity(state, Object.entries(action.state)) as InteractionState;
-    default:
-      return state;
-  }
-}
 //#endregion slice reducers
+
+//#region 🕹️LocalInteraction
+/** 🕹️ The shell's own local interaction (selection, hover, mode and granularity per domain) — EPHEMERAL LOCAL state that
+ * nothing the shell renders reads: the leftover inspection and the tutorial capture/replay read it through `get`, the
+ * tutorial recorder through `subscribe`. It is no `ShellState` slice because a slice change re-renders the whole shell,
+ * and every world hover publishes one (ticket 26/09/23 F3: the last whole-shell render per puzzle3d hover transition). */
+export type LocalInteractionStoreV1 = {
+  readonly get: () => InteractionState;
+  readonly observe: (state: InteractionState) => void;
+  readonly subscribe: (listener: () => void) => () => void;
+};
+
+/** 🧲️ An observation is a freshly decoded guest read, so it is structurally shared with the current state: an unchanged
+ * one keeps the identity and notifies nobody, a hover-only one keeps every other field's identity. */
+export function createLocalInteractionStoreV1(initial: InteractionState = EMPTY_INTERACTION_STATE): LocalInteractionStoreV1 {
+  let current = initial;
+  const listeners = new Set<() => void>();
+  return {
+    get: () => current,
+    observe: (state) => {
+      const next = mergeRecordPreservingIdentity(current, Object.entries(state)) as InteractionState;
+      if (next === current) return;
+      current = next;
+      for (const listener of [...listeners]) listener();
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+//#endregion 🕹️LocalInteraction
 
 /** 🧵️ Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
 export function shellReducer(state: ShellState, action: ShellAction): ShellState {
@@ -1194,7 +1216,6 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     layout: ownerChanged ? { ...layout, windowTitlesById: {}, windowIconsById: {} } : layout,
     overlays: overlayReducer(state.overlays, action),
     tutorial: tutorialReducer(state.tutorial, action),
-    interaction: interactionReducer(state.interaction, action),
     uiPrefs: uiPrefsReducer(state.uiPrefs, action),
     sync: syncReducer(state.sync, action),
     inference: inferenceReducer(state.inference, action),
@@ -1255,7 +1276,7 @@ export function initialShellState(_props: {
   return {
     pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null, sessionFault: null, instanceFault: null },
     windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY, appCatalogue: EMPTY_APP_CATALOGUE },
-    spawnedWindow: { spawnedWindowUiByWindowId: {}, spawnedWindowFault: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
+    spawnedWindow: { spawnedWindowActivityByWindowId: {}, spawnedWindowFault: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
@@ -1274,7 +1295,6 @@ export function initialShellState(_props: {
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionAutoStartedKeys: [], introductionCompletedInteractions: [], dialog: null, transientNotice: null, openWithFocusRole: null },
     tutorial: { activeTutorialId: null, playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false },
-    interaction: EMPTY_INTERACTION_STATE,
     uiPrefs: {
       uiAppearance: locks.appearance ?? preferences.appearance,
       uiLayout: preferences.layout,

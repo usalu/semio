@@ -1,20 +1,22 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/VideoRenderHost/module.ts
-/** @emoji 🎥️ `🎥️VideoRenderHost` — the browser host of `Effect::VideoRenderExport` (`🎠️kernel`): a guest has no GPU and no
- * encoder, so it hands the host a `VideoRenderProgram` and the host paints every distinct scene on a 2D canvas, encodes the
- * timeline as H.264 and muxes an MP4 with the raster video tier's first-party writer (`🖌️raster/🎥️video/🟦️.ts`).
+/** @emoji 🎥️ `🎥️VideoRenderHost` — the browser host of the `media.video-render` capability (`Effect::VideoRenderExport`,
+ * `🎠️kernel`): a guest has no canvas and no encoder, so a plugin that requested {@link MEDIA_VIDEO_RENDER_CAPABILITY} hands
+ * the host a `VideoRenderProgram`; the host paints every distinct scene once on a 2D canvas, encodes the timeline as H.264
+ * and muxes an MP4 with the raster video tier's first-party writer (`🖌️raster/🎥️video/🟦️.ts`).
  *
- * Two encoder tiers behind the tier's `VideoEncoderPort`: WebCodecs `VideoEncoder` (hardware/platform H.264, AVCC chunks +
- * `avcC` description) whenever the page supports the stream's configuration, otherwise the first-party all-`I_PCM` encoder
- * (exact, larger). Every export is a task the `🧵️TaskManager` lists with frame progress and a cancel control; cancellation is
- * checked before every frame and closes the platform encoder. React-free, so its laws run without a browser
- * (`🧪️tests/🔬️unit/🟦️.ts`), and the wgpu page host reuses it for the same effect.
+ * Two encoder tiers behind ports: the platform's own H.264 encoder (WebCodecs `VideoEncoder`, hardware where the OS has
+ * one) whenever the page supports the stream's configuration, otherwise the tier's first-party `AvcPcmEncoder` (exact
+ * `I_PCM` pictures, `P_Skip` repeats). Every export is an event-sourced job: the host appends
+ * `VideoRenderJobEvent`s to one log and the Task Manager's rows are the kernel ledger's fold of it; a cancel appends
+ * `cancelRequested`, which the render loop reads back from the ledger before its next frame. React-free, so its laws run
+ * without a browser (`🧪️tests/🔬️unit/🟦️.ts`).
  */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { type VideoRenderPath, type VideoRenderProgram, videoRenderFrameCount, videoRenderProgramProblem } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
-import { AvcIntraPcmEncoder, avcConfigurationFromRecord, avcLevelIdc, type AvcDecoderConfiguration, type EncodedVideoSample, type VideoStreamParameters, writeAvcMp4 } from "../../../../../../../🔨️modules/🖌️raster/🎥️video/🟦️.ts";
+import { MEDIA_VIDEO_RENDER_CAPABILITY, type VideoRenderEncoderTier, type VideoRenderJobEvent, VideoRenderJobLedger, type VideoRenderJobOutcome, type VideoRenderJobRow, type VideoRenderPath, type VideoRenderProgram, videoRenderFrameCount, videoRenderProgramProblem } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { AvcPcmEncoder, avcConfigurationFromRecord, avcLevelIdc, type AvcDecoderConfiguration, type EncodedVideoSample, type VideoStreamParameters, writeAvcMp4 } from "../../../../../../../🔨️modules/🖌️raster/🎥️video/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🌐️Labels
@@ -24,6 +26,7 @@ export const VIDEO_RENDER_EXPORT_TEXT_V1 = {
   done: { en: "Video {filename} exported ({frames} frames).", de: "Video {filename} exportiert ({frames} Bilder)." },
   cancelled: { en: "Video export {filename} cancelled.", de: "Videoexport {filename} abgebrochen." },
   refused: { en: "Video export {filename} refused: the program is invalid ({code}).", de: "Videoexport {filename} abgelehnt: das Programm ist ungültig ({code})." },
+  refusedCapability: { en: "Video export {filename} refused: {owner} did not request the {capability} capability.", de: "Videoexport {filename} abgelehnt: {owner} hat die Fähigkeit {capability} nicht angefordert." },
   failed: { en: "Video export {filename} failed: {reason}", de: "Videoexport {filename} fehlgeschlagen: {reason}" },
   progress: { en: "Frame {completed} of {total}", de: "Bild {completed} von {total}" },
 } as const;
@@ -36,8 +39,11 @@ export function videoRenderExportTextV1(kind: keyof typeof VIDEO_RENDER_EXPORT_T
 //#endregion 🌐️Labels
 
 //#region 🖌️Paint
+/** 🖼️ A decoded picture the host draws from (`ImageBitmap`, `HTMLImageElement`, …) with its pixel size. */
+export type VideoRenderImageSourceV1 = Readonly<{ source: CanvasImageSource; width: number; height: number }>;
+
 /** 🖌️ The 2D context surface this host paints on (`OffscreenCanvasRenderingContext2D` or a DOM canvas's). */
-export type VideoRenderContext2dV1 = Pick<CanvasRenderingContext2D, "setTransform" | "clearRect" | "fillRect" | "fill" | "stroke" | "getImageData"> & { fillStyle: unknown; strokeStyle: unknown; lineWidth: number };
+export type VideoRenderContext2dV1 = Pick<CanvasRenderingContext2D, "setTransform" | "clearRect" | "fillRect" | "fill" | "stroke" | "drawImage" | "getImageData"> & { fillStyle: unknown; strokeStyle: unknown; lineWidth: number; globalAlpha: number };
 
 /** ✏️ A program path as a `Path2D` (`M`, `L`, `Q`, `C`, `Z` over flat points). */
 export function videoRenderPath2dV1(path: VideoRenderPath, create: () => Path2D = () => new Path2D()): Path2D {
@@ -60,17 +66,27 @@ export function videoRenderCssColorV1(color: readonly number[]): string {
   return `rgba(${channel(color[0])}, ${channel(color[1])}, ${channel(color[2])}, ${Math.min(1, Math.max(0, color[3] ?? 1))})`;
 }
 
-/** 🖼️ Paints scene `sceneIndex` over the program background, in list order, each op under its own device transform. */
-export function drawVideoRenderSceneV1(context: VideoRenderContext2dV1, program: VideoRenderProgram, sceneIndex: number, paths: readonly Path2D[]): void {
+/** 🖼️ Paints scene `sceneIndex` over the program background, in list order, each op under its own device transform; an
+ * image op draws its crop of the picture onto the unit square its transform places. */
+export function drawVideoRenderSceneV1(context: VideoRenderContext2dV1, program: VideoRenderProgram, sceneIndex: number, paths: readonly Path2D[], images: readonly VideoRenderImageSourceV1[]): void {
   context.setTransform(1, 0, 0, 1, 0, 0);
+  context.globalAlpha = 1;
   context.clearRect(0, 0, program.width, program.height);
   context.fillStyle = videoRenderCssColorV1(program.background);
   context.fillRect(0, 0, program.width, program.height);
   for (const op of program.scenes[sceneIndex]?.ops ?? []) {
+    context.setTransform(op.transform[0], op.transform[1], op.transform[2], op.transform[3], op.transform[4], op.transform[5]);
+    if (op.kind === "image") {
+      const image = images[op.image];
+      if (!image) continue;
+      context.globalAlpha = op.opacity;
+      context.drawImage(image.source, op.crop[0] * image.width, op.crop[1] * image.height, op.crop[2] * image.width, op.crop[3] * image.height, 0, 0, 1, 1);
+      context.globalAlpha = 1;
+      continue;
+    }
     const path = paths[op.path];
     if (!path) continue;
-    context.setTransform(op.transform[0], op.transform[1], op.transform[2], op.transform[3], op.transform[4], op.transform[5]);
-    if (op.paint === "stroke") {
+    if (op.kind === "stroke") {
       context.strokeStyle = videoRenderCssColorV1(op.color);
       context.lineWidth = op.width;
       context.stroke(path);
@@ -83,22 +99,24 @@ export function drawVideoRenderSceneV1(context: VideoRenderContext2dV1, program:
 //#endregion 🖌️Paint
 
 //#region 🎞️Encode
-/** 🧩️ Which encoder produced the samples. */
-export type VideoRenderEncoderTierV1 = "webcodecs" | "intra-pcm";
-
 /** 🌍️ What the host environment offers; injected so the laws run the whole pipeline without a browser. */
 export interface VideoRenderEnvironmentV1 {
   readonly createCanvas: (width: number, height: number) => { readonly context: VideoRenderContext2dV1; readonly source: unknown };
   readonly createPath: () => Path2D;
+  readonly loadImage: (url: string) => Promise<VideoRenderImageSourceV1>;
   readonly webCodecs: WebCodecsVideoEncoderPortV1 | null;
   readonly yieldToHost: () => Promise<void>;
+  readonly now: () => number;
 }
 
-/** 🔌️ The slice of WebCodecs this host drives (`VideoEncoder`, `VideoFrame`), injectable for laws. */
+/** 🔌️ The slice of WebCodecs this host drives (`VideoEncoder`, `VideoFrame`) — the platform encoder port, injectable for laws. */
 export interface WebCodecsVideoEncoderPortV1 {
-  isConfigSupported(config: { codec: string; width: number; height: number; framerate: number; avc: { format: "avc" } }): Promise<boolean>;
-  open(config: { codec: string; width: number; height: number; framerate: number; avc: { format: "avc" } }, output: (sample: EncodedVideoSample, description: Uint8Array | null) => void, error: (reason: unknown) => void): WebCodecsSessionV1;
+  isConfigSupported(config: WebCodecsVideoConfigV1): Promise<boolean>;
+  open(config: WebCodecsVideoConfigV1, output: (sample: EncodedVideoSample, description: Uint8Array | null) => void, error: (reason: unknown) => void): WebCodecsSessionV1;
 }
+
+/** 🎛️ The encoder configuration this host asks the platform for. */
+export type WebCodecsVideoConfigV1 = Readonly<{ codec: string; width: number; height: number; framerate: number; avc: { readonly format: "avc" } }>;
 
 /** 🎛️ One open platform encoder. */
 export interface WebCodecsSessionV1 {
@@ -108,13 +126,10 @@ export interface WebCodecsSessionV1 {
   close(): void;
 }
 
-/** 📈️ Progress of one render: frames encoded of frames total. */
-export type VideoRenderProgressV1 = (completed: number, total: number) => void;
-
 /** 🚨️ Why a render stopped short of a file. */
 export class VideoRenderExportErrorV1 extends Error {
   constructor(
-    readonly code: "refused" | "cancelled" | "encoder",
+    readonly code: "cancelled" | "encoder",
     readonly detail: string,
   ) {
     super(`${code}: ${detail}`);
@@ -124,7 +139,7 @@ export class VideoRenderExportErrorV1 extends Error {
 /** 📦️ A finished render. */
 export interface VideoRenderResultV1 {
   readonly bytes: Uint8Array;
-  readonly tier: VideoRenderEncoderTierV1;
+  readonly tier: VideoRenderEncoderTier;
   readonly frames: number;
 }
 
@@ -133,17 +148,18 @@ export function videoRenderWebCodecsCodecV1(parameters: VideoStreamParameters): 
   return `avc1.42E0${avcLevelIdc(parameters).toString(16).toUpperCase().padStart(2, "0")}`;
 }
 
-/** 🎬️ Renders and encodes `program` into MP4 bytes: admission first (`videoRenderProgramProblem`), then one paint per
- * timeline run and one encode per frame, `progress` after every frame, cancellation before every frame. */
-export async function renderVideoProgramV1(program: VideoRenderProgram, environment: VideoRenderEnvironmentV1, progress: VideoRenderProgressV1, signal: AbortSignal): Promise<VideoRenderResultV1> {
-  const problem = videoRenderProgramProblem(program);
-  if (problem !== null) throw new VideoRenderExportErrorV1("refused", problem);
+/** ⏱️ The longest stretch the render loop keeps the page's thread before yielding (the interactive step ceiling). */
+export const VIDEO_RENDER_YIELD_BUDGET_MS = 8;
+
+/** 🎬️ Renders and encodes an ADMITTED `program` into MP4 bytes: each timeline run painted once, one encode per frame
+ * (a repeat per further frame of a run), `progress` after every frame, `cancelled()` read before every frame. */
+export async function renderVideoProgramV1(program: VideoRenderProgram, environment: VideoRenderEnvironmentV1, progress: (completed: number, total: number) => void, cancelled: () => boolean): Promise<VideoRenderResultV1> {
   const parameters: VideoStreamParameters = { width: program.width, height: program.height, fps: program.fps };
   const total = videoRenderFrameCount(program);
   const canvas = environment.createCanvas(program.width, program.height);
   const paths = program.paths.map((path) => videoRenderPath2dV1(path, environment.createPath));
-  const codec = videoRenderWebCodecsCodecV1(parameters);
-  const config = { codec, width: program.width, height: program.height, framerate: program.fps, avc: { format: "avc" as const } };
+  const images = await Promise.all(program.images.map((image) => environment.loadImage(image.url)));
+  const config: WebCodecsVideoConfigV1 = { codec: videoRenderWebCodecsCodecV1(parameters), width: program.width, height: program.height, framerate: program.fps, avc: { format: "avc" } };
   const webCodecs = environment.webCodecs !== null && (await environment.webCodecs.isConfigSupported(config).catch(() => false)) ? environment.webCodecs : null;
   const samples: EncodedVideoSample[] = [];
   let description: Uint8Array | null = null;
@@ -158,26 +174,29 @@ export async function renderVideoProgramV1(program: VideoRenderProgram, environm
       failure = reason;
     },
   );
-  const pcm = session ? null : new AvcIntraPcmEncoder(parameters);
+  const firstParty = session ? null : new AvcPcmEncoder(parameters);
   const frameMicros = 1_000_000 / program.fps;
   const keyInterval = program.fps * 2;
   let frame = 0;
+  let yieldedAt = environment.now();
   try {
     for (const run of program.timeline) {
-      drawVideoRenderSceneV1(canvas.context, program, run.scene, paths);
-      const rgba = pcm ? canvas.context.getImageData(0, 0, program.width, program.height).data : null;
+      drawVideoRenderSceneV1(canvas.context, program, run.scene, paths, images);
       for (let repeat = 0; repeat < run.frames; repeat += 1) {
-        if (signal.aborted) throw new VideoRenderExportErrorV1("cancelled", `${frame}/${total}`);
+        if (cancelled()) throw new VideoRenderExportErrorV1("cancelled", `${frame}/${total}`);
         if (failure !== null) throw new VideoRenderExportErrorV1("encoder", String(failure));
         if (session) {
-          session.encode(canvas.source, Math.round(frame * frameMicros), Math.round(frameMicros), frame % keyInterval === 0);
+          session.encode(canvas.source, Math.round(frame * frameMicros), Math.round(frameMicros), frame % keyInterval === 0 || repeat === 0);
           while (session.queueSize > 4) await environment.yieldToHost();
-        } else if (pcm && rgba) {
-          samples.push(pcm.encode(rgba));
+        } else if (firstParty) {
+          samples.push(repeat === 0 ? firstParty.encode(canvas.context.getImageData(0, 0, program.width, program.height).data) : firstParty.repeat());
         }
         frame += 1;
         progress(frame, total);
-        await environment.yieldToHost();
+        if (repeat === 0 || environment.now() - yieldedAt >= VIDEO_RENDER_YIELD_BUDGET_MS) {
+          await environment.yieldToHost();
+          yieldedAt = environment.now();
+        }
       }
     }
     if (session) await session.flush();
@@ -185,12 +204,13 @@ export async function renderVideoProgramV1(program: VideoRenderProgram, environm
   } finally {
     session?.close();
   }
-  const configuration: AvcDecoderConfiguration | null = pcm ? pcm.configuration() : description ? avcConfigurationFromRecord(description) : null;
+  const configuration: AvcDecoderConfiguration | null = firstParty ? firstParty.configuration() : description ? avcConfigurationFromRecord(description) : null;
   if (configuration === null || samples.length !== total) throw new VideoRenderExportErrorV1("encoder", `encoder answered ${samples.length} of ${total} frames${configuration === null ? " and no avcC" : ""}`);
-  return { bytes: writeAvcMp4(parameters, configuration, samples), tier: session ? "webcodecs" : "intra-pcm", frames: total };
+  return { bytes: writeAvcMp4(parameters, configuration, samples), tier: session ? "platform" : "first-party", frames: total };
 }
 
-/** 🌍️ The page's own environment: `OffscreenCanvas` (or a detached `<canvas>`), `Path2D`, WebCodecs when present. */
+/** 🌍️ The page's own environment: `OffscreenCanvas` (or a detached `<canvas>`), `Path2D`, `createImageBitmap` over a
+ * same-origin `fetch`, WebCodecs when present. */
 export function browserVideoRenderEnvironmentV1(): VideoRenderEnvironmentV1 {
   const scope = globalThis as unknown as {
     readonly OffscreenCanvas?: new (width: number, height: number) => { getContext(kind: "2d", options: { willReadFrequently: boolean }): VideoRenderContext2dV1 | null };
@@ -251,98 +271,121 @@ export function browserVideoRenderEnvironmentV1(): VideoRenderEnvironmentV1 {
       return { context, source: element };
     },
     createPath: () => new Path2D(),
+    loadImage: async (url) => {
+      const response = await fetch(url);
+      if (!response.ok) throw new VideoRenderExportErrorV1("encoder", `image ${url} answered ${response.status}`);
+      const bitmap = await createImageBitmap(await response.blob());
+      return { source: bitmap, width: bitmap.width, height: bitmap.height };
+    },
     webCodecs,
     yieldToHost: () => new Promise((resolve) => setTimeout(resolve, 0)),
+    now: () => performance.now(),
   };
 }
 //#endregion 🎞️Encode
 
-//#region 🧵️Tasks
-/** 🧵️ One running export as the task manager lists it. */
-export interface VideoRenderExportTaskV1 {
-  readonly id: string;
-  readonly filename: string;
-  readonly owner: string;
-  readonly startedAtMs: number;
-  readonly completed: number;
-  readonly total: number;
-  readonly cancelling: boolean;
-}
+//#region 🧵️Jobs
+/** 🧵️ How many job events this tab keeps readable after the ledger has folded them (the ledger itself is the snapshot). */
+export const VIDEO_RENDER_JOB_LOG_TAIL = 256;
 
-const controllers = new Map<string, AbortController>();
+const ledger = new VideoRenderJobLedger();
+const log: VideoRenderJobEvent[] = [];
 const listeners = new Set<() => void>();
-let snapshot: readonly VideoRenderExportTaskV1[] = [];
-let serial = 0;
 
-function publish(next: readonly VideoRenderExportTaskV1[]): void {
-  snapshot = next;
+/** ➕️ The ONE write door of this host's task state: folds `event` into the ledger and keeps it in the log tail; a refused
+ * event throws (a host that emits an illegal fact has a bug, never a user-visible state). */
+function record(event: VideoRenderJobEvent): void {
+  const refused = ledger.apply(event);
+  if (refused !== null) throw new Error(`video render job event refused (${refused}): ${JSON.stringify(event)}`);
+  log.push(event);
+  if (log.length > VIDEO_RENDER_JOB_LOG_TAIL) log.splice(0, log.length - VIDEO_RENDER_JOB_LOG_TAIL);
   for (const listener of [...listeners]) listener();
 }
 
-/** 🧵️ Every export running in this tab right now (stable identity between changes). */
-export function videoRenderExportTasksSnapshotV1(): readonly VideoRenderExportTaskV1[] {
-  return snapshot;
+/** 🧵️ Every running export of this tab, the ledger's fold (stable identity between changes). */
+export function videoRenderExportJobsSnapshotV1(): readonly VideoRenderJobRow[] {
+  return ledger.running();
 }
 
-/** 🧵️ Notifies `listener` whenever an export starts, advances, is cancelled or ends. */
-export function subscribeVideoRenderExportTasksV1(listener: () => void): () => void {
+/** 📜️ The most recent job events of this tab, oldest first. */
+export function videoRenderExportJobLogV1(): readonly VideoRenderJobEvent[] {
+  return log.slice();
+}
+
+/** 🧵️ Notifies `listener` after every job event. */
+export function subscribeVideoRenderExportJobsV1(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-/** 🛑️ Asks export `id` to stop before its next frame; `false` when no such export runs. */
-export function cancelVideoRenderExportV1(id: string): boolean {
-  const controller = controllers.get(id);
-  if (!controller) return false;
-  controller.abort();
-  publish(snapshot.map((task) => (task.id === id ? { ...task, cancelling: true } : task)));
+/** 🏷️ The prefix of every Task Manager id this host owns. */
+export const VIDEO_RENDER_EXPORT_TASK_PREFIX = "export:video#";
+
+/** 🏷️ The Task Manager id of job `job`. */
+export function videoRenderExportTaskIdV1(job: number): string {
+  return `${VIDEO_RENDER_EXPORT_TASK_PREFIX}${job}`;
+}
+
+/** 🛑️ The cancel command: appends `cancelRequested` for the job behind Task Manager id `taskId`; `false` when no such job
+ * runs or it is already cancelling. */
+export function cancelVideoRenderExportV1(taskId: string): boolean {
+  const job = taskId.startsWith(VIDEO_RENDER_EXPORT_TASK_PREFIX) ? Number(taskId.slice(VIDEO_RENDER_EXPORT_TASK_PREFIX.length)) : Number.NaN;
+  const row = Number.isInteger(job) ? ledger.row(job) : undefined;
+  if (!row || row.cancelling) return false;
+  record({ kind: "cancelRequested", job: row.job });
   return true;
 }
 
 /** 🏁️ How an export ended, with the user-facing sentence the host shows for it. */
 export interface VideoRenderExportOutcomeV1 {
-  readonly status: "done" | "cancelled" | "refused" | "failed";
+  readonly job: number;
+  readonly outcome: VideoRenderJobOutcome;
   readonly text: string;
-  readonly tier: VideoRenderEncoderTierV1 | null;
-  readonly bytes: number;
 }
 
-/** 🎥️ The whole host answer to one `videoRenderExport` effect: registers a task, renders + encodes, hands the MP4 to
- * `deliver`, and resolves with the outcome (never rejects — every failure is a stated outcome). */
+/** ⏱️ The shortest gap between two `progressed` events of one job; the last frame always reports. */
+export const VIDEO_RENDER_PROGRESS_EVENT_MS = 100;
+
+/** 🎥️ The whole host answer to one `videoRenderExport` effect: starts a job, admits it (the plugin's declared
+ * {@link MEDIA_VIDEO_RENDER_CAPABILITY}, then the kernel's program rule), renders + encodes, hands the MP4 to `deliver`,
+ * and finishes the job with its outcome. Never rejects — every failure is a finished job with a stated outcome. */
 export async function runVideoRenderExportV1(
-  request: { readonly filename: string; readonly owner: string; readonly program: VideoRenderProgram },
+  request: { readonly filename: string; readonly owner: string; readonly program: VideoRenderProgram; readonly capabilities: readonly string[] },
   host: { readonly environment: VideoRenderEnvironmentV1; readonly deliver: (filename: string, bytes: Uint8Array) => void; readonly locale: () => string; readonly announce?: (text: string) => void },
 ): Promise<VideoRenderExportOutcomeV1> {
-  serial += 1;
-  const id = `export:video#${serial}`;
-  const controller = new AbortController();
-  controllers.set(id, controller);
+  const job = ledger.lastJob() + 1;
   const total = videoRenderFrameCount(request.program);
-  publish([...snapshot, { id, filename: request.filename, owner: request.owner, startedAtMs: Date.now(), completed: 0, total, cancelling: false }]);
-  host.announce?.(videoRenderExportTextV1("started", host.locale(), { filename: request.filename }));
-  let lastPublish = 0;
+  record({ kind: "started", job, owner: request.owner, filename: request.filename, frames: Number.isSafeInteger(total) && total >= 0 ? total : 0, atMs: Date.now() });
+  const finish = (outcome: VideoRenderJobOutcome, text: string): VideoRenderExportOutcomeV1 => {
+    record({ kind: "finished", job, outcome });
+    return { job, outcome, text };
+  };
+  const locale = host.locale();
+  if (!request.capabilities.includes(MEDIA_VIDEO_RENDER_CAPABILITY)) return finish({ status: "refused", code: "capability" }, videoRenderExportTextV1("refusedCapability", locale, { filename: request.filename, owner: request.owner, capability: MEDIA_VIDEO_RENDER_CAPABILITY }));
+  const problem = videoRenderProgramProblem(request.program);
+  if (problem !== null) return finish({ status: "refused", code: problem }, videoRenderExportTextV1("refused", locale, { filename: request.filename, code: problem }));
+  host.announce?.(videoRenderExportTextV1("started", locale, { filename: request.filename }));
+  let reportedAt = Number.NEGATIVE_INFINITY;
+  let completed = 0;
   try {
     const result = await renderVideoProgramV1(
       request.program,
       host.environment,
-      (completed) => {
-        const now = Date.now();
-        if (completed !== total && now - lastPublish < 100) return;
-        lastPublish = now;
-        publish(snapshot.map((task) => (task.id === id ? { ...task, completed } : task)));
+      (frame) => {
+        completed = frame;
+        const now = host.environment.now();
+        if (frame !== total && now - reportedAt < VIDEO_RENDER_PROGRESS_EVENT_MS) return;
+        reportedAt = now;
+        record({ kind: "progressed", job, completed: frame });
       },
-      controller.signal,
+      () => ledger.row(job)?.cancelling === true,
     );
     host.deliver(request.filename, result.bytes);
-    return { status: "done", text: videoRenderExportTextV1("done", host.locale(), { filename: request.filename, frames: result.frames }), tier: result.tier, bytes: result.bytes.length };
+    return finish({ status: "done", bytes: result.bytes.length, tier: result.tier }, videoRenderExportTextV1("done", host.locale(), { filename: request.filename, frames: result.frames }));
   } catch (error) {
-    const known = error instanceof VideoRenderExportErrorV1 ? error : null;
-    if (known?.code === "cancelled") return { status: "cancelled", text: videoRenderExportTextV1("cancelled", host.locale(), { filename: request.filename }), tier: null, bytes: 0 };
-    if (known?.code === "refused") return { status: "refused", text: videoRenderExportTextV1("refused", host.locale(), { filename: request.filename, code: known.detail }), tier: null, bytes: 0 };
-    return { status: "failed", text: videoRenderExportTextV1("failed", host.locale(), { filename: request.filename, reason: known?.detail ?? (error instanceof Error ? error.message : String(error)) }), tier: null, bytes: 0 };
-  } finally {
-    controllers.delete(id);
-    publish(snapshot.filter((task) => task.id !== id));
+    if (error instanceof VideoRenderExportErrorV1 && error.code === "cancelled") return finish({ status: "cancelled", completed }, videoRenderExportTextV1("cancelled", host.locale(), { filename: request.filename }));
+    const reason = error instanceof VideoRenderExportErrorV1 ? error.detail : error instanceof Error ? error.message : String(error);
+    return finish({ status: "failed", reason }, videoRenderExportTextV1("failed", host.locale(), { filename: request.filename, reason }));
   }
 }
-//#endregion 🧵️Tasks
+//#endregion 🧵️Jobs

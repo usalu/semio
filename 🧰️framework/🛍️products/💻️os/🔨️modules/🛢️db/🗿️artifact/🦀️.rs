@@ -20,10 +20,8 @@
 //! `db_conflict::ConflictDetector` fed by retained recent-commit `TouchedSet` history (not a local
 //! last-writer stand-in), and `query`/`RunQuery`/`run_query` take a `db_query::
 //! Consistency` and resolve it via `db_query::resolve_consistency` + `db_index::
-//! IndexConsistencyResolver`. `AuthzHook`/`AllowAll` are kept defined (unused in the hot `submit`
-//! path now that `security` supersedes them) purely because they are still a public, documented
-//! extension seam and cost nothing to keep — a caller may still hand-roll one. Because
-//! `ArtifactEngineConfig`'s new fields are absorbed via `..Default::default()` at every call site
+//! IndexConsistencyResolver`. `submit` authorizes through `ArtifactEngineConfig::security` (the real
+//! `db_security::SecurityGate`) only. Because `ArtifactEngineConfig`'s new fields are absorbed via `..Default::default()` at every call site
 //! observed, `db_projection` registration is also wired in as a `projections` factory field (see
 //! `🔖️Engine`'s doc for why a factory, not a stored engine).
 //!
@@ -1274,6 +1272,14 @@ struct DocumentState {
     last_writer: db_state::PMap<String, protocol::MutationId>,
 }
 
+/// @emoji 🗺️ One envelope planned by `ArtifactEngine::plan_one` and not applied yet: its path entries with every value
+/// already encoded as the state stores it (`None` deletes), the regions it touches and the conflicts it meets.
+struct PlannedEntries {
+    entries: Vec<(String, Option<Vec<u8>>)>,
+    touched: db_state::TouchedSet,
+    conflicts: Vec<ConflictRecord>,
+}
+
 impl DocumentState {
     // 🚫️async: E1 pure constructor, `db_state::PMap::new` is sync — see R9
     fn new() -> DocumentState {
@@ -1374,54 +1380,24 @@ impl DocumentState {
 }
 //#endregion 🔖️State
 
-//#region 🔖️Hooks
-/// @emoji 🛂️ The authorization seam `ArtifactEngine::submit` calls once per envelope, before
-/// executing it — kept as its own narrow trait (rather than a direct `db_security` dependency) so a
-/// real deployment supplies whatever backend it wants at `ArtifactEngineConfig` construction time.
-/// `db_engine`'s `SecurityAuthzHook` is the real `db_security::SecurityGate`-backed implementation.
-pub trait AuthzHook: Send + Sync {
-    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> impl Future<Output = Result<(), DbError>> + Send;
-}
-
-/// @emoji 🟢️ The default `AuthzHook`: authorizes everything. Correct for a single-tenant/test
-/// deployment with no authorization policy configured; a real multi-tenant deployment must supply
-/// its own hook.
-#[derive(Clone, Copy, Default, Debug)]
-pub struct AllowAll;
-
-impl AuthzHook for AllowAll {
-    async fn authorize(&self, _actor: &protocol::ActorId, _envelope: &protocol::MutationEnvelope) -> Result<(), DbError> {
-        Ok(())
-    }
-}
-//#endregion 🔖️Hooks
-
 //#region 🔖️Engine
 /// @emoji ⚙️ Construction-time configuration for one `ArtifactEngine`. Field shape is FROZEN for
 /// this wave (see module doc): `db_engine` constructs this as a 4-field struct literal with no
 /// `..Default::default()` spread, so a new required field here would be a breaking change to a
 /// sibling crate this session does not own.
-// 🔀️ `A` is the pluggable `AuthzHook` implementation (open extension point per the module doc: "a
-// caller may still hand-roll one") — dedyn-fw-os-misc, R11(a): a stored, caller-supplied
-// implementation is trivially generic, so `Arc<dyn AuthzHook>` becomes `Arc<A>` with `AllowAll` as
-// the default so every existing `ArtifactEngineConfig`/`::default()` call site keeps compiling
-// unparameterized.
-// 🔀️ `V` is the pluggable `VersionGraph` backend, generic for the same reason as `A` (R11a). Unlike
-// `AuthzHook`, `VersionGraph`'s own closed 2-implementor set (`NullVersionGraph` here, the
+// 🔀️ `V` is the pluggable `VersionGraph` backend (dedyn-fw-os-misc, R11a: a stored, caller-supplied
+// implementation is trivially generic). `VersionGraph`'s own closed 2-implementor set (`NullVersionGraph` here, the
 // `vcs`-feature-gated `VcsVersionGraph`) is closed with `dyn_enum_close!` into `db_engine`'s
 // `VersionGraphs` enum instead — but that enum lives in `db_engine`, one layer above this crate, and
 // the hard dependency rule ("only `db_engine` may depend on `vcs`") means `db_artifact` must stay
 // ignorant of it. Staying generic here (rather than naming `VersionGraphs` directly) preserves
 // exactly the erasure `Arc<dyn VersionGraph>` used to give this crate; `db_engine` is the one layer
 // that instantiates `V = VersionGraphs` concretely (see its `Database::document_engine_config`).
-pub struct ArtifactEngineConfig<A: AuthzHook + 'static = AllowAll, V: VersionGraph + 'static = NullVersionGraph> {
+pub struct ArtifactEngineConfig<V: VersionGraph + 'static = NullVersionGraph> {
     pub limits: DbLimits,
-    /// @emoji 🛂️ Deprecated-in-spirit extension seam, kept defined (see module doc): `submit` now
-    /// authorizes through `security` instead. A caller with an existing `AuthzHook` impl can still
-    /// call it manually; `ArtifactEngine` itself no longer does.
-    pub authz: Arc<A>,
-    /// @emoji 🔐️ The real authz/dedupe/DoS-budget gate `submit` calls once per envelope — see
-    /// `db_security::SecurityGate::admit_command`'s doc. Keyed per-envelope by a `Principal`
+    /// @emoji 🔐️ The real authz/dedupe/DoS-budget gate `submit` admits every not-yet-committed
+    /// envelope through and records its committed ones in — see `db_security::SecurityGate::admit_commands`
+    /// and `record_committed`. Keyed per-envelope by a `Principal`
     /// synthesized from that envelope's own `actor` (a permissive `"member"` role, `"default"`
     /// tenant) — `SubmitOptions` stays durability-only (see its doc) so this crate's dedupe/authz
     /// story does not require a caller to separately authenticate every submit call.
@@ -1436,7 +1412,7 @@ pub struct ArtifactEngineConfig<A: AuthzHook + 'static = AllowAll, V: VersionGra
     // hits). Unlike `db_security::SecurityGate` (which genuinely needs `E: Emit` generic so its own
     // tests can inject a `RecordingEmit`), there is no second implementor anywhere in this crate's
     // call graph, so O1 takes the "exactly one impl" branch: concrete `NullEmit`, no `dyn`, no
-    // generic param added to this already-two-deep (`A`, `V`) config type.
+    // generic param added to this config type beside `V`.
     pub emit: Arc<NullEmit>,
     pub preview_ttl_ms: u64,
     /// @emoji 🧬️ Projection factory: `submit`'s project step registers a fresh
@@ -1453,14 +1429,13 @@ pub struct ArtifactEngineConfig<A: AuthzHook + 'static = AllowAll, V: VersionGra
     pub projections: Arc<dyn Fn() -> Vec<db_projection::NoProjections> + Send + Sync>,
 }
 
-impl Default for ArtifactEngineConfig<AllowAll, NullVersionGraph> {
+impl Default for ArtifactEngineConfig<NullVersionGraph> {
     fn default() -> Self {
         let limits = DbLimits::default();
         let policy = db_security::RoleBasedPolicy::new().with_grant(db_security::Grant::allow("member", &["**"], &[db_security::Action::Read, db_security::Action::Write]));
         ArtifactEngineConfig {
             preview_ttl_ms: limits.max_preview_ttl_ms,
             limits,
-            authz: Arc::new(AllowAll),
             security: db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 4_096), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(NullEmit)),
             version_graph: Arc::new(NullVersionGraph),
             emit: Arc::new(NullEmit),
@@ -1474,7 +1449,7 @@ impl Default for ArtifactEngineConfig<AllowAll, NullVersionGraph> {
 /// `ArtifactAuthority` (the `db_actor`-mailbox wrapper below) drives in finite process-pool turns.
 /// The engine is moved only between serialized turns; callers can also use it directly wherever a
 /// mailbox is unnecessary (for example this crate's own tests).
-pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + 'static = NullVersionGraph> {
+pub struct ArtifactEngine<V: VersionGraph + 'static = NullVersionGraph> {
     document: ArtifactId,
     protocol_document: protocol::ArtifactId,
     storage: Arc<db_storage::DbBackend>,
@@ -1496,7 +1471,7 @@ pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + '
     live_queries: HashMap<u64, db_query::LiveQuery>,
     next_live_query_id: u64,
     index_backlog: ArtifactIndexBacklog,
-    config: ArtifactEngineConfig<A, V>,
+    config: ArtifactEngineConfig<V>,
 }
 
 /// @emoji 🗂️ Index entries of commits that are durable in the WAL but not yet written as index runs.
@@ -1709,7 +1684,7 @@ impl std::fmt::Debug for ArtifactEngineOpenRejected {
 
 const MAX_RECENT_TOUCHES: usize = 256;
 
-impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
+impl<V: VersionGraph + 'static> ArtifactEngine<V> {
     /// @emoji 🔕️ One close step: progress wakes the caller's waker, a pending writer release parks it
     /// in the release signal until the backend's terminal notification.
     fn poll_close(&mut self, context: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), DbError>> {
@@ -1739,7 +1714,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
     /// @emoji 🌱️ Retained constructor used by the document authority. Every storage wait remains
     /// represented by this future so a pool worker only polls it once before yielding.
-    pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected> {
+    pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<ArtifactEngine<V>, ArtifactEngineOpenRejected> {
         let core_id = to_core_document_id(&document).await;
         let wal = db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await.map_err(ArtifactEngineOpenRejected::WalOpen)?;
         Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config).await)
@@ -1749,12 +1724,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     /// Process/test entry-point convenience; live document authorities use `create_retained`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected> {
+    pub(crate) fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<ArtifactEngine<V>, ArtifactEngineOpenRejected> {
         db_actor::block_on(Self::create_retained(document, storage, config, now_ms))
     }
 
     /// @emoji 🚑️ Retained materialization as initial ⊕ snapshot ⊕ WAL suffix.
-    pub async fn open_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), ArtifactEngineOpenRejected> {
+    pub async fn open_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<(ArtifactEngine<V>, MaterializeReport), ArtifactEngineOpenRejected> {
         let core_id = to_core_document_id(&document).await;
         let mut report = MaterializeReport::default();
 
@@ -1865,7 +1840,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                                     *engine.actor_seq.entry(envelope.actor.0.clone()).or_insert(0) += 1;
                                     engine.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
                                 } else {
-                                    let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids).await?;
+                                    let touched = match engine.plan_one(&envelope, &batch_ids, &mut HashMap::new()).await? {
+                                        Some(plan) => {
+                                            engine.commit_one(&envelope, plan.entries).await?;
+                                            plan.touched
+                                        }
+                                        None => db_state::TouchedSet::new(),
+                                    };
                                     let touch = command_touch(&envelope, &touched);
                                     engine.remember_target(&envelope);
                                     remember_recent_touch(&mut engine.recent_touches, touch);
@@ -1968,11 +1949,11 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
     /// @emoji 🚑️ Process/test entry-point convenience; live authorities use `open_retained`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), ArtifactEngineOpenRejected> {
+    pub(crate) fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<V>, now_ms: u64) -> Result<(ArtifactEngine<V>, MaterializeReport), ArtifactEngineOpenRejected> {
         db_actor::block_on(Self::open_retained(document, storage.clone(), config, now_ms))
     }
 
-    async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<A, V>) -> ArtifactEngine<A, V> {
+    async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<V>) -> ArtifactEngine<V> {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         ArtifactEngine {
             document: core_id.clone(),
@@ -2081,15 +2062,19 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let mut planned: Vec<(&protocol::MutationEnvelope, PlannedEntries)> = Vec::new();
         let mut commands: Vec<Vec<u8>> = Vec::new();
         for envelope in &batch.envelopes {
-            // authz: the `AuthzHook` seam (defaults to `AllowAll`; `db_engine`'s `SecurityAuthzHook`
-            // wraps a real `db_security::SecurityGate` here).
-            self.config.authz.authorize(&envelope.actor, envelope).await?;
+            if batch_ids.contains(&envelope.mutation_id.0) {
+                return Err(DbError::Conflict(format!("mutation id {} appears twice in one batch", envelope.mutation_id.0)));
+            }
+            if self.applied.contains_key(&envelope.mutation_id.0) {
+                batch_ids.insert(envelope.mutation_id.0.clone());
+                continue;
+            }
 
-            // authz (defense in depth): the newer, real `db_security::SecurityGate` gate, keyed by a
-            // permissive principal synthesized from the envelope's own actor (see
-            // `ArtifactEngineConfig::security`'s doc) — additive, does not replace `authz` above.
+            // authz: the `db_security::SecurityGate`, keyed by a permissive principal synthesized from the
+            // envelope's own actor (see `ArtifactEngineConfig::security`'s doc). An already-committed
+            // envelope (content-checked above) skipped it: it is an idempotent resend.
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
-            self.config.security.admit_command(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &envelope.actor, &envelope.mutation_id, now_ms).await?;
+            self.config.security.admit_commands(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &[(&envelope.actor, &envelope.mutation_id)], now_ms).await?;
 
             // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
             // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
@@ -2110,7 +2095,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
         if planned.is_empty() {
             // Every envelope in this (re-)submitted batch was already durable individually — a
-            // full no-op commit, per-envelope half of the dedupe law (see `apply_one`'s doc).
+            // full no-op commit, per-envelope half of the dedupe law (see `plan_one`'s doc).
             let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash().await?), messages: Vec::new() };
             self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
             return Ok(receipt);
@@ -2177,6 +2162,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let wal_facet = self.storage.wal().await;
         let appended = self.wal.submit(&wal_facet, &commands, &records, options.durability, now_ms).await?;
         drop(wal_facet);
+        self.config.security.record_committed(&newly_applied.iter().map(|(envelope, _)| (&envelope.actor, &envelope.mutation_id)).collect::<Vec<_>>(), now_ms);
         let _ = records.close_step()?;
         drop(records);
         self.frontier = new_frontier.clone();
@@ -4754,7 +4740,7 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
 }
 
 /// 🧳️ The runner owns its engine **boxed**, and every future it drives yields the box, never the
-/// engine itself. `ArtifactEngine<AllowAll, VersionGraphs>` measures ~529 KB by value (read off the
+/// engine itself. `ArtifactEngine<VersionGraphs>` measures ~529 KB by value (read off the
 /// two `catch_unwind` shim frames of ticket 26/09/18 slice HS1's crash reports), and `run_turn`
 /// carries each turn's result out through `std::panic::catch_unwind` → `do_call` → its own frame. A
 /// debug build gives every one of those moves its own stack slot, so a by-value engine priced
@@ -4762,16 +4748,16 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
 /// that own 2 MiB. Moving a pointer instead is what keeps the hub's first document socket from
 /// aborting the process; see `📓️hs1-hub-pool-worker-stack-overflow.md`.
 #[cfg(not(target_arch = "wasm32"))]
-type ArtifactBuildFuture<A, V> = Pin<Box<dyn Future<Output = Result<Box<ArtifactEngine<A, V>>, ArtifactEngineOpenRejected>> + Send + 'static>>;
+type ArtifactBuildFuture<V> = Pin<Box<dyn Future<Output = Result<Box<ArtifactEngine<V>>, ArtifactEngineOpenRejected>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
-type ArtifactTurnFuture<A, V> = Pin<Box<dyn Future<Output = Box<ArtifactEngine<A, V>>> + Send + 'static>>;
+type ArtifactTurnFuture<V> = Pin<Box<dyn Future<Output = Box<ArtifactEngine<V>>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
-enum ArtifactTurn<A: AuthzHook + 'static, V: VersionGraph + 'static> {
-    Future(ArtifactTurnFuture<A, V>),
-    CloseFlush(ArtifactTurnFuture<A, V>),
-    History { engine: Option<Box<ArtifactEngine<A, V>>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
+enum ArtifactTurn<V: VersionGraph + 'static> {
+    Future(ArtifactTurnFuture<V>),
+    CloseFlush(ArtifactTurnFuture<V>),
+    History { engine: Option<Box<ArtifactEngine<V>>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -5168,14 +5154,14 @@ pub struct ArtifactRunnerTerminalJob {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
+struct ArtifactRunner<V: VersionGraph + 'static> {
     pool: Arc<semio_framework_async::WorkerPool>,
     address: db_actor::Address<ArtifactMessage>,
     receiver: db_actor::Receiver<ArtifactMessage>,
     generation: u64,
-    builder: std::sync::Mutex<Option<ArtifactBuildFuture<A, V>>>,
-    engine: std::sync::Mutex<Option<Box<ArtifactEngine<A, V>>>>,
-    turn: std::sync::Mutex<Option<ArtifactTurn<A, V>>>,
+    builder: std::sync::Mutex<Option<ArtifactBuildFuture<V>>>,
+    engine: std::sync::Mutex<Option<Box<ArtifactEngine<V>>>>,
+    turn: std::sync::Mutex<Option<ArtifactTurn<V>>>,
     ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), ArtifactEngineOpenRejected>>>>,
     done: std::sync::Mutex<Option<db_actor::ReplySender<()>>>,
     handoff: Arc<ArtifactRunnerHandoff>,
@@ -5193,12 +5179,12 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
 const ARTIFACT_RUNNER_TURN_MICROS: u64 = 2_000;
 
 #[cfg(not(target_arch = "wasm32"))]
-struct ArtifactRunnerPoll<A: AuthzHook + 'static, V: VersionGraph + 'static> {
-    runner: Arc<ArtifactRunner<A, V>>,
+struct ArtifactRunnerPoll<V: VersionGraph + 'static> {
+    runner: Arc<ArtifactRunner<V>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<A: AuthzHook + 'static, V: VersionGraph + 'static> Drop for ArtifactRunnerPoll<A, V> {
+impl<V: VersionGraph + 'static> Drop for ArtifactRunnerPoll<V> {
     fn drop(&mut self) {
         use std::sync::atomic::Ordering;
         loop {
@@ -5225,13 +5211,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> Drop for ArtifactRunnerP
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct ArtifactRunnerWake<A: AuthzHook + 'static, V: VersionGraph + 'static> {
-    runner: std::sync::Weak<ArtifactRunner<A, V>>,
+struct ArtifactRunnerWake<V: VersionGraph + 'static> {
+    runner: std::sync::Weak<ArtifactRunner<V>>,
     generation: u64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<A: AuthzHook + 'static, V: VersionGraph + 'static> std::task::Wake for ArtifactRunnerWake<A, V> {
+impl<V: VersionGraph + 'static> std::task::Wake for ArtifactRunnerWake<V> {
     fn wake(self: Arc<Self>) {
         self.wake_by_ref();
     }
@@ -5246,7 +5232,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> std::task::Wake for Arti
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
+impl<V: VersionGraph + 'static> ArtifactRunner<V> {
     fn close_one(self: &Arc<Self>) -> bool {
         use std::sync::atomic::Ordering;
         self.cancelled.store(true, Ordering::Release);
@@ -5510,7 +5496,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         }
     }
 
-    fn start_turn(engine: Box<ArtifactEngine<A, V>>, message: ArtifactMessage) -> ArtifactTurn<A, V> {
+    fn start_turn(engine: Box<ArtifactEngine<V>>, message: ArtifactMessage) -> ArtifactTurn<V> {
         match message {
             ArtifactMessage::History { operation_generation, cancelled, reservation, reply } => {
                 let replay = engine.history_replay(operation_generation, cancelled, reservation);
@@ -5777,7 +5763,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
 impl ArtifactAuthority {
     /// @emoji 🚀️ Builds the engine on the injected pool and resolves only after construction, so
     /// a caller never receives an authority whose engine failed to open.
-    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<A, V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
+    pub async fn spawn<V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         build: impl FnOnce() -> F + Send + 'static,
         capacities: MailboxCapacities,
@@ -5789,7 +5775,7 @@ impl ArtifactAuthority {
     /// 🧵️ Mounts an authority under an already-retained process-pool use. Database document
     /// mounts pass their exact use cell through this boundary, so no second lifecycle admission
     /// can conflict after the catalog transaction has begun.
-    pub(crate) async fn spawn_with_pool_use<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<A, V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
+    pub(crate) async fn spawn_with_pool_use<V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         pool_use: Arc<semio_framework_async::WorkerPoolUse>,
         build: impl FnOnce() -> F + Send + 'static,

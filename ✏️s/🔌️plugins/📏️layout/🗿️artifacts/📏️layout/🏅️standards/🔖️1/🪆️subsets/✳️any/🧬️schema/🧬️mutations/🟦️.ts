@@ -283,6 +283,46 @@ export interface SetFrameFlags {
   locked?: boolean;
   visible?: boolean;
 }
+
+export interface UpdateParagraphStyle {
+  id: string;
+  name: string;
+  font_family: string;
+  font_size: number;
+  font_weight: number;
+  leading: number;
+  tracking: number;
+  alignment: string;
+}
+
+export interface UpdateTextFrame {
+  page_id: string;
+  frame_id: string;
+  story_id: string;
+  thread_next?: string;
+  inset_x: number;
+  inset_y: number;
+  inset_width: number;
+  inset_height: number;
+}
+
+export interface UpdateLayer {
+  page_id: string;
+  layer_id: string;
+  name: string;
+  visible: boolean;
+  locked: boolean;
+}
+
+export interface CreateCharacterStyle { id: string }
+export interface DeleteCharacterStyle { id: string }
+export interface UpdateCharacterStyle { id: string }
+export interface UpdateParentPage { id: string }
+export interface UpdateSpread { id: string }
+export interface SetPageParent { id: string }
+export interface SetPageGuides { id: string }
+export interface SetStoryRuns { id: string }
+export interface UpdateLink { id: string }
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -314,5 +354,17 @@ export type LayoutMutation =
   | { ChangeFrameWrapMode: ChangeFrameWrapMode }
   | { ChangeFrameColumns: ChangeFrameColumns }
   | { UpdateGrid: UpdateGrid }
-  | { SetFrameFlags: SetFrameFlags };
+  | { SetFrameFlags: SetFrameFlags }
+  | { UpdateParagraphStyle: UpdateParagraphStyle }
+  | { UpdateTextFrame: UpdateTextFrame }
+  | { UpdateLayer: UpdateLayer }
+  | { CreateCharacterStyle: CreateCharacterStyle }
+  | { DeleteCharacterStyle: DeleteCharacterStyle }
+  | { UpdateCharacterStyle: UpdateCharacterStyle }
+  | { UpdateParentPage: UpdateParentPage }
+  | { UpdateSpread: UpdateSpread }
+  | { SetPageParent: SetPageParent }
+  | { SetPageGuides: SetPageGuides }
+  | { SetStoryRuns: SetStoryRuns }
+  | { UpdateLink: UpdateLink };
 //#endregion 🔖️Mutations

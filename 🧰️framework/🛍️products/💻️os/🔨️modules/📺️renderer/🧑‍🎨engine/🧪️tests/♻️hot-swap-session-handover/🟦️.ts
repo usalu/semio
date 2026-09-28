@@ -83,7 +83,6 @@ describe("♻️ a hot swap hands every window over to the successor instance", 
     expect(green.length, "the defect case must NOT satisfy the law, or this suite proves nothing").toBe(2);
     for (const authored of law.cases as Array<{ name: string; ownsSession: boolean; plan: Step[] }>) {
       const outcome = replay(authored.plan, authored.ownsSession);
-      console.log(`[DEBUG] hot-swap handover ${authored.plan.join(" → ")} :: mounts=${outcome.boardMounts} overRetired=${outcome.presentationsOverRetiredInstance} endsOnInstance=${String(outcome.endsOnInstance)}`);
     }
   });
 

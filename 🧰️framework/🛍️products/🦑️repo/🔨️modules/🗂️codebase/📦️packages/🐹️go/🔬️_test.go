@@ -265,7 +265,7 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 		if len(breachs) != 0 {
 			for _, v := range breachs {
-				t.Logf("[DEBUG] breach in %s: kind=%s scope=%s line=%d summary=%s", path, v.Kind, v.Scope, v.Line, v.Summary)
+				t.Logf("breach in %s: kind=%s scope=%s line=%d summary=%s", path, v.Kind, v.Scope, v.Line, v.Summary)
 			}
 			t.Fatalf("expected no breachs for %s, got %d", path, len(breachs))
 		}

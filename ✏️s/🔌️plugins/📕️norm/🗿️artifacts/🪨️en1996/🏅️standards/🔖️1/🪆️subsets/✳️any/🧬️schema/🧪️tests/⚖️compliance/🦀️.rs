@@ -114,6 +114,63 @@ fn remedy_law_flips_at_least_two_distinct_fails_to_pass() {
 }
 
 #[test]
+fn gate_blocking_fails_clear_via_remedy_bounds() {
+    let doc = En1996Snapshot::noncompliant_multi_fail();
+    let before = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let blocking = [
+        "en1996.3.1.material.wall-weak",
+        "en1996.6.3.flexure.wall-weak.uls-bad",
+        "en1996.6.1.3.concentrated.wall-weak.uls-bad.beam-A",
+    ];
+    for id in blocking {
+        let fail = before
+            .checks
+            .iter()
+            .find(|c| c.id == id)
+            .unwrap_or_else(|| panic!("missing blocking check {id}"));
+        assert!(matches!(fail.status, CheckStatus::Fail), "{id} should start Fail");
+        assert!(!fail.remedies.is_empty(), "{id} needs remedies");
+        let applicables: Vec<_> = fail
+            .remedies
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r.applicable && !r.target.path.is_empty() && r.options.is_empty())
+            .collect();
+        assert!(!applicables.is_empty(), "{id} needs applicable scalar remedies");
+        let mut cleared = false;
+        for (_, remedy) in &applicables {
+            let mut tree = dsl::ToValue::to_value(&doc);
+            set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).expect("apply");
+            let trial: En1996Snapshot = dsl::FromValue::from_value(tree).expect("decode");
+            let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
+            if let Some(c) = after.checks.iter().find(|c| c.id == id) {
+                if !matches!(c.status, CheckStatus::Fail) {
+                    cleared = true;
+                    break;
+                }
+            } else {
+                cleared = true;
+                break;
+            }
+        }
+        if !cleared && applicables.len() > 1 {
+            let mut tree = dsl::ToValue::to_value(&doc);
+            for (_, remedy) in &applicables {
+                set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).expect("seq apply");
+            }
+            let trial: En1996Snapshot = dsl::FromValue::from_value(tree).expect("seq decode");
+            let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
+            match after.checks.iter().find(|c| c.id == id) {
+                None => cleared = true,
+                Some(c) if !matches!(c.status, CheckStatus::Fail) => cleared = true,
+                Some(c) => panic!("{id} sequential still Fail u={:.4}", c.utilization),
+            }
+        }
+        assert!(cleared, "{id}: no applicable remedy cleared the Fail");
+    }
+}
+
+#[test]
 fn every_editable_leaf_has_en_de_field_meta() {
     let wildcards = [
         "annex", "masonryClass", "designSituation", "storeys",

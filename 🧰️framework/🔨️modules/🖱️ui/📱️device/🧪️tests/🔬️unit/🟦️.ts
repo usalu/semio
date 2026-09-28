@@ -8,10 +8,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  UI_AVAILABLE_HEIGHT,
   UI_MOBILE_MAX_WIDTH_PX,
   UI_MOBILE_MEDIA_QUERY,
   UI_TABLET_MAX_WIDTH_PX,
   UI_TABLET_MEDIA_QUERY,
+  availableViewportHeightPx,
   elementsSurfaceDeviceForMatches,
   elementsSurfaceDeviceForWidth,
   elementsSurfaceDeviceIsMobile,
@@ -32,6 +34,8 @@ function repoRoot(): string {
 }
 
 const DOCK_WGPU_SOURCE = resolve(repoRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs");
+const CSS_PATH = '🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css';
+const HOST_PATH = '🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts';
 
 //#region 📱️Policy
 describe("📱️ breakpoint policy", () => {
@@ -96,3 +100,54 @@ describe("📱️ wgpu dock breakpoint parity", () => {
   });
 });
 //#endregion 🧊️WgpuParity
+
+//#region 📐 Available viewport
+describe("📐 available viewport height", () => {
+  it("uses the visible viewport when the screen is taller than what the browser toolbar leaves", () => {
+    expect(availableViewportHeightPx({ innerHeight: 800, visualHeight: 640 })).toBe(640);
+    expect(availableViewportHeightPx({ innerHeight: 800, visualHeight: 640.4 })).toBe(640);
+  });
+
+  it("falls back to the screen when the visible viewport is missing", () => {
+    expect(availableViewportHeightPx({ innerHeight: 800, visualHeight: null })).toBe(800);
+    expect(availableViewportHeightPx({ innerHeight: 800, visualHeight: 0 })).toBe(800);
+    expect(availableViewportHeightPx({ innerHeight: 800 })).toBe(800);
+    expect(availableViewportHeightPx({ innerHeight: 700, visualHeight: Number.NaN })).toBe(700);
+  });
+
+  it("returns zero when neither reading is a usable height", () => {
+    expect(availableViewportHeightPx({ innerHeight: 0, visualHeight: 0 })).toBe(0);
+    expect(availableViewportHeightPx({ innerHeight: Number.POSITIVE_INFINITY })).toBe(0);
+  });
+
+  it("names the CSS length shells use in place of 100vh", () => {
+    expect(UI_AVAILABLE_HEIGHT).toBe("var(--ui-available-height, 100dvh)");
+  });
+
+  it("the stylesheet and the host boot script both size shells to that available height", () => {
+    const root = repoRoot();
+    const css = readFileSync(resolve(root, CSS_PATH), "utf8");
+    expect(css).toContain("--ui-available-height: 100dvh");
+    expect(css).toContain(".h-screen {\n  height: var(--ui-available-height, 100dvh);");
+    const host = readFileSync(resolve(root, HOST_PATH), "utf8");
+    const script = /export const PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT = `([\s\S]*?)`;/.exec(host);
+    expect(script, "host boot viewport script").toBeTruthy();
+    const style = documentFromScript(script![1]!, { innerHeight: 800, visualHeight: 640 });
+    expect(style).toBe("640px");
+    expect(style).toBe(`${availableViewportHeightPx({ innerHeight: 800, visualHeight: 640 })}px`);
+  });
+});
+
+/** 📐 Runs the host boot script against a fake window and returns the height it published. */
+function documentFromScript(script: string, reading: { readonly innerHeight: number; readonly visualHeight: number }): string {
+  const props: Record<string, string> = {};
+  const window = {
+    innerHeight: reading.innerHeight,
+    visualViewport: { height: reading.visualHeight, addEventListener() {} },
+    addEventListener() {},
+  };
+  const document = { documentElement: { style: { getPropertyValue(name: string) { return props[name] ?? ""; }, setProperty(name: string, value: string) { props[name] = value; } } } };
+  new Function("window", "document", script)(window, document);
+  return props["--ui-available-height"] ?? "";
+}
+// #endregion 📐 Available viewport

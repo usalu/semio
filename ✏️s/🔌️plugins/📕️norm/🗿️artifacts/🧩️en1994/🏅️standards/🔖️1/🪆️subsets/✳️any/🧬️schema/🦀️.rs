@@ -674,7 +674,7 @@ pub mod part_1_1 {
         let e = 210e9;
         let i = beam.steel.i_y_m4.max(1e-12);
         let a = beam.steel.a_m2.max(1e-12);
-        let l_cr = beam.ltb_length_m.max(0.1);
+        let l_cr = beam.ltb_length_m.max(0.05);
         let n_cr = std::f64::consts::PI.powi(2) * e * i / l_cr.powi(2);
         let lambda = (a * f_y_pa / n_cr).sqrt().max(0.05);
         let phi = 0.5 * (1.0 + 0.34 * (lambda - 0.2) + lambda.powi(2));

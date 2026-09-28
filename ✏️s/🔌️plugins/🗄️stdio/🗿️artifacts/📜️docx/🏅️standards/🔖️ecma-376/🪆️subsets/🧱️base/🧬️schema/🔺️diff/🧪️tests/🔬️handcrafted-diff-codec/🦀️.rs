@@ -31,7 +31,7 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
     use std::io::Read;
 
-    let fixture_text = include_str!("../../../🧫️fixtures/🧹️clear-main-declaration/🔣️.json");
+    let fixture_text = include_str!("../../🧫️fixtures/🧹️clear-main-declaration/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(fixture_text).expect("third-party JSON parser accepts the neutral fixture");
     let fixture_diff = serde_json::to_string(&fixture["diff"]).expect("fixture diff serializes");
     let diff: DocxDiff = dsl::os_pack::json::from_json_str(&fixture_diff).expect("canonical DOCX diff decodes");
@@ -57,7 +57,7 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
         assert_eq!(replay.apply(&before).expect("codec replay applies"), after);
     }
 
-    let bytes = crate::standards::v_ecma_376::subsets::base::io::encode_docx(&after).expect("declaration-free package publishes");
+    let bytes = crate::engine::encode_docx(&after).expect("declaration-free package publishes");
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("third-party ZIP reader opens package");
     let mut xml = String::new();
     archive.by_name(main_path).unwrap().read_to_string(&mut xml).unwrap();

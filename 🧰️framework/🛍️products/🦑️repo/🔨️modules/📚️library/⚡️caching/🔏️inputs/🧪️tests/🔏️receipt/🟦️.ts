@@ -46,5 +46,4 @@ export async function testGeneratorInputReceipt(workspace: string, generated: st
   assert.ok(target.dependsOn.includes(contract.target));
   assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === contract.output));
   assert.ok(!target.inputs.some((input: any) => input.runtime?.includes("generator-inputs")));
-  console.log("[DEBUG] Digest publication matches stable JSON/Ajv, preserves unchanged bytes and mtime, rejects invalid writes and has a cacheable Nx producer PASS");
 }

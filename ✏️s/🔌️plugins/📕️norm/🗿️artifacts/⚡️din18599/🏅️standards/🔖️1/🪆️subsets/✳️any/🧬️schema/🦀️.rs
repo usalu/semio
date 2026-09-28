@@ -738,6 +738,10 @@ fn element_g_path(e: &EnvelopeElement) -> String {
     format!("elements[id={}].gValue", e.id)
 }
 
+fn element_fc_path(e: &EnvelopeElement) -> String {
+    format!("elements[id={}].fc", e.id)
+}
+
 
 fn fan_operating_hours_weighted(doc: &Din18599Snapshot) -> f64 {
     let v: f64 = doc.zones.iter().map(|z| z.volume_m3).sum::<f64>().max(1e-9);
@@ -1214,7 +1218,6 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
             &format!("Q_H,nd = {q_h:.0} kWh/a gegenüber Referenzgebäude Q_H,nd,Ref = {q_h_ref:.0} kWh/a (H_T={:.1} W/K, H_V={:.1} W/K).", derived.h_t, derived.h_v),
         ));
         if q_h > q_h_ref {
-            let mut remedied = false;
             for el in &doc.elements {
                 let target = reference_u(el.kind);
                 if el.u_value_w_m2k > target + 1e-9 {
@@ -1228,35 +1231,41 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
                             &format!("Hülle verbessern: U von {} ≤ {:.3} W/(m²·K) (GEG-Referenz).", el.label_de, target),
                         ),
                     ));
-                    remedied = true;
+                }
+                if el.kind == ElementKind::Window {
+                    if el.g_value + 1e-9 < GEG_ANLAGE1_WINDOW_G_REF {
+                        let path = element_g_path(el);
+                        b = b.remedy(Remedy::at_least(
+                            element_ref(el, &path),
+                            dimensionless(el.g_value),
+                            dimensionless(GEG_ANLAGE1_WINDOW_G_REF),
+                            copy(
+                                &format!("Raise g-value of {} to at least {:.2} (GEG reference) to recover solar gains toward Q_H,nd,Ref.", el.label_en, GEG_ANLAGE1_WINDOW_G_REF),
+                                &format!("g-Wert von {} auf mindestens {:.2} anheben (GEG-Referenz), um solare Gewinne Richtung Q_H,nd,Ref zu stärken.", el.label_de, GEG_ANLAGE1_WINDOW_G_REF),
+                            ),
+                        ));
+                    }
+                    if el.fc + 1e-9 < 1.0 {
+                        let path = element_fc_path(el);
+                        b = b.remedy(Remedy::at_least(
+                            element_ref(el, &path),
+                            dimensionless(el.fc),
+                            dimensionless(1.0),
+                            copy(
+                                &format!("Raise shading factor F_c of {} to 1.0 so solar gains match the GEG reference building.", el.label_en),
+                                &format!("Abminderungsfaktor F_c von {} auf 1.0 anheben, damit solare Gewinne dem GEG-Referenzgebäude entsprechen.", el.label_de),
+                            ),
+                        ));
+                    }
                 }
             }
-            if !remedied {
-                if doc.delta_u_wb_w_m2k > GEG_ANLAGE1_DELTA_U_WB_REF + 1e-9 {
-                    b = b.remedy(Remedy::at_most(
-                        SubjectRef::new("", "deltaUWbWM2k", copy("Thermal-bridge surcharge ΔU_WB", "Wärmebrückenzuschlag ΔU_WB")),
-                        heat_transfer(doc.delta_u_wb_w_m2k),
-                        heat_transfer(GEG_ANLAGE1_DELTA_U_WB_REF),
-                        copy("Lower ΔU_WB to 0.05 W/(m²·K) to approach the reference heat demand.", "ΔU_WB auf 0.05 W/(m²·K) senken, um den Referenz-Heizwärmebedarf zu erreichen."),
-                    ));
-                } else if doc.ventilation.heat_recovery_eta < GEG_ANLAGE1_TABELLE1_ETA_WRG_REF {
-                    b = b.remedy(Remedy::at_least(
-                        SubjectRef::new("", "ventilation.heatRecoveryEta", copy("Heat recovery η_WRG", "Wärmerückgewinnung η_WRG")),
-                        dimensionless(doc.ventilation.heat_recovery_eta),
-                        dimensionless(GEG_ANLAGE1_TABELLE1_ETA_WRG_REF),
-                        copy(
-                        &format!("Raise heat recovery to at least {:.0}% to reduce Q_H,nd toward the reference.", GEG_ANLAGE1_TABELLE1_ETA_WRG_REF * 100.0),
-                        &format!("Wärmerückgewinnung auf mindestens {:.0}% anheben, um Q_H,nd Richtung Referenz zu senken.", GEG_ANLAGE1_TABELLE1_ETA_WRG_REF * 100.0),
-                    ),
-                    ));
-                } else {
-                    b = b.remedy(Remedy::at_least(
-                        SubjectRef::new("", "renewables.pvAreaM2", copy("PV area", "PV-Fläche")),
-                        Quantity::new(QuantityKind::Area, doc.renewables.pv_area_m2),
-                        Quantity::new(QuantityKind::Area, doc.renewables.pv_area_m2 + 10.0),
-                        copy("Increase PV area while refining the envelope to meet the reference heat demand.", "PV-Fläche erhöhen und Hülle nachschärfen, um den Referenz-Heizwärmebedarf zu erreichen."),
-                    ));
-                }
+            if doc.delta_u_wb_w_m2k > GEG_ANLAGE1_DELTA_U_WB_REF + 1e-9 {
+                b = b.remedy(Remedy::at_most(
+                    SubjectRef::new("", "deltaUWbWM2k", copy("Thermal-bridge surcharge ΔU_WB", "Wärmebrückenzuschlag ΔU_WB")),
+                    heat_transfer(doc.delta_u_wb_w_m2k),
+                    heat_transfer(GEG_ANLAGE1_DELTA_U_WB_REF),
+                    copy("Lower ΔU_WB to 0.05 W/(m²·K) to match the reference heat demand.", "ΔU_WB auf 0.05 W/(m²·K) senken, um den Referenz-Heizwärmebedarf zu erreichen."),
+                ));
             }
         }
         report.push(b.build());

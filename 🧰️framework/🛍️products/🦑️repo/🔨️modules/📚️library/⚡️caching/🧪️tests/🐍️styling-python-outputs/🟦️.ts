@@ -66,7 +66,6 @@ appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\
     assert.equal((await value(wheel)).trim(), expected);
     assert.equal(readFileSync(wheel).equals(readFileSync(join(root, "oracle", fixture.wheel))), true, "The published wheel must equal native uv's independent build byte for byte");
   };
-  console.log("[DEBUG] Styling Python fixture: preparing locked tools and building the native wheel");
   await run(); assert.equal(runs(), 1); await check(fixture.values[0]);
   assert.equal((await execute([python, "-I", "-c", "from importlib.metadata import distributions; assert not any(d.metadata['Name'] == 'semio-framework-ui-styling' for d in distributions()); print('preparation contains no first-party editable build')"])).trim(), "preparation contains no first-party editable build");
   const bytes = new Map(readdirSync(published).map(name => [name, readFileSync(join(published, name))]));
@@ -84,6 +83,5 @@ appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\
   await assert.rejects(execute(["bun", join(root, "📜️script.ts"), "build"]), /styling-python-build failed/);
   assert.deepEqual(new Map(readdirSync(published).map(name => [name, readFileSync(join(published, name))])), retained, "A failed backend must preserve the previous complete wheel publication");
   assert.ok(!existsSync(join(root, "state/staging")) || readdirSync(join(root, "state/staging")).length === 0);
-  console.log("[DEBUG] Styling Python native Nx cold/warm/restoration/source-change wheels execute and match independent uv bytes; failed builds preserve published bytes and preparation performs no first-party build PASS");
   rmSync(root, { recursive: true, force: true });
 }

@@ -1,7 +1,7 @@
 //! 🧭️ Stable, namespace-aware addresses for canonical DOCX XML mutations.
 
 use super::*;
-use crate::standards::v_ecma_376::subsets::base::io::namespaces::{XML_NAMESPACE, apply_bindings, expanded_name, is_word_name, qualified_word_prefix, word_attr};
+use crate::standards::v_ecma_376::subsets::base::io::namespaces::{XML_NAMESPACE, apply_bindings, expanded_name, is_word_name, qualified_word_prefix, set_word_attr, word_attr};
 
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 

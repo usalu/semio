@@ -6,14 +6,15 @@
  * AGENTS.md asks and TypeScript's own JSDoc reader needs (R9 item 5: `/** @emoji 🧹️ …` has an EMPTY summary).
  * A docstring whose marker is a symbol glyph (`⊕`, `√`, `⛶️` …) keeps it; the eleven that carry no symbol after the token
  * (a bullet, mojibake, or plain text) get the hand-picked emoji in `PICKS` (checked unused in their file). Excluded: Markdown prose (`.cursor/plans`), the ticket tree, and the frozen
- * projection asset whose sha256 the taxonomy pins (`📽️nested-cargo-package-projection`: historical source text).
+ * projection asset whose sha256 the taxonomy pins (`📽️nested-cargo-package-projection`: historical source text), and the
+ * docstring census fixture whose `@emoji` openers are the census law's test inputs (`🧮️source-census`).
  * Usage: bun at-emoji-strip.ts [--apply] [--diff <out.diff>] — dry run by default; idempotent.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = "/Users/ueli/Documents/semio";
-const EXCLUDED = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json"];
+const EXCLUDED = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧫️fixtures/🧮️source-census/🔣️.json"];
 const TOKEN = /(\/\/\/|\/\/!|\/\*\*|\/\*|\*|\/\/|#|""")([ \t]*)@emoji[ \t]+/gu;
 const EMOJI_START = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regional_Indicator}|[0-9#*]️?⃣)/u;
 

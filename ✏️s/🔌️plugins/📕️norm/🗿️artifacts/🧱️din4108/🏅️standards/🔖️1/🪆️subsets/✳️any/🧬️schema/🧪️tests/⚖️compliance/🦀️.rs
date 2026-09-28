@@ -346,22 +346,19 @@ async fn remedy_law_shading_fc_fixes_summer() {
     let mut snap = Din4108Snapshot::failing_thin_insulation();
     let report = evaluate(&snap);
     let fail = report.failing().find(|c| c.id.contains("summer") && c.id.contains("zone-living")).expect("summer fail");
-    // Apply every applicable numeric summer remedy (F_c then area) until Pass.
-    for _ in 0..4 {
-        let current = evaluate(&snap);
-        let check = current.checks.iter().find(|c| c.id == fail.id).unwrap();
-        if check.status != CheckStatus::Fail {
-            break;
+    let mut root = ToValue::to_value(&snap);
+    for (index, remedy) in fail.remedies.iter().enumerate() {
+        if !remedy.applicable {
+            continue;
         }
-        let remedy = check
-            .remedies
-            .iter()
-            .find(|r| r.applicable && (r.target.path.contains("shadingFc") || r.target.path.contains("areaM2")))
-            .expect("summer remedy");
-        let path = remedy.target.path.clone();
-        let required = remedy.required.value;
-        apply_numeric_remedy(&mut snap, &path, required);
+        let path = &remedy.target.path;
+        if !(path.contains("shadingFc") || path.contains("areaM2") || path.contains("floorAreaM2") || path.contains("gValue")) {
+            continue;
+        }
+        crate::app_surface::apply_remedy_edit(&report, &fail.id, index, 0, &mut root)
+            .unwrap_or_else(|e| panic!("apply summer remedy[{index}] {path}: {e:?}"));
     }
+    snap = dsl::FromValue::from_value(root).unwrap_or_else(|e| panic!("from_value: {e:?}"));
     let after = evaluate(&snap);
     let again = after.checks.iter().find(|c| c.id == fail.id).unwrap();
     assert_ne!(again.status, CheckStatus::Fail, "summer remedies must clear Fail, got {:?} util={}", again.status, again.utilization);

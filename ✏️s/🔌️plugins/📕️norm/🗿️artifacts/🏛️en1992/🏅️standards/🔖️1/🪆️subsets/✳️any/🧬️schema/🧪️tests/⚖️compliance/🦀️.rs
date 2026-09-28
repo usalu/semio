@@ -67,6 +67,81 @@ fn failing_under_reinforced_has_multiple_fails_with_remedies() {
 }
 
 #[test]
+fn gate_blocking_remedies_clear_fail_status() {
+    use crate::app_surface::apply_remedy_edit;
+    use crate::document::CheckStatus;
+    use semio_framework_os_kernel::{FromValue, ToValue};
+
+    const BLOCKING: &[&str] = &[
+        "en1992.6.1.flexure.acc.beam-B1",
+        "en1992.7.2.sigma-s.beam-B1",
+        "en1992.7.2.sigma-c.beam-B1",
+        "en1992.7.2.creep.beam-B1",
+        "en1992-4.cone.anc-1",
+        "en1992-4.splitting.anc-1",
+        "en1992-4.interaction.anc-1",
+    ];
+
+    let snap = En1992Snapshot::failing_under_reinforced();
+    let report = evaluate(&snap);
+    for &id in BLOCKING {
+        let check = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing check {id}"));
+        assert!(
+            matches!(check.status, CheckStatus::Fail),
+            "{id} expected Fail, got {:?}",
+            check.status
+        );
+        let applicables: Vec<usize> = check
+            .remedies
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r.applicable)
+            .map(|(i, _)| i)
+            .collect();
+        assert!(!applicables.is_empty(), "{id} has no applicable remedy");
+
+        let mut cleared = false;
+        let mut partials = Vec::new();
+        for &remedy_index in &applicables {
+            let mut tree = ToValue::to_value(&snap);
+            apply_remedy_edit(&report, id, remedy_index, 0, &mut tree).unwrap_or_else(|e| panic!("{id} remedy[{remedy_index}] apply: {e:?}"));
+            let fixed: En1992Snapshot = FromValue::from_value(tree).expect("decode after remedy");
+            let after = evaluate(&fixed);
+            let updated = after.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("{id} missing after remedy"));
+            if !matches!(updated.status, CheckStatus::Fail) {
+                cleared = true;
+                break;
+            }
+            partials.push(format!(
+                "remedy[{remedy_index}] u {:.4}→{:.4} path={}",
+                check.utilization,
+                updated.utilization,
+                check.remedies[remedy_index].target.path
+            ));
+        }
+        if !cleared && applicables.len() > 1 {
+            let mut tree = ToValue::to_value(&snap);
+            for &remedy_index in &applicables {
+                apply_remedy_edit(&report, id, remedy_index, 0, &mut tree).expect("sequential apply");
+            }
+            let fixed: En1992Snapshot = FromValue::from_value(tree).expect("decode sequential");
+            let after = evaluate(&fixed);
+            let updated = after.checks.iter().find(|c| c.id == id).expect("id after sequential");
+            if !matches!(updated.status, CheckStatus::Fail) {
+                cleared = true;
+            } else {
+                partials.push(format!("sequential left u={:.4}", updated.utilization));
+            }
+        }
+        assert!(
+            cleared,
+            "{id}: no applicable remedy cleared Fail ({})",
+            partials.join("; ")
+        );
+    }
+}
+
+#[test]
 fn remedy_law_cover_as_and_stirrups_flip_to_pass() {
     let before_snap = En1992Snapshot::failing_under_reinforced();
     let before = evaluate(&before_snap);

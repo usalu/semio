@@ -88,7 +88,6 @@ if (operation === "consumer" || operation === "waiting") {
     const bytes = readFileSync(join(directory, module.wasmPath)), descriptor = JSON.parse(readFileSync(join(directory, module.descriptorPath), "utf8"));
     assert.equal(bytes.subarray(0, 8).toString("hex"), fixture.componentHex);
     assert.equal(createHash("sha256").update(bytes).digest("hex"), descriptor.hashes.wasmSha256);
-    console.log("[DEBUG] Native consumer fetched its live asset and read the restored component digest");
   }
 } else {
   const { publishNativeRuntime } = await import(${JSON.stringify(join(native, "📦️modules/🟦️.ts"))});
@@ -173,7 +172,6 @@ if (operation === "consumer" || operation === "waiting") {
     await validateNative(text + " ".repeat(fixture.manifestLimitBytes - bytes), true);
     await validateNative(text + " ".repeat(fixture.manifestLimitBytes - bytes + 1), false);
     await validateNative(text + " ".repeat(fixture.manifestLimitBytes - bytes) + "null", false);
-    console.log("[DEBUG] Native Rust reader verified both restored profiles with Serde, SHA-256, portable paths, bounded JSON and fragmented payload pages");
   } finally { clearTimeout(deadline); process.removeListener("SIGINT", cancelCompile); process.removeListener("SIGTERM", cancelCompile); }
   put("source/unrelated.test.ts", "throw new Error('unrelated')");
   await run("dev");
@@ -217,6 +215,5 @@ if (operation === "consumer" || operation === "waiting") {
   assert.deepEqual(pids.filter(alive), [], "Cancelled native process tree must leave the OS process table");
   await assert.rejects(() => fetch(`http://127.0.0.1:${port}/asset`));
   rmSync(root, { recursive: true, force: true });
-  console.log("[DEBUG] Native runtime graph, component identity, both-profile Nx reuse/restoration, responsive asset service, protected environment and owned cancellation PASS");
 
 }

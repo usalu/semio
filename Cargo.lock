@@ -7212,6 +7212,7 @@ dependencies = [
 name = "semio-s-artifact-forms-forms"
 version = "0.1.0"
 dependencies = [
+ "calamine",
  "csv",
  "semio-framework",
  "semio-framework-artifact-playbook-playbook",
@@ -8972,6 +8973,7 @@ dependencies = [
 name = "semio-s-artifact-vcs-vcs"
 version = "0.1.0"
 dependencies = [
+ "calamine",
  "csv",
  "semio-framework",
  "semio-framework-async-macros",

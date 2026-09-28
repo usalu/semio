@@ -5,6 +5,54 @@ Scripts + prepared patches `wp-lb2/`, captures `wp-lb2/generated/` (expendable),
 `.🧬semio/🌐hub/s14-lb2-*`. Native cargo only via `wp-lb2/cargo-lane.sh` (native lane, build-fleet-b, nice 15); overlay builds via the
 overlay lane with a private build-dir. Landing rows: `📓️landing.md` § Session 14.
 
+### Session 14b
+
+Successor agent (2026-09-28 12:0x, after the usage cut + app restart). Guest freeze ON since 12:02:46 → every guest-linked item is a
+prepared patch (dry-run clean on the live tree) + an overlay proof; landing in window 3, compile-atomic.
+
+| # | Item | Status |
+|---|---|---|
+| 0 | Live tree carries no half-applied LB2 guest edit | **verified 12:1x**: p1/p2/p2b `--dry-run` report no "already applied" hunk; `/usr/bin/grep` for every LB2 marker (`take_arena_unbuilt_rows`, `ArenaStarvedSurfaces`, `details_arena_headroom`, `command_bridge`, `UNDECLARED_ARGUMENT_VOCABULARY`, …) over `🧰️framework` + `✏️s`: 0 hits; the 5 payload files do not exist |
+| 1 | stdio csv redo `snapshot details UI admission failed` (p1) | patch re-anchored on the overnight tree (SDK export block reformatted), dry run **7 files / 0 problems**; overlay synced + applied 12:28; law + details unit tests queued (overlay lane, hold A) |
+| 2 | stdio html/json/md/txt/xml "no snapshot schema is registered" (5 MCP mutations) | root cause gone from the tree: the Codex peer's `5bcb2da23da` resolves the edit schema from the editor's DOCUMENT schema (`s.stdio.<kind>`, registered by every one of the 5) instead of `{kind}.{standard}.{base\|any}` (never registered); native proof queued (`editor_catalog` laws of the text family, native lane) |
+| 3 | Verb-arg law (p2 + p2b) | p2 re-anchored (the live bridge law now also skips `CANCEL_TYPED_OPERATION_ACTION_ID` → one `framework_owned_verb` predicate shared by both laws), dry runs 0 problems; overlay census queued (hold B) |
+| 4 | LD leftover: conflict probe de 4/5 | probe criterion = committed DOMAIN ops on a census socket (C13's `HubProbeDocument.relayedEnvelopes`); the WAL reader is superseded; live run after the chain (item 6) |
+| 5 | lb-p1 / lb-p4 still green | check default `--lib --tests` stdio plugin + semio artifact **EXIT 0** 13:43 (`i5-check-default-2.txt`); **`shipped_fleet` RED 14:25** (`i5-test-shipped-2.txt`): stdio `plugin()` panics — the peer's `structural_table_window_kind` rows (add/remove row/column, set-header) are `Unclassified` → csv/tsv (shipped) + wav fail assembly → CHAIN RISK (descriptors). Fix prepared **p4** `lb2-p4-structural-classification.py` (stamp `Migrated`; dry run 0 problems), overlay proof queued, escalated to the coordinator for W4 / priority. semio brep lib + `editor_catalog` + brep parity still queued |
+| 6 | Item-3 live run orchestration | `live/run-conflict.sh up\|probe\|down` complete (own vigilant hub 8130 + link proxy 8131/8132 + serves 6630/6631); run scheduled after the chain publish (keeps the machine idle for the critical path) |
+| 8 | docx/xlsx lib tests after the peer's OPC + `xml_parts` snapshot move (coordinator 13:38, rule 22: test-only, may land now) | **edited in the tree (test-only)**: docx — quick-xml 0.42 names are `&str` (7 sites), `🧹️clear-main-declaration` include path one level too deep, `encode_docx` via `crate::engine`; xlsx — mutations unit tests (projection via `project_workbook`, cell edits through lineage-bound `xlsx_cell_address`, absorb law re-expressed on XML-part deltas, field sweep restored over BOTH lanes incl. binary parts/content types/part-owned relationships in the `#[cfg(test)]` sweeps), schema unit tests (SST/unmodeled parts as XML authority, shrinking via `RemoveSheet`), outline + result-apply tests, set-snapshot quintet test (new XML-part diff assertions + `#[ignore] zzz_write_committed_quintet` generator + drift law); native check → generate → lib tests queued (`t8-docx-xlsx.sh`) |
+| 9 | S18 matrix: 6 stdio editors (csv, tsv, json, json/i-json, xml, xml/valid) newly red, edits `[0,0,0,0]` (coordinator 14:1x) | **root-caused, no guest patch**: not S20's initializer (all four families override `build_document_store_initialization_job` with the bounded job; the example loads — `renderAfterRedo` shows the demo rows; "No data" is `render0`, captured before the pre-verb exactly as in S16's green run). The peer made `set-cell` (stdio `structural_table_window_kind`) and the SDK `set-node` revision-bound overnight — `revision` is DECLARED required (schema-first, consistent; every rendered cell/node binding carries it) — while the matrix pins `stdio.set-cell {row,column,value}` / `set-node {nodeId,value}` carry no revision → `command_from_action` refuses → 0 edits. Fix = S18's harness (resolve the live revision from the rendered binding, or drive the cell input); relayed |
+| 10 | ui conformance corpus `🧩️component/📊️table` (peer 00:21 snapshot vs 09-25 expect, coordinator 14:1x, rule 22) | **edited in the tree (fixture-only)** by `lb2-t10-table-corpus.py`: snapshot brought to the agreed TableRow contract (the two `row-action-0` child buttons dropped — `rowActions` props stay the one representation; the editable row keeps its `cell-0`/`cell-1` Commit-bound, revision-guarded inputs), expectation DERIVED from the snapshot alone (nodeCount 5, shape, accessibility, actionIds openSpace + 2× set-cell; no generator existed — the script is it); Rust corpus harness queued (native lane, `t10-ui-conformance-1`) |
+| 7 | Home rows carry each row action twice → item capacity 27 < 32-row viewport (S18 via coordinator; SDK half mine, wgpu TableRow painter WG11, land together) | prepared `lb2-p3-row-actions.py` (5 files, dry run 0 problems live + overlay): SDK drops `table_row_action_buttons` (both call sites), React Interpreter drops its `row-action-` key filter, law `home_shaped_rows_carry_actions_as_props_and_fill_the_default_window` + fixture/schema `🪟️window-kits/📊️table/🧫️fixtures/🏠️row-capacity` (python-jsonschema valid); contract agreed with WG11 (unchanged `TableRowProps`); overlay law queued (hold B) |
+
+#### Log 14b
+
+- 12:09 start. Load 37, swap 4.5/6 GiB, 100 GiB free; native lane 5 deep (g12 holding), overlay lane free, wasm = chain.
+- 12:1x last night's overlay proofs never compiled: the overlay was cloned 18:44 while the kernel was red (Codex, E0282/E0308 ×74) —
+  `o-p1-proof-1`, `o-p2-proof-1`, `o-probe-2` all stop in `semio-framework-os-kernel`. `i4-test-laws-1` (shipped_fleet) **EXIT 0**
+  21:04; `i4-test-semio-lib-1` cut at the restart (no EXIT).
+- 12:2x overlay synced onto the live tree (`overlay-sync-2.sh`: clone changed files, top-up now also refreshes stale gitignored sources
+  such as `🎨️styling/🔤️tokens/🦀️.rs`, NEW `lb2-overlay-prune.py` removes files the live tree no longer has); p1 + p2 + p2b applied
+  (0 problems). Found: `📜️fleet-mutex.sh` waiters survive SIGTERM (the TERM trap only removes the ticket, the loop keeps waiting and
+  would take a slot once the queue drains) — my two stray waiters were SIGKILLed (pids 63829, 64661, both mine). Coordinator fixed the
+  mutex (exit on INT/TERM).
+- 13:21 overlay hold A (p1 + p2 + p2b applied, private build-dir, 1 m 51 s): the SDK (incl. the reactor-turn re-dirty) and the stdio
+  contract COMPILE; details unit tests **21/21** (`o2-p1-unit.txt`, EXIT 0); p1 law **FAILED on case 4** (`o2-p1-law.txt`): "3 rows under
+  40 free collections, 3 complete" — cases 1–3 passed en + de, but the fixture's absolute `freeCollections` were calibrated on last
+  night's details costs; the peer's rewrite shows untyped add controls only where `allows_collection_insert` holds (default false).
+  Law made self-calibrating: each case measures what its complete render holds (`complete_cost`) and leaves a share free (`none`,
+  `third`, `half`, `complete-plus-one-row` — the last must render WHOLE, i.e. no over-reservation); the test provider mirrors the DSL
+  provider's `allows_collection_insert`. Fixture v2 validated with python-jsonschema 4.25.1. Re-run queued (hold B).
+- 13:1x item 2 root cause (read, not yet proven): at G11's run (7800 B3, built 09-27 13:56) `snapshot_schema_descriptor_for_dialect`
+  looked up `{kind}.{standard}.{base|any}` (e.g. `s.stdio.html.5.any`) — never registered; the text kinds register `s.stdio.<kind>`.
+  Codex `5bcb2da23da` (27 21:54) resolves from the editor's `DOCUMENT_SCHEMA` (`stdio.html` → `s.stdio.html`, owner-checked).
+  The stdio `editor_catalog` gate carries a peer `println!("[DEBUG] editor=…")` (not mine; rule 19: nobody edits that gate now).
+- 13:3x item 7 (coordinator): the duplicate exists because the wgpu reconcile never painted `TableRowProps.row_actions` (TableRow with
+  children → bare horizontal Stack, cells dropped; childless → one Button, no actions). Split agreed: SDK half = p3 (mine), wgpu
+  TableRow painter = WG11 (Table → retained Tree section, TableRow → tree item with column cells + trailing actions); contract deltas
+  relayed (editable rows keep exactly one child per materialised cell `cell-<col>` / draft / read-only surface; `table_row_action`
+  always sets `label`). Also: the live SDK test `table_kit_render_rows_builds_one_table_node_with_one_record_per_row` asserts
+  `row.children.is_empty()` — red on the live tree since the duplicate landed; p3 makes it true again.
+
 ## Session 14
 
 | # | Item | Status |

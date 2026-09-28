@@ -45,7 +45,6 @@ for (const row of fixture.cases) it(`browser timers replay ${row.id}`, () => {
       expect(vi.getTimerCount() === 0).toBe(step.nextMs === null);
     }
   }
-  console.log(`[DEBUG] browser timer contract ${row.id}`);
 });
 
 for (const row of fixture.bridges) it(`browser wake translates ${row.id}`, () => {

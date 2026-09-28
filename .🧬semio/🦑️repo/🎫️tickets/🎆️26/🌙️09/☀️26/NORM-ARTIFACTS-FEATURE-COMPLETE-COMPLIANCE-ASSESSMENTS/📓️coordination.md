@@ -32,6 +32,58 @@ Repo-default shared cargo cache (`.cargo/config.toml`: `build-dir`/`target-dir` 
 
 ## Status log
 
+- 16:26 DIN 4108 reverify e17e80fb FAIL. Compliance gate still panics: din4108-6.u-prime.wall-north bare Fail on re-evaluate after zone-ht. length/area/insulation fallbacks attach nothing in that state. Fresh grok-4.7-high fixer 87ff83f2 launched. Full fleet gate not rerun as a close.
+
+- 16:18 EN 1994 gate reverify d798c2ac PASS. Blocking list read as None. LTB option 0 is a heavier HEB; crack spacing 0.98·s_limit. Cached 76/76, live nx not rerun (cargo locked). Family closed for this gate round. Full gate waits on DIN 4108 reverify.
+
+- 16:16 EN 1994 fixer b499b00f done: LTB one_of heavier HEB (option 0) or corrected length; crack spacing 0.98·s_limit. Family Summary 76 passed, 0 skipped (was 75). Verifier d798c2ac launched. Full gate not rerun.
+
+- 16:15 DIN 4108 fixer cfa5b7f0 done: U′ always emits a lengthM remedy when insulation and ψ skip. Family Summary 95 passed, 0 skipped. Verifier e17e80fb launched. Full gate not rerun.
+
+- 16:02 ISO 16757 gate verify 4f7054db PASS. Blocking list read as None. Source trace only (nx/cargo not finished). Family closed for this gate round. Full gate not rerun.
+
+- 16:01 DIN 4108 gate verify ba531f88 FAIL. Gate panics: din4108-6.u-prime.wall-north Fail with zero remedies after zone-ht thickens thin-eps. Other four checks not certified. Fresh grok-4.7-high fixer cfa5b7f0 launched. Full gate not rerun.
+
+- 15:51 EN 1999 gate verify 0c215013 PASS. Blocking list read as None. gate_parity_every_fail_remedy_clears_status passed (status not Fail). Family closed for this gate round. Full gate not rerun.
+
+- 15:51 EN 1996 gate verify 0e9f7267 PASS. Blocking list read as None. gate_blocking_fails_clear_via_remedy_bounds passed. Count 145 (was 144), no deletion. Family closed for this gate round. Full gate not rerun.
+
+- 15:50 EN 1992 gate verify 358e4d6d PASS. Blocking list read as None. gate_blocking_remedies_clear_fail_status passed. Family closed for this gate round. Full gate not rerun.
+
+- 15:45 EN 1994 gate verify 82c78610 FAIL. Blocking: en1994.6.4.ltb.girder-G1 (ltb length no-op, u=1.948), en1994.7.4.crack.girder-G1 (u=1+ε still Fail). Fresh grok-4.7-high fixer b499b00f launched. Gate not rerun.
+
+- 15:43 ISO 16757 fixer c563e60e done: one_of tags/selection/BIM, clearance Pass at have≥needed, script limit AtLeast. Family Summary 313 passed, 0 skipped. Impl note in the real ticket. Verifier launched (composer-2.5). Gate not rerun.
+
+- 15:39 EN 1999 fixer 39b6a1cf done: action-leaf scale, positive buckling lengths, weld/bolt/fire/sheet/shell. Family Summary 78 passed, 0 skipped (was 77). Impl note is in the real ticket. Verifier launched (composer-2.5). Gate not rerun.
+
+- 15:38 EN 1996 fixer 389d55b7 done: bed-joint/aspect, flexure thickness+f_yd, bearing area. Family Summary 145 passed, 0 skipped (was 144). Verifier launched (composer-2.5). Gate not rerun.
+
+- 15:37 EN 1997 gate verify 985673a3 PASS. Blocking list read as None. Probe: bearing, settlement, pile count solo Pass; sliding sequential Pass. Family closed for this gate round.
+- 15:37 EN 1992 fixer 1215d987 done: flexure, stresses, creep, cone, splitting, interaction bounds. Family Summary 98 passed, 0 skipped. Verifier launched (composer-2.5). Gate not rerun.
+
+- 15:36 EN 1998 gate verify 557d6865 PASS. Blocking list read as None. Source remedies every storey with θ>0.3 via at_most drift (θ=0.3). Family rerun 74 passed, 0 skipped. Family closed for this gate round. Full gate not rerun.
+
+- 15:34 EN 1993 gate verify bbb514b5 PASS. Blocking list read as None. Directional weld throat next_up until Ed≤Rd. Hub overlay left stale; gate compiles the canonical family. Family closed for this gate round. Full gate not rerun.
+
+- 15:31 DIN 4108 fixer 8a62dd8a done: summer, zone-ht, U′, 4108-10 one_of. Family Summary 95 passed, 0 skipped (was 96). Verifier launched (composer-2.5) including the count drop. Gate not rerun yet.
+
+- 15:28 EN 1994 fixer 6cc2e527 done: vlrd As, slab m_Rd, LTB length, span deflection, crack spacing. Family Summary 75 passed, 0 skipped. Verifier launched (composer-2.5). Gate not rerun yet.
+
+- 15:27 EN 1993 fixer abf8220b done: directional weld uses σ_eq·A and next_up throat until Ed≤Rd. Family Summary 159 passed, 0 skipped. Verifier launched (composer-2.5). Gate not rerun yet.
+
+- 15:26 DIN 18599 gate verify 6984b4eb PASS. Blocking list read as None. Oracle: U-only u=1.1936 still Fail; U+deltaUWb u=0.984 Pass. Family closed for this gate round. Full gate not rerun.
+
+- 15:22 DIN 18599 fixer 09bbac83 done: heating-demand remedies now stack deltaUWb and window g/fc with U-values. Family Summary 113 passed, 0 skipped. Verifier launched (composer-2.5). Gate not rerun yet.
+
+- 15:20 EN 1997 fixer ed88b757 done: bearing, settlement, pile tension, sliding remedies. Family Summary 97 passed, 0 skipped. Verifier launched (composer-2.5). Gate not rerun yet.
+
+- 15:18 EN 1998 fixer 04487c01 done: P-Δ remedies now at_most storey drift. Family Summary 74 passed, 0 skipped. Verifier launched (composer-2.5). Gate not rerun yet.
+
+- 15:07 Ten grok-4.7-high fixers launched for remedy-clear failures: din4108 8a62dd8a, din18599 09bbac83, en1992 1215d987, en1993 abf8220b, en1994 6cc2e527, en1996 389d55b7, en1997 ed88b757, en1998 04487c01, en1999 39b6a1cf, iso16757 c563e60e. Pass families left untouched: din16798, en1990, en1991, en1995, vdi3805.
+- 15:06 Gate Summary: 1 test, 0 passed, 1 failed, 0 skipped. 10/15 families failed because remedies left status Fail. Pass: din16798, en1990, en1991, en1995, vdi3805. Fixers launched for the ten failures. Evidence: `📓️impl-compliance-gate.md`.
+- 15:05 Gate exited before compile: nextest rejected `--no-fail-fast` after `--` (`test binary arguments are unsupported`). Restarted without that flag: `quick --test compliance_gate`. No Summary yet.
+- 15:02 Overnight gate process is gone and no rustc is running. `DslValue::Object` fix is still in the gate. Restarted `@semio-tech/norm-plugin:test quick --test compliance_gate` on a quiet build lock. No Summary yet.
+
 - 11:51 Wave A: 16/19 audits done (all 15 families + report-model). Verdict: every family is a flat scalar demo (6–74 scalars), defaults tuned to pass, no remediation, English-only, JSON-only editing. ISO 16757 / VDI 3805 evaluate is fixture-bound.
 - 11:55 Wave B launched: B1 core model (`📓️spec-core-assessment-model.md`), B2 app surface / inputs editor / verbs / results UI.
 

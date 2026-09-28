@@ -33,5 +33,4 @@ export async function testNxBootstrap(workspace: string, output: string): Promis
   const native = await run("native", ["node", require.resolve("nx/bin/nx.js"), ...fixture.arguments]);
   const program = join(root, entry);
   assert.equal(await run("public", [process.execPath, program, "nx", ...fixture.arguments]), native);
-  console.log("[DEBUG] Public Nx bootstrap matches pinned native Nx with poisoned application sources and taxonomy PASS");
 }

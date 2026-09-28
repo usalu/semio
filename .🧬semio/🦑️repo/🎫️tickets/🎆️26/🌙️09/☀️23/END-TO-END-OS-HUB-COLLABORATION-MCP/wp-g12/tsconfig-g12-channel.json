@@ -1,0 +1,30 @@
+{
+ "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+ "compilerOptions": {
+  "incremental": false,
+  "noEmit": true,
+  "lib": [
+   "DOM",
+   "DOM.Iterable",
+   "ESNext"
+  ],
+  "types": [
+   "bun-types",
+   "node"
+  ],
+  "typeRoots": [
+   "/Users/ueli/Documents/semio/node_modules/@types",
+   "/Users/ueli/Documents/semio/node_modules"
+  ]
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🌎️hub/💡️inference/🧬️schema/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts"
+ ]
+}

@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{
     change_data_fields, change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, change_link_path, change_page_height, change_page_width, change_print_target, create_frame, create_link, create_page, create_story,
-    delete_frame, delete_link, delete_page, delete_story, edit_story, move_frame, rename_layout, rename_page, reorder_pages, resize_frame, rotate_frame, set_frame_flags, update_grid, update_page_columns, update_page_margins,
+    delete_frame, delete_link, delete_page, delete_story, edit_story, move_frame, rename_layout, rename_page, reorder_pages, resize_frame, rotate_frame, set_frame_flags, update_grid, create_character_style, delete_character_style, set_page_guides, set_page_parent, set_story_runs, update_link, update_character_style, update_layer, update_page_columns, update_page_margins, update_paragraph_style, update_parent_page, update_spread, update_text_frame,
 };
 
 //#region 🔖️Mutations
@@ -55,6 +55,18 @@ pub enum LayoutMutation {
     ChangeFrameColumns(change_frame_columns::ChangeFrameColumns),
     UpdateGrid(update_grid::UpdateGrid),
     SetFrameFlags(set_frame_flags::SetFrameFlags),
+    UpdateParagraphStyle(update_paragraph_style::UpdateParagraphStyle),
+    UpdateTextFrame(update_text_frame::UpdateTextFrame),
+    UpdateLayer(update_layer::UpdateLayer),
+    CreateCharacterStyle(create_character_style::CreateCharacterStyle),
+    DeleteCharacterStyle(delete_character_style::DeleteCharacterStyle),
+    UpdateCharacterStyle(update_character_style::UpdateCharacterStyle),
+    UpdateParentPage(update_parent_page::UpdateParentPage),
+    UpdateSpread(update_spread::UpdateSpread),
+    SetPageParent(set_page_parent::SetPageParent),
+    SetPageGuides(set_page_guides::SetPageGuides),
+    SetStoryRuns(set_story_runs::SetStoryRuns),
+    UpdateLink(update_link::UpdateLink),
 }
 
 //#endregion 🔖️Mutations
@@ -176,6 +188,18 @@ pub const KINDS: &[&str] = &[
     "change-frame-columns",
     "update-grid",
     "set-frame-flags",
+    "update-paragraph-style",
+    "update-text-frame",
+    "update-layer",
+    "create-character-style",
+    "delete-character-style",
+    "update-character-style",
+    "update-parent-page",
+    "update-spread",
+    "set-page-parent",
+    "set-page-guides",
+    "set-story-runs",
+    "update-link",
 ];
 //#endregion 🔖️Kinds
 

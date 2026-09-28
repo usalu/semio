@@ -1,0 +1,295 @@
+{
+  "note": "🧠️ The language-neutral law of a windowed container the guest answers SHORT (its item budget ends the run early, from the offset it was asked for): the host learns the capacity from the short answer, places the next window for it — centred on the visible rows when it covers them, else pinned to the edge the reader scrolls towards, the end of the list when the viewport opens there — while still asking the viewport rule's rows, so a settled short window asks the same question again (silence), a capacity learned from an answer to an older, smaller window is corrected by the next answer, and a guest that serves more raises it. Every length is in rows of the container's row extent: `topRows` is the container's top relative to the viewport's content origin (negative = scrolled past), the container is `total` rows tall (no expanded rows), and its materialised rows sit at `topRows + offset + i`. `memory` is what the observer kept from the previous measure (`null` = never measured). Answered in TypeScript by `treeWindowServedRequestsV1` (`💻️os/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter`); the live oracle is Chromium's layout under Playwright over a real guest (ticket 26/09/23, S18 item 2).",
+  "cases": [
+    {
+      "name": "a short answer teaches the capacity and keeps the top edge",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 0,
+        "length": 27,
+        "topRows": 0
+      },
+      "memory": {
+        "asked": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": null,
+        "anchor": "start",
+        "firstVisible": 0,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": 27,
+        "anchor": "start"
+      }
+    },
+    {
+      "name": "a settled short window asks the same question again",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 0,
+        "length": 27,
+        "topRows": 0
+      },
+      "memory": {
+        "asked": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": 27,
+        "anchor": "start",
+        "firstVisible": 0,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": 27,
+        "anchor": "start"
+      }
+    },
+    {
+      "name": "scrolling down pins the window to the bottom edge, so the last row is served",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 0,
+        "length": 27,
+        "topRows": -10
+      },
+      "memory": {
+        "asked": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": 27,
+        "anchor": "start",
+        "firstVisible": 0,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 15,
+          "rows": 27
+        },
+        "capacity": 27,
+        "anchor": "end"
+      }
+    },
+    {
+      "name": "scrolling back up pins the window to the top edge",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 15,
+        "length": 27,
+        "topRows": -5
+      },
+      "memory": {
+        "asked": {
+          "offset": 15,
+          "rows": 27
+        },
+        "capacity": 27,
+        "anchor": "end",
+        "firstVisible": 10,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 5,
+          "rows": 37
+        },
+        "capacity": 27,
+        "anchor": "start"
+      }
+    },
+    {
+      "name": "a viewport that opens at the end of the list pins the end",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 0,
+        "length": 27,
+        "topRows": -10
+      },
+      "memory": {
+        "asked": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": null,
+        "anchor": "start",
+        "firstVisible": null,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 15,
+          "rows": 27
+        },
+        "capacity": 27,
+        "anchor": "end"
+      }
+    },
+    {
+      "name": "a capacity that covers the viewport is centred on it",
+      "viewportRows": 10,
+      "container": {
+        "key": "objects",
+        "total": 200,
+        "offset": 32,
+        "length": 20,
+        "topRows": -40
+      },
+      "memory": {
+        "asked": {
+          "offset": 32,
+          "rows": 26
+        },
+        "capacity": null,
+        "anchor": "start",
+        "firstVisible": 40,
+        "total": 200
+      },
+      "expect": {
+        "request": {
+          "offset": 35,
+          "rows": 26
+        },
+        "capacity": 20,
+        "anchor": "start"
+      }
+    },
+    {
+      "name": "a capacity learned from the answer to an older, smaller window is corrected by the next answer",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 0,
+        "length": 27,
+        "topRows": 0
+      },
+      "memory": {
+        "asked": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": 1,
+        "anchor": "start",
+        "firstVisible": 0,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": 27,
+        "anchor": "start"
+      }
+    },
+    {
+      "name": "a guest that serves more than it did raises the capacity",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 15,
+        "length": 27,
+        "topRows": -10
+      },
+      "memory": {
+        "asked": {
+          "offset": 15,
+          "rows": 27
+        },
+        "capacity": 20,
+        "anchor": "end",
+        "firstVisible": 10,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 15,
+          "rows": 27
+        },
+        "capacity": 27,
+        "anchor": "end"
+      }
+    },
+    {
+      "name": "a changed total forgets the capacity and asks the viewport rule again",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 43,
+        "offset": 0,
+        "length": 27,
+        "topRows": 0
+      },
+      "memory": {
+        "asked": {
+          "offset": 0,
+          "rows": 42
+        },
+        "capacity": 27,
+        "anchor": "start",
+        "firstVisible": 0,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 0,
+          "rows": 43
+        },
+        "capacity": null,
+        "anchor": "start"
+      }
+    },
+    {
+      "name": "an answer to an older window teaches nothing",
+      "viewportRows": 32,
+      "container": {
+        "key": "framework.window.table",
+        "total": 42,
+        "offset": 0,
+        "length": 27,
+        "topRows": -10
+      },
+      "memory": {
+        "asked": {
+          "offset": 15,
+          "rows": 27
+        },
+        "capacity": 27,
+        "anchor": "end",
+        "firstVisible": 10,
+        "total": 42
+      },
+      "expect": {
+        "request": {
+          "offset": 15,
+          "rows": 27
+        },
+        "capacity": 27,
+        "anchor": "end"
+      }
+    }
+  ]
+}

@@ -87,6 +87,5 @@ export function testCanonicalEditFixtures(): void {
   ];
   for (const [name, hostile] of hostiles) assert.equal(exported(name)(hostile), false, `${name} hostile is refused`);
 
-  console.log(`[DEBUG] canonical edit oracle: AJV=4 canonical-JSON=2 SHA-256=1 UTF-8-frames=2 hostiles=${hostiles.length}; native reader/sealer lifetimes remain a separate gate`);
 }
 //#endregion 🧵️CanonicalEditOracle

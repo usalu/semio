@@ -463,9 +463,6 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
   }
 }
 
-/** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
- *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
- *  `stdio` when no mode is given, matching `🏗️bootstrap/🦀️.rs`'s own default-less argv contract. */
 /** 🎛️ The acceptance flags a live os-mcp harness verb takes (preamble rule 17), each mapped onto the environment
  * variable its harness reads: `--hub <url>` → `OS_MCP_HUB_ORIGIN`, `--serve <url>` → `S_OS_MCP_LIVE_SHELL_URL`,
  * `--locale en|de` → `S_OS_MCP_LIVE_LOCALE`, `--hub-admin-capability <file>` → `OS_HUB_ADMIN_CAPABILITY_FILE`.
@@ -579,6 +576,9 @@ class OsMcpAgentReplyScript extends BundleScript {
   }
 }
 
+/** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
+ *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
+ *  `stdio` when no mode is given, matching `🏗️bootstrap/🦀️.rs`'s own default-less argv contract. */
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     const args = segments.length > 0 ? segments : ["stdio"];
@@ -586,10 +586,6 @@ class DevScript extends BundleScript {
   }
 }
 
-/** 🪞️ `bun ./📜️script.ts schema-mirror [--check]` — regenerates (or verifies) the `os.mcp` scope's
- *  two language mirrors from the ONE Rust registry, by running the built binary's own
- *  `semio-os-mcp schemas` emitter. `--check` writes nothing and fails on any drift, so a stale
- *  mirror is a red gate rather than a silently divergent contract. */
 /** 🚨️ The capability-audience/destructive/description gate (ticket 26/09/18 slice M5a §7.4, ticket
  * 26/09/23 slice D1): runs the built gateway's own `audit` mode over every committed plugin
  * descriptor in this repo and fails on any finding — a gesture-named route published to agents with
@@ -618,6 +614,10 @@ class CapabilityAuditCheckScript extends BundleScript {
   }
 }
 
+/** 🪞️ `bun ./📜️script.ts schema-mirror [--check]` — regenerates (or verifies) the `os.mcp` scope's
+ *  two language mirrors from the ONE Rust registry, by running the built binary's own
+ *  `semio-os-mcp schemas` emitter. `--check` writes nothing and fails on any drift, so a stale
+ *  mirror is a red gate rather than a silently divergent contract. */
 class SchemaMirrorScript extends BundleScript {
   run(segments: string[]): void {
     const check = segments.includes("--check");

@@ -28,7 +28,6 @@ for (const row of fixture.cases) {
 for (const mutate of [(value: any) => { value.extra = true; }, (value: any) => { value.grants = [16384]; }, (value: any) => { value.ownership.finalDrop = "recursive-drop"; }, (value: any) => { value.cases[0].expandedText.repetitions = -1; }]) {
   const mutant = structuredClone(fixture); mutate(mutant); assert(!validate(mutant));
 }
-console.log("[DEBUG] Neural value-retirement source fixtures=2 hostileRejections=4 grants=1,64,4096 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🔣️DomainFixture
 
 //#region 🧠️CacheFixture
@@ -54,7 +53,6 @@ for (const operation of cacheFixture.operations) {
 }
 assert.equal(finalBytes, cacheFixture.expected.finalReleasedBytes); assert.equal(cache.size + pending.length, cacheFixture.expected.terminalOwners);
 for (const mutant of [{ ...cacheFixture, extra: true }, { ...cacheFixture, expected: { ...cacheFixture.expected, sharedReleasedBytes: 1 } }, { ...cacheFixture, operations: [{ op: "erase" }, ...cacheFixture.operations.slice(1)] }]) assert(!validateCache(mutant));
-console.log("[DEBUG] Neural cache-retirement source fixtures=1 hostileRejections=3 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🧠️CacheFixture
 
 //#region 📸️EvaluationOwnership
@@ -65,5 +63,4 @@ const node = evaluation.node.text.repeat(evaluation.node.repeat); const payload 
 assert.equal(Buffer.byteLength(node) + 2 * Buffer.byteLength(payload) + Buffer.byteLength("seednodelabel"), evaluation.expectedBytes);
 assert.equal(stableStringify({ node: { label: payload } }), JSON.stringify({ node: { label: payload } }));
 for (const mutant of [{ ...evaluation, extra: true }, { ...evaluation, expectedBytes: 0 }]) assert(!validateEvaluation(mutant));
-console.log("[DEBUG] Neural evaluation-retirement source fixtures=1 hostileRejections=2 bytes=25997 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 📸️EvaluationOwnership

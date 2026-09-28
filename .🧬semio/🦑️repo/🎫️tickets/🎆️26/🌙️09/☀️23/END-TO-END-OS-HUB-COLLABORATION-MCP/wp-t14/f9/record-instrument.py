@@ -9,10 +9,6 @@ usage: record-instrument.py --root <overlay>"""
 import sys
 from pathlib import Path
 
-ROOT = Path(sys.argv[sys.argv.index("--root") + 1])
-if ROOT.resolve() == Path("/Users/ueli/Documents/semio").resolve():
-    raise SystemExit("record-instrument.py is overlay-only")
-STORE = ROOT / "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"
 OLD = """pub fn content_id(prefix: &str, bytes: &[u8]) -> String {
     format!("{prefix}-{}", semio_framework_hash::hex_lower(&semio_framework_hash::Sha256::digest(bytes)[..8]))
 }
@@ -59,6 +55,12 @@ fn t14_f9_record(prefix: &str, bytes: &[u8], id: &str) {
     }
 }
 """
+if __name__ != "__main__":
+    raise ImportError("record-instrument.py exposes OLD/NEW to runpy only")
+ROOT = Path(sys.argv[sys.argv.index("--root") + 1])
+if ROOT.resolve() == Path("/Users/ueli/Documents/semio").resolve():
+    raise SystemExit("record-instrument.py is overlay-only")
+STORE = ROOT / "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"
 text = STORE.read_text(encoding="utf-8")
 if "fn t14_f9_record" in text:
     print("already instrumented")

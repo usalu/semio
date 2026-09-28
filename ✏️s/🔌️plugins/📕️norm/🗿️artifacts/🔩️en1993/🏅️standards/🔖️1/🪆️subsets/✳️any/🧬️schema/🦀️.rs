@@ -604,8 +604,8 @@ pub mod part_1_1 {
 
     /// 🔗 η from Eqs. 6.61 / 6.62.
     pub fn interaction_eta(n_ed: f64, n_b_rd_y: f64, n_b_rd_z: f64, my_ed: f64, mz_ed: f64, m_rd_y: f64, m_rd_z: f64, kyy: f64, kyz: f64, kzy: f64, kzz: f64) -> (f64, f64) {
-        let eta61 = (n_ed / n_b_rd_y).abs() + kyy * (my_ed / m_rd_y).abs() + kyz * (mz_ed / m_rd_z).abs();
-        let eta62 = (n_ed / n_b_rd_z).abs() + kzy * (my_ed / m_rd_y).abs() + kzz * (mz_ed / m_rd_z).abs();
+        let eta61 = (n_ed / n_b_rd_y.max(1e-9)).abs() + kyy * (my_ed / m_rd_y.max(1e-9)).abs() + kyz * (mz_ed / m_rd_z.max(1e-9)).abs();
+        let eta62 = (n_ed / n_b_rd_z.max(1e-9)).abs() + kzy * (my_ed / m_rd_y.max(1e-9)).abs() + kzz * (mz_ed / m_rd_z.max(1e-9)).abs();
         (eta61, eta62)
     }
 
@@ -1757,15 +1757,25 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                     let a_req = a.n * params.gamma_m0 / material.fy;
                     let options = next_section_options(section, a_req, w_y);
                     if !options.is_empty() {
-                    builder = builder.remedy(Remedy::one_of(
-                        subject_member(member, &format!("members[id={}].sectionId", member.id)),
-                        options.clone(),
-                        loc(
-                            &format!("Upsize section: {}.", options.join(", ")),
-                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
-                        ),
-                    ));
-                }
+                        builder = builder.remedy(Remedy::one_of(
+                            subject_member(member, &format!("members[id={}].sectionId", member.id)),
+                            options.clone(),
+                            loc(
+                                &format!("Upsize section: {}.", options.join(", ")),
+                                &format!("Querschnitt vergrößern: {}.", options.join(", ")),
+                            ),
+                        ));
+                    } else {
+                        builder = builder.remedy(Remedy::at_least(
+                            subject_member(member, &format!("sections[id={}].area", section.id)),
+                            area_m2(section.area),
+                            area_m2(a_req),
+                            loc(
+                                &format!("Increase section area to at least {:.1} cm².", a_req * 1e4),
+                                &format!("Querschnittsfläche auf mindestens {:.1} cm² erhöhen.", a_req * 1e4),
+                            ),
+                        ));
+                    }
                 }
                 report.push(builder.build());
             }
@@ -1891,18 +1901,28 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                     &format!("η={:.3} from §6.2.9/6.2.10 (n, a, M_N,y/M_N,z, α/β).", eta),
                     &format!("η={:.3} nach §6.2.9/6.2.10 (n, a, M_N,y/M_N,z, α/β).", eta),
                 ));
-                if eta > 1.0 {
-                    let options = next_section_options(section, section.area * eta, w_y * eta);
+                if eta > 1.0 || !eta.is_finite() {
+                    let options = next_section_options(section, section.area * eta.max(1.0), w_y * eta.max(1.0));
                     if !options.is_empty() {
-                    builder = builder.remedy(Remedy::one_of(
-                        subject_member(member, &format!("members[id={}].sectionId", member.id)),
-                        options.clone(),
-                        loc(
-                            &format!("Upsize section: {}.", options.join(", ")),
-                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
-                        ),
-                    ));
-                }
+                        builder = builder.remedy(Remedy::one_of(
+                            subject_member(member, &format!("members[id={}].sectionId", member.id)),
+                            options.clone(),
+                            loc(
+                                &format!("Upsize section: {}.", options.join(", ")),
+                                &format!("Querschnitt vergrößern: {}.", options.join(", ")),
+                            ),
+                        ));
+                    } else {
+                        builder = builder.remedy(Remedy::at_least(
+                            subject_member(member, &format!("sections[id={}].area", section.id)),
+                            area_m2(section.area),
+                            area_m2(section.area * eta.max(1.0)),
+                            loc(
+                                &format!("Increase section area to clear M+N interaction."),
+                                &format!("Querschnittsfläche erhöhen, damit M+N-Interaktion erfüllt ist."),
+                            ),
+                        ));
+                    }
                 }
                 report.push(builder.build());
             }
@@ -2077,18 +2097,28 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                     &format!("η_61={:.3}, η_62={:.3} (k_yy={:.3}, k_zz={:.3}).", eta61, eta62, kyy, kzz),
                     &format!("Nachweis: η_61={:.3}, η_62={:.3} (k_yy={:.3}, k_zz={:.3}).", eta61, eta62, kyy, kzz),
                 ));
-                if eta > 1.0 {
-                    let options = next_section_options(section, section.area * eta, w_y * eta);
+                if eta > 1.0 || !eta.is_finite() {
+                    let options = next_section_options(section, section.area * eta.max(1.0), w_y * eta.max(1.0));
                     if !options.is_empty() {
-                    builder = builder.remedy(Remedy::one_of(
-                        subject_member(member, &format!("members[id={}].sectionId", member.id)),
-                        options.clone(),
+                        builder = builder.remedy(Remedy::one_of(
+                            subject_member(member, &format!("members[id={}].sectionId", member.id)),
+                            options.clone(),
+                            loc(
+                                &format!("Upsize section: {}.", options.join(", ")),
+                                &format!("Querschnitt vergrößern: {}.", options.join(", ")),
+                            ),
+                        ));
+                    }
+                    let l_req = (member.buckling_length_y / eta.max(1.01)).max(0.1);
+                    builder = builder.remedy(Remedy::at_most(
+                        subject_member(member, &format!("members[id={}].bucklingLengthY", member.id)),
+                        length_m(member.buckling_length_y),
+                        length_m(l_req),
                         loc(
-                            &format!("Upsize section: {}.", options.join(", ")),
-                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
+                            &format!("Reduce buckling length from {:.2} m to at most {:.2} m.", member.buckling_length_y, l_req),
+                            &format!("Knicklänge von {:.2} m auf höchstens {:.2} m reduzieren.", member.buckling_length_y, l_req),
                         ),
                     ));
-                }
                 }
                 report.push(builder.build());
             }
@@ -2313,7 +2343,7 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
         } else if joint.kind == "welded" {
             let beta = part_1_8::beta_w(&joint.weld_grade);
             let fw_s = part_1_8::fillet_weld_simplified_n(joint.weld_throat, joint.weld_length, joint.weld_fu, beta, params.gamma_m2);
-            let (_f_ed_dir, fw_d) = part_1_8::fillet_weld_directional_n(joint.weld_throat, joint.weld_length, joint.weld_fu, beta, params.gamma_m2, shear_ed);
+            let (f_ed_dir, fw_d) = part_1_8::fillet_weld_directional_n(joint.weld_throat, joint.weld_length, joint.weld_fu, beta, params.gamma_m2, shear_ed);
             let mut b = CheckResult::assess(
                 format!("en1993.1-8.4.5.simplified.{}", joint.id),
                 "DIN EN 1993-1-8",
@@ -2328,7 +2358,10 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                 &format!("Kehlnaht (vereinfacht) F_w,Ed={:.1} kN (maßgebend {}), F_w,Rd={:.1} kN (a={:.1} mm, ℓ={:.0} mm).", shear_ed / 1000.0, shear_gov, fw_s / 1000.0, joint.weld_throat * 1000.0, joint.weld_length * 1000.0),
             ));
             if shear_ed > fw_s {
-                let a_req = shear_ed * beta * 3.0_f64.sqrt() * params.gamma_m2 / (joint.weld_fu * joint.weld_length.max(1e-6));
+                let mut a_req = shear_ed * beta * 3.0_f64.sqrt() * params.gamma_m2 / (joint.weld_fu * joint.weld_length.max(1e-6));
+                while part_1_8::fillet_weld_simplified_n(a_req, joint.weld_length, joint.weld_fu, beta, params.gamma_m2) < shear_ed {
+                    a_req = a_req.next_up();
+                }
                 b = b.remedy(Remedy::at_least(
                     subject_joint(joint, &format!("joints[id={}].weldThroat", joint.id)),
                     length_m(joint.weld_throat),
@@ -2349,13 +2382,20 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                 loc("Fillet weld directional method", "Kehlnaht gerichtetes Verfahren"),
             )
             .annex(annex)
-            .utilization(force_n(shear_ed), force_n(fw_d))
+            .utilization(force_n(f_ed_dir), force_n(fw_d))
             .explanation(loc(
-                &format!("Directional F_w,Ed={:.1} kN (gov. {}), F_w,Rd={:.1} kN.", shear_ed / 1000.0, shear_gov, fw_d / 1000.0),
-                &format!("Gerichtetes Verfahren F_w,Ed={:.1} kN (maßgebend {}), F_w,Rd={:.1} kN.", shear_ed / 1000.0, shear_gov, fw_d / 1000.0),
+                &format!("Directional σ_eq·A={:.1} kN (gov. {}), f_w,d·A={:.1} kN.", f_ed_dir / 1000.0, shear_gov, fw_d / 1000.0),
+                &format!("Gerichtetes Verfahren σ_eq·A={:.1} kN (maßgebend {}), f_w,d·A={:.1} kN.", f_ed_dir / 1000.0, shear_gov, fw_d / 1000.0),
             ));
-            if shear_ed > fw_d {
-                let a_req = joint.weld_throat * (shear_ed / fw_d.max(1e-9));
+            if f_ed_dir > fw_d {
+                let mut a_req = joint.weld_throat * (f_ed_dir / fw_d.max(1e-9));
+                loop {
+                    let (ed, rd) = part_1_8::fillet_weld_directional_n(a_req, joint.weld_length, joint.weld_fu, beta, params.gamma_m2, shear_ed);
+                    if ed <= rd {
+                        break;
+                    }
+                    a_req = a_req.next_up();
+                }
                 b = b.remedy(Remedy::at_least(
                     subject_joint(joint, &format!("joints[id={}].weldThroat", joint.id)),
                     length_m(joint.weld_throat),

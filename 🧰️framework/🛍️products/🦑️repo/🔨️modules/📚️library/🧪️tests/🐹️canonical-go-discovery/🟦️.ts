@@ -66,7 +66,6 @@ test("canonical Go plans preserve private-package tests through the Go toolchain
     expect(oracle.status, oracle.stderr).toBe(0);
     for (const name of vector.expectedTests) expect(oracle.stdout).toContain(`=== RUN   ${name}`);
     expect(oracle.stdout).not.toContain("TestFixtureMustStayOpaque");
-    console.log("[DEBUG] Canonical Go discovery oracle", JSON.stringify({ packages: plan.packages, tests: vector.expectedTests }));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

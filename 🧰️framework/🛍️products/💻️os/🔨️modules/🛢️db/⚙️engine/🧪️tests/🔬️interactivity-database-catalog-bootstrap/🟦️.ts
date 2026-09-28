@@ -32,7 +32,7 @@ pub struct DatabaseCatalogBootstrapRejected impl DatabaseCatalogBootstrapRejecte
 impl DatabaseCatalogBootstrapTerminalHandle { pub fn close_step { let authority = self.state.driver_authority.load(Ordering::Acquire); if authority == DatabaseCatalogBootstrapDriverAuthority::Driving as u8 || authority == DatabaseCatalogBootstrapDriverAuthority::Retry as u8 { return Blocked; } self.state.schedule(); } pub fn terminal_is_empty }
 fn retire_one { DatabaseCatalogBootstrapWork::close_one; owner.close_step(); owner.close_one(); } fn release_success
 //#endregion 🔖️CatalogBootstrapCas`;
-  const open = `pub async fn open( pub async fn open_at( pub async fn open_with_emit pub async fn open_with_authz async fn open_with { Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages); Err(rejected) => return Err(rejected.close_and_take_error()); let result = bootstrap.await?; result.into_parts(); (retained_storage, epoch, Vec::new()) } pub async fn create_document`;
+  const open = `pub async fn open( pub async fn open_at( pub async fn open_with_emit async fn open_with { Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages); Err(rejected) => return Err(rejected.close_and_take_error()); let result = bootstrap.await?; result.into_parts(); (retained_storage, epoch, Vec::new()) } pub async fn create_document`;
   const laws = [
     `fn database_catalog_bootstrap_max_plus_one_and_aba_preserve_exact_credit_identity() { DATABASE_CATALOG_BOOTSTRAP_PAGES + 1; replacement.1; !state.release(slot, generation; state.bytes; }`,
     `fn database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence() { storage_pointer; operation = pages.operation(); page_count(); mount_close_and_take_error; terminal_is_empty; }`,

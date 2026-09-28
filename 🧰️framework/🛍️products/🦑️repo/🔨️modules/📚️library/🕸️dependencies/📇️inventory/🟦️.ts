@@ -36,6 +36,14 @@ function dependencyTaxonomy(repoRoot: string): any {
 /** 🔒️Ecosystems the dependency freeze tracks — all five the repository actually ships. */
 export type DependencyEcosystem = "rust" | "js" | "go" | "python" | "dotnet";
 export const DEPENDENCY_ECOSYSTEMS: readonly DependencyEcosystem[] = ["rust", "js", "go", "python", "dotnet"];
+
+/** 🧱️ External libraries production code reaches only through one interface module (AGENTS.md: an external library only
+ * behind an interface, re-exported explicitly): `directory` is the only production code that imports the package (the
+ * repo acceptance gate `verify interface-owners` proves it), `manifest` its one production declaration. That declaration
+ * is not an oracle conflict: an oracle of the same package stays independent of code that only reaches it through here. */
+export const DEPENDENCY_INTERFACE_OWNERS: Readonly<Record<string, Readonly<{ ecosystem: DependencyEcosystem; directory: string; manifest: string }>>> = Object.freeze({
+  three: Object.freeze({ ecosystem: "js" as const, directory: "🧰️framework/🔨️modules/🖱️ui/", manifest: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json" }),
+});
 /**
  * 🔒️Which phase a dependency is pulled in for. A dependency can serve more than one, so this is a
  * set per baseline entry. The two `production-*` classes are the only ones the purity gate cares
@@ -636,11 +644,15 @@ export function dependencyIsCompositionManifest(relPath: string): boolean {
 
 /** 🔒️Merges every third-party (non-internal) dependency across the whole workspace (Rust + JS, `compose/` excluded) into one baseline-entry list, keyed by `${ecosystem}:${name}`.
  * A manifest inside the taxonomy's test domain never ships, so its runtime/build sections are recorded as `test-runner` inputs. */
+/** 🧰️ The Nx bootstrap recipe: the manifest that installs the runner before the workspace exists, audited against its own
+ * lockfile; every section of it is repository tooling. */
+export const DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS: ReadonlyMap<string, string> = new Map([["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock"]]);
+
 export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaselineEntry[] {
   const byKey = new Map<string, DependencyBaselineEntry>();
   const testDomain = dependencyTestDomain(dependencyTaxonomy(repoRoot));
   const record = (ecosystem: DependencyEcosystem, name: string, version: string, declaredKind: DependencyKind, user: string): void => {
-    const kind = dependencyTestOwned(user, testDomain) && (declaredKind === "production-runtime" || declaredKind === "production-build") ? "test-runner" : declaredKind;
+    const kind = DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS.has(user) ? "repository-tooling" : dependencyTestOwned(user, testDomain) && (declaredKind === "production-runtime" || declaredKind === "production-build") ? "test-runner" : declaredKind;
     const key = `${ecosystem}:${name}`;
     const existing = byKey.get(key);
     if (existing) {
@@ -705,7 +717,8 @@ export function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, or
   if (!oracleIds) return;
   entry.oracleIds = [...oracleIds].sort();
   const declarations = entry.declarations ?? entry.users.map((user) => ({ user, version: entry.version, kind: entry.kinds[0] ?? "repository-tooling" }));
-  const productDeclarations = declarations.filter((declaration) => !dependencyTestOwned(declaration.user, testDomain) && (declaration.kind === "production-runtime" || declaration.kind === "production-build"));
+  const owner = DEPENDENCY_INTERFACE_OWNERS[entry.name];
+  const productDeclarations = declarations.filter((declaration) => !dependencyTestOwned(declaration.user, testDomain) && (declaration.kind === "production-runtime" || declaration.kind === "production-build") && !(owner?.ecosystem === entry.ecosystem && declaration.user === owner.manifest));
   if (productDeclarations.length === 0) entry.kinds = ["test-oracle"];
   else entry.oracleConflictUsers = [...new Set(productDeclarations.map((declaration) => declaration.user))].sort();
 }

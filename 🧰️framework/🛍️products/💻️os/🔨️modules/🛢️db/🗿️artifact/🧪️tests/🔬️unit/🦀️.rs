@@ -780,8 +780,8 @@ async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_int
         }
     }
     let mut state = DocumentState::new();
-    let entries = [("exact-all-tier-state-refusal".to_string(), None)];
-    let refusal = match state.apply_entries(&protocol::MutationId("exact-all-tier-state-refusal".to_string()), &[], &entries).await {
+    let entries = vec![("exact-all-tier-state-refusal".to_string(), None)];
+    let refusal = match state.apply_entries(&protocol::MutationId("exact-all-tier-state-refusal".to_string()), entries).await {
         Err(error) => error,
         Ok(_) => panic!("all-tier artifact retirement saturation admitted a state mutation"),
     };
@@ -1114,6 +1114,68 @@ async fn a_committed_mutation_id_replays_idempotently_but_refuses_colliding_cont
         }
         assert_eq!(after.head_seq, case["headSeq"].as_u64().unwrap(), "{name}");
     }
+}
+
+/// ⚖️ C12 P1 (ticket 26/09/23 session 14): a link cut's whole outbox reaches the authority as ONE batch. The largest
+/// batch of the smallest db envelope the document backbone declares legal (`DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES`,
+/// admitted by the wire's own exact decoder) holds more envelopes than both former capacity refusals (the per-operation
+/// DB I/O credit and the 4 096-command batch limit); it commits as one transaction and replays to the same frontier.
+#[semio_framework_async_macros::async_test]
+async fn a_declared_legal_byte_maximal_batch_commits_as_one_transaction_and_replays() {
+    let storage = storage().await;
+    let mut engine = ArtifactEngine::create(document_id().await, storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
+    let mut envelopes = Vec::new();
+    let mut bytes = 0usize;
+    loop {
+        let next = envelope(&format!("{:x}", envelopes.len()), &[], "a", &[]).await;
+        let mut encoded = Vec::new();
+        protocol::encode_envelope(&next, &mut encoded);
+        let count_bytes = if envelopes.len() + 1 < 128 { 1 } else if envelopes.len() + 1 < 16_384 { 2 } else { 3 };
+        if envelopes.len() == protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES || count_bytes + bytes + encoded.len() > protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES {
+            let mut over = envelopes.clone();
+            over.push(next);
+            assert!(protocol::decode_document_backbone_envelopes_exact(&protocol::encode_envelopes(&over)).is_err(), "one more envelope leaves the declared batch");
+            break;
+        }
+        bytes += encoded.len();
+        envelopes.push(next);
+    }
+    let wire = protocol::encode_envelopes(&envelopes);
+    assert_eq!(protocol::decode_document_backbone_envelopes_exact(&wire).unwrap().len(), envelopes.len(), "the batch is declared legal by the wire's own decoder");
+    assert!(envelopes.len() > 4_096, "the byte-maximal batch ({} envelopes, {} bytes) exceeds the former 4 096-command limit", envelopes.len(), wire.len());
+    let count = envelopes.len() as u64;
+    let receipt = engine.submit(CommandBatch::new(envelopes).await.unwrap(), SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).await.unwrap();
+    assert_eq!((receipt.frontier.head_seq, receipt.frontier.commit_seq), (count, 1), "one transaction holds the whole batch");
+    engine.wal.close().await.unwrap();
+    while engine.state.values.close_step().unwrap() {
+        semio_framework_async::yield_once().await;
+    }
+    let (mut reopened, _) = ArtifactEngine::open(document_id().await, &storage, ArtifactEngineConfig::default(), 2).unwrap();
+    assert_eq!(reopened.frontier().await, receipt.frontier);
+    reopened.wal.close().await.unwrap();
+    while reopened.state.values.close_step().unwrap() {
+        semio_framework_async::yield_once().await;
+    }
+}
+
+/// ⚖️ C12 P1: a batch refused after admission (here: its second envelope names an unknown dependency) records nothing
+/// in the replay guard, so its envelope commits when resent; a resend that merges an already-committed envelope with a
+/// new one commits only the new one (the committed envelope is idempotent, never a replay refusal); one operation twice
+/// in one batch is refused.
+#[semio_framework_async_macros::async_test]
+async fn an_envelope_of_a_refused_batch_commits_when_resent_and_a_merged_resend_is_idempotent() {
+    let mut engine = ArtifactEngine::create(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).unwrap();
+    let op = |id: &str, deps: &[&str], path: &str| db_actor::block_on(envelope(id, deps, "alice", &[(path, serde_json::json!(1))]));
+    let refused = engine.submit(CommandBatch::new(vec![op("op-1", &[], "a"), op("op-2", &["never"], "b")]).await.unwrap(), SubmitOptions::default(), 1).await;
+    assert!(matches!(refused, Err(DbError::InvalidArgument(_))));
+    assert_eq!(engine.frontier().await.head_seq, 0);
+    let resent = engine.submit(CommandBatch::new(vec![op("op-1", &[], "a")]).await.unwrap(), SubmitOptions::default(), 2).await.unwrap();
+    assert_eq!((resent.frontier.head_seq, resent.frontier.commit_seq), (1, 1));
+    let merged = engine.submit(CommandBatch::new(vec![op("op-1", &[], "a"), op("op-3", &["op-1"], "c")]).await.unwrap(), SubmitOptions::default(), 3).await.unwrap();
+    assert_eq!((merged.frontier.head_seq, merged.frontier.commit_seq), (2, 2));
+    let twice = engine.submit(CommandBatch::new(vec![op("op-4", &[], "d"), op("op-4", &[], "d")]).await.unwrap(), SubmitOptions::default(), 4).await;
+    assert!(matches!(twice, Err(DbError::Conflict(_))));
+    assert_eq!(engine.frontier().await.head_seq, 2);
 }
 //#endregion 🔖️Deps + Dedupe
 
@@ -1653,7 +1715,7 @@ async fn document_authority_close_drains_pending_group_commit_for_every_durabili
         }
         assert!(authority.handoff.close_error.lock().unwrap().is_none());
         drop(authority);
-        let (engine, report) = ArtifactEngine::<AllowAll, NullVersionGraph>::open_retained(reopen_document, reopen_storage, ArtifactEngineConfig::default(), 1).await.unwrap();
+        let (engine, report) = ArtifactEngine::<NullVersionGraph>::open_retained(reopen_document, reopen_storage, ArtifactEngineConfig::default(), 1).await.unwrap();
         assert_eq!(report.torn_tail_bytes, 0);
         assert_eq!(engine.frontier.head_seq, 1, "{durability:?} close must make the acknowledged transaction durable");
         let mut engine = engine;
@@ -1678,7 +1740,7 @@ async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
     let result = ArtifactAuthority::spawn(
         pool.clone(),
-        || async { Err::<Box<ArtifactEngine<AllowAll, NullVersionGraph>>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string()))) },
+        || async { Err::<Box<ArtifactEngine<NullVersionGraph>>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string()))) },
         MailboxCapacities::uniform(4),
     );
     let rejected = match result.await {

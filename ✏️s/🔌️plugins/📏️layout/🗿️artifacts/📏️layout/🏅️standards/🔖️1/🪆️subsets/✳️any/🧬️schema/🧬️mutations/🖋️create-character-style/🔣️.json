@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️create-character-style",
+  "semanticKind": "create-character-style",
+  "displayName": "CreateCharacterStyle",
+  "emoji": "✳️",
+  "aggregateVariant": "CreateCharacterStyle",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 32,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "no-op", "rejected"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

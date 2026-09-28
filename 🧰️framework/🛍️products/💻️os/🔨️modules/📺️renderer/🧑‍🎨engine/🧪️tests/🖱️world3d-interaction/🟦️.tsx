@@ -94,7 +94,7 @@ describe("leftover brush guest hover retain", () => {
 
 const gesture = (id: string): Gesture => {
   const found = fixture.gestures.find((entry) => entry.id === id);
-  if (!found) throw new Error(`[DEBUG] fixture gesture ${id} missing`);
+  if (!found) throw new Error(`fixture gesture ${id} missing`);
   return found;
 };
 
@@ -139,13 +139,13 @@ function mountHost(pane?: { readonly surfaceId: string; readonly windowInstanceI
 const only = (dispatched: readonly Dispatched[], action: string): readonly Dispatched[] => dispatched.filter((entry) => entry.action === action);
 
 function expectSelection(entry: Dispatched | undefined, expected: Gesture["expect"]): void {
-  expect(entry, `[DEBUG] no ${expected.action} dispatched`).toBeTruthy();
+  expect(entry, `no ${expected.action} dispatched`).toBeTruthy();
   expect(entry!.controllerId).toBe(fixture.scene.controllerId);
   expect(entry!.args.surfaceId).toBe(fixture.scene.surfaceId);
   expect(entry!.args.windowId).toBe(fixture.scene.windowInstanceId);
   expect(entry!.args.domainId).toBe(expected.domainId);
   expect(entry!.args.merge).toBe(expected.merge);
-  expect(mergeModes.vocabulary, `[DEBUG] merge "${String(entry!.args.merge)}" is outside the ONE schema vocabulary`).toContain(entry!.args.merge);
+  expect(mergeModes.vocabulary, `merge "${String(entry!.args.merge)}" is outside the ONE schema vocabulary`).toContain(entry!.args.merge);
   expect(entry!.args.method).toBe(expected.method);
   const targets = JSON.parse(String(entry!.args.targets)) as readonly { readonly granularity: string; readonly id: string }[];
   expect(targets).toEqual(expected.targets);
@@ -304,8 +304,8 @@ export function testWorld3dInteraction(): void {
         const { dispatched, meshes } = mountHost();
         fireEvent.click(meshes[0]!, row.modifiers);
         const selects = only(dispatched, "interactionSelect");
-        expect(selects.length, `[DEBUG] ${row.id} dispatched ${selects.length} selects`).toBe(1);
-        expect(selects[0]!.args.merge, `[DEBUG] ${row.id} must resolve to ${row.pick}`).toBe(row.pick);
+        expect(selects.length, `${row.id} dispatched ${selects.length} selects`).toBe(1);
+        expect(selects[0]!.args.merge, `${row.id} must resolve to ${row.pick}`).toBe(row.pick);
         expect(componentPickMergeMode(row.pick as MergeMode), `[DEBUG] ${row.id} component pick`).toBe(row.componentPick);
         for (const never of mergeModes.modifierPolicy.neverEmitted) expect(selects[0]!.args.merge).not.toBe(never);
         cleanup();

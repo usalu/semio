@@ -392,28 +392,46 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 CatalogueValue::Quantity { value, .. } => *value,
                 _ => 0.0,
             }).sum();
-            let mut remedies = vec![Remedy {
-                target: subject("partNumber", "partNumberInputs", "Part number inputs", "Teilenummer-Eingaben"),
-                current: q_dim(input_fp),
-                required: q_dim(1.0),
-                bound: RemedyBound::Exactly,
-                options: doc.part_number_inputs.keys().cloned().collect(),
-                action: copy(
-                    format!("Fix part-number inputs/rule so evaluation succeeds (error: {err})."),
-                    format!("Teilenummer-Eingaben/Regel so korrigieren, dass die Auswertung gelingt (Fehler: {err})."),
+            let mut remedies = vec![
+                Remedy::at_least(
+                    subject("scriptLimits", "scriptLimits.maxSteps", "Script limits", "Skriptgrenzen"),
+                    q_dim(doc.script_limits.max_steps as f64),
+                    q_dim(10_000.0),
+                    copy(
+                        format!("Raise scriptLimits.maxSteps so the part-number script can finish (error: {err})."),
+                        format!("scriptLimits.maxSteps erhöhen, damit das Teilenummer-Skript durchläuft (Fehler: {err})."),
+                    ),
                 ),
-                applicable: false,
-            }];
-            if err.contains("timeout") || err.contains("step") || err.contains("recursion") {
-                remedies.push(Remedy::at_least(
+                Remedy::at_least(
+                    subject("scriptLimits", "scriptLimits.maxRecursion", "Script limits", "Skriptgrenzen"),
+                    q_dim(doc.script_limits.max_recursion as f64),
+                    q_dim(64.0),
+                    copy(
+                        "Raise scriptLimits.maxRecursion so the part-number script can finish.",
+                        "scriptLimits.maxRecursion erhöhen, damit das Teilenummer-Skript durchläuft.",
+                    ),
+                ),
+                Remedy::at_least(
                     subject("scriptLimits", "scriptLimits.timeoutMs", "Script limits", "Skriptgrenzen"),
                     q_dim(doc.script_limits.timeout_ms as f64),
-                    q_dim((doc.script_limits.timeout_ms * 2).max(100) as f64),
+                    q_dim(50.0),
                     copy(
-                        format!("Raise scriptLimits (timeout/steps/recursion) so the part-number script can finish (currently timeout_ms={}).", doc.script_limits.timeout_ms),
-                        format!("scriptLimits (timeout/steps/recursion) erhöhen, damit das Teilenummer-Skript durchläuft (aktuell timeout_ms={}).", doc.script_limits.timeout_ms),
+                        "Raise scriptLimits.timeoutMs so the part-number script can finish.",
+                        "scriptLimits.timeoutMs erhöhen, damit das Teilenummer-Skript durchläuft.",
                     ),
-                ));
+                ),
+            ];
+            if let PartNumberRule::Script { source, .. } = &doc.part_number_rule {
+                if source.trim().is_empty() || source.contains("/0") {
+                    remedies.push(Remedy::one_of(
+                        subject("partNumber", "partNumberRule.source", "Part number rule", "Teilenummer-Regel"),
+                        vec!["dn * 10 + 50".into()],
+                        copy(
+                            "Replace partNumberRule.source with a pure expression of partNumberInputs (e.g. 'dn * 10 + 50').",
+                            "partNumberRule.source durch einen reinen Ausdruck von partNumberInputs ersetzen (z. B. 'dn * 10 + 50').",
+                        ),
+                    ));
+                }
             }
             report.push(assess(
                 "iso16757.5.6.10.partNumber",
@@ -554,12 +572,26 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                     subject("scriptLimits", "scriptLimits", "Script limits", "Skriptgrenzen"),
                     copy("Script execution limits", "Skriptausführungsgrenzen"),
                     copy("scriptLimits has a zero cap which prevents any script execution.", "scriptLimits hat eine Nullgrenze, die jede Skriptausführung verhindert."),
-                    vec![Remedy::at_least(
-                        subject("scriptLimits", "scriptLimits.maxSteps", "Script limits", "Skriptgrenzen"),
-                        q_dim(limits.max_steps as f64),
-                        q_dim(10_000.0),
-                        copy("Set maxSteps ≥ 10000, maxRecursion ≥ 64, timeoutMs ≥ 50.", "maxSteps ≥ 10000, maxRecursion ≥ 64, timeoutMs ≥ 50 setzen."),
-                    )],
+                    vec![
+                        Remedy::at_least(
+                            subject("scriptLimits", "scriptLimits.maxSteps", "Script limits", "Skriptgrenzen"),
+                            q_dim(limits.max_steps as f64),
+                            q_dim(10_000.0),
+                            copy("Set maxSteps ≥ 10000.", "maxSteps ≥ 10000 setzen."),
+                        ),
+                        Remedy::at_least(
+                            subject("scriptLimits", "scriptLimits.maxRecursion", "Script limits", "Skriptgrenzen"),
+                            q_dim(limits.max_recursion as f64),
+                            q_dim(64.0),
+                            copy("Set maxRecursion ≥ 64.", "maxRecursion ≥ 64 setzen."),
+                        ),
+                        Remedy::at_least(
+                            subject("scriptLimits", "scriptLimits.timeoutMs", "Script limits", "Skriptgrenzen"),
+                            q_dim(limits.timeout_ms as f64),
+                            q_dim(50.0),
+                            copy("Set timeoutMs ≥ 50.", "timeoutMs ≥ 50 setzen."),
+                        ),
+                    ],
                 ));
             } else {
                 let source = source.clone();

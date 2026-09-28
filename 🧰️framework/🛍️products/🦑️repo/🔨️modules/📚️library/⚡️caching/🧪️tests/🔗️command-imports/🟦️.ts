@@ -53,6 +53,5 @@ export async function testCommandImportClosure(workspace: string, output: string
     const factory = join(root, fixture.factory.entry); writeFileSync(factory, fixture.factory.source);
     assert.deepEqual(normalize(cacheInternals.relativeScriptInputs([factory], root)), fixture.factory.runtimeInputs);
     assert.equal(execute(pathToFileURL(factory).href, "api.value"), fixture.factory.result);
-    console.log(`[DEBUG] Command inputs match esbuild and native Node; ${fixture.discovery.repetitions * fixture.discovery.entries.length} closures read each source once per graph pass and refresh after source edits PASS`);
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

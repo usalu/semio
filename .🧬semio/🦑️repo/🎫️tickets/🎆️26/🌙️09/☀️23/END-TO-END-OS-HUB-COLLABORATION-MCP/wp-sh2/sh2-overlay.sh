@@ -22,6 +22,15 @@ for job in $jobs; do
     home-feature) run home-feature test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4 ;;
     space) run space test -p semio-s-artifact-space-space --features component-app-assembly --lib --no-fail-fast -- --test-threads 4 ;;
     plugin) run plugin test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4 ;;
+    items)
+      echo "START items $(date '+%H:%M:%S')"
+      ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'cargo check -p semio-framework-os-kernel --features sync,ureq --lib --tests --message-format short; echo "== home-feature"; cargo test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4; echo "== home"; cargo test -p semio-s-artifact-space-home --lib --no-fail-fast -- --test-threads 4' ) > "$out/$tag-items.txt" 2>&1
+      echo "END items rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^test result|^error(\[|:)|^== ' "$out/$tag-items.txt" | sort | uniq -c | tr '\n' ' ' | cut -c1-600)" ;;
+    b1)
+      echo "START b1 $(date '+%H:%M:%S')"
+      ( cd "$overlay" && zsh /Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh overlay sh2 -- nice -n 15 zsh -c 'echo "== config"; cargo test -p semio-framework-os-config --lib --no-fail-fast; echo "== home-feature"; cargo test -p semio-s-artifact-space-home --features component-app-assembly --lib --no-fail-fast -- --test-threads 4; echo "== plugin"; cargo test -p semio-s-plugin-space --lib --no-fail-fast -- --test-threads 4; echo "== kernel"; cargo test -p semio-framework-os-kernel --features sync,ureq --lib --no-fail-fast -- --test-threads 4' ) > "$out/$tag-b1.txt" 2>&1
+      echo "END b1 rc=$? $(date '+%H:%M:%S') :: $(/usr/bin/grep -E '^test result|^error(\[|:)|^== ' "$out/$tag-b1.txt" | tr '\n' ' ' | cut -c1-900)" ;;
+    kernel-check) run kernel-check check -p semio-framework-os-kernel --features sync,ureq --lib --tests --message-format short ;;
     kernel) run kernel test -p semio-framework-os-kernel --features sync,ureq --lib --no-fail-fast -- --test-threads 4 ;;
   esac
 done

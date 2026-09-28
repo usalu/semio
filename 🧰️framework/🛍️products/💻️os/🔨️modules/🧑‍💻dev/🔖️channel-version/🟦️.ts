@@ -30,7 +30,13 @@ export const CHANNEL_VERSION_LITERAL_PATTERNS: readonly RegExp[] = [
   /APP_CHANNEL_VERSION\w*\s*=\s*(\d+)/gu,
   /CHANNEL_VERSION: u32 = (\d+)/gu,
   /app_channel_version:\s*(\d+)/gu,
+  /"executionProtocol"\s*:\s*(\d+)/gu,
 ];
+
+/** 🧬️ The version inside a hex-encoded first-party Pack value (a descriptor fixture's bytes): the key `appChannelVersion`
+ * followed by its f64 value (tag `0x05`, eight little-endian bytes = group 1). The census counts it like a literal; the
+ * generator never rewrites it — only a `derived` consumer may hold one, re-derived by its owner through the Pack codec. */
+export const CHANNEL_VERSION_PACK_HEX_PATTERN = /6170704368616e6e656c56657273696f6e05([0-9a-f]{16})/gu;
 
 /** 🧾️ One registered place that states the channel version. */
 export type ChannelVersionConsumerV1 = Readonly<{
@@ -64,11 +70,13 @@ export const CHANNEL_VERSION_CONSUMERS: readonly ChannelVersionConsumerV1[] = [
   { path: `${MOD}/🧑‍💻dev/🧫️fixtures/🚀️local-hub.json`, occurrences: 6 },
   { path: `${OS}/🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json`, occurrences: 2, derived: "the document-open catalog encoding and plan digests" },
   { path: `${OS}/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json`, occurrences: 3, derived: "the plan catalog expectedHex and its generation id" },
-  { path: "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", occurrences: 2, derived: "the lease's catalog generation" },
+  { path: "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", occurrences: 3, derived: "the lease's catalog generation and its Pack-encoded descriptorHex" },
   { path: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/👥️two-package/🔣️.json", occurrences: 2, derived: "the package trust records" },
   { path: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json", occurrences: 2, derived: "profile.generationId (trustedBootstrapProfileEncoding)" },
   { path: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧱️generation-stage/🔣️.json", occurrences: 3, derived: "the staged generation id" },
+  { path: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json", occurrences: 4, derived: "the rawCases descriptor Pack bytes (decode, set executionProtocol.appChannelVersion, re-encode; hostile rows keep their layout)" },
   { path: "🌎️hub/🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json", occurrences: 1, derived: "the frozen-binding digest and the fixtures that quote it" },
+  { path: "🌎️hub/🧫️fixtures/🤝️two-author-shell-v1/🔣️.json", occurrences: 1 },
   { path: "🌎️hub/📦️packages/🦀️rust/📜️script.ts", occurrences: 2, hostileValues: [13] },
   { path: `${MOD}/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts`, occurrences: 2, hostileValues: [13, 14] },
   { path: "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️package-descriptor-value-codec/🦀️.rs", occurrences: 1, arbitrary: true },
@@ -78,7 +86,7 @@ export const CHANNEL_VERSION_CONSUMERS: readonly ChannelVersionConsumerV1[] = [
 ];
 
 /** 🧮️ One version literal found in a file: its byte offset and value. */
-export type ChannelVersionLiteralV1 = Readonly<{ index: number; length: number; valueStart: number; value: number }>;
+export type ChannelVersionLiteralV1 = Readonly<{ index: number; length: number; valueStart: number; value: number; encoded?: true }>;
 
 /** 🔎️ Every version literal in `text`, in file order, with the exact span of its number. */
 export function channelVersionLiterals(text: string): readonly ChannelVersionLiteralV1[] {
@@ -88,6 +96,10 @@ export function channelVersionLiterals(text: string): readonly ChannelVersionLit
       const number = match[1] ?? "";
       found.push({ index: match.index, length: match[0].length, valueStart: match.index + match[0].length - number.length, value: Number(number) });
     }
+  }
+  for (const match of text.matchAll(new RegExp(CHANNEL_VERSION_PACK_HEX_PATTERN.source, CHANNEL_VERSION_PACK_HEX_PATTERN.flags))) {
+    const bytes = match[1] ?? "";
+    found.push({ index: match.index, length: match[0].length, valueStart: match.index + match[0].length - bytes.length, value: Buffer.from(bytes, "hex").readDoubleLE(0), encoded: true });
   }
   return found.sort((left, right) => left.valueStart - right.valueStart).filter((literal, position, all) => position === 0 || all[position - 1]!.valueStart !== literal.valueStart);
 }
@@ -99,7 +111,7 @@ function isDescribeOutput(path: string): boolean {
 
 /** 🗂️ Every tracked or untracked (not ignored) file that could state the version, outside ticket folders and describe outputs. */
 export function channelVersionCandidateFiles(repoRoot: string): readonly string[] {
-  const listed = spawnSync("git", ["-c", "core.quotePath=false", "grep", "-l", "-z", "--untracked", "-E", "appChannelVersion|CHANNEL_VERSION|app_channel_version", "--", ".", ":!.🧬semio"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const listed = spawnSync("git", ["-c", "core.quotePath=false", "grep", "-l", "-z", "--untracked", "-E", "appChannelVersion|CHANNEL_VERSION|app_channel_version|6170704368616e6e656c56657273696f6e", "--", ".", ":!.🧬semio"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (listed.status !== 0 && listed.status !== 1) throw new Error(`channel-version census: git grep failed (${listed.status}): ${listed.stderr}`);
   return listed.stdout.split("\0").filter((path) => path.length > 0 && !isDescribeOutput(path) && path !== CHANNEL_VERSION_PIN_PATH && !path.startsWith(`${MOD}/🧑‍💻dev/🔖️channel-version/`) && !path.startsWith(`${MOD}/🧑‍💻dev/🧪️tests/🔖️channel-version/`));
 }
@@ -153,8 +165,8 @@ export function writeChannelVersionConsumers(repoRoot: string, options: Readonly
     const text = readFileSync(path, "utf8");
     const drifted = channelVersionLiterals(text).filter((literal) => literal.value !== pin && !(consumer.hostileValues ?? []).includes(literal.value));
     if (drifted.length === 0) continue;
-    if (consumer.derived || (consumer.guest && !options.guest)) {
-      refused.push(`${consumer.path}: ${consumer.derived ? `derived values (${consumer.derived}) must be recomputed by its owner` : "guest-linked, rewrite inside a landing window with --guest"}`);
+    if (consumer.derived || drifted.some((literal) => literal.encoded) || (consumer.guest && !options.guest)) {
+      refused.push(`${consumer.path}: ${consumer.derived ? `derived values (${consumer.derived}) must be recomputed by its owner` : drifted.some((literal) => literal.encoded) ? "Pack-encoded versions must be re-derived by its owner" : "guest-linked, rewrite inside a landing window with --guest"}`);
       continue;
     }
     let next = text;

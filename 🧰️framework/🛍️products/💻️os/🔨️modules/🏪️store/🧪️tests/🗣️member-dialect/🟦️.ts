@@ -125,5 +125,4 @@ export function testMemberDialectFixture(): void {
   assert(store.includes("if history.doc_id != expected.artifact_id || history.schema != schema || !dialect_matches || !owner_matches"), "persisted member identity, schema, dialect and ownership must match before typed hydration");
   const memberOpen = store.slice(store.indexOf("pub async fn open_member_store"), store.indexOf("fn validate_member_history_identity"));
   assert(memberOpen.indexOf("validate_member_history_identity(&history, schema, expected, owner)?") < memberOpen.indexOf("parse_decoded_document_spr::<P, Mutation>"), "identity preflight must precede typed snapshot and history allocation");
-  console.log(`[DEBUG] member dialect source/AJV/Graphlib oracle: ${fixture.bindings.length} closed bindings, ${fixture.cases.length} admission, ${fixture.identityCases.length} identity/ownership, ${fixture.graphCases.length} graph, ${fixture.projectionCases.length} parent-reference and ${fixture.publicRestoreCases.length} public restore vectors; no native assertion claim`);
 }

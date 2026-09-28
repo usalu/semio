@@ -35,6 +35,8 @@ pub const PDF17UA_DIALECT: Dialect = Dialect { artifact_kind: PDF_ARTIFACT_SCHEM
 pub enum Pdf17UaEditorCommand {
     #[dsl(key = "set-page")]
     SetPage { page: u32, item: u32, revision: String, text: String },
+    #[dsl(key = "page-edit")]
+    PageEdit { action: String, payload: String },
 }
 
 //#region 🔖️OpCodec
@@ -90,7 +92,7 @@ impl protocol::OpBinary for Pdf17UaEditorCommand {
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf17UaEditorCommand, ["set-page"]);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf17UaEditorCommand, ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption"]);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -123,7 +125,10 @@ impl ArtifactEditor for Pdf17UaEditor {
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
-        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-page")
+        semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |native| match native {
+            Pdf17UaEditorCommand::SetPage { .. } => "set-page",
+            Pdf17UaEditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),
+        })
     }
 
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
@@ -131,6 +136,10 @@ impl ArtifactEditor for Pdf17UaEditor {
             "set-page" => {
                 let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;
                 Ok(Pdf17UaEditorCommand::SetPage { page: edit.page, item: edit.item, revision: edit.revision, text: edit.text })
+            }
+            other if crate::editor::page::is_page_action(other) => {
+                let edit = crate::editor::page::edit_from_action(other, args)?;
+                Ok(Pdf17UaEditorCommand::PageEdit { action: edit.action, payload: edit.payload })
             }
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
         })
@@ -155,6 +164,10 @@ impl ArtifactEditor for Pdf17UaEditor {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::SetPage { page, item, revision, text }) => {
                 let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
                 Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+            }
+                        semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::PageEdit { action, payload }) => {
+                let mutations = crate::editor::page::apply_payload(doc.snapshot, action, payload)?;
+                Ok(Emit { artifact_mutations: mutations, description: Some(action.clone()), ..Default::default() })
             }
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
         }
@@ -190,14 +203,20 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf17Ua
 
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     editor: Pdf17UaEditor,
-    tools: ["set-page"],
+    tools: ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption"],
     payload_schema: "semio.stdio.document-text-edit-command.v1",
     reduce: |command, snapshot| {
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::SetPage { page, item, revision, text }) = command else {
-            return Err(Fault::from("stdio-pdf-native-edit-command-mismatch"));
-        };
-        let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+        match command {
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::SetPage { page, item, revision, text }) => {
+                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
+                Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+            }
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::PageEdit { action, payload }) => {
+                let mutations = crate::editor::page::apply_payload(snapshot, action, payload)?;
+                Ok(Emit { artifact_mutations: mutations, description: Some(action.clone()), ..Default::default() })
+            }
+            _ => Err(Fault::from("stdio-pdf-native-edit-command-mismatch")),
+        }
     },
 }
 

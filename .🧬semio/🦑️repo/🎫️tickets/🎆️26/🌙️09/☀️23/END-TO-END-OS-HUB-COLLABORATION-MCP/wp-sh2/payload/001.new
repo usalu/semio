@@ -319,18 +319,27 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind("", "/tmp/sh1.os"), &doc), "s.home.bind-space-file.studio-invalid"));
     let space_id = crate::create_and_register_ephemeral_studio("SH1 bind law", "u1", "Ada").await;
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind(&space_id, " "), &doc), "s.home.bind-space-file.path-invalid"));
-    let file = std::env::temp_dir().join(format!("sh1-bind-law-{space_id}.os"));
-    let file_path = file.to_string_lossy().into_owned();
+    let stem = format!("sh1-bind-law-{space_id}");
+    let file_path = std::env::temp_dir().join(format!("{stem}.os")).to_string_lossy().into_owned();
+    let read_back = || {
+        use semio_framework_os::OsBackbonePort as _;
+        semio_framework_os::open_file_space_backbone(&file_path).and_then(|port| port.read(&format!("file://{file_path}"))).and_then(|payload| semio_framework_os::decode_backbone_payload::<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation>(&payload, semio_framework_artifact_space_space::S_SPACE_SCHEMA))
+    };
     let mut work = HomeCatalogWork::new("bindSpaceFile");
     assert!(matches!(work.advance(&bind(&space_id, &file_path), &doc).expect("validate stage"), ArtifactCommandWorkStep::Progress { .. }));
-    assert!(!file.exists(), "validate must not touch the filesystem");
+    assert!(read_back().is_err(), "validate must not touch the filesystem");
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = work.advance(&bind(&space_id, &file_path), &doc) else { panic!("the bind job commits") };
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
-    assert!(std::fs::metadata(&file).map(|metadata| metadata.len() > 0).unwrap_or(false), "commit writes the studio's document into the file");
+    let bound = read_back().expect("commit writes the studio's document to its file backbone");
+    assert_eq!(semio_framework_os::materialize_backbone_snapshot(&bound, &[]).expect("the bound studio materializes").name, "SH1 bind law", "a fresh file backbone reads the studio back");
     let listed = semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id).expect("the bound studio stays listed");
     assert!(!listed.backbone_uri.is_empty(), "the bound studio is a persisted catalog studio, no longer an ephemeral draft");
     assert_eq!(listed.name, "SH1 bind law", "the bound studio keeps its name");
-    let _ = std::fs::remove_file(&file);
+    for entry in std::fs::read_dir(std::env::temp_dir()).into_iter().flatten().flatten() {
+        if entry.file_name().to_string_lossy().starts_with(&stem) {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
 }
 
 /// 💾️ The persist job validates before it writes; its commit keeps the ephemeral studio in the folder, lists it as a

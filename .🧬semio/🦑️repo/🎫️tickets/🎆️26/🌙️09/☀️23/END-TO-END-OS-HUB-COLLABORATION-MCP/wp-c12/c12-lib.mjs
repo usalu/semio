@@ -50,6 +50,7 @@ export async function openSessions(urls, { locale = "en-US", users = USERS } = {
       lines.push(`${ms()} ${message.type()} ${text.slice(0, 900)}`);
     });
     page.on("pageerror", (error) => lines.push(`${ms()} pageerror ${String(error).slice(0, 900)}`));
+    page.on("worker", (worker) => worker.on("console", (message) => { if (message.type() === "warning" || message.type() === "error") lines.push(`${ms()} worker-${message.type()} ${message.text().slice(0, 3000)}`); }));
     page.on("response", (response) => {
       const url = response.url();
       if (/_semio\/hub\/(?!auth\/sessions\/me)|:7800\/(?!auth\/sessions\/me)/.test(url)) lines.push(`${ms()} http ${response.status()} ${response.request().method()} ${url.replace(/^https?:\/\/[^/]+/, "").slice(0, 160)}`);

@@ -10,13 +10,13 @@ serves 6510–6519. Private cargo target: `.tmp-ticket/wp-h13/target` (build-dir
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | H11's P0 agent ceiling + agent roles + check-in cause + interpreter cancellation: semio-hub `--all-features --lib --tests`, os-hub bin, os-mcp green on the current tree; new laws run | H11 compiled + ran them 16:02–16:19 (unreported; captures below). TS oracles re-run today **9/9 PASS**. Re-proof on the current tree QUEUED (native lane, hold 1). **Live finding: the P0 fix broke every read-audience semio-MCP agent binding** → root-fixed in os-mcp 🔗️remote (item 2) |
-| 2 | Live P0 proof: `wp-g11/g11-refused-relay-probe.ts` against my own current-tree hub (fresh root) | **Hub side PROVEN LIVE 19:2x: new permanent check `os-hub-ts agent-ceiling-check` 16/16 PASS on the current-tree hub 8010** (read agent's edit Rejected `no grant allows Write`, head 0→0; edit agent accepted 0→1; neither agent lists/reads the foreign space (404), renames/adds a member/mints an invite (403 ×6), reads the admin console (401 ×2); author + admin controls 202/200) — and **5/16 on the pre-P0 B3 binary (= 7800 today)**: read agent edits, agents see the foreign space and administer the space. MCP leg: the P0 fix broke the gateway's read-agent binding → os-mcp 🔗️remote fix (TS oracle 4/4; native check queued); G11 probe re-run after the rebuilt gateway |
-| 3 | Hub suite on the current tree (`os-hub:test`, `os-hub:test-all-features`; rows 2.1–2.3) | QUEUED (hold 1: full all-features suite) |
-| 4 | C11/C12 routed defect: Check In refused `codec-refused` → root cause + fix | **ROOT CAUSE FOUND + FIX LANDED 19:15** (guest-linked, pre-freeze): guest `print_mirror` dropped a populated envelope's owners → vcs ledger Drop witness panic. **Native kernel + plugin `--lib --tests` EXIT 0 20:04**; 2 laws running (hold 1); wasm32 = chain. Live re-proof needs a rebuilt writer guest (7800 ALL) |
-| 5 | pg/neo4j live gates (row 2.4): backend-up → two-client-e2e + document-growth-e2e pg/neo4j → backend-down | TODO |
-| 6 | DB1 greeting-storm / storm-ratio (row 2.6) + permanent hostile-input/fuzz harness (row 2.13) | storm: DB1's redesigned laws are already permanent (`@semio-tech/framework-os-kernel:reopen-storm-check`, record `hub-reopen-storm`) → run queued (hold 2). Fuzz: NEW permanent `os-hub hostile-input-check` (Ajv oracle + 3 enumerated laws + generative law per seed, `--seed-range` for longer fuzz, record `hub-hostile-input`); tsc 0; runs queued (hold 2) |
-| 7 | C12 P1 (coordinator 20:0x): writers' post-cut batch refused `DB I/O aggregate admission exhausted` → all typing lost | (b) DONE hub-side: transient refusals carry `HubTransientApplyRefusalMessageV1` (`hub.unavailable`, warning) — schema + Rust + fixture + bin law + Ajv 6/6; native check in hold 1. (a) db per-operation credit vs declared batch maxima → routed to H14 via main |
+| 1 | H11's P0 agent ceiling + agent roles + check-in cause + interpreter cancellation: semio-hub `--all-features --lib --tests`, os-hub bin, os-mcp green on the current tree; new laws run | **DONE (14b):** semio-hub compiles on today's tree (H14 check 13:16; my bin/lib suites below); os-mcp check EXIT 0 12:40 + gateway 12:41; P0 bin laws 8/8, lib laws 7/7, os-mcp laws 8/8 (`hold4b-*.txt`) |
+| 2 | Live P0 proof: `wp-g11/g11-refused-relay-probe.ts` against my own current-tree hub (fresh root) | Hub side proven 19:2x (16/16 vs 5/16 pre-P0). **14b MCP leg LIVE 12:15:** read agent binds with the 🔗️remote fix; edit agent relay-acknowledged; revoke → PERMISSION_DENIED; read agent's edit never reaches the hub, but the gateway answers SUCCEEDED on a local `plugin:note` session → G12. `agent-ceiling-check` on a current-tree hub **waits for ALL** (a channel-19 hub refuses the channel-18 B3 catalog) |
+| 3 | Hub suite on the current tree (`os-hub:test`, `os-hub:test-all-features`; rows 2.1–2.3) | **os-hub:test-all-features EXIT 0 14:09** (lib 247 pass / 19 ignored, bin 176 pass; `hold4b-all-features.txt`); default-feature suite = hold 5 |
+| 4 | C11/C12 routed defect: Check In refused `codec-refused` → root cause + fix | Fix landed 19:15; kernel laws **2/2 PASS 20:11**; guest law red once on its own non-server-minted genesis id (fixed 20:3x), re-run blocked by peers' plugin lib-test compile errors (6) → window 3. Docstring misplacement → prepared patch `h13-docstring-restore.py` (window 3). Live re-proof = 7800 on ALL (C12 STEP 6) |
+| 5 | pg/neo4j live gates (row 2.4): backend-up → two-client-e2e + document-growth-e2e pg/neo4j → backend-down | blocked until ALL: needs a channel-19 catalog (B3 refused by today's binary); all-driver binary ready (`s14-h13-bin/os-hub-all-drivers-1404`) |
+| 6 | DB1 greeting-storm / storm-ratio (row 2.6) + permanent hostile-input/fuzz harness (row 2.13) | hostile-input-check (fixture seeds + 100..109) + reopen-storm-check all = hold 5 (queued) |
+| 7 | C12 P1 (coordinator 20:0x): writers' post-cut batch refused `DB I/O aggregate admission exhausted` → all typing lost | (b) **DONE**: bin law + unit law PASS (hold 4b); live proof waits for ALL. (a) H14. G12 relay (transport wedge) root-caused → prepared patch `h13-transport-refill-patch.py` (window 3) |
 
 ### Session 14 log
 
@@ -123,3 +123,75 @@ serves 6510–6519. Private cargo target: `.tmp-ticket/wp-h13/target` (build-dir
   `🧪️tests/🚧️hostile-input/🟦️.ts` → **6/6 PASS** (`vitest-transient-1.txt`). C12 told the code (`hub.unavailable`).
 - 20:04 **hold 1 step 1: `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib --tests` EXIT 0** (16 min,
   warnings = type-checked; `hold1-check-codec.txt`) → the Check In fix compiles natively. Kernel law build running.
+
+### Session 14b
+
+Successor agent (2026-09-28 12:0x, after the usage cut + app restart; guest freeze ON since 12:02:46).
+
+- 12:1x **reconcile.** Every predecessor edit is complete and was auto-committed (`5bcb2da23da` 21:54): `🌎️hub` has no
+  diff vs HEAD and no overnight change; the transient refusal (schema `🚧️refusal/🧬️schema` 20:07, `🚧️refusal/🦀️.rs` +
+  unit law 20:07, fixture `⏳️transient-apply-refusal-v1` 20:08, bootstrap `transient_apply_refusal_messages` + bin law
+  `a_transiently_refused_batch_names_…`, Ajv case 20:10) is whole; os-mcp `🔗️remote/🦀️.rs` unchanged since 18:51. No `[DEBUG]`
+  in `🌎️hub` (`git grep`). Hold captures after the last log line (all `s14-h13-logs/`): `hold1-check-mcp` **EXIT 0 20:48**,
+  `hold1-os-mcp` gateway build **EXIT 0 20:59**; `hold1-check-hub`/`-bin-laws`/`-all-features`/`-os-hub` and `hold2-*` hub
+  steps **EXIT 101 on the db crate** (`semio-framework-os-kernel-db`: `🛢️db/🗿️artifact/🦀️.rs` 20:41 uses an undefined
+  `PlannedEntries` and a removed `ArtifactEngine::apply_one` — H14's cut WAL edit; still red now, the chain's hub-prewarm
+  failed on it 12:03) → **no hub proof on today's tree yet**; `hold1-mcp-laws` EXIT 101 on a peer's `semio-framework-ui`
+  `colors::DIFF_ADDED`; `hold1-plugin-codec-law` **FAILED** (my law's genesis id `surface-codec` is not a server-minted
+  artifact id — test construction, not the fix); the predecessor corrected the id (`artifact-5c0dec0de…`, 32 hex) and
+  re-ran it in hold 2, which did not compile (a peer's broken `include_str!` in `🔬️app-window-kits`, since fixed). Hostile /
+  storm runs in hold 2 were red only because their cargo hit the db crate.
+- **Docstring defect of my 19:15 landing:** the law was inserted between the `👁️🔒` docstring of
+  `viewer_rejects_every_contract_mutating_verb` and its function (patch anchor = the function head) → that docstring now heads the
+  codec law and the viewer law has none. Plugin crate frozen → prepared patch `wp-h13/h13-docstring-restore.py` (idempotent,
+  `--dry-run` clean: "would move"). `h13-checkin-retire-patch.py` realigned to the live tree (server-minted id, docstring-safe
+  anchor): it now refuses instead of inserting a second copy, and reports "applied already" after the restore (simulated).
+- 12:1x db blocker relayed to main (owner H14, confirmed by the coordinator). Hold 3 (db-independent: os-mcp check + role law,
+  gateway build, plugin codec law) queued 12:14 (`h13-hold-3.sh`, pid 51877).
+- 12:15 **hub 8010 restarted** (P0 binary `s14-h13-bin/os-hub-h11-1619`, root `s14-h13-hub-8010`, pid 52780, ready 13.0 s).
+  **G11 probe with the 🔗️remote-fixed gateway** (`wp-h13/target/debug/semio-os-mcp` 20:59; capture
+  `wp-h13/generated/p0-refused-relay-2.txt`, rc 0): the read agent now **binds** (yesterday: gateway exit `PermissionDenied`) ✓;
+  edit agent `relay:acknowledged` head 0→1 ✓; after revoke `PERMISSION_DENIED hub session is unauthorized` ✓; read agent's edit
+  never reaches the hub (head 0) ✓ — but the gateway answers it `SUCCEEDED` on its local `plugin:note` session
+  (`stamped_artifact_id` fallback) → MCP truthfulness defect, relayed to G12 via main (not hub).
+- 12:40 **hold 3** (`hold3-*.txt`): os-mcp `check --lib --tests` **EXIT 0 12:40:01** (incl. a peer's 12:14 🏠️workspace edit), gateway
+  build **EXIT 0 12:41:57** → "os-mcp green 12:40" sent to main. Laws 7/8: my role law **PASS**; neighbour
+  `authenticated_hub_catalog_hydrates_exact_selected_descriptor…` FAILED on the lease corpus' `appChannelVersion` 18 vs the pin 19
+  (fixed by the channel-19 re-derivation below; re-run pending). Plugin guest codec law: compile blocked by 6 peer errors in plugin lib
+  tests (`🔬️app-window-kits`, `🔬️plugin-runtime-plugin-builder-contract`) → window 3. Hub 8010 stopped 12:4x (no current-tree binary yet).
+- 12:45 hold 4 queued (`h13-hold-4.sh`: semio-hub all-features check first, all-driver os-hub build, full all-features suite).
+- 12:5x–13:0x **channel pin 19 (coordinator, rule 22):** `wp-h13/h13-channel19.py` re-derived my 4 channel-derived fixtures with the
+  17→18 oracles, each first proven equal at 18 (plan generation `97f393c7…`→`28ebc3e4…`, frozen binding `25a58ad6…`→`1643c1dd…` + its
+  2 quotes + the inference identity chain in 5 files, lease/browser literals). `channel-version check`: 7 → 3 findings (H14's).
+  TS oracles all rc 0 after fixing 3 stale hub-script oracles (lease status vocabulary lacked the contract's `retrying`; GIS approval-undo
+  source oracle still named the pre-09-25 MCP `HubGisMapApproval`; ingress oracle predated the 09-26 retained-guard redesign). Hub-script
+  tsc: 0 errors in os-hub-ts (G12's 6 = compiling without `🦀️rust/📐️ambient.d.ts`; lodash-es/leb128 are test-only oracles).
+- 13:1x docstring restore applied (rule 22, test-only): `h13-docstring-restore.py` ("already applied" after), check-in patch "0 pending".
+- 13:2x **G12 relay — hub-lane MCP "transport" wedge: ROOT CAUSE.** The gateway's `HttpPool` byte bucket never refills:
+  `NativeDirectoryTransport::with_new_http_pool_now` never starts `HttpPool::spawn_refill_driver` (only services tests call it;
+  `HTTP_BUCKET_REFILL_INTERVAL_MS` is dead code) → the 80 MiB "per minute" budget is a lifetime budget → after 3 components + the
+  catalog refreshes every request fails `ByteBudgetExhausted` → `TransportError::Io(detail)` → mapped to a detail-less
+  `HubUnavailableCause::Transport` → permanent. Same latent bug in the wgpu shell's directory client and the renderer probe (same
+  constructor). Run 2's "4 registered plugins" = `🏠️workspace::open_hub` builds the Catalog once → G12 owns that. **Prepared patch
+  (window 3)** `wp-h13/h13-transport-refill-patch.py` (dry-run: 21 pending, 0 problems): services `TokioHostRuntime::worker_pool()` +
+  pub `HTTP_BUCKET_REFILL_INTERVAL_MS`; kernel constructor starts the refill driver + law
+  `an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pools_own_turn` + fixture `🔁️byte-budget-refill.json`; os-mcp
+  🔗️remote `Transport { detail }` (≤ 512 chars) + refusal `details.cause`/`summary` (en + de), schema `HubUnavailableCauseV1` /
+  `HubUnavailableRefusalDetailsV1` / corpus def, generated fixture `🔣️hub-unavailable-refusal.json` (6 cases), laws
+  `a_hub_unavailable_refusal_names_its_typed_cause_in_english_and_german` + `a_transport_fault_keeps_its_cause_and_the_next_refresh_recovers_the_binding`,
+  Ajv/independent-derivation oracle case. Proven now: patched schema + corpus under Ajv strict (corpus valid, index fixture still valid,
+  overlong detail and missing `de` refused; scratch check). Rust compile + laws: window 3, native lane.
+- 13:31 hold 4 re-queued with the coordinator's priority stamp (`FLEET_TICKET_STAMP=20260928120004`, hold 4b; old waiter stopped).
+  **Results (`hold4b-*.txt`):** hub bin laws **8/8 PASS 13:45** (the 7 P0 agent/delegation/revocation/credential laws +
+  `a_transiently_refused_batch_names_the_declared_resend_code_and_a_permanent_one_does_not`), hub lib laws **7/7 PASS 13:47**
+  (`refusal::` ×3 incl. `the_transient_apply_refusal_is_the_declared_schema_message`, both access-policy laws incl. the 160-vector truth
+  table, both interpretation-cancellation laws), os-mcp laws **8/8 PASS 13:48** (role law + the catalog-hydration law, green again
+  after the channel-19 lease fix), all-driver `os-hub` (sqlite + postgres + neo4j) **EXIT 0 14:04** → `s14-h13-bin/os-hub-all-drivers-1404`;
+  full all-features suite running. (H14's semio-hub lib+bins+tests check EXIT 0 13:16 already covered this code.)
+- 13:5x lease corpus `descriptorHex` re-sealed at 19 with its own generator (coordinator relay from H14): census **29 consumers, 0 findings**;
+  lease / actor-identity / open-plan TS oracles rc 0.
+- 14:05 **live proofs on a current-tree hub are blocked until ALL is published:** hub 8010 on the 14:04 binary + fresh B3 clone
+  (`s14-h13-hub-8010-b`) refuses to boot: `package semio:animate was published for app channel 18 but this hub speaks app channel 19`
+  (log `s14-h13-hub-8010-b-8010-1.log`; process exited, nothing left running). ⇒ `agent-ceiling-check`, the transient-refusal live proof
+  and the pg/neo4j e2e gates run against a clone of the chain's ALL catalog after `final-publish.rc`.
+- 14:0x T14: plugin lib tests compile again → the guest codec law + os-mcp lease readers are the first steps of hold 5 (queued 13:3x).

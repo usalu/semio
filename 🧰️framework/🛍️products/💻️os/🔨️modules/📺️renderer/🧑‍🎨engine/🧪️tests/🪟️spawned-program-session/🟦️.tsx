@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  contributionsReceiverSessionV1,
   focusedProgramKeyV1,
   focusedProgramV1,
   guestActiveUtilityByWindowIdV1,
@@ -38,6 +39,7 @@ import {
 } from "../../🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts";
 import { applyUiRefreshResponseToCache, buildUiRefreshRequest, EMPTY_APP_LABELS_OVERLAY, frameworkLayoutDeclaredInstances, historyPatchShouldApplyV1, resolveFrameworkLayoutSeed, type UiRefreshCache } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import declaredInstancesFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪟️declared-instances.json";
+import contributionsReceiverFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🧩️contributions-receiver.json";
 import { resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 
 afterEach(cleanup);
@@ -450,5 +452,31 @@ describe("🪐️ the space the user is in reaches every render that shows it", 
     expect(effect).toContain("requestSessionRoute(route);");
     expect(effect).not.toMatch(/if \(overlay[^)]*\) return;/u);
     expect(shellHostSource).toContain('navigateHistory(sessionRouteRef.current ?? "/");');
+  });
+});
+
+/** 🧩️ A contributions install's re-arm addresses the RECEIVER, replayed from
+ * `🏛️ShellHost/🧫️fixtures/🧩️contributions-receiver.json`: in `s` the primary is Home, and a spawned generation3d's
+ * `flowEvalTick` re-arm dispatched under Home's app was refused by the guest and swallowed — its preview never left
+ * "Computing 0/1 (0%)" (measured 2026-09-28, ticket 26/09/23 slice S19). */
+describe("🧩️ contributions receiver session", () => {
+  const { live, cases } = contributionsReceiverFixture as unknown as {
+    live: Parameters<typeof contributionsReceiverSessionV1>[1];
+    cases: readonly { id: string; receiver: Parameters<typeof contributionsReceiverSessionV1>[0]; expect: { appId: string; viewState: Record<string, unknown> } }[];
+  };
+  for (const row of cases) {
+    it(row.id, () => {
+      const target = contributionsReceiverSessionV1(row.receiver, live);
+      expect(target.pluginId).toBe(row.receiver.pluginId);
+      expect(target.instanceId).toBe(row.receiver.instanceId);
+      expect(target.app.id).toBe(row.expect.appId);
+      expect(target.viewState).toEqual(row.expect.viewState);
+    });
+  }
+
+  it("the live shell dispatches an install's effects through the receiver, never a primary-derived target", () => {
+    expect(shellHostSource).toContain("const target = contributionsReceiverSessionV1(receiver, live);");
+    expect(shellHostSource).not.toContain("{ ...live, pluginId: deferredPluginId, instanceId: deferredInstanceId }");
+    expect(shellHostSource).not.toMatch(/dispatchDeferredEffects[\s\S]{0,600}\.catch\(\(error\) => undefined\)/u);
   });
 });

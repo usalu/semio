@@ -5,12 +5,15 @@
  * pill and every notice in the human's own language, measures local echo per keystroke burst, and after the links return
  * waits for both editors to agree and records which markers survived and the hub head.
  * usage: source env.sh; bun probe-c12-shortage.mjs <tag> <urlA> <urlB> <controlA> <controlB> <spaceId> <cutsMs=5000,15000,60000> [kindId=text.document]
- * env: C12_LOCALE_A (en-US), C12_LOCALE_B (de-DE) */
+ * env: C12_LOCALE_A (en-US), C12_LOCALE_B (de-DE), C12_TYPISTS (AB: both type during a cut; A or B: only that human types, which
+ *      isolates the outbox drain from the whole-text SET race of item 2) */
 import { boot, openSessions, recorder, signIn, shot } from "./c12-lib.mjs";
 import { awaitMounted, createArtifact, creatableKinds, hubHead, openRow, openSpace, pause } from "./c12-journey.mjs";
 
 const [tag = "c12shortage", urlA, urlB, controlA, controlB, spaceId, cutList = "5000,15000,60000", kindId = "text.document"] = process.argv.slice(2);
 const locales = [process.env.C12_LOCALE_A ?? "en-US", process.env.C12_LOCALE_B ?? "de-DE"];
+const typists = process.env.C12_TYPISTS ?? "AB";
+const rebuildNotice = /fresh authoritative restore|autoritative Wiederherstellung/u;
 const { browser, sessions } = await openSessions([urlA, urlB], { locale: locales[0] });
 const [A, B] = sessions;
 await B.context.close();
@@ -24,6 +27,7 @@ await B.context.close();
     lines.push(`${Date.now()} ${message.type()} ${text.slice(0, 900)}`);
   });
   page.on("pageerror", (error) => lines.push(`${Date.now()} pageerror ${String(error).slice(0, 900)}`));
+  page.on("worker", (worker) => worker.on("console", (message) => { if (message.type() === "warning" || message.type() === "error") lines.push(`${Date.now()} worker-${message.type()} ${message.text().slice(0, 3000)}`); }));
   Object.assign(B, { context, page, lines, sockets: [] });
 }
 const { record, save } = recorder(tag, sessions);
@@ -67,6 +71,7 @@ try {
   await awaitMounted(B, 300_000);
   const base = await typeBurst(A, "base ");
   record("open + baseline", base.echoMs !== null, { artifactId, locales, base, head: await hubHead(artifactId), linkA: await linkState(A), linkB: await linkState(B) });
+  const allMarkers = [];
   for (const [round, outageMs] of cutList.split(",").map(Number).entries()) {
     const settleBefore = Date.now();
     while (Date.now() - settleBefore < 20_000 && (await textOf(A)) !== (await textOf(B))) await pause(A, 250);
@@ -93,8 +98,8 @@ try {
     const typingEnd = cutAt + Math.min(outageMs - 1_000, 20_000);
     let index = 0;
     while (Date.now() < typingEnd) {
-      bursts.push({ who: "A", at: Date.now() - cutAt, ...(await typeBurst(A, `a${round}k${index} `)) });
-      bursts.push({ who: "B", at: Date.now() - cutAt, ...(await typeBurst(B, `b${round}k${index} `)) });
+      if (typists.includes("A")) bursts.push({ who: "A", at: Date.now() - cutAt, ...(await typeBurst(A, `a${round}k${index} `)) });
+      if (typists.includes("B")) bursts.push({ who: "B", at: Date.now() - cutAt, ...(await typeBurst(B, `b${round}k${index} `)) });
       index += 1;
     }
     const remaining = cutAt + outageMs - Date.now();
@@ -117,10 +122,24 @@ try {
     record(`cut ${outageMs} ms: no freeze`, worst("A") < 1_000 && worst("B") < 1_000 && worstRead("A") < 2_000 && worstRead("B") < 2_000, { outageMs, cuts, samples: [samples.A.length, samples.B.length], worstFrameMs: [worst("A"), worst("B")], worstReadMs: [worstRead("A"), worstRead("B")], localEchoMs: bursts.map((burst) => burst.echoMs) });
     record(`cut ${outageMs} ms: link state in each human's language`, true, { A: [...states.A.entries()].map(([state, at]) => ({ at, ...JSON.parse(state) })), B: [...states.B.entries()].map(([state, at]) => ({ at, ...JSON.parse(state) })) });
     record(`cut ${outageMs} ms: convergence`, convergedMs !== null, { convergedMsAfterRestore: convergedMs, a: texts[0].slice(-200), b: texts[1].slice(-200), headBefore, headAfter: await hubHead(artifactId) });
-    record(`cut ${outageMs} ms: typed markers kept`, survived.every((row) => row.inA && row.inB), { survived });
+    record(`cut ${outageMs} ms: typed markers kept`, survived.every((row) => row.inA && row.inB), { typists, survived });
+    const rebuilds = Object.fromEntries(Object.entries(states).map(([label, map]) => [label, [...map.keys()].filter((key) => rebuildNotice.test(key)).length]));
+    record(`cut ${outageMs} ms: no rebuild (the outbox was admitted, nothing rolled back)`, rebuilds.A === 0 && rebuilds.B === 0, { rebuilds });
+    allMarkers.push(...survived.map((row) => row.marker));
     await shot(A, tag, `cut${outageMs}`);
     await shot(B, tag, `cut${outageMs}`);
   }
+  await B.page.reload({ waitUntil: "domcontentloaded" });
+  await openRow(B, spaceId, artifactId);
+  await awaitMounted(B, 300_000);
+  const reopenedAt = Date.now();
+  let reopened = "";
+  while (Date.now() - reopenedAt < 60_000) {
+    reopened = await textOf(B);
+    if (allMarkers.every((marker) => reopened.includes(marker))) break;
+    await pause(B, 500);
+  }
+  record("the hub holds every marker (B reloaded and re-opened the document)", allMarkers.every((marker) => reopened.includes(marker)), { missing: allMarkers.filter((marker) => !reopened.includes(marker)), markers: allMarkers.length, head: await hubHead(artifactId) });
 } catch (error) {
   record("probe", false, String(error?.stack ?? error).slice(0, 1500));
   await shot(A, tag, "fail");

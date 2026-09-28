@@ -112,6 +112,11 @@ export const LOCAL_HUB_DEVELOPMENT_PROFILES: readonly LocalProfile[] = Object.fr
   Object.freeze({ profileId: "user-2", subject: "local-user-02", displayName: "Local User Two", allowedClientClasses: Object.freeze(["react-relay"] as const) }),
 ]);
 
+/** 🛡️ The administrator a development hub declares for its operator surfaces (the admin SPA, the gates that read the hub's
+ * own state): the one `admin-relay` profile, and the admin subject a run must declare for it. */
+export const LOCAL_HUB_ADMINISTRATOR_PROFILE: LocalProfile = Object.freeze({ profileId: "administrator", subject: "local-administrator-01", displayName: "Local Administrator", allowedClientClasses: Object.freeze(["admin-relay"] as const) });
+export const LOCAL_HUB_ADMINISTRATOR_SUBJECT = `semio.local.bootstrap/v1:${LOCAL_HUB_ADMINISTRATOR_PROFILE.subject}`;
+
 /** 🎯 The single Nx target that stages the development executable every launch route reads. */
 export const HUB_DEV_BINARY_TARGET = "os-hub:build-dev";
 

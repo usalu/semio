@@ -868,6 +868,18 @@ fn evaluate_wall(
         if ok {
             b = b.utilization(Quantity::new(QuantityKind::Dimensionless, 0.5), Quantity::new(QuantityKind::Dimensionless, 1.0));
         } else {
+            let path_joint = wall_path(wall, "bedJointThicknessM");
+            let path_unit_w = wall_path(wall, "unitWidthM");
+            let joint_target = if matches!(wall.mortar_type, MortarType::ThinLayer) {
+                0.002
+            } else {
+                0.010
+            };
+            let fb_target_mpa = match wall.unit_material {
+                UnitMaterial::Aerated => wall.f_b_pa.max(2.0e6).min(10.0e6) / 1e6,
+                UnitMaterial::Clay => wall.f_b_pa.max(6.0e6) / 1e6,
+                _ => wall.f_b_pa.max(6.0e6) / 1e6,
+            };
             b = b
                 .utilization(Quantity::new(QuantityKind::Dimensionless, 1.5), Quantity::new(QuantityKind::Dimensionless, 1.0))
                 .remedy(Remedy::exactly(
@@ -879,7 +891,7 @@ fn evaluate_wall(
                 .remedy(Remedy::at_least(
                     wall_subject(wall, &path_fb),
                     Quantity::new(QuantityKind::Stress, wall.f_b_pa),
-                    Quantity::stress_mpa(6.0),
+                    Quantity::stress_mpa(fb_target_mpa.max(6.0)),
                     loc("Raise unit strength f_b into admissible range.", "f_b in zulässigen Bereich anheben."),
                 ))
                 .remedy(Remedy::exactly(
@@ -887,6 +899,21 @@ fn evaluate_wall(
                     Quantity::length_m(wall.unit_height_m),
                     Quantity::length_m(0.113),
                     loc("Use admissible unit height for group/shape factor δ.", "Zulässige Steinhöhe für Formfaktor δ wählen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_unit_w),
+                    Quantity::length_m(wall.unit_width_m),
+                    Quantity::length_m((wall.unit_height_m / 2.4).max(0.100)),
+                    loc("Widen unit so group aspect and dimensions conform.", "Steinsicht verbreitern für Gruppen-/Abmessungskonformität."),
+                ))
+                .remedy(Remedy::exactly(
+                    wall_subject(wall, &path_joint),
+                    Quantity::length_m(wall.bed_joint_thickness_m),
+                    Quantity::length_m(joint_target),
+                    loc(
+                        "Set bed-joint thickness to admissible GP (10 mm) or thin-layer (2 mm) value.",
+                        "Lagerfugendicke auf zulässigen NM- (10 mm) bzw. DBM-Wert (2 mm) setzen.",
+                    ),
                 ));
         }
         out.push(b.build());
@@ -1163,7 +1190,7 @@ fn evaluate_wall(
                 .remedy(Remedy::at_least(
                     wall_subject(wall, &path_t),
                     Quantity::length_m(t),
-                    Quantity::length_m(t * 1.2),
+                    Quantity::length_m(t * (m_ed / m_rd.max(1e-12)).max(1.0).sqrt() * 1.01),
                     loc("Increase thickness for lateral flexure.", "Dicke für Plattenbiegung erhöhen."),
                 ))
                 .remedy(Remedy::at_least(
@@ -1171,16 +1198,15 @@ fn evaluate_wall(
                     Quantity::new(QuantityKind::Area, as_h),
                     Quantity::new(QuantityKind::Area, (as_h + 50e-6).max(50e-6)),
                     loc("Add bed-joint reinforcement As,h.", "Lagerfugenbewehrung As,h ergänzen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &wall_path(wall, "fYdPa")),
+                    Quantity::new(QuantityKind::Stress, f_yd),
+                    Quantity::new(QuantityKind::Stress, 435e6),
+                    loc("Declare f_yd for bed-joint reinforcement.", "f_yd für Lagerfugenbewehrung angeben."),
                 ));
                 if as_h > 0.0 && f_yd <= 0.0 {
-                    b = b
-                        .utilization(Quantity::new(QuantityKind::Dimensionless, 1.5), Quantity::new(QuantityKind::Dimensionless, 1.0))
-                        .remedy(Remedy::at_least(
-                            wall_subject(wall, &wall_path(wall, "fYdPa")),
-                            Quantity::new(QuantityKind::Stress, f_yd),
-                            Quantity::new(QuantityKind::Stress, 435e6),
-                            loc("Declare f_yd for bed-joint reinforcement.", "f_yd für Lagerfugenbewehrung angeben."),
-                        ));
+                    b = b.utilization(Quantity::new(QuantityKind::Dimensionless, 1.5), Quantity::new(QuantityKind::Dimensionless, 1.0));
                 }
                 out.push(b.build());
             }
@@ -1206,12 +1232,27 @@ fn evaluate_wall(
                 &format!("{}; β={beta:.2}; F_Ed={f_ed:.0} N; N_Rdc={n_rdc:.0} N.", ge.combo_en),
                 &format!("{}; β={beta:.2}; F_Ed={f_ed:.0} N; N_Rdc={n_rdc:.0} N (Teilflächenpressung).", ge.combo_de),
             ));
-            b = b.remedy(Remedy::at_least(
-                wall_subject(wall, &concentrated_path(wall, lc, &c.id, "bearingLengthM")),
-                Quantity::length_m(c.bearing_length_m),
-                Quantity::length_m(c.bearing_length_m * (f_ed / n_rdc.max(1e-12)).max(1.0)),
-                loc("Increase bearing length.", "Auflagerlänge erhöhen."),
-            ));
+            let area_used = c.bearing_area_m2.max(c.bearing_length_m * t);
+            let area_req = area_used * (f_ed / n_rdc.max(1e-12)).max(1.0) * 1.01;
+            b = b
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &concentrated_path(wall, lc, &c.id, "bearingAreaM2")),
+                    Quantity::new(QuantityKind::Area, c.bearing_area_m2),
+                    Quantity::new(QuantityKind::Area, area_req),
+                    loc("Increase bearing area for concentrated load.", "Auflagerfläche für Einzellast erhöhen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &concentrated_path(wall, lc, &c.id, "bearingLengthM")),
+                    Quantity::length_m(c.bearing_length_m),
+                    Quantity::length_m((area_req / t.max(1e-9)).max(c.bearing_length_m)),
+                    loc("Increase bearing length.", "Auflagerlänge erhöhen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_t),
+                    Quantity::length_m(t),
+                    Quantity::length_m(t * (f_ed / n_rdc.max(1e-12)).max(1.0)),
+                    loc("Increase wall thickness for concentrated bearing.", "Wanddicke für Teilflächenpressung erhöhen."),
+                ));
             out.push(b.build());
         }
     }

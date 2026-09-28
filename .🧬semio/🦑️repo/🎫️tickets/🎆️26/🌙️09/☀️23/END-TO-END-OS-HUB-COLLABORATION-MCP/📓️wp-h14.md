@@ -7,6 +7,90 @@ Handovers: [📓️wp-h12.md](📓️wp-h12.md), [📓️wp-h10.md](📓️wp-h1
 [📓️acceptance-s13.md](📓️acceptance-s13.md) §2. Neighbours: H13 (hub correctness/security, fuzz row 2.13, interpreter
 cancellation), R10 (launch generator, harness productization), W4 (chain, 7800).
 
+### Session 14b
+
+Successor agent, 2026-09-28 12:1x (predecessor cut ~20:45 by the usage limit, mid-way through the P1 db credit fix).
+Chain launched 12:02:46 (GUEST FREEZE on). `semio-framework-os-kernel-db` has exactly one normal-edge dependent, `semio-hub`
+(`cargo tree -i … --workspace -e normal --target all`), so it is chain-compiled only through os-hub (hub prewarm + the
+post-publish os-hub build), never through a guest / rebuild-all.
+
+| # | Item | Status |
+|---|------|--------|
+| 0 | Reconcile the predecessor's in-flight db edit | predecessor's WAL + artifact hunks (20:35–20:41) were auto-committed at 21:54 (`5bcb2da23da`) **red**: `PlannedEntries` undefined + replay still called the removed `apply_one` → chain `hub-prewarm rc=1` 12:03 (`s14-w4-logs/final-hub-prewarm.txt` l.222–676; predecessor's own `lane-hub-1.txt` 21:10 saw the same 4 errors). **Finished forward 12:2x**: `struct PlannedEntries` + replay `plan_one → commit_one`; native check queued (priority stamp) → `generated/lane-db-1.txt` |
+| 1 | P1 db credit: a declared-legal batch never refused for capacity | **DONE, native green** (coordinator: kernel-db is hub-closure-only → hub rule): 4 capacity refusals + the replay trap removed, 1 P0 found by the max-batch law and fixed (WAL reader held 64 frames → a committed batch of ≥ 64 envelopes left its document unopenable); db laws 85/85 + 210/210, hub check EXIT 0, hub bin laws 2/2 — see log + landing |
+| 2 | Trusted-catalog fixtures → channel 19 + bundle check green (coordinator 13:0x–13:5x; H14 = trusted-catalog owner this session) | **DONE**: 3 fixtures bumped; stdio-gis generation re-derived twice by the hub script's own encoding (→ `bda0b90f…` after ST2's svg pin fix; relayed); compiled-dependencies rawCases re-derived by the Pack codec (15 → 19); census sees Pack-hex + numeric `executionProtocol` versions, 2 fixtures registered, two-author fixture 17 → 19 via `generate`: `channel-version check` **0 findings**; resolver: `trustedBootstrapResolveClosure` (foreign/self/cycle/linked-profile edge) at the root; 3 stale source anchors aligned; `trusted-stdio-gis-bundle-check --source` **rc 0**; hub TS typecheck rc 0 |
+| 3 | Rust hub `trusted_catalog` laws 54/57 → root-cause the 3 reds | **DONE**: all three panicked at `plugin().expect(..)` (unit l.940/l.1895) = stdio/gis/vcs assembly failing on the peer's svg `📡️.protocol.semio` change with a stale pinned SHA-256 (fixed by ST2 13:5x); rerun **3/3 PASS** 14:26 (`generated/lane-tc-1.txt`) |
+| 4 | Item 7: remove the db artifact "deprecated-in-spirit extension seam" | **DONE 14:28**: `wp-h14/h14-remove-authz-seam.py` applied inside one lane hold (auto-revert armed): `AuthzHook`, `AllowAll`, `SecurityAuthzHook`, `Database::open_with_authz` and the generic `A` of `ArtifactEngineConfig`/`ArtifactEngine`/runner/`Database` removed (9 files); `submit` authorizes through `security` only; db `--lib --tests` EXIT 0, semio-hub `--lib --bins --tests` EXIT 0, db laws **210/210** (`generated/lane-seam-1.txt`); root `📜️script.ts` P1w caller census drops `open_with_authz` (its 16 other findings on the real engine source are pre-existing, identical before/after); TS self-test PASS |
+| 5 | Predecessor's unrun hub laws (residency footprint, observability, pair-content Rust twin) | **DONE**: hub lib laws **68/68** (incl. footprint + pair-content twin), bin observability/readiness **6/6** 14:30 (`generated/lane-hub-2.txt`); landing row written for the predecessor's 27th hub set |
+| 6 | Post-assembly codec origin (`OwnedRuntime::codec_call`, plugin host = frozen) | prepared patch `wp-h14/h14-codec-origin.py` **dry-run clean on the live tree 14:3x** (plugin-host + owned-instance laws + hub residency hunk: all `replace`, i.e. unchanged since capture); the predecessor's overlay law build died on an overlay-sync gap (`validate_fragment_array_structure`, 27th 20:57) → **window 3**: apply, native check plugin-host + hub, run the laws (no overlay rebuild now: machine reserved for the chain) |
+| 7 | ALL catalog on 7800: idle-release/LRU under real pressure (row 2.7), boot/readyz timings | waits for 7800 on ALL (chain in rebuild-all at 14:3x) |
+| 8 | `shutdown-drill` / backup-restore / README-metrics parity (row 4.9) | done by the predecessor (drill LIVE PASS 27th, parity law 7/7, spec relayed to R10); backup-restore stays permanent |
+
+#### Session 14b log
+
+- 12:1x read preamble 14 (rules 1–21 + 14b), AGENTS.md, fleet tail, this report. db module: no working-tree diff; the
+  predecessor's P1 work = commit `5bcb2da23da` (10 files: `📝️wal/🦀️.rs` commands appended from their own encoded bytes
+  inside the one transaction — `SegmentWriter::append_command`, `ArtifactWal::{preflight_submit, submit}(commands, records)`;
+  `🗿️artifact/🦀️.rs` submit split into a side-effect-free plan (`plan_one`/`plan_entries`, batch-local last-writer map) →
+  WAL preflight → commit (`commit_one`/`apply_entries`), so a WAL refusal leaves state untouched and commands take no DB I/O
+  page credit; call sites in cli/cluster/tests pass `&[]`).
+- 12:2x finished forward (not reverted — revert would have to restore 10 files from `6b8089dcb21`): `PlannedEntries` struct
+  beside `DocumentState`; `open`'s replay → `plan_one(&envelope, &batch_ids, &mut HashMap::new())` then `commit_one`
+  (same semantics: replay applies one envelope at a time, conflicts ignored); doc reference `apply_one` → `plan_one`.
+  Main told (SendMessage). Native lane: `wp-h14/h14-lane-db.sh` (check db lib+tests, then hub lib+bins+tests),
+  `FLEET_TICKET_STAMP=20260928120000`, capture `generated/lane-db-1.txt`; lane held by WG11 from 12:18.
+- 12:3x–12:4x hold 0 (`lane-db-1.txt`, priority stamp): db lib EXIT 0; lib-test red on one stale `apply_entries` call (fixed);
+  semio-hub red only on ST2's vcs xlsx break (`XlsxSnapshot.workbook`, relayed). Contract `💻️os/📦️packages/🦀️rust/📜️script.ts`
+  asserted the old `preflight_submit(&self, records…)` signature → updated.
+- 12:4x **P1 root causes** (C12: the post-cut outbox arrives as ONE batch, refused → rolled back → keystrokes lost). A
+  declared-legal batch (`DOCUMENT_BACKBONE_BATCH_MAXIMUM_*` = 8192 envelopes / 256 KiB) met four capacity refusals + one replay trap:
+  (a) DB I/O per-operation credit when commands were staged as `WalBytes` (predecessor's WAL change: commands appended from their
+  own bytes); (b) `DbLimits::default().max_batch_commands` 4 096 < 8 192 → now `protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES`;
+  (c) the hub's per-socket DoS budget 240 tokens charged per envelope (a 241-envelope flush refused, permanent) → capacity = the
+  declared maximum, whole batch charged at once (never partially), refill 60/s, and an empty budget is `DbError::Unavailable` →
+  H13's transient `hub.unavailable` (client resends); (d) the replay guards (hub socket + engine) RECORDED ids at admission, so the
+  resend of a batch refused after admission was refused as a replay (permanent) → `ReplayGuard::{check, record}` split,
+  `SecurityGate::admit_commands` (batch) + `record_committed` after commit; the engine skips already-committed envelopes of a
+  batch (idempotent merged resend) and refuses one id twice in one batch explicitly.
+- 13:0x hold 1 (`lane-p1-2.txt`): db check EXIT 0 (226 pre-existing warnings), hub `--lib --bins --tests` EXIT 0 13:16, hub bin laws
+  `a_document_socket_admits_a_declared_maximal_batch_and_readmits_an_uncommitted_one` + `a_transiently_refused_batch_…` **2/2 PASS**;
+  db laws (security/wal/artifact/engine/sync/cluster) **330 pass / 2 fail**: (1) my `a_declared_legal_byte_maximal_batch_commits_as_one_transaction_and_replays`
+  → `ArtifactEngine::open` refused the reopen → **P0**: `WalTransactionGate` (recovery + committed replay) held
+  `[Option<WalRecordFrame>; 64]` while the writer bounded a transaction only by the readable segment → a committed batch of ≥ 64
+  envelopes left its document unopenable (reachable since `5bcb2da23da`; before it, ≥ 63 envelopes hit the per-op credit instead).
+  Fix: `WAL_TRANSACTION_RECORDS_MAX` = declared envelopes + 1 (frontier); `preflight_submit` refuses above it before any I/O; the
+  gate is a bounded `Vec<WalRecordFrame>`; WAL law extended (maximal 8 192 × 32 B transaction reopens via `ArtifactWal::open` and
+  replays byte for byte; one record over is refused, segment untouched); os contract assertion updated. (2)
+  `fs_commits_and_reopen_storms_stay_within_their_throughput_bounds` (process-isolated child) → rerun alone in hold 2.
+- 13:3x coordinator item: trusted-catalog fixtures `👥️two-package`, `🧬️stdio-gis-bootstrap`, `🧱️generation-stage` → `appChannelVersion`
+  19 (2/2/3 literals). stdio-gis `profile.generationId` derived with the hub script's OWN `trustedBootstrapProfileEncoding` over
+  `projectTrustedBootstrapCodecsV1` (loaded from a rewritten copy, `wp-h14/h14-bootstrap-generation.ts --write 19`): 0ca2d589… →
+  76d1a92f… (4 occurrences: generationId, rotation initial/current/stale-issued); the derivation only admits the current version, the
+  old id was already stale before 18. `channel-version check`: pin 19, 28 consumers, **0 findings** (`generated/channel-version-check-1.txt`).
+  Oracles: `trusted-stdio-gis-bundle-check --publication-source` rc 0 (generation-stage 33 cases, publication; `fixture-oracle-2.txt`);
+  full stdio+GIS bootstrap oracle **PASS** via `h14-bootstrap-oracle.ts` skipping only `proveTrustedCompiledDependenciesFixture`, which
+  is red outside this fixture (`🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json` violates its schema; `fixture-oracle-1.txt`).
+  RELAY ST2: `cx1-apply.py` BOOTSTRAP_GENERATION_OLD → 76d1a92f….
+- 13:5x coordinator: (1) lease fixture `descriptorHex` → H13 (fixed by H13, census 0 findings 14:0x); (2)+(3) mine.
+  (2) `trustedBootstrapResolveDependencies` was generalised to N packages on 09-21 (`50c97b20513`, deliberate) and lost four
+  refusals the hub still enforces at load (`validate_bundle`: selected identity = its package record, topological order refuses
+  cycles incl. self, profile fence `local-stdio-gis-open-v1` = gis → stdio exactly). Root fix in `🌎️hub/📦️packages/🦀️rust/📜️script.ts`:
+  per-package self-dependency refusal + new `trustedBootstrapResolveClosure(profileId, claims, candidates)` (identity = own
+  descriptor, acyclic, linked-profile edge set), used by `materializeTrustedCatalogBundle` and `trustedBootstrapPreflightDescriptorsV1`
+  (both hold every selected package's claims; `requests` = `selection` 1:1); the compiled-dependencies oracle resolves the whole
+  two-package closure → 25/25 cases (probe `wp-h14/🗑️generated/probe-cases.ts`: 0 non-throwing refusals). Further reds of the same
+  check, all stale source anchors vs deliberate 09-21/09-26 changes: fresh-component describe docstring (`Shared implementation` →
+  `The ONE describe route`), Rust N-target messages (`exactly one` → `at least one` + count equality), `export async function
+  materializeTrustedCatalogBundle`; `🌎️hub/🧫️fixtures/🤝️two-author-shell-v1` held `"executionProtocol": 17` unregistered → census
+  pattern `"executionProtocol": N` + consumer row, `channel-version generate` wrote 19. **`trusted-stdio-gis-bundle-check --source`
+  rc 0** 14:0x (`generated/fixture-oracle-9.txt`, `-11.txt` after the re-derivation); hub `typecheck` rc 0 (`hub-ts-typecheck-2.txt`).
+- 14:0x ST2 fixed svg's pinned protocol sha (stdio receipts changed) → `h14-bootstrap-generation.ts --write 19`: 76d1a92f… →
+  **bda0b90f3ef9a8e253c4ee54c6e7ea2595b8377330d4044f7e9d6400abbead51** (4 occurrences); full bootstrap oracle PASS with nothing
+  skipped (`fixture-oracle-10.txt`); relayed to ST2 (`cx1-apply.py` OLD).
+- channel-version vitest: Pack-hex + literal + generator laws 3/3 PASS; the repo-census law's 50 s whole-repo `git grep --untracked`
+  (48.8 s old pattern vs 51.0 s new at load 44) exceeds the vitest timeout under load — pre-existing cost, the CLI census is the
+  measurement (`channel-version check` 0 findings).
+
 ## Session 14
 
 | # | Item | Status |

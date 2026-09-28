@@ -109,7 +109,7 @@
           "maxLength": 256
         },
         "appChannelVersion": {
-          "const": 18
+          "const": 19
         },
         "activationGeneration": {
           "type": "string",
@@ -198,7 +198,7 @@
               "type": "string"
             },
             "appChannelVersion": {
-              "const": 18
+              "const": 19
             },
             "activationGeneration": {
               "type": "string"
@@ -330,7 +330,7 @@
               "type": "string"
             },
             "appChannelVersion": {
-              "const": 18
+              "const": 19
             },
             "activationGeneration": {
               "type": "string"

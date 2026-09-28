@@ -12,7 +12,7 @@
     { "name": "wrong-version", "path": ["version"], "value": 2, "accepted": false },
     { "name": "short-request", "path": ["requestId"], "value": "1111111111111111111111111111111", "accepted": false },
     { "name": "uppercase-request", "path": ["requestId"], "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "accepted": false },
-    { "name": "client-job", "path": ["jobId"], "value": "4f454b8464c9e51bf4128f5f178bf20e", "accepted": false },
+    { "name": "client-job", "path": ["jobId"], "value": "9c02ee2c201322544da0b0987b8d3d9e", "accepted": false },
     { "name": "client-user", "path": ["userId"], "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "accepted": false },
     { "name": "client-session", "path": ["sessionId"], "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "accepted": false }
   ],
@@ -37,8 +37,8 @@
         "requestId": "11111111111111111111111111111111",
         "found": true,
         "job": {
-          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "accepted", "proposalState": "none", "proposalHash": null, "cursor": 0, "expiresAtMs": 121000 },
-          "page": { "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "accepted", "proposalState": "none", "cancelRequested": false, "expired": false, "proposalHash": null, "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }], "progress": [], "nextCursor": 0 },
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "accepted", "proposalState": "none", "proposalHash": null, "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "accepted", "proposalState": "none", "cancelRequested": false, "expired": false, "proposalHash": null, "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }], "progress": [], "nextCursor": 0 },
           "approval": null
         }
       }
@@ -52,8 +52,8 @@
         "requestId": "11111111111111111111111111111111",
         "found": true,
         "job": {
-          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "cancelled", "proposalState": "none", "proposalHash": null, "cursor": 0, "expiresAtMs": 121000 },
-          "page": { "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "cancelled", "proposalState": "none", "cancelRequested": true, "expired": true, "proposalHash": null, "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }, { "ordinal": 2, "kind": "cancel-requested", "atMs": 121000 }, { "ordinal": 3, "kind": "cancelled", "atMs": 121000 }], "progress": [], "nextCursor": 0 },
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "cancelled", "proposalState": "none", "proposalHash": null, "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "cancelled", "proposalState": "none", "cancelRequested": true, "expired": true, "proposalHash": null, "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }, { "ordinal": 2, "kind": "cancel-requested", "atMs": 121000 }, { "ordinal": 3, "kind": "cancelled", "atMs": 121000 }], "progress": [], "nextCursor": 0 },
           "approval": null
         }
       }
@@ -67,13 +67,13 @@
         "requestId": "11111111111111111111111111111111",
         "found": true,
         "job": {
-          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 1, "expiresAtMs": 121000 },
-          "page": { "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": true, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }, { "ordinal": 2, "kind": "running", "atMs": 1001 }, { "ordinal": 3, "kind": "succeeded", "atMs": 1002 }, { "ordinal": 4, "kind": "approval-prepared", "atMs": 1003 }, { "ordinal": 5, "kind": "approved", "atMs": 1004 }], "progress": [{ "cursor": 1, "runEpoch": 1, "completed": 1, "total": 1, "atMs": 1002 }], "nextCursor": 1 },
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 1, "expiresAtMs": 121000 },
+          "page": { "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": true, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [{ "ordinal": 1, "kind": "accepted", "atMs": 1000 }, { "ordinal": 2, "kind": "running", "atMs": 1001 }, { "ordinal": 3, "kind": "succeeded", "atMs": 1002 }, { "ordinal": 4, "kind": "approval-prepared", "atMs": 1003 }, { "ordinal": 5, "kind": "approved", "atMs": 1004 }], "progress": [{ "cursor": 1, "runEpoch": 1, "completed": 1, "total": 1, "atMs": 1002 }], "nextCursor": 1 },
           "approval": {
             "state": "available",
             "receipt": {
               "schema": "semio.hub.inference-approval-receipt/v1",
-              "jobId": "4f454b8464c9e51bf4128f5f178bf20e",
+              "jobId": "9c02ee2c201322544da0b0987b8d3d9e",
               "mutationId": "e9dc772df5a1648204db93ff78e9346b",
               "commandHash": "ff026b41d8841bef973f4d6110359602394e06770d30185991a6d33f720c3dda",
               "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc",
@@ -96,8 +96,8 @@
         "requestId": "11111111111111111111111111111111",
         "found": true,
         "job": {
-          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 0, "expiresAtMs": 121000 },
-          "page": { "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": false, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [], "progress": [], "nextCursor": 0 },
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": false, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [], "progress": [], "nextCursor": 0 },
           "approval": { "state": "undo-prepared", "receipt": null }
         }
       }
@@ -111,8 +111,8 @@
         "requestId": "11111111111111111111111111111111",
         "found": true,
         "job": {
-          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 0, "expiresAtMs": 121000 },
-          "page": { "jobId": "4f454b8464c9e51bf4128f5f178bf20e", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": false, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [], "progress": [], "nextCursor": 0 },
+          "receipt": { "schema": "semio.hub.inference-job-receipt/v1", "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "succeeded", "proposalState": "approved", "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "cursor": 0, "expiresAtMs": 121000 },
+          "page": { "jobId": "9c02ee2c201322544da0b0987b8d3d9e", "state": "succeeded", "proposalState": "approved", "cancelRequested": false, "expired": false, "proposalHash": "c6d60dfeff69b38527a6baec2b34993c8b27d3b70b9aa7014063d6dadf8a2bcc", "events": [], "progress": [], "nextCursor": 0 },
           "approval": { "state": "undone", "receipt": null }
         }
       }

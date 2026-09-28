@@ -53,6 +53,5 @@ export function testScalarRecordWireFixture():void {
   }
   const hostile=[{...fixture,unexpected:true},{...fixture,grants:[0,4096]},{...fixture,terminalEmpty:false},{...fixture,cases:fixture.cases.map((test,index)=>index?test:{...test,fields:[null,null,null,null]})}];
   for(const invalid of hostile)assert.equal(validate(invalid),false);
-  console.log(`[DEBUG] scalar wire source oracle: ${fixture.cases.length} exact binary cases, ${hostile.length} strict hostile fixtures; native cursor lifecycle is a separate gate`);
 }
 //#endregion 🧪️Oracle

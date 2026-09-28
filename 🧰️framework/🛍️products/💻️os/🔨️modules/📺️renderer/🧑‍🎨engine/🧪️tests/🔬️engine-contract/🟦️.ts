@@ -34,7 +34,7 @@ import {
   type SafeAreaYield,
 } from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldCameraReportTargetV1, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
-import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { createLocalInteractionStoreV1, resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
 import windowIconOverrideFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🪟️window-icon-overrides/🔣️.json" with { type: "json" };
 import windowIconOverrideSchema from "../../🧱️elements/🐚️Shell/🧫️fixtures/🪟️window-icon-overrides/🧬️schema/🔣️.json" with { type: "json" };
@@ -54,6 +54,7 @@ import {
   selectedSpaceArtifactCreationCatalogV1,
   tutorialInteractionSelectionActions,
   createBuiltNodeStoreCacheV1,
+  publishBuiltNodesV1,
   type SpaceArtifactCreationCatalogAuthorityV1,
   type SpaceArtifactCreationOwnerV1,
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
@@ -148,6 +149,7 @@ import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/�
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
 import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
 import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
+import type { InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import manifestFixtureSchema from "../../../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
 import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/⚖️action-semantics.json";
@@ -204,7 +206,6 @@ describe("catalog-resolved artifact creation kinds", () => {
       expect(!oracle(data), row.id).toBe(row.unresolved);
       expect(unresolvedActionArgs([def], data), row.id).toEqual(row.unresolved ? ["kindChoice"] : []);
     }
-    console.log("[DEBUG] Action choice validation: neutral=12 independent-enum-oracle=12");
   });
   const localized = (en: string, de: string) => ({ native: { en, de }, reuse: { en, de } });
   const dialog: DialogDefinition = {
@@ -277,7 +278,6 @@ describe("catalog-resolved artifact creation kinds", () => {
         view.unmount();
       }
     }
-    console.log("[DEBUG] Shell catalog dialog: locales=2 withdrawn-catalog=6 stale-submits=0 fresh-selection=2");
   });
 
   it("retires only choices when their catalog generation changes, even if the same tuple returns", async () => {
@@ -322,7 +322,6 @@ describe("catalog-resolved artifact creation kinds", () => {
     } finally {
       view.unmount();
     }
-    console.log("[DEBUG] Shell catalog dialog: generation-change=1 choices-retired=1 unrelated-text-retained=1");
   });
 
   it("rejects an already queued submit handler when capture retires its catalog generation", async () => {
@@ -373,7 +372,6 @@ describe("catalog-resolved artifact creation kinds", () => {
     expect(cancel).not.toHaveBeenCalled();
     expect(submit).toHaveBeenCalledTimes(1);
     expect(JSON.parse(submit.mock.calls[0]![0].kindChoice).kindId).toBe("s.gis.gismap");
-    console.log("[DEBUG] Shell catalog dialog: named-real-picker=1 modal-selection=1 exact-tuple=s.gis.gismap");
     view.unmount();
   });
 
@@ -451,7 +449,6 @@ describe("Shell dialog origin", () => {
       expect(deepEqual({ writes, cursor }, { writes: row.writes, cursor: row.cursor })).toBe(true);
       expect(drive.busy).toBe(false);
     }
-    console.log("[DEBUG] Shell tutorial serial drive: neutral=3 inverse-before-forward=0 retire-drains=1 pending-capacity=1");
   });
 
   it("restores the original tutorial snapshot only after the admitted write drains", async () => {
@@ -613,7 +610,6 @@ describe("Shell dialog origin", () => {
         vi.unstubAllGlobals();
       }
     }
-    console.log("[DEBUG] Shell tutorial seek: neutral=6 real-clock-paused=6 duplicate-mutations=0 requested-play-authority=1");
   });
 
   it("carries current Play intent through coalesced seeks without executing their superseded target", async () => {
@@ -699,7 +695,6 @@ describe("Shell dialog origin", () => {
       expect(states, row.id).toEqual(row.active);
       expect(drive.active, row.id).toBe(false);
     }
-    console.log("[DEBUG] Shell dialog origin: tutorial-drive neutral=3 user-interaction-restored=3");
   });
 
   it("admits an explicit target handoff once and retires a target created after its source expired", async () => {
@@ -719,7 +714,6 @@ describe("Shell dialog origin", () => {
       expect(retire, row.id).toHaveBeenCalledTimes(row.retires);
       if (row.retires === 1) expect(retire).toHaveBeenCalledWith(target);
     }
-    console.log("[DEBUG] Shell dialog origin: admitted-instance neutral=3 stale-target-retirement=1");
   });
 
   it("admits a spawned program's own progress and completion passes only when the primary session presents them", () => {
@@ -767,7 +761,6 @@ describe("Shell dialog origin", () => {
     complete({ requestedEffects: [{ navigate: { uri: "/wrong" } }, { setPanel: { panelJson: "{}" } }] });
     await pending;
     expect(applyEffects).not.toHaveBeenCalled();
-    console.log("[DEBUG] Shell dialog origin: removed-spawned-source effects=0 primary-retained=1");
   });
 
   it("keeps tutorial snapshots on their exact run and never restores into a replacement session", async () => {
@@ -816,7 +809,6 @@ describe("Shell dialog origin", () => {
       expect(restore, row.id).toHaveBeenCalledTimes(row.restores);
       expect(run.isCurrent()).toBe(false);
     }
-    console.log("[DEBUG] Shell dialog origin: tutorial-run neutral=5 replacement-restores=0");
   });
 
   it("remounts staged fields and rejects old callbacks before they can dispatch into or close a replacement", () => {
@@ -868,7 +860,6 @@ describe("Shell dialog origin", () => {
     secondCallbacks.onSubmit({ name: "B duplicate" });
     expect(dispatch).toHaveBeenCalledExactlyOnceWith("createArtifact", b.origin, { name: "B accepted" });
     view.unmount();
-    console.log("[DEBUG] Shell dialog origin: mounted staged-reset=1 stale-submit=2 stale-cancel=1 exact-once=1");
   });
 
   it("drops delayed effect replies and scheduled invocations after the owning mount retires", async () => {
@@ -892,7 +883,6 @@ describe("Shell dialog origin", () => {
     await invoke("openCreateArtifact", {});
     expect(applyEffects).not.toHaveBeenCalled();
     expect(handleAction).toHaveBeenCalledTimes(1);
-    console.log("[DEBUG] Shell dialog origin: late-effect-reply=0 retired-scheduled-dispatch=0");
   });
 
   it("rejects every changed origin with the same result as the independent JSON Patch and equality oracle", () => {
@@ -904,7 +894,6 @@ describe("Shell dialog origin", () => {
     }
     expect(shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, null)).toBe(false);
     expect(shellDialogOriginIsCurrentV1(null, dialogOriginFixture.owner)).toBe(false);
-    console.log("[DEBUG] Shell dialog origin: neutral cases=11 exact-owner=1");
   });
 
   it("requires a unique exact mounted session and supports documentless dialogs without lending document authority", () => {
@@ -1017,7 +1006,6 @@ describe("Space artifact creation host owner", () => {
     expect(ready).toMatchObject({ phase: "ready", kinds: catalog.kinds, authority: catalogAuthority });
     expect(withdrawn).toMatchObject({ phase: "unavailable", kinds: [], authority: null });
     expect(ready.choiceRevision).not.toBe(withdrawn.choiceRevision);
-    console.log("[DEBUG] Shell creation catalog authority: neutral=8 admitted=1 generation-and-mount-fences=7");
   });
 
   it("binds creation acceptance and ready status to the selected catalog generation", () => {
@@ -1039,7 +1027,6 @@ describe("Space artifact creation host owner", () => {
       requestGeneration: catalogAuthority.catalogGenerationId,
       statuses: artifactCreationCatalogAuthorityFixture.statusCases.map((row) => row.admitted),
     });
-    console.log("[DEBUG] Shell creation request and ready statuses preserve the selected catalog generation");
   });
 
   it("refreshes only the exact current selected catalog after an owned initial conflict", () => {
@@ -1075,7 +1062,6 @@ describe("Space artifact creation host owner", () => {
       const request = spaceArtifactCreationCatalogRefreshRequestV1(owners[row.owner], authorities[row.authority], origins[row.origin], messages[row.message]);
       expect(request, row.id).toEqual(row.admitted ? { kind: "space-artifact-creation-catalog-open", clientInstanceId: owner.clientInstanceId, spaceId: owner.spaceId } : null);
     }
-    console.log("[DEBUG] Shell creation catalog refresh: neutral=12 admitted=1 stale-or-terminal=11");
   });
 
   it("retires only staged artifact-kind fields on catalog revision", () => {
@@ -1148,7 +1134,6 @@ describe("Space artifact creation host owner", () => {
       expect(publishes, row.id).toBe(row.publish ? 1 : 0);
       expect(failures, row.id).toBe(row.failure ? 1 : 0);
     }
-    console.log("[DEBUG] Ready opening disposition: neutral=9 published=1 released-once=6");
   });
 
   it("requires an explicit same-generation mount after the document port becomes ready", async () => {
@@ -1180,7 +1165,6 @@ describe("Space artifact creation host owner", () => {
       expect(gate.current(), row.id).toBe(row.committed);
     }
     for (const generation of ["", "0".repeat(64), "A".repeat(64), "1".repeat(63), "1".repeat(65), null, ["1".repeat(64)]]) expect(() => createArtifactCreationCatalogMountV1(generation as string)).toThrow();
-    console.log("[DEBUG] creation mount gate: eight identity/retirement cases; a bound port alone never admits commit");
   });
 
   it("commits private document opening only after a still-current creation mount", async () => {
@@ -1235,7 +1219,6 @@ describe("Space artifact creation host owner", () => {
       expect(deepEqual(result, expected), row.id).toBe(true);
       if (row.outcome === "failed") expect(failure, row.id).toBe(row.actions.includes("close") ? "document closed" : "artifact-creation.catalog-generation-mismatch");
     }
-    console.log("[DEBUG] creation opening composition: eight mount cases; two commits and six exact private releases without deadline expiry");
   });
 
   it("retains exact sibling owners through one-shot cancellation and accepts a racing Ready", () => {
@@ -2717,7 +2700,6 @@ describe("plugin session ownership", () => {
     expect(tally.install).toBe(pluginAvailabilityRouteFixture.replay.expected.installs);
     expect(tally["hot-swap"]).toBe(pluginAvailabilityRouteFixture.replay.expected.hotSwaps);
     expect(tally.drop).toBe(pluginAvailabilityRouteFixture.replay.expected.drops);
-    console.log(`[DEBUG] plugin availability route: rows=${pluginAvailabilityRouteFixture.rows.length} connects=${pluginAvailabilityRouteFixture.replay.connects} installs=${tally.install} hot-swaps=${tally["hot-swap"]} drops=${tally.drop}`);
   });
 });
 //#endregion 🔌️PluginSessionOwnership
@@ -3145,7 +3127,7 @@ describe("coalescing action dispatcher", () => {
     const calls: string[] = [];
     const send = createCoalescingActionDispatcher<string>((value) => {
       calls.push(value);
-      return calls.length === 1 ? Promise.reject(new Error("[DEBUG] refused hover")) : Promise.resolve();
+      return calls.length === 1 ? Promise.reject(new Error("refused hover")) : Promise.resolve();
     });
     send("a");
     expect(calls).toEqual(["a"]);
@@ -3227,7 +3209,6 @@ describe("ui refresh coalescing lane", () => {
     expect(secondSettled).toBe(true);
     expect(coalescer.passes(), "three requests, two passes — never one per request").toBe(2);
     expect(coalescer.busy()).toBe(false);
-    console.warn("[DEBUG] b37 lane union", JSON.stringify({ passes: coalescer.passes(), scopes: taken.map((request) => request.scope) }));
   });
 
   it("carries a utility armed by a host effect while a pass was in flight into the very next pass", async () => {
@@ -3248,7 +3229,6 @@ describe("ui refresh coalescing lane", () => {
     expect(taken[1]!.utilities).toEqual({ "puzzle3d-main-perspective": "brush" });
     await settle();
     expect(coalescer.passes()).toBe(2);
-    console.warn("[DEBUG] b37 lane armed utility", JSON.stringify({ passes: coalescer.passes(), utilities: taken.map((request) => request.utilities) }));
   });
 
   it("answers a 50-request hover storm during one in-flight pass with exactly one follow-up", async () => {
@@ -3261,7 +3241,6 @@ describe("ui refresh coalescing lane", () => {
     await settle();
     expect(coalescer.passes()).toBe(2);
     expect(coalescer.owedScope()).toBeNull();
-    console.warn("[DEBUG] b37 lane hover storm", JSON.stringify({ requests: 51, passes: coalescer.passes() }));
   });
 
   it("runs the owed follow-up after a pass that REJECTED, and rejects only the requests that pass covered", async () => {
@@ -3271,15 +3250,14 @@ describe("ui refresh coalescing lane", () => {
     const joiner = coalescer.request({ scope: partial(["panel"]), utilities: {}, replaceBodies: false });
     const joinerOutcome = joiner.then(() => "resolved" as const).catch((error: unknown) => `rejected:${String(error)}`);
 
-    await settle(new Error("[DEBUG] guest refused the refresh"));
+    await settle(new Error("guest refused the refresh"));
     // 🧯️ Asserted BEFORE awaiting either outcome: a lane that drops its owed work on a throw leaves both
     // promises pending forever, and this is what makes that a failed assertion instead of a hung suite.
     expect(taken, "a failed pass may not take the lane down with it").toHaveLength(2);
     expect(taken[1]!.scope).toEqual(partial(["panel"]));
-    expect(await starterOutcome, "the boot refresh turns its own rejection into the session fault card — it must still arrive").toBe("rejected:Error: [DEBUG] guest refused the refresh");
+    expect(await starterOutcome, "the boot refresh turns its own rejection into the session fault card — it must still arrive").toBe("rejected:Error: guest refused the refresh");
     await settle();
     expect(await joinerOutcome).toBe("resolved");
-    console.warn("[DEBUG] b37 lane after rejection", JSON.stringify({ passes: coalescer.passes(), scopes: taken.map((request) => request.scope) }));
   });
 
   it("serves a request made from INSIDE a pass with the next pass instead of wedging the lane", async () => {
@@ -3314,7 +3292,6 @@ describe("ui refresh coalescing lane", () => {
     await Promise.resolve();
     expect(reentrantSettled).toBe(true);
     expect(coalescer.busy()).toBe(false);
-    console.warn("[DEBUG] b37 lane reentrant", JSON.stringify({ passes: coalescer.passes(), scopes: taken }));
   });
 
   it("asks for nothing at all on a none scope", async () => {
@@ -3333,7 +3310,7 @@ describe("shell store reducer", () => {
     readonly hover: Readonly<Record<string, { readonly channel: string; readonly ids: readonly string[] }>>;
     readonly activeMode: Readonly<Record<string, string>>;
     readonly activeGranularity: Readonly<Record<string, string>>;
-  }): ShellState["interaction"] => {
+  }): InteractionState => {
     const activeMode: Record<string, "single" | "multiple"> = {};
     for (const [domainId, mode] of Object.entries(value.activeMode)) {
       if (mode !== "single" && mode !== "multiple") throw new Error(`invalid fixture selection mode: ${mode}`);
@@ -3347,7 +3324,7 @@ describe("shell store reducer", () => {
     granularity: value.granularity,
     ids: [...value.ids],
   });
-  const fixtureTutorialSelection = (value: ShellState["interaction"]["selection"]): TutorialUiSnapshot["interactionSelection"] => {
+  const fixtureTutorialSelection = (value: InteractionState["selection"]): TutorialUiSnapshot["interactionSelection"] => {
     const selection: TutorialUiSnapshot["interactionSelection"] = {};
     for (const [domainId, current] of Object.entries(value)) {
       Object.defineProperty(selection, domainId, { value: { ...current, ids: [...current.ids] }, enumerable: true, writable: true, configurable: true });
@@ -3355,8 +3332,8 @@ describe("shell store reducer", () => {
     return selection;
   };
   const tutorialBridgeContext = (
-    interactionSelection: () => ShellState["interaction"]["selection"] = () => ({}),
-    publishInteractionSelection: (selection: ShellState["interaction"]["selection"]) => void = () => {},
+    interactionSelection: () => InteractionState["selection"] = () => ({}),
+    publishInteractionSelection: (selection: InteractionState["selection"]) => void = () => {},
   ): import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx").TutorialUiBridgeContext => ({
     session: null,
     restoreDialog: () => null,
@@ -3426,20 +3403,37 @@ describe("shell store reducer", () => {
     expect(shellStateUnchanged(state, state)).toBe(true);
   });
 
-  it("structurally shares a re-observed interaction state and an unchanged spawned-window projection, so a world hover echo re-renders no unchanged shell slice", () => {
+  it("keeps local interaction out of the shell state: a re-observation notifies nobody, a hover keeps every other field, an unchanged spawned-window projection is the same state", () => {
     const state = baseState();
-    const read = (): ShellState["interaction"] => ({ selection: { vortex: { granularity: "object", ids: ["seed-left-001"] } }, hover: {}, activeMode: { vortex: "multiple" }, activeGranularity: { vortex: "object" } });
-    const observed = shellReducer(state, { type: "INTERACTION_STATE_OBSERVED", state: read() });
-    expect(observed).not.toBe(state);
-    expect(shellReducer(observed, { type: "INTERACTION_STATE_OBSERVED", state: read() })).toBe(observed);
-    const hovered = shellReducer(observed, { type: "INTERACTION_STATE_OBSERVED", state: { ...read(), hover: { vortex: { channel: "pointer", ids: ["seed-left-001"] } } } });
-    expect(hovered.interaction.hover).toEqual({ vortex: { channel: "pointer", ids: ["seed-left-001"] } });
-    expect(hovered.interaction.selection).toBe(observed.interaction.selection);
-    expect(hovered.interaction.activeMode).toBe(observed.interaction.activeMode);
-    expect(hovered.interaction.activeGranularity).toBe(observed.interaction.activeGranularity);
-    expect(hovered.spawnedWindow).toBe(observed.spawnedWindow);
-    expect(shellReducer(state, { type: "SET_SPAWNED_WINDOW_UI", value: (current) => current })).toBe(state);
-    expect(shellReducer(state, { type: "SET_SPAWNED_WINDOW_UI", value: (current) => current, fault: null })).toBe(state);
+    expect(Object.hasOwn(state, "interaction")).toBe(false);
+    const read = (): InteractionState => ({ selection: { vortex: { granularity: "object", ids: ["seed-left-001"] } }, hover: {}, activeMode: { vortex: "multiple" }, activeGranularity: { vortex: "object" } });
+    const interaction = createLocalInteractionStoreV1();
+    let notifications = 0;
+    const unsubscribe = interaction.subscribe(() => {
+      notifications += 1;
+    });
+    interaction.observe(read());
+    const observed = interaction.get();
+    expect(observed).toEqual(read());
+    expect(notifications).toBe(1);
+    interaction.observe(read());
+    expect(interaction.get()).toBe(observed);
+    expect(notifications).toBe(1);
+    interaction.observe({ ...read(), hover: { vortex: { channel: "pointer", ids: ["seed-left-001"] } } });
+    const hovered = interaction.get();
+    expect(notifications).toBe(2);
+    expect(hovered.hover).toEqual({ vortex: { channel: "pointer", ids: ["seed-left-001"] } });
+    expect(hovered.selection).toBe(observed.selection);
+    expect(hovered.activeMode).toBe(observed.activeMode);
+    expect(hovered.activeGranularity).toBe(observed.activeGranularity);
+    unsubscribe();
+    interaction.observe(read());
+    expect(notifications).toBe(2);
+    expect(shellReducer(state, { type: "SET_SPAWNED_WINDOW_ACTIVITY", value: (current) => current })).toBe(state);
+    expect(shellReducer(state, { type: "SET_SPAWNED_WINDOW_ACTIVITY", value: (current) => current, fault: null })).toBe(state);
+    const opened = shellReducer(state, { type: "SET_SPAWNED_WINDOW_ACTIVITY", value: { "puzzle-2::puzzle3d-main": "idle" } });
+    expect(opened.spawnedWindow.spawnedWindowActivityByWindowId).toEqual({ "puzzle-2::puzzle3d-main": "idle" });
+    expect(shellReducer(opened, { type: "SET_SPAWNED_WINDOW_ACTIVITY", value: (current) => mergeRecordPreservingIdentity(current, [["puzzle-2::puzzle3d-main", "idle"]]) })).toBe(opened);
   });
 
   it("starts, advances, and dismisses an introduction via SET_INTRODUCTION_STEP without touching unrelated slices", () => {
@@ -3706,7 +3700,7 @@ describe("shell store reducer", () => {
   });
 
   it("APPLY_TUTORIAL_UI_SNAPSHOT restores shell-owned fields without forging actor-owned interaction state", () => {
-    const state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: fixtureInteractionState(tutorialInteractionFixture.playbackBefore) });
+    const state = baseState();
     const snapshot = shellReducer(state, {
       type: "APPLY_TUTORIAL_UI_SNAPSHOT",
       snapshot: {
@@ -3728,7 +3722,7 @@ describe("shell store reducer", () => {
     expect(snapshot.actionPane.activeToolId).toBe("fill");
     expect(snapshot.overlays.dialog).toEqual({ openingId: 3, dialogId: "addObject", origin: dialogOriginFixture.owner });
     expect(snapshot.overlays.searchOpen).toBe(true);
-    expect(snapshot.interaction).toBe(state.interaction);
+    expect(Object.hasOwn(snapshot, "interaction")).toBe(false);
     expect(snapshot.pluginRuntime).toBe(state.pluginRuntime);
   });
 
@@ -3766,24 +3760,26 @@ describe("shell store reducer", () => {
     const observed = fixtureInteractionState(tutorialInteractionFixture.observed);
     const selection = { ...observed.selection };
     Object.defineProperty(selection, "__proto__", { value: { granularity: "node", ids: ["prototype-safe"] }, enumerable: true, writable: true, configurable: true });
-    const state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: { ...observed, selection } });
-    const snapshot = captureTutorialUiSnapshot(state, null);
+    const interaction = createLocalInteractionStoreV1();
+    interaction.observe({ ...observed, selection });
+    const snapshot = captureTutorialUiSnapshot(baseState(), interaction.get(), null);
     expect(snapshot.interactionSelection.mesh).toEqual(tutorialInteractionFixture.snapshotSelection.mesh);
     expect(snapshot.interactionSelection["special.domain"]).toEqual(tutorialInteractionFixture.snapshotSelection["special.domain"]);
-    expect(snapshot.interactionSelection).not.toBe(state.interaction.selection);
-    expect(snapshot.interactionSelection.mesh?.ids).not.toBe(state.interaction.selection.mesh?.ids);
+    expect(snapshot.interactionSelection).not.toBe(interaction.get().selection);
+    expect(snapshot.interactionSelection.mesh?.ids).not.toBe(interaction.get().selection.mesh?.ids);
     expect(Object.hasOwn(snapshot.interactionSelection, "__proto__")).toBe(true);
     expect(snapshot.interactionSelection["__proto__"]).toEqual({ granularity: "node", ids: ["prototype-safe"] });
   });
 
-  it("plays full and sparse typed selections through the Shell reducer with JSON Patch parity", () => {
-    let state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: fixtureInteractionState(tutorialInteractionFixture.playbackBefore) });
+  it("plays full and sparse typed selections through the Shell reducer and the local interaction store with JSON Patch parity", () => {
+    let state = baseState();
+    const interaction = createLocalInteractionStoreV1(fixtureInteractionState(tutorialInteractionFixture.playbackBefore));
     const dispatch = (action: ShellAction) => {
       state = shellReducer(state, action);
     };
     const bridge = tutorialBridgeContext(
-      () => state.interaction.selection,
-      (selection) => dispatch({ type: "INTERACTION_STATE_OBSERVED", state: { ...state.interaction, selection } }),
+      () => interaction.get().selection,
+      (selection) => interaction.observe({ ...interaction.get(), selection }),
     );
     applyTutorialUiSnapshotToShell(
       dispatch,
@@ -3796,9 +3792,10 @@ describe("shell store reducer", () => {
       },
       bridge,
     );
-    expect(state.interaction).toEqual(applyPatch(structuredClone(tutorialInteractionFixture.playbackBefore), [{ op: "replace", path: "/selection", value: structuredClone(tutorialInteractionFixture.snapshotSelection) }], true, false).newDocument);
+    expect(interaction.get()).toEqual(applyPatch(structuredClone(tutorialInteractionFixture.playbackBefore), [{ op: "replace", path: "/selection", value: structuredClone(tutorialInteractionFixture.snapshotSelection) }], true, false).newDocument);
 
-    state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: fixtureInteractionState(tutorialInteractionFixture.playbackBefore) });
+    state = baseState();
+    interaction.observe(fixtureInteractionState(tutorialInteractionFixture.playbackBefore));
     applyTutorialUiChangeToShell(dispatch, fixtureSelectionChange({ ...tutorialInteractionFixture.delta, domainId: "mesh" }), bridge);
     const oracleAfterDelta = applyPatch(
       structuredClone(tutorialInteractionFixture.playbackBefore),
@@ -3806,10 +3803,10 @@ describe("shell store reducer", () => {
       true,
       false,
     ).newDocument;
-    expect(state.interaction).toEqual(oracleAfterDelta);
-    expect(state.interaction).toEqual(tutorialInteractionFixture.afterDelta);
+    expect(interaction.get()).toEqual(oracleAfterDelta);
+    expect(interaction.get()).toEqual(tutorialInteractionFixture.afterDelta);
     applyTutorialUiChangeToShell(dispatch, fixtureSelectionChange({ ...tutorialInteractionFixture.clearDelta, domainId: "mesh" }), bridge);
-    expect(state.interaction).toEqual(tutorialInteractionFixture.afterClear);
+    expect(interaction.get()).toEqual(tutorialInteractionFixture.afterClear);
   });
 
   it("projects tutorial selection playback through ordinary interaction CQRS actions", () => {
@@ -5012,7 +5009,6 @@ describe("framework external slots", () => {
     await resolveExternalSlots(node("empty", { type: "text", value: "Empty", emphasize: null, dataAttributes: null }), { ...context, ownerId: `${law.ownerId}:a` });
     expect(destroyed).toEqual([1]);
     expect(context.contributorInstances.size).toBe(1);
-    console.info("[DEBUG] external slot bodies rendered with independent instances, refreshed input and exact retirement");
   });
 
   it("shares pending creations and retires the exact detached contributor", async () => {
@@ -5472,7 +5468,6 @@ describe("framework renderer hosts", () => {
       }
     }
     expect(cases).toHaveLength(8);
-    console.log("[DEBUG] Node graph typed viewport action matches Ajv for 8 shared neutral cases");
   });
 
   it("encodes node graph selection and hover with its scene-owned framework interaction address", () => {
@@ -11190,7 +11185,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, volume).activeUtility).toBe("volumeBrush");
     const idle = leftoverOverlayCarryingSelectionV1(hoverSelect, { ids: [] as const, hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select" });
     expect(idle.activeUtility).toBe("select");
-    console.warn("[DEBUG] leftover hover select keeps armed brush", JSON.stringify({ brush: brush.activeUtility, volume: volume.activeUtility, idle: idle.activeUtility }));
   });
 
   it("every pane of one document names its OWN window surface, and publishes the selection it paints", async () => {
@@ -11224,7 +11218,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const carried = publication.guestCarriedPick;
     const { why: _carriedWhy, ...carriedExpected } = { why: carried.why, ...carried.guestPublished };
     expect(worldSurfaceGuestSelectionDomV1(JSON.stringify(carried.guestSelectionJson)), "a guest that KEPT the pick must say so on its own lane").toEqual(carriedExpected);
-    console.warn("[DEBUG] world surface identity", JSON.stringify({ identities, published: worldSurfaceSelectionDomV1(painted, interaction), guestPublished }));
   });
 
   it("the leftover world overlay is per window INSTANCE: arming one pane leaves its sibling's record untouched", async () => {
@@ -11255,7 +11248,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     world.publishLeftoverWorldSelectionV1({ ...idle, activeUtility: "fill", activeToolId: "fill" }, { kind: "allWindows" });
     expect(paneRecord(perspective).activeUtility, "a mode-level tool is the ONE authority that speaks for every pane").toBe("fill");
     expect(paneRecord(top).activeUtility).toBe("fill");
-    console.warn("[DEBUG] leftover per-instance overlay", JSON.stringify({ surfaces, perspective: paneRecord(perspective).activeUtility, top: paneRecord(top).activeUtility }));
     world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
     expect(world.leftoverWorldWindowOverlayV1(perspective)).toBeNull();
   });
@@ -11329,7 +11321,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(leftoverInspectionPanelHash([], "abc")).toBe("abc");
     expect(uiRefreshSectionUnchanged(leftoverInspectionPanelHash(["seed-left-001"], "abc"), { root: 0, hash: "abc" })).toBe(false);
     expect(uiRefreshSectionUnchanged("abc", { root: 0, hash: "abc" })).toBe(true);
-    console.warn("[DEBUG] leftover first-pick Inspection hash bust", JSON.stringify({ selectedIds: carried.ids, omitHash: leftoverInspectionPanelHash(carried.ids, "abc") === undefined }));
   });
 
   it("empty-target interactionSelect clears selectedIds while hover may remain; hover leftover does not invent a pick", () => {
@@ -11353,7 +11344,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const hoverOnly = leftoverOverlayCarryingSelectionV1({ ids: [] as const, hoveredId: "seed-left-001", hoveredDomain: "vortex" as const, gumballActive: false, gumballAnchorId: null }, null);
     expect(hoverOnly.ids).toEqual([]);
     expect(leftoverSelectIdsMustNameHoverPickV1(hoverOnly.ids, hoverOnly.hoveredId)).toBe(false);
-    console.warn("[DEBUG] leftover empty-target select ids", JSON.stringify({ selectedIds: published?.selectedIds, hoverId: published?.hoverTarget?.id, hoverOnlyIds: hoverOnly.ids }));
   });
 
   it("retires a stale selection overlay against the pane's own document, and keeps the pick it exists for", async () => {
@@ -11412,7 +11402,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     // rule the guest's topology pruning uses for a domain it has no entry for.
     expect(world.leftoverWorldOverlayIdsInDocumentV1(["shell@solid"], [])).toEqual(["shell@solid"]);
     world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
-    console.warn("[DEBUG] leftover cover in document", JSON.stringify({ covered: covered.ids, afterSwitch: afterSwitch.ids, afterRepick: afterRepick.ids }));
   });
 
   it("dirties the whole shell when a direct browser-actor dispatch applied a mutation", () => {
@@ -11499,7 +11488,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       measures: true,
       labels: false,
     });
-    console.warn("[DEBUG] b37 effect scope", JSON.stringify({ declared, earned }));
   });
 
   /** 🔁️ A pass's OWED effects are applied under the scope that pass declared — never a wider one.
@@ -11528,7 +11516,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(lane, "the lane applies the scope the pass recorded").toContain("applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, owedEffects.scope, owedEffects.owner)");
     expect(lane.includes('{ kind: "full" }'), "and names no scope of its own").toBe(false);
     expect(shellHost, "the owed slot records the pass's scope when it records the effects").toContain("owedPassEffectsRef.current = { effects: pendingRefreshEffects, session: nextSession, owner: refreshOwner, scope: scopeArg }");
-    console.warn("[DEBUG] owed-pass scope: pending effects earn nothing, the lane carries the pass's own scope");
   });
 
   // 📚️ The language-agnostic half of the picker: which examples a surface may offer at all. Rust
@@ -13462,7 +13449,6 @@ describe("node-graph surface attachment in a hidden tab", () => {
       await waitFor(() => {
         for (const release of released) expect(release).toHaveBeenCalledTimes(1);
       });
-      console.info("[DEBUG] retained React graph host preserved one session across refreshes and released it once on window unmount");
     } finally {
       view.unmount();
       vi.unstubAllGlobals();
@@ -13510,6 +13496,34 @@ describe("built-node store reloads", () => {
       expect(cache.storeFor("window:procedural-main", second)).toBe(store);
       cache.flushPendingReloads();
       expect(notifications).toBe(settled);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it("publishes a body no render owns straight into its store: a new key loads, a changed body reloads and notifies at once, an unchanged one is a no-op", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    expect(cache.storeOf("spawned:puzzle-2::puzzle3d-main")).toBeNull();
+    const first = contractNode("first");
+    publishBuiltNodesV1(cache, [["spawned:puzzle-2::puzzle3d-main", first]]);
+    const store = cache.storeOf("spawned:puzzle-2::puzzle3d-main");
+    expect(store).not.toBeNull();
+    const textOf = () => (store!.getNodeSnapshot(store!.getState().root ?? 0)?.component as { readonly value?: string } | undefined)?.value;
+    expect(textOf()).toBe("first");
+    let notifications = 0;
+    const unsubscribe = store!.subscribeNode(store!.getState().root ?? 0)(() => {
+      notifications += 1;
+    });
+    try {
+      publishBuiltNodesV1(cache, [["spawned:puzzle-2::puzzle3d-main", first]]);
+      expect(notifications).toBe(0);
+      const revisionBefore = store!.getRevisionSnapshot();
+      publishBuiltNodesV1(cache, [["spawned:puzzle-2::puzzle3d-main", contractNode("hovered")]]);
+      expect(cache.storeOf("spawned:puzzle-2::puzzle3d-main")).toBe(store);
+      expect(textOf()).toBe("hovered");
+      expect(notifications).toBeGreaterThan(0);
+      expect(store!.getRevisionSnapshot()).toBeGreaterThan(revisionBefore);
+      expect(cache.pendingReloadKeys()).toEqual([]);
     } finally {
       unsubscribe();
     }
@@ -13864,7 +13878,6 @@ describe("history patch apply", () => {
     expect(historyRefreshNeededV1("setActiveExample", { upserts: [] })).toBe(true);
     expect(historyRefreshNeededV1("setActiveExample", { upserts: [{ seq: 1 }] })).toBe(false);
     expect(historyRefreshNeededV1("undo", undefined)).toBe(false);
-    console.log("[DEBUG] History patch apply: equal-cursor-upserts=1 newer=1 older-skipped=1 equal-empty-skipped=1 replace=1 example-refresh=1 example-has-upserts=0 undo-skip=1");
   });
 });
 
@@ -13890,7 +13903,6 @@ describe("example switch — the completion's scope is what re-takes the flow wi
     const historyOnly = typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: { cursor: 4 }, requestedEffects: [] });
     expect(historyOnly).toEqual({ kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] });
     expect(buildUiRefreshRequest(historyOnly!, generation3dWindows, historyPanel, {}, new Map())?.windows ?? []).toEqual([]);
-    console.log("[DEBUG] example switch host caching: full-scope-windows=2 history-only-windows=0");
   });
 
   it("the guest's new graph replaces the cached flow body while the untouched preview body keeps its identity", () => {
@@ -13913,14 +13925,12 @@ describe("example switch — the completion's scope is what re-takes the flow wi
     );
     expect(merged["procedural-main"]).toEqual({ type: "nodeGraph", value: "box-shell-preview" });
     expect(merged["procedural-preview"]).toBe(previousBodies["procedural-preview"]);
-    console.log("[DEBUG] example switch host caching: flow-body-replaced=1 preview-body-identity-kept=1");
   });
 
   it("a guest that re-renders the PREVIOUS example answers the same hash, so the shell keeps showing it — the failure this law names", () => {
     const cache: UiRefreshCache = new Map([["window:procedural-main", { hash: "hex-column-hash", value: { type: "nodeGraph", value: "hexagonal-mushroom-column" } }]]);
     applyUiRefreshResponseToCache(cache, { windows: [{ key: "procedural-main", hash: "hex-column-hash" }] });
     expect(cache.get("window:procedural-main")?.value).toEqual({ type: "nodeGraph", value: "hexagonal-mushroom-column" });
-    console.log("[DEBUG] example switch host caching: unchanged-hash-keeps-previous-graph=1");
   });
 
   it("a refresh asked for while one is already crossing is coalesced onto the union, never dropped", () => {
@@ -13942,7 +13952,6 @@ describe("example switch — the completion's scope is what re-takes the flow wi
     // of coalescing instead of letting the newer pass supersede (and discard) the older one.
     const union = mergeUiDirtyScopeV1({ kind: "partial", windowBodies: ["procedural.play.main"] }, { kind: "partial", windowBodies: ["procedural.play.preview"] });
     expect(buildUiRefreshRequest(union, generation3dWindows, historyPanel, {}, new Map())?.windows?.map((entry) => entry.bodyKey)).toEqual(["procedural.play.main", "procedural.play.preview"]);
-    console.log("[DEBUG] example switch host caching: coalesced-union-windows=2");
   });
 });
 //#endregion 🎨️ExampleSwitchHostCaching
@@ -14006,7 +14015,6 @@ describe("node-graph caption clipping (2D replay twin)", () => {
       expect(syntheticLabelMeasure(fitted, row.charWidth)).toBeLessThanOrEqual(Math.max(row.maxWidth, 0) + 1e-9);
       expect([...fitted].filter((glyph) => glyph === DAG_LABEL_ELLIPSIS).length).toBeLessThanOrEqual(1);
     }
-    console.log("[DEBUG] node-graph caption clipping reproduced all %s shared fixture rows", rows.length);
   });
 
   it("draws a node title clipped at its measured width instead of shrinking the font into a smudge", () => {
@@ -14027,7 +14035,6 @@ describe("node-graph caption clipping (2D replay twin)", () => {
     expect(text.endsWith(DAG_LABEL_ELLIPSIS)).toBe(true);
     expect(text.startsWith("Brep")).toBe(true);
     expect([...text].length * fontPx * 0.6).toBeLessThanOrEqual(40 * 1.7844325616011099 * 0.88 + 1e-9);
-    console.log("[DEBUG] node-graph caption drawn as %o at %spx", text, fontPx);
   });
 
   it("centres captions on the measured overlay, not on a stale session size", () => {
@@ -14075,7 +14082,6 @@ describe("node-graph opening camera (renderer twin)", () => {
         expect([row.name, coverage <= DAG_CONTENT_REFIT_MAX_COVERAGE]).toEqual([row.name, row.expect.refits]);
       }
     }
-    console.log("[DEBUG] node-graph opening camera reproduced all %s shared fixture rows", rows.length);
   });
 
   it("derives the graph bounds a fit frames from the scene's own node records", () => {
@@ -14102,7 +14108,6 @@ describe("node-graph opening camera (renderer twin)", () => {
       const again = dagFitCamera(content, row.viewport.width, row.viewport.height);
       expect([row.name, again.x, again.y, again.zoom]).toEqual([row.name, published.x, published.y, published.zoom]);
     }
-    console.log("[DEBUG] node-graph fit publication reproduced all %s surface rows", rows.length);
   });
 
   it("re-frames only on a layout change, never on hover, selection or evaluation churn", () => {
@@ -14155,7 +14160,6 @@ describe("🔌️ operator port sides", () => {
       const handles = ports.map((port) => `${row.operator}@${port}`);
       expect([row.operator, new Set(handles).size]).toEqual([row.operator, handles.length]);
     }
-    console.log("[DEBUG] port-side twin checked %s operators", fixture.rows.length);
   });
 
   it("spells a produced channel with the suffix only when its own operator is given the same noun", () => {
@@ -14236,7 +14240,6 @@ describe("📚️ boot example contract", () => {
       const options = row.options.map((id: string) => ({ id }));
       expect(resolveBootExampleId(row.activeExampleId, options, row.defaultExampleId ?? undefined), row.id).toBe(row.expected);
     }
-    console.log("[DEBUG] boot example contract reproduced all %s shared fixture rows", bootExampleFixture.rows.length);
   });
 
   it("reads the `?example=` axis the same way on both entries", () => {
@@ -14246,7 +14249,6 @@ describe("📚️ boot example contract", () => {
     expect(resolveBootQueryExampleId("?plugin=generation3d", "seeded"), "an absent query keeps the per-server seed").toBe("seeded");
     expect(resolveBootQueryExampleId("?plugin=generation3d&example=", "seeded"), "an empty value is the same as no value at all").toBe("seeded");
     expect(() => resolveBootQueryExampleId("?example=" + "x".repeat(BOOT_QUERY_CAPACITY), undefined)).toThrow(/boot-query-overflow/);
-    console.log("[DEBUG] boot example contract reproduced all %s shared `?example=` rows", bootExampleFixture.bootQuery.length);
   });
 });
 //#endregion 📚️BootExampleTwin
@@ -14296,7 +14298,6 @@ describe("🛑️ world3d cancel contract", () => {
       expect(status.cancelAction, row.id).toBe(row.expected.cancelAction);
       expect(status.cancelArgs, row.id).toEqual(row.expected.cancelArgs);
     }
-    console.log("[DEBUG] world3d cancel contract reproduced all %s shared fixture rows", rows.length);
   });
 
   it("derives the control ids the wgpu shell paints from the same rows", () => {
@@ -14360,7 +14361,6 @@ describe("🛟️ chrome panel safe area", () => {
       expect(safeArea.inlinePx, `${row.id}: inline reserve`).toBe(row.expected.inline);
       expect(safeArea.blockPx, `${row.id}: block reserve`).toBe(row.expected.block);
     }
-    console.log("[DEBUG] chrome panel safe area reproduced all %s shared fixture rows", surfaceControlsFixture.chromePanelSafeArea.length);
   });
 
   it("leaves every reserved affordance clear of the panels it yielded to", () => {
@@ -14425,7 +14425,6 @@ describe("⏳️ world3d compute status pane", () => {
       expect(status.inFlight, row.id).toBe(row.expected.inFlight);
       expect(status.ratio, row.id).toBeCloseTo(row.expected.ratio, 9);
     }
-    console.log("[DEBUG] world3d status pane reproduced all %s shared fixture rows", rows.length);
   });
 
   it("carries the producer's own empty-surface hint, and an idle surface that HAS one is not silent", () => {
@@ -14455,7 +14454,6 @@ describe("⏳️ world3d compute status pane", () => {
       painted += 1;
     }
     expect(painted).toBeGreaterThan(0);
-    console.log("[DEBUG] world3d status pane: %s of %s rows are unsettled and paint a pane", painted, rows.length);
   });
 
   it("never defaults to one language: a half-translated phase label is no label at all", () => {
@@ -14496,7 +14494,6 @@ describe("⏳️ world3d compute status pane", () => {
       }
       expect(isVisible(world3dComputeStatusV1(frames[frames.length - 1].statusJson)), `${lane}: the timeline ends settled`).toBe(false);
       if (lane === "evaluation") expect(nonIdle, `${lane}: non-idle frames`).toBeGreaterThanOrEqual(timeline.minimumNonIdleFrames);
-      console.log("[DEBUG] world3d status timeline %s: %s non-idle frame(s), ratio monotone up to %s, settled at the end", lane, nonIdle, previousRatio);
     }
     expect(
       timeline.cancelled.some((frame) => frame.expected.phase === "cancelled"),
@@ -14531,7 +14528,6 @@ describe("node-graph port types", () => {
     for (const row of fixture.rows) {
       expect([row.source, row.target, portValueTypesCompatible(typesOf(row.source), typesOf(row.target))]).toEqual([row.source, row.target, row.compatible]);
     }
-    console.log("[DEBUG] port-type twin answered %s rows", fixture.rows.length);
   });
 
   it("refuses the drag the defect accepted, on the node records a surface actually holds", () => {

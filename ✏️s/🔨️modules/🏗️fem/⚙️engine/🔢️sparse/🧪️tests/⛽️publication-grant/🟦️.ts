@@ -34,5 +34,4 @@ export function testFemPcgPublicationGrantOracle(): void {
     assert.deepEqual(next, row.expected);
     assert.deepEqual(applyPatch(before, patch, true, false).newDocument, row.expected);
   }
-  console.log(`[DEBUG] FEM PCG publication admission: ${fixture.cases.length} cases agree with fast-json-patch ${fixture.oracle.version}`);
 }

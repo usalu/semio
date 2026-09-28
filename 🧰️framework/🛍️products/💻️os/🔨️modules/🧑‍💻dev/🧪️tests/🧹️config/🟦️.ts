@@ -134,7 +134,6 @@ describe("vite config module graph", () => {
     const { modules, sourceBytes } = await esbuildConfigGraph();
     expect(modules.length).toBeLessThanOrEqual(contract.maxModules);
     expect(sourceBytes).toBeLessThanOrEqual(contract.maxSourceBytes);
-    console.log(`[DEBUG] vite config graph: ${modules.length} modules, ${sourceBytes} source bytes`);
   });
 
   it("resolves nothing outside the parsed graph and every required module under Bun's independent bundler", async () => {
@@ -591,7 +590,6 @@ describe("browser entry module graph", () => {
     const { modules, packageEdges, unresolved } = browserGraph();
     for (const required of browserContract.requireModules) expect(modules).toContain(required);
     expect(modules.length).toBeLessThanOrEqual(browserContract.maxModules);
-    console.log(`[DEBUG] browser entry graph: ${modules.length} modules, ${packageEdges.size} bare packages, ${unresolved.length} unbuilt artifacts`);
   });
 
   it("agrees with esbuild's independent bundler on the denied modules and packages", async () => {
@@ -604,7 +602,6 @@ describe("browser entry module graph", () => {
     // under-walks is the dangerous one. The reverse is not asserted: esbuild drops an import statement whose
     // bindings are all unused (it assumes they were types), so its input set is legitimately the smaller one.
     expect(oracle.modules.filter((module) => SOURCE_MODULE.test(module) && !ours.modules.includes(module)), "esbuild reached a browser module this walk never visited").toEqual([]);
-    console.log(`[DEBUG] browser entry graph: ${ours.modules.length} walked, ${oracle.modules.length} esbuild inputs, ${oracle.packages.length} bare packages`);
   }, 120_000);
 
   it("agrees with enhanced-resolve's independent resolver on every resolved specifier", async () => {

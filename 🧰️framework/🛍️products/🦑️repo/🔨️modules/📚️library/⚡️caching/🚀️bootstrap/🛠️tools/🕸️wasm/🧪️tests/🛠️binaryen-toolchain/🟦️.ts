@@ -43,5 +43,4 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
       assert.deepEqual(readdirSync(join(binaryenDirectory(temporary), "..")), []);
     } finally { globalThis.fetch = previous; rmSync(temporary, { recursive: true, force: true }); }
   }
-  console.log("[DEBUG] Binaryen platform/archive contract and Ajv schema parity PASS");
 }

@@ -2,7 +2,7 @@
   "schema": "semio.hub.gis-map-proposal-approval-fixture/v1",
   "version": 1,
   "binding": {
-    "digest": "25a58ad69c47710a9b1dd683edd12fc7e88c6a3296b6c356e2115d1c7ee20537",
+    "digest": "1643c1ddc80caf3505f5a9650272a940dc31ceb6731ca134d6058f22dfd2fbbd",
     "catalogGenerationId": "0101010101010101010101010101010101010101010101010101010101010101",
     "packageId": "semio:gis",
     "packageVersion": "0.1.0",

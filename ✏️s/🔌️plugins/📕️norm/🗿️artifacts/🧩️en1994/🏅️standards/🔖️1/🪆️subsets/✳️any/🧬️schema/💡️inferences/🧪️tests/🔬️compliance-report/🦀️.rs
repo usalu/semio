@@ -1,5 +1,5 @@
 use super::*;
-use crate::app_surface::{get_value_at_path, insert_value_at_path, remove_value_at_path, set_value_at_path};
+use crate::app_surface::{apply_remedy_edit, get_value_at_path, insert_value_at_path, remove_value_at_path, set_value_at_path};
 use crate::document::{AnnexChoice, CheckStatus, RemedyBound};
 use crate::field_meta::en1994_field_meta;
 use crate::{encode_en1994_snapshot_json, En1994Snapshot, SteelSection};
@@ -201,6 +201,23 @@ fn bridge_example_runs_fatigue_checks() {
     let report = evaluate(&doc);
     assert!(report.checks.iter().any(|c| c.id.contains("delta-sigma")));
     assert!(report.checks.iter().any(|c| c.id.contains("stud") && c.part.contains("1994-2")));
+}
+
+#[test]
+fn bridge_girder_ltb_and_crack_remedy0_clear() {
+    let doc = crate::decode_en1994_dsl(&example_dsl("composite-bridge-girder")).expect("decode");
+    let report = evaluate(&doc);
+    for id in ["en1994.6.4.ltb.girder-G1", "en1994.7.4.crack.girder-G1"] {
+        let fail = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing {id}"));
+        assert_eq!(fail.status, CheckStatus::Fail, "{id} should start Fail");
+        assert!(!fail.remedies.is_empty(), "{id} needs a remedy");
+        let mut tree = dsl::ToValue::to_value(&doc);
+        apply_remedy_edit(&report, id, 0, 0, &mut tree).unwrap_or_else(|e| panic!("{id} apply: {e:?}"));
+        let fixed: En1994Snapshot = dsl::FromValue::from_value(tree).expect("decode after remedy");
+        let after = evaluate(&fixed);
+        let again = after.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing after {id}"));
+        assert_ne!(again.status, CheckStatus::Fail, "{id} remedy[0] left Fail u={}", again.utilization);
+    }
 }
 
 #[test]

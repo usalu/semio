@@ -154,7 +154,6 @@ describe("flow node-graph boot selection", () => {
     ledger.adoptSelection({ nodeIds: [] });
     ledger.adoptSelection({ nodeIds: ["column-preview"] });
     expect(ledger.publishSelection({ nodeIds: mountReport(["column-preview"]) })).toBe(false);
-    console.log(`[DEBUG] boot selection: adopted=${JSON.stringify(["column-preview"])} mountReport=${JSON.stringify(mountReport(["column-preview"]))} owed=0`);
   });
 });
 

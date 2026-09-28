@@ -101,10 +101,12 @@ async fn unmodeled_parts_survive_decode_encode_verbatim() {
     let bytes = semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("encode");
 
     let decoded = decode_docx(&bytes).expect("decode");
-    assert_eq!(decoded.opc.part_bytes("word/numbering.xml"), Some(b"<w:numbering/>".as_slice()));
+    let numbering = decoded.xml_part("word/numbering.xml").expect("an unmodeled XML part is authoritative XML, never an opaque byte part").document.clone();
+    assert!(decoded.opc.part("word/numbering.xml").is_none(), "an XML part is never duplicated into the binary lane");
+    assert_eq!(xml_document_to_text(&numbering), "<w:numbering/>", "the unmodeled part's text survives decode");
     let re_encoded = encode_docx(&decoded).expect("re-encode");
     let re_decoded = decode_docx(&re_encoded).expect("re-decode");
-    assert_eq!(re_decoded.opc.part_bytes("word/numbering.xml"), Some(b"<w:numbering/>".as_slice()));
+    assert_eq!(re_decoded.xml_part("word/numbering.xml").map(|part| &part.document), Some(&numbering), "the unmodeled part survives encode/decode exactly");
     assert_eq!(re_decoded.project_document().expect("project document"), sample_document().await);
 }
 
@@ -465,7 +467,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     let mut rows = 0usize;
     loop {
         match reader.read_event().unwrap() {
-            Event::Start(event) | Event::Empty(event) if event.local_name().as_ref() == b"tr" => rows += 1,
+            Event::Start(event) | Event::Empty(event) if event.local_name().as_ref() == "tr" => rows += 1,
             Event::Eof => break,
             _ => {}
         }

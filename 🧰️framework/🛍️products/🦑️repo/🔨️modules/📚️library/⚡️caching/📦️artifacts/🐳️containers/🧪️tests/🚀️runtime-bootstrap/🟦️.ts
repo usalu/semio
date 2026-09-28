@@ -6,6 +6,10 @@ import { spawnSync } from "node:child_process";
 
 /** 🐳️ The devcontainer fields this bootstrap contract reads. */
 interface DevcontainerConfig {
+  readonly workspaceFolder: string;
+  readonly remoteUser: string;
+  readonly mounts: readonly string[];
+  readonly onCreateCommand: readonly string[];
   readonly postCreateCommand: readonly string[];
   readonly features: Readonly<Record<string, { readonly version?: string; readonly moby?: boolean }>>;
   readonly forwardPorts: readonly number[];
@@ -18,13 +22,25 @@ interface LaunchRow {
   readonly env?: Readonly<Record<string, string>>;
 }
 
-/** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization. */
+/** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization, and that every named
+ * volume nested in the checkout is private to that checkout (`${devcontainerId}`: two clones with the same folder name must
+ * not share `node_modules` or build caches) and, created root-owned by Docker, is handed to the remote user before
+ * `postCreateCommand` installs into it. https://containers.dev/implementors/json_reference/#variables-in-devcontainerjson
+ * https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume */
 export function testContainerRuntimeBootstrap(workspace: string): void {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
   const dockerfile = readFileSync(join(workspace, ".devcontainer/Dockerfile"), "utf8"), configSource = readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8");
   const config = Bun.JSONC.parse(configSource) as DevcontainerConfig;
   assert.deepEqual(Bun.JSONC.parse(configSource), require("jsonc-parser").parse(configSource));
   assert.deepEqual(config.postCreateCommand, fixture.postCreateCommand);
+  const nestedMounts = (mounts: readonly Readonly<Record<string, string>>[]) => mounts.filter((mount) => mount.type === "volume" && mount.target!.startsWith("${containerWorkspaceFolder}/"));
+  const nested = (mounts: readonly Readonly<Record<string, string>>[]) => nestedMounts(mounts).map((mount) => mount.target!.replace("${containerWorkspaceFolder}", config.workspaceFolder));
+  const parsedMounts = config.mounts.map((mount) => Object.fromEntries(mount.split(",").map((pair) => [pair.slice(0, pair.indexOf("=")), pair.slice(pair.indexOf("=") + 1)])));
+  const volumes = nested(parsedMounts);
+  for (const mount of nestedMounts(parsedMounts)) assert.ok(mount.source!.includes("${devcontainerId}"), `The volume at ${mount.target} is nested in the checkout, so it must be private to it (\${devcontainerId})`);
+  assert.deepEqual(volumes, nested(require("lodash").map(config.mounts, (mount: string) => require("lodash").fromPairs(require("lodash").map(mount.split(","), (pair: string) => require("lodash").split(pair, /=(.*)/s, 2))))));
+  assert.deepEqual(volumes, fixture.workspaceVolumeTargets);
+  assert.deepEqual(config.onCreateCommand, ["sudo", "chown", `${config.remoteUser}:${config.remoteUser}`, ...volumes], "Docker creates a named volume nested in the checkout owned by root; the remote user must own it before postCreateCommand installs into it");
   for (const path of fixture.retiredScripts) assert.equal(existsSync(join(workspace, path)), false, `Retired lifecycle bypass: ${path}`);
   const rootTargets = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets;
   const target = rootTargets[fixture.postCreateCommand[3].split(":")[1]];
@@ -66,6 +82,8 @@ export function testContainerRuntimeBootstrap(workspace: string): void {
   assert.ok(runtime.includes("https://github.com/oven-sh/bun/releases/download/bun-v$BUN_VERSION/"));
   assert.ok(runtime.includes("https://nodejs.org/dist/v$NODE_VERSION/"));
   assert.ok(!/bun install|npm|curl[^\n]*\|\s*(?:ba)?sh/.test(runtime));
+  assert.ok(!/(?:curl|wget)[^\n]*\|[^\n]*\bsh\b/.test(dockerfile), "The image pipes no unpinned installer into a shell; tools come from pinned features or checksum-verified archives");
+  assert.equal(config.features[fixture.uvFeature.id]?.version, fixture.uvFeature.version, "uv comes from its pinned feature only");
   if (process.platform !== "win32") {
     const command = `${selector}\nprintf '%s|%s|%s|%s' "$bun_archive" "$bun_sha" "$node_archive" "$node_sha"`;
     for (const row of fixture.platforms) {
@@ -75,5 +93,5 @@ export function testContainerRuntimeBootstrap(workspace: string): void {
     }
     for (const architecture of fixture.rejectedArchitectures) assert.notEqual(spawnSync("sh", ["-ec", command], { env: { ...process.env, runtime_arch: architecture }, encoding: "utf8", timeout: 5000 }).status, 0);
   }
-  console.log("✅️ Container runtime pins, checksum-before-extraction, repository Nx ownership, forwarded launch-row ports and JSONC/lodash/native shell oracles PASS");
+  console.log("✅️ Container runtime pins, checksum-before-extraction, repository Nx ownership, forwarded launch-row ports, volume ownership before creation and JSONC/lodash/native shell oracles PASS");
 }

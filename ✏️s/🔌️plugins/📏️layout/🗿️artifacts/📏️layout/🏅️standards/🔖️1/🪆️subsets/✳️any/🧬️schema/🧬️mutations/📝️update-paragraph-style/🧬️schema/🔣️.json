@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-paragraph-style/schema.json",
+  "title": "UpdateParagraphStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "fontFamily", "fontSize", "fontWeight", "leading", "tracking", "alignment"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "fontFamily": { "type": "string", "minLength": 1 },
+    "fontSize": { "type": "number", "exclusiveMinimum": 0 },
+    "fontWeight": { "type": "integer", "minimum": 1 },
+    "leading": { "type": "number", "exclusiveMinimum": 0 },
+    "tracking": { "type": "number" },
+    "alignment": { "type": "string", "enum": ["left", "center", "right", "justify"] }
+  }
+}

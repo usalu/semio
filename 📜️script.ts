@@ -7187,6 +7187,64 @@ async function runDocstringCensusGate(root: string, rule: string | undefined): P
   }
 }
 
+/** 🐞️ The debug-tag census as a gate (acceptance ledger 5.12): fails on any tracked line outside the ticket tree and Markdown
+ * prose that carries the tag AGENTS.md reserves for temporary logs, cross-checks the scanner against `git grep -c`, prints
+ * the findings and publishes the acceptance record.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runDebugTagCensus` */
+async function runDebugTagCensusGate(root: string): Promise<void> {
+  const { acceptanceCheckResult, publishAcceptanceCheckResult, runDebugTagCensus } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+  const controller = new AbortController();
+  const cancel = (): void => controller.abort();
+  process.once("SIGINT", cancel);
+  const startedAt = new Date();
+  try {
+    const census = runDebugTagCensus(root, controller.signal, (line) => console.error(`[verify debug-tags] ${line}`));
+    for (const hit of census.hits.slice(0, 200)) console.log(`[verify debug-tags] ${hit.path}:${hit.line} ${hit.text}`);
+    for (const disagreement of census.disagreements) console.log(`[verify debug-tags] oracle disagreement ${disagreement}`);
+    const status = census.hits.length === 0 && census.disagreements.length === 0 ? "pass" : "fail";
+    console.log(`[verify debug-tags] files=${census.files} lines=${census.hits.length} oracle=${census.disagreements.length === 0 ? "agrees" : "DISAGREES"}`);
+    publishAcceptanceCheckResult(root, acceptanceCheckResult({
+      check: "debug-tags",
+      status,
+      startedAt,
+      measured: { files: census.files, lines: census.hits.length, oracleAgrees: census.disagreements.length === 0 },
+      summary: { en: `${census.hits.length} lines in ${census.files} tracked sources still carry the temporary-log tag`, de: `${census.hits.length} Zeilen in ${census.files} verfolgten Quellen tragen noch die Markierung für temporäre Protokolle` },
+    }));
+    if (status !== "pass") process.exitCode = 1;
+  } finally {
+    process.removeListener("SIGINT", cancel);
+  }
+}
+
+/** 🧱️ The interface-ownership census as a gate (acceptance ledger 1.10 / 5.9): fails on any production TypeScript / JavaScript
+ * source that imports an interface-owned external library (three.js → the ui module) from outside its owner, cross-checks
+ * the scanner against `git grep`, prints the findings and publishes the acceptance record.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runInterfaceImportCensus` */
+async function runInterfaceImportGate(root: string): Promise<void> {
+  const { acceptanceCheckResult, publishAcceptanceCheckResult, runInterfaceImportCensus } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+  const controller = new AbortController();
+  const cancel = (): void => controller.abort();
+  process.once("SIGINT", cancel);
+  const startedAt = new Date();
+  try {
+    const census = runInterfaceImportCensus(root, controller.signal, (line) => console.error(`[verify interface-owners] ${line}`));
+    for (const hit of census.hits) console.log(`[verify interface-owners] ${hit.path}:${hit.line} imports ${hit.specifier} outside ${hit.owner}`);
+    for (const disagreement of census.disagreements) console.log(`[verify interface-owners] oracle disagreement ${disagreement}`);
+    const status = census.hits.length === 0 && census.disagreements.length === 0 ? "pass" : "fail";
+    console.log(`[verify interface-owners] files=${census.files} imports=${census.hits.length} oracle=${census.disagreements.length === 0 ? "agrees" : "DISAGREES"}`);
+    publishAcceptanceCheckResult(root, acceptanceCheckResult({
+      check: "interface-owned-imports",
+      status,
+      startedAt,
+      measured: { files: census.files, imports: census.hits.length, oracleAgrees: census.disagreements.length === 0 },
+      summary: { en: `${census.hits.length} production imports of an interface-owned library outside its owner in ${census.files} sources`, de: `${census.hits.length} produktive Importe einer schnittstellengebundenen Bibliothek außerhalb ihres Besitzers in ${census.files} Quellen` },
+    }));
+    if (status !== "pass") process.exitCode = 1;
+  } finally {
+    process.removeListener("SIGINT", cancel);
+  }
+}
+
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "taxonomy") {
@@ -7223,6 +7281,14 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "docstrings") {
       await runDocstringCensusGate(this.root, segments[1]);
+      return;
+    }
+    if (segments[0] === "debug-tags") {
+      await runDebugTagCensusGate(this.root);
+      return;
+    }
+    if (segments[0] === "interface-owners") {
+      await runInterfaceImportGate(this.root);
       return;
     }
     if (segments[0] === "interactivity" && segments[1] === "commands") {
@@ -13391,7 +13457,7 @@ function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): st
   const expectedWaits = production.includes("DatabaseSyncHelloFuture::try_submit") ? 0 : production.includes("db_compact::DatabaseCompactionFuture::try_submit") ? 1 : 2;
   if (waits !== expectedWaits || openWith.includes("db_actor::block_on") || openWith.includes("storage.catalog().await.cas_root") || openWith.includes("cas_root(EpochFence::INITIAL")) failures.push("P1w retained bootstrap does not preserve the exact post-P1y production-wait/direct-CAS cut");
   if (!openWith.includes("Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages)") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || !openWith.includes("let result = bootstrap.await?") || !openWith.includes("result.into_parts()") || !openWith.includes("storage = retained_storage") && !openWith.includes("(retained_storage, epoch, Vec::new())")) failures.push("fresh Database::open_with does not consume the retained P1w result and exact storage handback");
-  for (const caller of ["pub async fn open(", "pub async fn open_at(", "pub async fn open_with_emit", "pub async fn open_with_authz"])
+  for (const caller of ["pub async fn open(", "pub async fn open_at(", "pub async fn open_with_emit"])
     if (!production.includes(caller)) failures.push(`P1w caller census lost ${caller}`);
   for (const required of [
     "const DATABASE_CATALOG_BOOTSTRAP_SLOTS: usize = 64",

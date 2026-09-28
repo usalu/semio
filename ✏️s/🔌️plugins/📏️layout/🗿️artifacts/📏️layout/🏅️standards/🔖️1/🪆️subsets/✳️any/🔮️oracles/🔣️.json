@@ -388,7 +388,19 @@
         "change-frame-wrap-mode",
         "change-frame-columns",
         "update-grid",
-        "set-frame-flags"
+        "set-frame-flags",
+        "update-paragraph-style",
+        "update-text-frame",
+        "update-layer",
+        "create-character-style",
+        "delete-character-style",
+        "update-character-style",
+        "update-parent-page",
+        "update-spread",
+        "set-page-parent",
+        "set-page-guides",
+        "set-story-runs",
+        "update-link"
       ]
     }
   ],

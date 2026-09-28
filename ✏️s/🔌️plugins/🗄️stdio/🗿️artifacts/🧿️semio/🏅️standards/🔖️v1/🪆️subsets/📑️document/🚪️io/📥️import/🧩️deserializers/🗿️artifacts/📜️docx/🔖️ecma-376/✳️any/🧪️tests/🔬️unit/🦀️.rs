@@ -1,11 +1,10 @@
 use super::*;
 use semio_s_artifact_stdio_docx::schema::snapshot::{DocxDocument, DocxStyle, DocxTableCell, DocxTableRow};
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
+use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn sample_docx() -> DocxSnapshot {
-    DocxSnapshot::from_parts(
-        OpcPackage::default(),
+    build_minimal_docx(
         DocxDocument {
             styles: vec![DocxStyle { id: "Heading1".into(), name: "Heading 1".into(), based_on: None }, DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: Some("Heading1".into()) }],
             body: vec![

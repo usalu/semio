@@ -460,6 +460,15 @@ describe("hub sign-in pane", () => {
     expect(view.container.querySelector<HTMLInputElement>('input[type="email"]')!.disabled).toBe(true);
   });
 
+  it("names the local bootstrap hub in the reader's language, never by the text the book stores", () => {
+    const stored = book();
+    const relabeled = { ...stored, connections: stored.connections.map((entry) => (entry.kind === "local-bootstrap" ? { ...entry, label: "stored text" } : entry)) };
+    const view = render(<HubSignInPane book={relabeled} session={hubSessionInitialStateV1("local-bootstrap")} locale="en" onSelectConnection={() => undefined} onAddHub={() => null} onForgetHub={() => undefined} onSignIn={() => undefined} onCancel={() => undefined} onSignOut={() => undefined} />);
+    const option = view.container.querySelector<HTMLOptionElement>(`option[value="${LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1}"]`);
+    expect(option?.textContent?.startsWith("This device — ")).toBe(true);
+    view.unmount();
+  });
+
   it("keeps a visible local-only affordance in every phase, including offline and signed-in", () => {
     for (const session of [hubSessionInitialStateV1("local-bootstrap"), signedIn(), { ...signedIn(), offline: true }, { ...hubSessionInitialStateV1("local-bootstrap"), phase: "expired" as const }]) {
       const view = render(<PaneHarness session={session} />);

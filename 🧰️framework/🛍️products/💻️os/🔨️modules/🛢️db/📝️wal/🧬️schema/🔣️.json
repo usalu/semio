@@ -295,7 +295,8 @@
                         "properties": {
                           "kind": { "enum": ["header", "begin", "commit", "abort", "command", "frontier", "snapshot", "cas"] },
                           "id": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
-                          "count": { "type": "integer", "minimum": 0 }
+                          "count": { "type": "integer", "minimum": 0 },
+                          "repeat": { "type": "integer", "minimum": 2, "description": "This frame stands for `repeat` consecutive copies of itself; frame ordinals (`physicalCommitsAfter`) count the expanded frames." }
                         }
                       }
                     },

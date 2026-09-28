@@ -1,7 +1,27 @@
 use super::*;
-use crate::schema::diff::{XlsxCellDiff, XlsxOpcPartDiff};
+use crate::schema::diff::XlsxOpcPartDiff;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn workbook(snapshot: &XlsxSnapshot) -> XlsxWorkbook {
+    snapshot.project_workbook().expect("the canonical XML parts project a workbook")
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn address(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32) -> cell_address::XlsxCellAddress {
+    cell_address::xlsx_cell_address(snapshot, sheet, row, col).unwrap_or_else(|error| panic!("{sheet}!({row},{col}) has an address: {error}"))
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn set_cell_at(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32, value: XlsxCellValue) -> XlsxMutation {
+    XlsxMutation::SetCell(set_cell::SetCell { address: address(snapshot, sheet, row, col), value })
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn remove_cell_at(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32) -> XlsxMutation {
+    XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: address(snapshot, sheet, row, col) })
+}
 
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_sheet_apply_and_inverse() {
@@ -9,8 +29,9 @@ async fn insert_then_remove_sheet_apply_and_inverse() {
     let insert = XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "New".into(), cells: vec![] } });
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &insert);
-    assert_eq!(after.workbook.sheets.len(), 3);
-    assert!(after.workbook.sheets.iter().any(|s| s.name == "New"));
+    let sheets = workbook(&after).sheets;
+    assert_eq!(sheets.len(), 3);
+    assert!(sheets.iter().any(|s| s.name == "New"));
 
     for inv in Mutation::inverse(&insert, &base) {
         apply_xlsx_mutation(&mut after, &inv);
@@ -20,17 +41,13 @@ async fn insert_then_remove_sheet_apply_and_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn remove_sheet_inverse_restores_removed_sheet() {
-    // 🎯️ Targets `"Sheet2"`, the LAST sheet in `fixture()` — like docx's own `RemovePart`
-    // precedent (see that artifact's `sample_mutations` doc comment), `sheets` is a
-    // NAME-keyed collection (position carries no spec meaning), so `RemoveSheet`'s
-    // mutation-level inverse (`InsertSheet`, which always APPENDS) only restores the exact
-    // original Vec position when the removed sheet was already last — exact positional
-    // restoration in the general case is only guaranteed at the diff level.
+    // 🎯️ Targets `"Sheet2"`, the LAST sheet in `fixture()`; the inverse is the canonical `SetSnapshot` of the
+    // pre-state, so the removed worksheet part, its relationship and its workbook entry all come back exactly.
     let base = fixture();
     let remove = XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Sheet2".into() });
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &remove);
-    assert_eq!(after.workbook.sheets.len(), 1);
+    assert_eq!(workbook(&after).sheets.len(), 1);
     for inv in Mutation::inverse(&remove, &base) {
         apply_xlsx_mutation(&mut after, &inv);
     }
@@ -39,17 +56,13 @@ async fn remove_sheet_inverse_restores_removed_sheet() {
 
 #[semio_framework_async_macros::async_test]
 async fn rename_sheet_apply_and_inverse() {
-    // 🎯️ Targets `"Sheet2"` (the last sheet, empty) — same last-position caveat as
-    // `remove_sheet_inverse_restores_removed_sheet` above: `RenameSheet`'s diff is a
-    // remove-old-name + add-new-name (name IS the sheet's identity), so its mutation-level
-    // inverse only reproduces the EXACT original Vec position when the renamed sheet was
-    // already last.
     let base = fixture();
     let rename = XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() });
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &rename);
-    assert!(!after.workbook.sheets.iter().any(|s| s.name == "Sheet2"));
-    let renamed = after.workbook.sheets.iter().find(|s| s.name == "Renamed").expect("renamed sheet present");
+    let sheets = workbook(&after).sheets;
+    assert!(!sheets.iter().any(|s| s.name == "Sheet2"));
+    let renamed = sheets.iter().find(|s| s.name == "Renamed").expect("renamed sheet present");
     assert!(renamed.cells.is_empty());
     for inv in Mutation::inverse(&rename, &base) {
         apply_xlsx_mutation(&mut after, &inv);
@@ -60,28 +73,21 @@ async fn rename_sheet_apply_and_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn set_and_remove_cell_apply_and_inverse() {
     let base = fixture();
-    let set_existing = XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 1, col: 0, value: XlsxCellValue::Boolean(true) });
+    let set_existing = set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Boolean(true));
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &set_existing);
-    assert_eq!(after.workbook.sheets[0].cells[0].value, XlsxCellValue::Boolean(true));
+    assert_eq!(workbook(&after).sheets[0].cells[0].value, XlsxCellValue::Boolean(true));
     for inv in Mutation::inverse(&set_existing, &base) {
         apply_xlsx_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
 
-    let set_new = XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 2, col: 3, value: XlsxCellValue::InlineString("fresh".into()) });
-    let mut after2 = base.clone();
-    apply_xlsx_mutation(&mut after2, &set_new);
-    assert!(after2.workbook.sheets[0].cells.iter().any(|c| c.row == 2 && c.col == 3 && c.value == XlsxCellValue::InlineString("fresh".into())));
-    for inv in Mutation::inverse(&set_new, &base) {
-        apply_xlsx_mutation(&mut after2, &inv);
-    }
-    assert_eq!(after2, base);
+    assert!(cell_address::xlsx_cell_address(&base, "Sheet1", 2, 3).is_err(), "set-cell edits an existing SpreadsheetML cell: a cell the worksheet does not carry has no address");
 
-    let remove = XlsxMutation::RemoveCell(remove_cell::RemoveCell { sheet_name: "Sheet1".into(), row: 1, col: 0 });
+    let remove = remove_cell_at(&base, "Sheet1", 1, 0);
     let mut after3 = base.clone();
     apply_xlsx_mutation(&mut after3, &remove);
-    assert!(after3.workbook.sheets[0].cells.is_empty());
+    assert!(workbook(&after3).sheets[0].cells.is_empty());
     for inv in Mutation::inverse(&remove, &base) {
         apply_xlsx_mutation(&mut after3, &inv);
     }
@@ -94,7 +100,7 @@ async fn shared_string_mutations_apply_and_inverse() {
     let insert = XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "world".into() });
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &insert);
-    assert_eq!(after.workbook.shared_strings, vec!["hello".to_string(), "world".to_string()]);
+    assert_eq!(workbook(&after).shared_strings, vec!["hello".to_string(), "world".to_string()]);
     for inv in Mutation::inverse(&insert, &base) {
         apply_xlsx_mutation(&mut after, &inv);
     }
@@ -103,7 +109,7 @@ async fn shared_string_mutations_apply_and_inverse() {
     let set = XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "changed".into() });
     let mut after2 = base.clone();
     apply_xlsx_mutation(&mut after2, &set);
-    assert_eq!(after2.workbook.shared_strings, vec!["changed".to_string()]);
+    assert_eq!(workbook(&after2).shared_strings, vec!["changed".to_string()]);
     for inv in Mutation::inverse(&set, &base) {
         apply_xlsx_mutation(&mut after2, &inv);
     }
@@ -112,7 +118,7 @@ async fn shared_string_mutations_apply_and_inverse() {
     let remove = XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 });
     let mut after3 = base.clone();
     apply_xlsx_mutation(&mut after3, &remove);
-    assert!(after3.workbook.shared_strings.is_empty());
+    assert!(workbook(&after3).shared_strings.is_empty());
     for inv in Mutation::inverse(&remove, &base) {
         apply_xlsx_mutation(&mut after3, &inv);
     }
@@ -168,73 +174,78 @@ fn assert_absorb_matches_sequential(base: &XlsxSnapshot, d1: &XlsxDiff, d2: &Xls
     absorbed
 }
 
+/// 🧮️ One worksheet with two cells, `A1` and `B1` — cell edits address EXISTING SpreadsheetML cells.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn two_cell_base() -> XlsxSnapshot {
+    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }, XlsxCell { row: 1, col: 1, value: XlsxCellValue::Number(2.0) }] }],
+        shared_strings: vec![],
+    })
+}
+
+/// 🎯️ A cell-level diff touches exactly one authoritative XML part — the addressed worksheet — and never the OPC lane.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn cells_diff<'a>(diff: &'a XlsxDiff, sheet_name: &str) -> &'a crate::schema::diff::XlsxCellsDiff {
-    let sheets = diff.workbook.as_ref().expect("workbook diff present").sheets.as_ref().expect("sheets diff present");
-    sheets.modified.iter().find(|m| m.key == sheet_name).expect("sheet modified").diff.cells.as_ref().expect("cells diff present")
+fn assert_only_part_modified(diff: &XlsxDiff, part: &str) {
+    assert!(diff.opc.is_none(), "a cell edit never reaches the lossless OPC lane");
+    let parts = diff.xml_parts.as_ref().expect("xml parts diff present");
+    assert!(parts.removed.is_empty() && parts.added.is_empty(), "a cell edit neither adds nor removes a part");
+    assert_eq!(parts.modified.iter().map(|modified| modified.key.as_str()).collect::<Vec<_>>(), vec![part], "a cell edit modifies only its worksheet part");
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn cell_value(snapshot: &XlsxSnapshot, row: u32, col: u32) -> Option<XlsxCellValue> {
+    workbook(snapshot).sheets[0].cells.iter().find(|cell| cell.row == row && cell.col == col).map(|cell| cell.value.clone())
 }
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Canonical: SetCell(1,0)+RemoveCell(1,0) on a fresh row -> annihilated add (mirrors
-    // Insert+Remove-before): net effect is "never existed".
+    // Modify + remove: the later remove wins; the absorbed delta is one worksheet-part edit.
     {
-        let base = fixture();
-        let d1 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::Number(1.0) }), &base);
+        let base = two_cell_base();
+        let sheet = address(&base, "Sheet1", 1, 0).part_path;
+        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Boolean(true)), &base);
         let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XlsxMutation::RemoveCell(remove_cell::RemoveCell { sheet_name: "Sheet2".into(), row: 5, col: 5 }), &mid);
+        let d2 = Mutation::diff(&remove_cell_at(&mid, "Sheet1", 1, 0), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
-        let triple = cells_diff(&absorbed, "Sheet2");
-        assert!(triple.added.is_empty(), "the add must be annihilated by the later remove");
-        assert!(triple.removed.is_empty(), "a never-based cell must not appear as a base removal either");
+        assert_only_part_modified(&absorbed, &sheet);
+        let result = MutationDiff::apply(&absorbed, &base).unwrap();
+        assert_eq!(cell_value(&result, 1, 0), None, "the modify of a since-removed cell must not survive absorb");
+        assert_eq!(cell_value(&result, 1, 1), Some(XlsxCellValue::Number(2.0)), "the untouched neighbour survives");
     }
 
-    // Canonical: SetCell(5,5,f)+SetCell(5,6,g) on distinct fresh cells -> both survive
-    // (mirrors Insert+Insert-same-index-both-survive: two independent adds never LWW-clobber
-    // each other).
+    // Two edits on distinct cells: both survive (two independent edits never clobber each other).
     {
-        let base = fixture();
-        let d1 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::InlineString("f".into()) }), &base);
+        let base = two_cell_base();
+        let sheet = address(&base, "Sheet1", 1, 0).part_path;
+        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
         let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 6, value: XlsxCellValue::InlineString("g".into()) }), &mid);
+        let d2 = Mutation::diff(&set_cell_at(&mid, "Sheet1", 1, 1, XlsxCellValue::InlineString("g".into())), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
-        let triple = cells_diff(&absorbed, "Sheet2");
-        assert_eq!(triple.added.len(), 2, "both cell adds must survive absorb");
+        assert_only_part_modified(&absorbed, &sheet);
+        let result = MutationDiff::apply(&absorbed, &base).unwrap();
+        assert_eq!((cell_value(&result, 1, 0), cell_value(&result, 1, 1)), (Some(XlsxCellValue::InlineString("f".into())), Some(XlsxCellValue::InlineString("g".into()))), "both cell edits must survive absorb");
     }
 
-    // Canonical: SetCell(insert)+SetCell(same coord, patch) -> patch into the added payload.
+    // Two edits of the same cell: the later value lands, still as one worksheet-part edit.
     {
-        let base = fixture();
-        let d1 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::InlineString("f".into()) }), &base);
+        let base = two_cell_base();
+        let sheet = address(&base, "Sheet1", 1, 0).part_path;
+        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
         let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::InlineString("patched".into()) }), &mid);
+        let d2 = Mutation::diff(&set_cell_at(&mid, "Sheet1", 1, 0, XlsxCellValue::InlineString("patched".into())), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
-        let triple = cells_diff(&absorbed, "Sheet2");
-        assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
-        assert_eq!(triple.added.len(), 1);
-        assert_eq!(triple.added[0].value, XlsxCellValue::InlineString("patched".into()));
-    }
-
-    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
-    {
-        let base = fixture();
-        let d1 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 1, col: 0, value: XlsxCellValue::Boolean(true) }), &base);
-        let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XlsxMutation::RemoveCell(remove_cell::RemoveCell { sheet_name: "Sheet1".into(), row: 1, col: 0 }), &mid);
-        let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
-        let triple = cells_diff(&absorbed, "Sheet1");
-        assert!(triple.modified.is_empty(), "modify of a since-removed cell must not survive absorb");
-        assert_eq!(triple.removed, vec![(1u32, 0u32)]);
+        assert_only_part_modified(&absorbed, &sheet);
+        assert_eq!(cell_value(&MutationDiff::apply(&absorbed, &base).unwrap(), 1, 0), Some(XlsxCellValue::InlineString("patched".into())));
     }
 
     // Associativity over a triple.
     {
-        let base = fixture();
-        let d1 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::Number(1.0) }), &base);
+        let base = two_cell_base();
+        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Number(10.0)), &base);
         let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet2".into(), row: 6, col: 6, value: XlsxCellValue::Number(2.0) }), &mid1);
+        let d2 = Mutation::diff(&set_cell_at(&mid1, "Sheet1", 1, 1, XlsxCellValue::Number(20.0)), &mid1);
         let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
-        let d3 = Mutation::diff(&XlsxMutation::RemoveCell(remove_cell::RemoveCell { sheet_name: "Sheet2".into(), row: 5, col: 5 }), &mid2);
+        let d3 = Mutation::diff(&remove_cell_at(&mid2, "Sheet1", 1, 0), &mid2);
         let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();
@@ -299,11 +310,12 @@ async fn codec_retention_law() {
 //#endregion 🔖️CodecRetentionLaw
 
 //#region 🔖️FieldSweep
-/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field across BOTH
-/// `opc` and `workbook` (see the fixtures' doc comment for exactly how each collection flavor
-/// — removed/modified/added — is exercised).
+/// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every lane the snapshot carries (see the fixtures'
+/// doc comment) — the lossless OPC lane (binary parts, content types, part-owned relationships) and the
+/// authoritative XML parts (workbook, worksheet, shared strings) — and the projected workbook follows exactly.
 #[semio_framework_async_macros::async_test]
 async fn field_sweep() {
+    use crate::standards::v_ecma_376::subsets::base::io::{SHARED_STRINGS_PART, WORKBOOK_PART};
     let a = sweep_a();
     let b = sweep_b();
 
@@ -313,80 +325,66 @@ async fn field_sweep() {
     assert_eq!(MutationDiff::apply(&diff_ba, &b).unwrap(), a);
     assert!(<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &a).is_empty());
 
-    // opc: content_types (both defaults+overrides), parts, relationships all populated.
     let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
     let ct = opc_diff.content_types.as_ref().expect("content_types diff present");
-    let defaults = ct.defaults.as_ref().expect("defaults diff present");
-    assert!(!defaults.added.is_empty(), "content_types.defaults: added not exercised");
+    assert!(!ct.defaults.as_ref().expect("defaults diff present").added.is_empty(), "content_types.defaults: added not exercised");
     let overrides = ct.overrides.as_ref().expect("overrides diff present");
     assert!(!overrides.modified.is_empty(), "content_types.overrides: modified not exercised");
     let parts = opc_diff.parts.as_ref().expect("parts diff present");
     assert!(!parts.removed.is_empty(), "opc.parts: removed not exercised");
     assert!(!parts.modified.is_empty(), "opc.parts: modified not exercised");
     assert!(!parts.added.is_empty(), "opc.parts: added not exercised");
-    let part_mod = &parts.modified[0];
-    assert!(matches!(&part_mod.diff, XlsxOpcPartDiff { bytes: Some(_), .. }));
+    assert!(matches!(&parts.modified[0].diff, XlsxOpcPartDiff { bytes: Some(_), content_type: Some(_) }), "the modified binary part changes bytes and content type");
     let rels = opc_diff.relationships.as_ref().expect("relationships diff present");
     assert!(!rels.removed.is_empty(), "opc.relationships: removed (owner) not exercised");
     assert!(!rels.modified.is_empty(), "opc.relationships: modified (owner) not exercised");
     assert!(!rels.added.is_empty(), "opc.relationships: added (owner) not exercised");
 
-    // workbook.sheets: removed ("toDrop") + modified ("toModify", whose OWN cells diff
-    // exercises removed+modified+added together) + added ("added", carried whole).
-    let wb_diff = diff_ab.workbook.as_ref().expect("workbook diff present");
-    let sheets_diff = wb_diff.sheets.as_ref().expect("sheets diff present");
-    assert!(sheets_diff.removed.contains(&"toDrop".to_string()), "sheets: removed not exercised");
-    assert!(sheets_diff.added.iter().any(|s| s.name == "added"), "sheets: added not exercised");
-    let sheet_mod = sheets_diff.modified.iter().find(|m| m.key == "toModify").expect("toModify sheet modified");
-    let cells_diff = sheet_mod.diff.cells.as_ref().expect("toModify cells diff present");
-    assert!(!cells_diff.removed.is_empty(), "toModify.cells: removed not exercised");
-    assert!(!cells_diff.modified.is_empty(), "toModify.cells: modified not exercised");
-    assert!(!cells_diff.added.is_empty(), "toModify.cells: added not exercised");
-    let cell_mod = &cells_diff.modified[0];
-    assert!(matches!(&cell_mod.diff, XlsxCellDiff { value: Some(_) }));
-    // The added cell in `toModify` carries a `Formula` value — exercises that variant too.
-    assert!(matches!(&cells_diff.added[0].value, XlsxCellValue::Formula { .. }), "added cell should carry a Formula value");
+    let xml = diff_ab.xml_parts.as_ref().expect("xml parts diff present");
+    let modified = xml.modified.iter().map(|part| part.key.as_str()).collect::<Vec<_>>();
+    for part in [WORKBOOK_PART, SHARED_STRINGS_PART] {
+        assert!(modified.contains(&part), "xml part {part} not modified: {modified:?}");
+    }
+    assert!(modified.iter().any(|part| part.starts_with("xl/worksheets/")), "no worksheet part modified: {modified:?}");
 
-    // The dropped sheet's full payload recurs as an `added` item in the OTHER direction.
-    let sheets_diff_ba = diff_ba.workbook.as_ref().unwrap().sheets.as_ref().expect("sheets diff (b->a) present");
-    let added_back = sheets_diff_ba.added.iter().find(|s| s.name == "toDrop").expect("toDrop sheet re-added in b->a");
-    assert!(!added_back.cells.is_empty());
-
-    // workbook.shared_strings (index-keyed, pairwise-position-matched): per the "known
-    // structural trap" note, `a -> b` (shorter) exercises removed+modified; `b -> a`
-    // (asserted separately) exercises added+modified.
-    let ss_diff = wb_diff.shared_strings.as_ref().expect("shared_strings diff present");
-    assert!(!ss_diff.removed.is_empty(), "shared_strings: removed not exercised");
-    assert!(!ss_diff.modified.is_empty(), "shared_strings: modified not exercised");
-    let ss_diff_ba = diff_ba.workbook.as_ref().unwrap().shared_strings.as_ref().expect("shared_strings diff (b->a) present");
-    assert!(!ss_diff_ba.added.is_empty(), "shared_strings (b->a): added not exercised");
-    assert!(!ss_diff_ba.modified.is_empty(), "shared_strings (b->a): modified not exercised");
+    let (before, after) = (workbook(&a), workbook(&b));
+    assert_eq!(workbook(&MutationDiff::apply(&diff_ab, &a).unwrap()), after, "the projected workbook follows the diff");
+    assert_eq!(before.sheets.iter().map(|sheet| sheet.name.as_str()).collect::<Vec<_>>(), ["toModify", "stay", "toDrop"]);
+    assert_eq!(after.sheets.iter().map(|sheet| sheet.name.as_str()).collect::<Vec<_>>(), ["toModify", "stay", "added"]);
+    let cells = |workbook: &XlsxWorkbook| workbook.sheets[0].cells.iter().map(|cell| (cell.row, cell.col, cell.value.clone())).collect::<Vec<_>>();
+    assert_eq!(cells(&before), vec![(1, 0, XlsxCellValue::Number(1.0)), (2, 0, XlsxCellValue::Boolean(false))]);
+    assert_eq!(cells(&after), vec![(1, 0, XlsxCellValue::Number(2.0)), (3, 0, XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(3.0))) })], "toModify: (2,0) removed, (1,0) modified, (3,0) added as a formula");
+    assert_eq!((before.shared_strings.len(), after.shared_strings.len()), (3, 2), "shared strings: one removed a -> b, re-added b -> a");
+    assert_eq!(after.shared_strings[1], "toModify-changed");
+    assert_eq!(workbook(&MutationDiff::apply(&diff_ba, &b).unwrap()), before, "the reverse diff restores the dropped sheet and the removed shared string");
 }
 //#endregion 🔖️FieldSweep
 
 //#region 🔖️OpTextBinaryRoundtripLaw
 /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `XlsxMutation` grammar —
 /// exercises every variant, incl. `SetSnapshot`'s full nested `XlsxSnapshot` (opc parts,
-/// content-types, relationships incl. `OpcTargetMode::External`, workbook sheets/cells/shared
-/// strings) and `SetCell`'s direct `XlsxCellValue` payload (incl. `Formula.cached` and raw
-/// `,`/`:`/`[`/`]` bytes-through-hex in a string value).
+/// content-types, relationships incl. `OpcTargetMode::External`, the authoritative XML parts) and
+/// `SetCell`'s lineage-bound cell address plus its direct `XlsxCellValue` payload (incl.
+/// `Formula.cached` and raw `,`/`:`/`[`/`]` bytes-through-hex in a string value).
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
-    let mut snapshot_with_opc = sweep_b();
-    snapshot_with_opc.opc.relationships.get_mut("xl/toModify.xml").unwrap()[0].target_mode = OpcTargetMode::External;
+    let snapshot_with_opc = sweep_b();
+    assert!(snapshot_with_opc.opc.relationships.values().flatten().any(|relationship| relationship.target_mode == OpcTargetMode::External), "the codec sweep carries an External relationship");
+    let base = fixture();
+    let cell = || address(&base, "Sheet1", 1, 0);
 
     let mutations = vec![
         XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot_with_opc }),
         XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "New, odd: [name]".into(), cells: vec![XlsxCell { row: 1, col: 2, value: XlsxCellValue::Empty }] } }),
         XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Sheet2".into() }),
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() }),
-        XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 1, col: 0, value: XlsxCellValue::Number(-2.5) }),
-        XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 2, col: 0, value: XlsxCellValue::SharedString(3) }),
-        XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 3, col: 0, value: XlsxCellValue::Boolean(false) }),
-        XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 4, col: 0, value: XlsxCellValue::InlineString("has, weird: [chars]".into()) }),
-        XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 5, col: 0, value: XlsxCellValue::Formula { expr: "SUM(A1:A4)".into(), cached: Some(Box::new(XlsxCellValue::Number(1.5))) } }),
-        XlsxMutation::SetCell(set_cell::SetCell { sheet_name: "Sheet1".into(), row: 6, col: 0, value: XlsxCellValue::Formula { expr: "NA()".into(), cached: None } }),
-        XlsxMutation::RemoveCell(remove_cell::RemoveCell { sheet_name: "Sheet1".into(), row: 1, col: 0 }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Number(-2.5) }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::SharedString(3) }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Boolean(false) }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::InlineString("has, weird: [chars]".into()) }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "SUM(A1:A4)".into(), cached: Some(Box::new(XlsxCellValue::Number(1.5))) } }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "NA()".into(), cached: None } }),
+        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell() }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into() }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
         XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "y".into() }),
@@ -430,8 +428,8 @@ async fn kinds_match_enum_and_catalog() {
         XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet::default() }),
         XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: String::new() }),
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: String::new(), new_name: String::new() }),
-        XlsxMutation::SetCell(set_cell::SetCell { sheet_name: String::new(), row: 0, col: 0, value: XlsxCellValue::Empty }),
-        XlsxMutation::RemoveCell(remove_cell::RemoveCell { sheet_name: String::new(), row: 0, col: 0 }),
+        XlsxMutation::SetCell(set_cell::SetCell { address: address(&fixture(), "Sheet1", 1, 0), value: XlsxCellValue::Empty }),
+        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: address(&fixture(), "Sheet1", 1, 0) }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: String::new() }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
         XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: String::new() }),

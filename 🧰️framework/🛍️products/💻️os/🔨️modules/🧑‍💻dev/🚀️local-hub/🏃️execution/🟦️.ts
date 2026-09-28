@@ -20,10 +20,12 @@ import { dirname, join, resolve } from "node:path";
 import { BundleScript, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { protectOwnerOnly } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
 import { terminateOwnedProcessTree } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { requestLocalBrokerSession, startLocalSessionBroker } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { LOCAL_ADMIN_CAPABILITY_FILE, requestLocalBrokerSession, startLocalSessionBroker } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import {
   finishLocalHub,
   hubDevBinaryPath,
+  LOCAL_HUB_ADMINISTRATOR_PROFILE,
+  LOCAL_HUB_ADMINISTRATOR_SUBJECT,
   LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES,
   LOCAL_HUB_DEVELOPMENT_PROFILES,
   startLocalHub,
@@ -535,7 +537,8 @@ export class DevLocalHubScript extends BundleScript {
       const binaryPath = hubDevBinaryPath(hubPkg);
       process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
       const adminToken = process.env.OS_HUB_ADMIN_TOKEN ?? "dev-local-hub-admin";
-      const run = await startLocalHub(this.repoRoot, hubPkg, LOCAL_HUB_DEVELOPMENT_PROFILES, { port, dataDir, binaryPath, adminToken, capture: false });
+      const profiles = [...LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_HUB_ADMINISTRATOR_PROFILE];
+      const run = await startLocalHub(this.repoRoot, hubPkg, profiles, { port, dataDir, binaryPath, adminToken, adminSubjects: [LOCAL_HUB_ADMINISTRATOR_SUBJECT], capture: false });
       let broker: ReturnType<typeof startLocalSessionBroker> | null = null;
       const stop = (): void => {
         broker?.stop();
@@ -545,8 +548,8 @@ export class DevLocalHubScript extends BundleScript {
       process.once("SIGTERM", stop);
       try {
         await waitForReadiness(run, false, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
-        broker = startLocalSessionBroker(run, dataDir, LOCAL_HUB_DEVELOPMENT_PROFILES, 2);
-        console.log(`[dev-local-hub] ready at ${hubUrl}; session broker for ${broker.record.profiles.join(",")}`);
+        broker = startLocalSessionBroker(run, dataDir, profiles, 2, LOCAL_HUB_ADMINISTRATOR_PROFILE.profileId);
+        console.log(`[dev-local-hub] ready at ${hubUrl}; session broker for ${broker.record.profiles.join(",")}; admin capability in ${join(dataDir, LOCAL_ADMIN_CAPABILITY_FILE)}`);
         await new Promise<void>((resolveExit) => (run.child.exitCode !== null ? resolveExit() : run.child.once("exit", () => resolveExit())));
       } finally {
         process.off("SIGINT", stop);

@@ -7,7 +7,7 @@ grammar Layout_layout_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'layout.layout.mutations' ;
 
-line: renameLayout | changePrintTarget | changeDataFields | createPage | deletePage | renamePage | changePageWidth | changePageHeight | updatePageMargins | updatePageColumns | reorderPages | createStory | deleteStory | editStory | createLink | deleteLink | changeLinkPath | createFrame | deleteFrame | moveFrame | resizeFrame | rotateFrame | changeFrameFill | changeFrameStroke | changeFrameWrapMode | changeFrameColumns | updateGrid | setFrameFlags ;
+line: renameLayout | changePrintTarget | changeDataFields | createPage | deletePage | renamePage | changePageWidth | changePageHeight | updatePageMargins | updatePageColumns | reorderPages | createStory | deleteStory | editStory | createLink | deleteLink | changeLinkPath | createFrame | deleteFrame | moveFrame | resizeFrame | rotateFrame | changeFrameFill | changeFrameStroke | changeFrameWrapMode | changeFrameColumns | updateGrid | setFrameFlags | updateParagraphStyle | updateTextFrame | updateLayer | createCharacterStyle | deleteCharacterStyle | updateCharacterStyle | updateParentPage | updateSpread | setPageParent | setPageGuides | setStoryRuns | updateLink ;
 renameLayout: 'rename-layout' SP text ;
 changePrintTarget: 'change-print-target' SP text? ;
 changeDataFields: 'change-data-fields' SP text? ;
@@ -36,6 +36,18 @@ changeFrameWrapMode: 'change-frame-wrap-mode' SP id SP id SP text ;
 changeFrameColumns: 'change-frame-columns' SP id SP id SP number ;
 updateGrid: 'update-grid' SP number SP number SP boolean ;
 setFrameFlags: 'set-frame-flags' SP id SP id SP boolean? SP boolean? ;
+updateParagraphStyle: 'update-paragraph-style' SP id SP text SP text SP number SP number SP number SP number SP text ;
+updateTextFrame: 'update-text-frame' SP id SP id SP text SP text SP number SP number SP number SP number ;
+updateLayer: 'update-layer' SP id SP id SP text SP boolean SP boolean ;
+createCharacterStyle: 'create-character-style' SP id ;
+deleteCharacterStyle: 'delete-character-style' SP id ;
+updateCharacterStyle: 'update-character-style' SP id ;
+updateParentPage: 'update-parent-page' SP id ;
+updateSpread: 'update-spread' SP id ;
+setPageParent: 'set-page-parent' SP id ;
+setPageGuides: 'set-page-guides' SP id ;
+setStoryRuns: 'set-story-runs' SP id ;
+updateLink: 'update-link' SP id ;
 id: OCTET+ ;
 number: OCTET+ ;
 text: OCTET+ ;

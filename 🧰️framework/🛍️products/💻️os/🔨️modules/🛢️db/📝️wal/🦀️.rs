@@ -1539,11 +1539,17 @@ fn wal_next_verified_page_frame(pages: &dyn WalImmutableByteSource, offset: &mut
     Ok(WalVerifiedFrameStep::PhysicalCommit)
 }
 
+/// @emoji 🧮️ Most body records one WAL transaction holds: a declared-legal document batch's commands
+/// (`protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES`) plus its frontier. `ArtifactWal::preflight_submit`
+/// refuses a larger transaction before any I/O and `WalTransactionGate` holds up to exactly this many frames, so
+/// every transaction the writer admits is one recovery and replay read back (it held 64 while the writer bounded a
+/// transaction only by the readable segment: a committed batch of 64 or more envelopes left its document unopenable).
+pub const WAL_TRANSACTION_RECORDS_MAX: usize = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES + 1;
+
 pub(crate) struct WalTransactionGate {
     transaction_id: Option<u64>,
     ready: Option<u64>,
-    frames: [Option<WalRecordFrame>; 64],
-    frames_len: u8,
+    frames: Vec<WalRecordFrame>,
     next_tx_id: u64,
     header_seen: bool,
     transaction_seen: bool,
@@ -1551,17 +1557,16 @@ pub(crate) struct WalTransactionGate {
 
 impl WalTransactionGate {
     pub(crate) fn new() -> Self {
-        Self { transaction_id: None, ready: None, frames: [None; 64], frames_len: 0, next_tx_id: 1, header_seen: false, transaction_seen: false }
+        Self { transaction_id: None, ready: None, frames: Vec::new(), next_tx_id: 1, header_seen: false, transaction_seen: false }
     }
 
     fn clear_frames(&mut self) {
-        self.frames[..self.frames_len as usize].fill(None);
-        self.frames_len = 0;
+        self.frames.clear();
     }
 
     fn committed_frame(&self, index: usize) -> Option<WalRecordFrame> {
         self.ready?;
-        self.frames.get(index).copied().flatten()
+        self.frames.get(index).copied()
     }
 
     fn push(&mut self, pages: &dyn WalImmutableByteSource, frame: WalRecordFrame) -> Result<bool, DbError> {
@@ -1593,7 +1598,7 @@ impl WalTransactionGate {
             WAL_TX_COMMIT | WAL_TX_ABORT => {
                 let tx_id = u64::from_le_bytes(reader.array()?);
                 let count = if frame.kind == WAL_TX_COMMIT { Some(u32::from_le_bytes(reader.array()?)) } else { None };
-                if reader.position != reader.limit || self.transaction_id != Some(tx_id) || count.is_some_and(|count| count != u32::from(self.frames_len)) {
+                if reader.position != reader.limit || self.transaction_id != Some(tx_id) || count.is_some_and(|count| usize::try_from(count).ok() != Some(self.frames.len())) {
                     return Err(DbError::Corrupt("wal logical terminal id or count differs".to_string()));
                 }
                 self.transaction_id = None;
@@ -1609,9 +1614,11 @@ impl WalTransactionGate {
                 if self.transaction_id.is_none() {
                     return Err(DbError::Corrupt("wal body outside a transaction".to_string()));
                 }
-                let slot = self.frames.get_mut(self.frames_len as usize).ok_or(DbError::LimitExceeded("wal transaction records"))?;
-                *slot = Some(frame);
-                self.frames_len += 1;
+                if self.frames.len() >= WAL_TRANSACTION_RECORDS_MAX {
+                    return Err(DbError::LimitExceeded("wal transaction records"));
+                }
+                self.frames.try_reserve(1).map_err(|_| DbError::LimitExceeded("wal transaction records"))?;
+                self.frames.push(frame);
                 Ok(false)
             }
             _ => Err(DbError::Corrupt("unknown wal logical record kind".to_string())),
@@ -2275,7 +2282,7 @@ impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.raw.terminal_is_empty() && self.record.is_none() && self.gate.frames_len == 0 && self.gate.ready.is_none() && self.gate.transaction_id.is_none()
+        self.raw.terminal_is_empty() && self.record.is_none() && self.gate.frames.is_empty() && self.gate.ready.is_none() && self.gate.transaction_id.is_none()
     }
 }
 
@@ -2293,7 +2300,7 @@ impl<'cursor, 'storage, S: db_storage::WalStorage> WalCommittedTransaction<'curs
     }
 
     pub fn record_count(&self) -> usize {
-        self.cursor.gate.frames_len as usize
+        self.cursor.gate.frames.len()
     }
 
     pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
@@ -2304,7 +2311,7 @@ impl<'cursor, 'storage, S: db_storage::WalStorage> WalCommittedTransaction<'curs
         if self.cursor.record.is_some() {
             return Err(DbError::Corrupt("wal committed body must be closed before advancing".to_string()));
         }
-        let frame = self.cursor.gate.frames[self.cursor.record_index].ok_or_else(|| DbError::Internal("wal committed replay lost body span".to_string()))?;
+        let frame = self.cursor.gate.frames.get(self.cursor.record_index).copied().ok_or_else(|| DbError::Internal("wal committed replay lost body span".to_string()))?;
         if self.cursor.raw.decoder.is_none() {
             self.cursor.raw.decoder = Some(WalRetainedRecordDecoder::new(frame));
         }
@@ -3057,6 +3064,9 @@ impl ArtifactWal {
     /// readable-segment bound without consuming a transaction id or beginning storage I/O.
     pub(crate) fn preflight_submit(&self, commands: &[Vec<u8>], records: &WalRecordBatch) -> Result<bool, DbError> {
         self.active.ensure_open()?;
+        if commands.len().checked_add(records.len()).is_none_or(|count| count > WAL_TRANSACTION_RECORDS_MAX) {
+            return Err(DbError::LimitExceeded("wal transaction records"));
+        }
         let reservation = wal_submit_reservation(commands, records)?;
         self.next_tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
         if self.active.total_len()?.checked_add(reservation).ok_or(DbError::LimitExceeded("wal segment reservation"))? <= db_storage::DB_IO_MAX_READ_BYTES {

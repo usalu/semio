@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """🪞️ S19 overlay: APFS-clones every tracked + untracked-unignored file outside `.🧬semio/` and every gitignored `🤖️generated`
 directory into the overlay root, then re-syncs changed files on later runs (size/mtime). `node_modules` is a symlink.
-usage: s19-overlay.py <overlay-root> [--sync]"""
+Every sync also prunes overlay files the tree no longer has (outside the overlay's own `.s19-*`, `node_modules`, `.🧬semio`)
+and mirrors `node_modules` (top level → the tree's entries, `@semio-tech/*` → the tree's relative links, so workspace packages
+resolve INSIDE the overlay). `--reset-staged` puts every payload path back to the tree's content (a create the tree lacks is
+removed) and rewrites its `.old` base, so the codemods re-run on the current tree.
+usage: s19-overlay.py <overlay-root> [--reset-staged]"""
 import ctypes, json, os, subprocess, sys
 
 repo = "/Users/ueli/Documents/semio"
@@ -47,8 +51,48 @@ protected = {entry["path"] for entry in json.load(open(manifest, encoding="utf-8
 protect_list = os.path.join(here, "s19-overlay-protect.txt")
 if os.path.exists(protect_list):
     protected |= {line.strip() for line in open(protect_list, encoding="utf-8") if line.strip() and not line.startswith("#")}
+if "--reset-staged" in sys.argv and os.path.exists(manifest):
+    for entry in json.load(open(manifest, encoding="utf-8")):
+        source, destination = os.path.join(repo, entry["path"]), os.path.join(target, entry["path"])
+        old = os.path.join(here, "payload", f"{entry['id']}.old")
+        for stale in (destination, old, os.path.join(here, "payload", f"{entry['id']}.new")):
+            if os.path.lexists(stale):
+                os.unlink(stale)
+        if os.path.exists(source):
+            os.makedirs(os.path.dirname(destination), exist_ok=True)
+            clonefile(source.encode(), destination.encode(), 0)
+            with open(source, encoding="utf-8") as handle, open(old, "w", encoding="utf-8") as out:
+                out.write(handle.read())
+        entry_mode = "modify" if os.path.exists(source) else "create"
+        print(f"reset {entry['id']} {entry_mode} {entry['path']}")
 placed = sum(place(r) for r in rels if r not in protected)
-link = os.path.join(target, "node_modules")
-if not os.path.lexists(link):
-    os.symlink(os.path.join(repo, "node_modules"), link)
-print(f"s19-overlay: {len(rels)} files considered, {placed} placed, {len(ignored_dirs)} generated entries → {target}")
+keep = set(rels) | protected
+OWN = (".s19-build", ".s19-target", ".s19-emitter", "node_modules", ".🧬semio", "target")
+pruned = 0
+for base, dirs, files in os.walk(target):
+    rel_base = os.path.relpath(base, target)
+    if rel_base == ".":
+        dirs[:] = [d for d in dirs if d not in OWN]
+    for name in files:
+        rel = os.path.normpath(os.path.join(rel_base, name))
+        if rel not in keep and rel not in OWN:
+            os.unlink(os.path.join(base, name))
+            pruned += 1
+modules, overlay_modules = os.path.join(repo, "node_modules"), os.path.join(target, "node_modules")
+if os.path.islink(overlay_modules):
+    os.unlink(overlay_modules)
+os.makedirs(os.path.join(overlay_modules, "@semio-tech"), exist_ok=True)
+for name in os.listdir(modules):
+    link = os.path.join(overlay_modules, name)
+    if name == "@semio-tech" or os.path.lexists(link):
+        continue
+    os.symlink(os.path.join(modules, name), link)
+for name in os.listdir(os.path.join(modules, "@semio-tech")):
+    source, link = os.path.join(modules, "@semio-tech", name), os.path.join(overlay_modules, "@semio-tech", name)
+    wanted = os.readlink(source) if os.path.islink(source) else source
+    if os.path.lexists(link):
+        if os.path.islink(link) and os.readlink(link) == wanted:
+            continue
+        os.unlink(link)
+    os.symlink(wanted, link)
+print(f"s19-overlay: {len(rels)} files considered, {placed} placed, {pruned} pruned, {len(ignored_dirs)} generated entries → {target}")

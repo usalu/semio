@@ -11,9 +11,13 @@ use crate::mutations::edit_story::EditStory;
 use crate::mutations::move_frame::MoveFrame;
 use crate::mutations::resize_frame::ResizeFrame;
 use crate::mutations::rotate_frame::RotateFrame;
+use crate::mutations::update_text_frame::UpdateTextFrame;
+use crate::mutations::set_frame_flags::SetFrameFlags;
+use crate::mutations::set_story_runs::SetStoryRuns;
+use crate::mutations::update_link::UpdateLink;
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::text_to_rgba;
-use crate::{Frame, LayoutSnapshot};
+use crate::{Frame, LayoutSnapshot, TextStyleRun};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -92,6 +96,42 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
                 _ => Ok(Emit::default()),
             }
         }
+        "characterStyle" => {
+            let Frame::Text { story_id, .. } = frame else { return Ok(Emit::default()) };
+            let Some(story) = document.stories.iter().find(|story| story.id == *story_id) else { return Ok(Emit::default()) };
+            let style_id = payload.value.trim();
+            let runs = if style_id.is_empty() {
+                Vec::new()
+            } else if document.character_styles.iter().any(|style| style.id == style_id) && !story.content.is_empty() {
+                vec![TextStyleRun { start: 0, end: story.content.len(), paragraph_style_id: None, character_style_id: Some(style_id.to_string()) }]
+            } else {
+                return Ok(Emit::default());
+            };
+            Ok(Emit::mutations(vec![LayoutMutation::SetStoryRuns(SetStoryRuns { id: story.id.clone(), runs })]))
+        }
+        "linkWidth" | "linkHeight" | "dpi" | "colorProfile" => {
+            let Frame::Image { link_id, .. } = frame else { return Ok(Emit::default()) };
+            let Some(link) = document.links.iter().find(|link| link.id == *link_id) else { return Ok(Emit::default()) };
+            let mut next = UpdateLink { id: link.id.clone(), width: link.width, height: link.height, dpi: link.dpi, color_profile: link.color_profile.clone() };
+            match payload.field.as_str() {
+                "colorProfile" => {
+                    let trimmed = payload.value.trim();
+                    next.color_profile = (!trimmed.is_empty()).then(|| trimmed.to_string());
+                }
+                _ => match payload.value.parse::<f64>() {
+                    Ok(number) if number > 0.0 => {
+                        let whole = number as u32;
+                        match payload.field.as_str() {
+                            "linkWidth" => next.width = whole,
+                            "linkHeight" => next.height = whole,
+                            _ => next.dpi = whole,
+                        }
+                    }
+                    _ => return Ok(Emit::default()),
+                },
+            }
+            Ok(Emit::mutations(vec![LayoutMutation::UpdateLink(next)]))
+        }
         "linkPath" => {
             let link_id = match frame {
                 Frame::Image { link_id, .. } => Some(link_id.clone()),
@@ -101,6 +141,35 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
                 Some(id) if document.links.iter().any(|link| link.id == id) => Ok(Emit::mutations(vec![LayoutMutation::ChangeLinkPath(ChangeLinkPath { id, new_path: payload.value.clone() })])),
                 _ => Ok(Emit::default()),
             }
+        }
+        "insetX" | "insetY" | "insetWidth" | "insetHeight" | "storyId" | "threadNext" => {
+            let Frame::Text { story_id, thread_next, inset, .. } = frame else {
+                return Ok(Emit::default());
+            };
+            let mut next = UpdateTextFrame { page_id, frame_id, story_id: story_id.clone(), thread_next: thread_next.clone(), inset_x: inset.x, inset_y: inset.y, inset_width: inset.width, inset_height: inset.height };
+            match payload.field.as_str() {
+                "insetX" | "insetY" | "insetWidth" | "insetHeight" => match payload.value.parse::<f64>() {
+                    Ok(number) => match payload.field.as_str() {
+                        "insetX" => next.inset_x = number,
+                        "insetY" => next.inset_y = number,
+                        "insetWidth" => next.inset_width = number,
+                        _ => next.inset_height = number,
+                    },
+                    Err(_) => return Ok(Emit::default()),
+                },
+                "storyId" => next.story_id = payload.value.clone(),
+                "threadNext" => {
+                    let trimmed = payload.value.trim();
+                    next.thread_next = (!trimmed.is_empty()).then(|| trimmed.to_string());
+                }
+                _ => return Ok(Emit::default()),
+            }
+            Ok(Emit::mutations(vec![LayoutMutation::UpdateTextFrame(next)]))
+        }
+        "locked" | "visible" => {
+            let on = matches!(payload.value.trim(), "true" | "1");
+            let (locked, visible) = if payload.field == "locked" { (Some(on), None) } else { (None, Some(on)) };
+            Ok(Emit::mutations(vec![LayoutMutation::SetFrameFlags(SetFrameFlags { page_id, frame_id, locked, visible })]))
         }
         _ => Ok(Emit::default()),
     }

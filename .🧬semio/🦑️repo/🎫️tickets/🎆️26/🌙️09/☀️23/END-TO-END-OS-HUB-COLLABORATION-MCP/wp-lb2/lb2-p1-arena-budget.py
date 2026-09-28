@@ -104,8 +104,10 @@ SDK_COUNTER_NEW = """    thread_local! {
 
     /// 🪟️ Pushes a slice's rows straight into a container builder's children. A row refused with
 """
-SDK_EXPORT_OLD = """pub use app::{tree_window_indexed_item, tree_window_indexed_section,"""
-SDK_EXPORT_NEW = """pub use app::{take_arena_unbuilt_rows, tree_window_indexed_item, tree_window_indexed_section,"""
+SDK_EXPORT_OLD = """pub use app::{
+    tree_window_indexed_item, tree_window_indexed_section,"""
+SDK_EXPORT_NEW = """pub use app::{
+    take_arena_unbuilt_rows, tree_window_indexed_item, tree_window_indexed_section,"""
 TURN_STARVED_OLD = """    Ok(taken)
 }
 

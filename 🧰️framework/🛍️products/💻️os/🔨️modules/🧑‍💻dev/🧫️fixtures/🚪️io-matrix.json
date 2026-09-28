@@ -1,9 +1,9 @@
 {
   "schema": "semio.os-dev.io-matrix/v1",
-  "why": "Every export and import control an editor offers in the Actions rail, keyed by the program-matrix row key `<plugin>/<kind>`. An export names the rail verb, its staged arguments and the file format a third-party parser must accept; an import names the verb that opens the host file picker (`picker`) or stages the file text into one argument (`argument`), and the export whose file it reads back, so the harness judges export → edit → import → export as one round trip. `reach` lists verbs that were `BatchOnlyPendingRewrite` (unreachable from any control) and must now dispatch from their rail row. Programs the live catalog lists without a row here are reported as having no export/import control.",
+  "why": "Every export and import control an editor offers in the Actions rail, keyed by the program-matrix row key `<plugin>/<kind>`. An export names the rail verb, its staged arguments and the file format a third-party parser must accept; an import names the verb that opens the host file picker (`picker`) or stages the file text into one argument (`argument`), and the export whose file it reads back, so the harness judges export → edit → import → export as one round trip. `reach` lists verbs that were `BatchOnlyPendingRewrite` (unreachable from any control) and must now dispatch from their rail row. Every editor, with or without a row here, also drives the framework's Export/Import Document pair (the canonical document archive); a row here adds the kind's own formats.",
   "programs": {
     "animate/presentation": {
-      "exports": [{ "id": "video", "verb": "exportVideoFromDeck", "format": "any" }],
+      "exports": [{ "id": "video", "verb": "exportVideoFromDeck", "format": "mp4" }],
       "imports": [],
       "reach": ["exportVideoFromDeck"]
     },

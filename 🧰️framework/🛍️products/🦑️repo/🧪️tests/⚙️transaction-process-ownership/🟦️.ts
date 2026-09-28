@@ -162,7 +162,6 @@ test("actual module imports no third-party runtime or signal/command implementat
   const imports = source.statements.filter(ts.isImportDeclaration).map((row) => (row.moduleSpecifier as ts.StringLiteral).text); expect(imports.every((name) => name.startsWith("node:"))).toBe(true);
   expect(text).not.toMatch(/\b(?:spawnSync|execSync|execFile|taskkill|TerminateProcess|process\.kill)\b/u);
   expect(text).not.toContain("export function createTransactionProcessObserver");
-  console.info(`[DEBUG] Private process observation inert input ${createHash("sha256").update(text).digest("hex")}; no native calls or subjects`);
 });
 
 test("complete private helper passes actual strict TypeScript declaration checking", () => {

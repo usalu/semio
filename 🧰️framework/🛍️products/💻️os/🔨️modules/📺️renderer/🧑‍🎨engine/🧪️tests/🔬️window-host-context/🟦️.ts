@@ -51,7 +51,6 @@ export function testWindowHostContext(): void {
     assert.equal(hash === undefined, row.omitHash);
     assert.equal(hash === undefined, Boolean(row.selectedIds.length));
   }
-  console.log(`[DEBUG] window-host-context bindings=${actual.length} inspection=${fixture.inspectionRefresh.length}`);
 }
 
 describe("window host context", () => {

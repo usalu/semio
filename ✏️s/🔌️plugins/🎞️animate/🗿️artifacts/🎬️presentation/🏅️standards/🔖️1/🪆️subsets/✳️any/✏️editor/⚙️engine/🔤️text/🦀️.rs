@@ -357,10 +357,7 @@ pub mod text {
     /// that string is now stdio-validated first instead of Typst's raw, unchecked output.
     fn typst_markup_to_validated_svg(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> String {
         use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
-        match render_markup_to_svg_snapshot(renderer, markup) {
-            Some(snapshot) => write_svg_xml(&snapshot.doc),
-            None => String::new(),
-        }
+        render_markup_to_svg_snapshot(renderer, markup).and_then(|snapshot| write_svg_xml(&snapshot.doc).ok()).unwrap_or_default()
     }
     //#endregion 🔖️TextRenderer
 

@@ -189,16 +189,14 @@ fn remedy_law_footing_width_clears_bearing_or_improves() {
     let fail = before.failing().find(|c| c.id.contains("bearing")).expect("bearing fail");
     let remedy = fail.remedies.iter().find(|r| r.applicable && r.target.path.contains("width")).expect("width remedy");
     apply_remedy_required(&mut doc, &remedy.target.path, remedy.required.value);
-    if let Some(f) = doc.footings.first_mut() {
-        f.length = f.length.max(f.width);
-    }
     let after = check_project(&doc);
     let after_check = after.checks.iter().find(|c| c.id == fail.id).expect("same check");
     assert_eq!(
         after_check.status,
         CheckStatus::Pass,
-        "bearing must Pass after width remedy; u={}",
-        after_check.utilization
+        "bearing must Pass after width remedy; u={} (required width={})",
+        after_check.utilization,
+        remedy.required.value
     );
 }
 
@@ -413,6 +411,8 @@ fn apply_remedy_required(doc: &mut En1997Snapshot, path: &str, value: f64) {
                 "length" => p.length = value,
                 "count" => p.count = value.round().max(1.0) as u32,
                 "diameter" => p.diameter = value,
+                "tensionPermanent" => p.tension_permanent = value,
+                "tensionVariable" => p.tension_variable = value,
                 _ => panic!("unsupported pile field {field}"),
             }
         }
@@ -425,6 +425,8 @@ fn apply_remedy_required(doc: &mut En1997Snapshot, path: &str, value: f64) {
                 "length" => p.length = value,
                 "count" => p.count = value.round().max(1.0) as u32,
                 "diameter" => p.diameter = value,
+                "tensionPermanent" => p.tension_permanent = value,
+                "tensionVariable" => p.tension_variable = value,
                 _ => panic!("unsupported pile field {field}"),
             }
         }

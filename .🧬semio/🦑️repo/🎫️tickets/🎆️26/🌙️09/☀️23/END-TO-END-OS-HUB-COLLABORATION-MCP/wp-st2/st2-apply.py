@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """🚢️ ST1 apply: per-family stdio components (Option A) — new family packages + anchored edits of the tree.
 
-usage: python3 st1-apply.py [--dry-run | --write] [--root <repo root>]
+usage: python3 st2-apply.py [--dry-run | --write] [--root <repo root>] [--part code|r10|all]
+  --part code (ST2, compile-atomic): family packages (Rust + Cargo + 📜️script.ts), stdio assembly/laws/scripts, root Cargo
+  workspace rows, deployment catalog, play panes. --part r10 (R10's serialized window-3 pass, after `code`): taxonomy,
+  workspace-contract counts, root 📜️script.ts policy row, every 📋️project.json (the nine new ones + the composition move with
+  its referrers) and the launch seed/json gate rows. --part all = both (overlay proofs).
   --dry-run (default) re-reads every target, proves every anchor matches exactly once, and writes the unified diffs to
   `generated/st1-dry.diff`; nothing in the tree changes. --write applies the same plan (all-or-nothing: every edit is
   computed in memory first). Inputs: `plan.json` + `payload/` from `st1-gen.py` (run it first on the same tree).
@@ -62,13 +66,26 @@ def block_end(text, start, label):
     return end + len("\n    },\n")
 
 
+R10_PATHS = {TAXONOMY, WORKSPACE_CONTRACT, "📜️script.ts", ".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"}
+
+
+def r10_owned(rel):
+    """🗂️ Whether R10's serialized window-3 pass lands this path: taxonomy + its count laws, the root policy row, every
+    `📋️project.json`, the launch rows and the `🧩️composition` → `🏘️composition` move with all its referrers."""
+    return rel in R10_PATHS or rel.endswith("📋️project.json") or rel in COMPOSITION_REFERRERS or rel.startswith(f"{STDIO}/🧩️composition")
+
+
 class Plan:
-    def __init__(self, root):
+    def __init__(self, root, part):
         self.root = root
+        self.part = part
         self.edits = {}
         self.news = {}
         self.renames = []
         self.problems = []
+
+    def wants(self, rel):
+        return self.part == "all" or (self.part == "r10") == r10_owned(rel)
 
     def read(self, rel):
         if rel in self.edits:
@@ -77,6 +94,8 @@ class Plan:
             return handle.read()
 
     def edit(self, rel, transform):
+        if not self.wants(rel):
+            return
         before = self.edits[rel][0] if rel in self.edits else self.read(rel)
         try:
             after = transform(self.read(rel))
@@ -89,11 +108,15 @@ class Plan:
         self.edits[rel] = (before, after)
 
     def new(self, rel, content):
+        if not self.wants(rel):
+            return
         if os.path.lexists(os.path.join(self.root, rel)):
             raise Refused(f"{rel}: new file already exists")
         self.news[rel] = content
 
     def rename_dir(self, source, target, expected_files):
+        if not self.wants(source):
+            return
         if not os.path.isdir(os.path.join(self.root, source)):
             raise Refused(f"{source}: rename source missing")
         if os.path.lexists(os.path.join(self.root, target)):
@@ -461,6 +484,27 @@ def catalog_json(text, plan_data):
 #endregion
 
 
+#region hub publication
+HUB_SCRIPT = "🌎️hub/📦️packages/🦀️rust/📜️script.ts"
+
+
+def hub_script_ts(text, plan_data):
+    """🌎️ The trusted-catalog publisher selects every family component like any other document-opening package: a guest
+    codec closure of its own (no hub-linked registry — `stdio` keeps the linked native codecs), published right after the
+    `stdio` package its exact pin names, so `--packages all` puts every stdio subset on the hub."""
+    families = plan_data["families"]
+    text = replace_once(
+        text,
+        "/** 🌎️ Every selectable top-level `s` plugin package, in publication order. */\nconst TRUSTED_BOOTSTRAP_ALL_PACKAGES = \"stdio,gis,",
+        "/** 🌎️ Every selectable `s` plugin package — the top-level plugins and the stdio family components right after the `stdio`\n * package they depend on — in publication order. */\nconst TRUSTED_BOOTSTRAP_ALL_PACKAGES = \"stdio," + ",".join(family["id"] for family in families) + ",gis,",
+        "hub: all packages",
+    )
+    rows = "".join(f'  Object.freeze({{ pluginId: "{family["id"]}", cargoPackage: "{family["crate"]}", componentPackageId: "semio:{family["id"]}", outputName: "{family["lib"]}.wasm", linkedCodecRegistry: null, opensDocuments: true }}),\n' for family in families)
+    anchor = '  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", opensDocuments: true }),\n'
+    return insert_after(text, anchor, rows, "hub: package specs")
+#endregion
+
+
 #region taxonomy
 def taxonomy_json(text, plan_data):
     families = plan_data["families"]
@@ -727,9 +771,9 @@ POLICY_ROW = '  "✏️s/🔌️plugins/🗄️stdio/🧩️extensions": "Family
 #endregion
 
 
-def build(root):
+def build(root, part):
     plan_data = json.load(open(os.path.join(HERE, "plan.json"), encoding="utf-8"))
-    plan = Plan(root)
+    plan = Plan(root, part)
     payload = os.path.join(HERE, "payload")
     for dirpath, _dirs, names in os.walk(payload):
         for name in names:
@@ -740,13 +784,14 @@ def build(root):
     plan.edit(f"{STDIO}/📦️packages/🦀️rust/Cargo.toml", lambda text: stdio_cargo(text, plan_data))
     shipped = f"{STDIO}/🧪️tests/🚢️shipped-fleet/🦀️.rs"
     current = plan.read(shipped)
-    if "const SHIPPED_APP_CEILING: usize = 24;" not in current or "fn the_shipped_component_assembles_exactly_the_declared_bounded_fleet()" not in current:
+    if plan.wants(shipped) and ("const SHIPPED_APP_CEILING: usize = 24;" not in current or "fn the_shipped_component_assembles_exactly_the_declared_bounded_fleet()" not in current):
         raise Refused(f"{shipped}: not the lb-p4 guard this patch supersedes")
     plan.edit(shipped, lambda _text: shipped_fleet_rs(plan_data))
     plan.edit(f"{STDIO}/🧪️tests/✏️editor-catalog/🦀️.rs", editor_catalog_rs)
     plan.edit(f"{STDIO}/📦️packages/🦀️rust/📜️script.ts", stdio_script_ts)
     plan.edit("Cargo.toml", lambda text: root_cargo(text, plan_data))
     plan.edit(CATALOG, lambda text: catalog_json(text, plan_data))
+    plan.edit(HUB_SCRIPT, lambda text: hub_script_ts(text, plan_data))
     plan.edit(TAXONOMY, lambda text: taxonomy_json(text, plan_data))
     plan.edit(WORKSPACE_CONTRACT, lambda text: workspace_contract_ts(text, plan_data))
     plan.edit(PLAY_RUNTIME, lambda text: play_runtime_json(text, plan_data))
@@ -766,9 +811,10 @@ def main():
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--write", action="store_true")
     parser.add_argument("--root", default="/Users/ueli/Documents/semio")
+    parser.add_argument("--part", choices=("code", "r10", "all"), default="all")
     args = parser.parse_args()
     try:
-        plan = build(args.root)
+        plan = build(args.root, args.part)
     except (Refused, ValueError, OSError) as error:
         print(f"st2-apply: REFUSED — {error}")
         sys.exit(1)
@@ -787,9 +833,9 @@ def main():
         print(f"new   {rel}  {content.count(chr(10))} lines")
     for source, target, files in plan.renames:
         print(f"move  {source} → {target}  ({len(files)} files)")
-    print(f"st2-apply: {len(plan.edits)} edits, {len(plan.news)} new files, {len(plan.renames)} directory move — root {args.root}")
+    print(f"st2-apply: part {args.part}: {len(plan.edits)} edits, {len(plan.news)} new files, {len(plan.renames)} directory move — root {args.root}")
     os.makedirs(os.path.join(HERE, "generated"), exist_ok=True)
-    with open(os.path.join(HERE, "generated", "st2-dry.diff" if not args.write else "st2-write.diff"), "w", encoding="utf-8") as handle:
+    with open(os.path.join(HERE, "generated", f"st2-{args.part}-{'write' if args.write else 'dry'}.diff"), "w", encoding="utf-8") as handle:
         handle.writelines(diffs)
     if not args.write:
         print("st2-apply: dry run — nothing written")

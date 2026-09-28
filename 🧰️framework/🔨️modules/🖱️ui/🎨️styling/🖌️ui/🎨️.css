@@ -23,6 +23,28 @@
   --color-emphasized: var(--foreground);
 }
 
+/* #region 📐 Available viewport
+   Tailwind's `h-screen` is `100vh` — the screen, including the strip a mobile browser toolbar covers.
+   Shells fill the available viewport instead, so Android Firefox's navbar does not sit on the page and
+   the rest is not clipped. The host boot script writes `--ui-available-height` from `visualViewport`;
+   `100dvh` covers the first paint and any host that has not run the script. */
+:root {
+  --ui-available-height: 100dvh;
+}
+
+.h-screen {
+  height: var(--ui-available-height, 100dvh);
+}
+
+.min-h-screen {
+  min-height: var(--ui-available-height, 100dvh);
+}
+
+.max-h-screen {
+  max-height: var(--ui-available-height, 100dvh);
+}
+/* #endregion 📐 Available viewport */
+
 #navbar,
 #compose\.sketchpad\.navbar,
 [data-slot="navbar"],

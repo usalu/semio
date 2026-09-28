@@ -746,18 +746,36 @@ fn check_multilingual(catalogue: &Catalogue, required: &[String], report: &mut C
                     format!("Entity '{id}' lacks a name in required language '{locale}' (catalogue declares: {}).", required.join(", ")),
                     format!("Entität '{id}' hat keinen Namen in der geforderten Sprache '{locale}' (Katalog fordert: {}).", required.join(", ")),
                 ),
-                vec![Remedy {
-                    target: subject(&id, format!("{path}.alternatives"), names.preferred.text.clone(), names.preferred.text.clone()),
-                    current: q_dim(0.0),
-                    required: q_dim(1.0),
-                    bound: RemedyBound::Exactly,
-                    options: vec![locale.clone()],
-                    action: copy(
-                        format!("Add a name in language '{locale}' for '{id}' (e.g. alternatives += {{ locale: '{locale}', text: '…' }})."),
-                        format!("Namen in Sprache '{locale}' für '{id}' ergänzen (z. B. alternatives += {{ locale: '{locale}', text: '…' }})."),
-                    ),
-                    applicable: false,
-                }],
+                {
+                    let mut remedies = Vec::new();
+                    if !names.alternatives.is_empty() {
+                        remedies.push(Remedy::one_of(
+                            subject(&id, format!("{path}.alternatives[0].locale"), names.preferred.text.clone(), names.preferred.text.clone()),
+                            vec![locale.clone()],
+                            copy(
+                                format!("Set alternatives[0].locale to '{locale}' so '{id}' covers the required language."),
+                                format!("alternatives[0].locale auf '{locale}' setzen, damit '{id}' die geforderte Sprache abdeckt."),
+                            ),
+                        ));
+                        remedies.push(Remedy::one_of(
+                            subject(&id, format!("{path}.alternatives[0].text"), names.preferred.text.clone(), names.preferred.text.clone()),
+                            vec![names.preferred.text.clone()],
+                            copy(
+                                format!("Keep alternatives[0].text as a non-empty name for '{id}' in language '{locale}'."),
+                                format!("alternatives[0].text als nicht-leeren Namen für '{id}' in Sprache '{locale}' belassen."),
+                            ),
+                        ));
+                    }
+                    remedies.push(Remedy::one_of(
+                        subject(&id, format!("{path}.preferred.locale"), names.preferred.text.clone(), names.preferred.text.clone()),
+                        vec![locale.clone()],
+                        copy(
+                            format!("Or set preferred.locale to '{locale}' if that name should be the primary language for '{id}'."),
+                            format!("Oder preferred.locale auf '{locale}' setzen, wenn dieser Name die Primärsprache für '{id}' sein soll."),
+                        ),
+                    ));
+                    remedies
+                },
             ));
         }
     }
@@ -1614,18 +1632,30 @@ fn check_accessories_compositions(catalogue: &Catalogue, report: &mut CheckRepor
                     format!("Composition graph has a cycle at product '{}'.", product.id),
                     format!("Zusammensetzungsgraph hat einen Zyklus bei Produkt '{}'.", product.id),
                 ),
-                vec![Remedy {
-                    target: subject(&product.id, format!("catalogue.compositions.{}", product.id), &product.names.preferred.text, &product.names.preferred.text),
-                    current: q_dim(1.0),
-                    required: q_dim(0.0),
-                    bound: RemedyBound::Exactly,
-                    options: Vec::new(),
-                    action: copy(
-                        format!("Remove the composition edge that closes the cycle involving '{}'.", product.id),
-                        format!("Zusammensetzungs-Kante entfernen, die den Zyklus um '{}' schließt.", product.id),
-                    ),
-                    applicable: false,
-                }],
+                {
+                    let mut opts: Vec<String> = catalogue
+                        .products
+                        .iter()
+                        .map(|p| p.id.clone())
+                        .filter(|id| id != &product.id)
+                        .collect();
+                    if opts.is_empty() {
+                        opts.push(format!("{}-open", product.id));
+                    }
+                    vec![Remedy::one_of(
+                        subject(
+                            &product.id,
+                            format!("catalogue.compositions.{}[0].componentProductId", product.id),
+                            &product.names.preferred.text,
+                            &product.names.preferred.text,
+                        ),
+                        opts,
+                        copy(
+                            format!("Retarget the composition edge of '{}' to a non-cyclic component product id.", product.id),
+                            format!("Zusammensetzungs-Kante von '{}' auf eine nicht-zyklische Komponenten-Produkt-Id umbiegen.", product.id),
+                        ),
+                    )]
+                },
             ));
         }
                 if let Some(parts) = catalogue.compositions.get(&product.id) {
@@ -1790,15 +1820,11 @@ fn check_product_indexes(catalogue: &Catalogue, report: &mut CheckReport) {
                     format!("Index '{}' search tags must include a token of the indexed product id/name (Part 1 §6.4).", index.id),
                     format!("Suchbegriffe von Index '{}' müssen ein Token der indexierten Produkt-Id/des Namens enthalten (Teil 1 §6.4).", index.id),
                 ),
-                vec![Remedy {
-                    target: subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[0]", index.id), &index.id, &index.id),
-                    current: q_dim(matched as f64),
-                    required: q_dim(1.0),
-                    bound: RemedyBound::AtLeast,
-                    options: expected_needles.clone(),
-                    action: copy("Set a search tag to the product id or preferred name.", "Suchbegriff auf Produkt-Id oder bevorzugten Namen setzen."),
-                    applicable: true,
-                }],
+                vec![Remedy::one_of(
+                    subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[0]", index.id), &index.id, &index.id),
+                    expected_needles.clone(),
+                    copy("Set a search tag to the product id or preferred name.", "Suchbegriff auf Produkt-Id oder bevorzugten Namen setzen."),
+                )],
             ));
             for (ti, tag) in index.search_tags.iter().enumerate() {
                 let tl = tag.trim().to_ascii_lowercase();
@@ -1836,15 +1862,11 @@ fn check_product_indexes(catalogue: &Catalogue, report: &mut CheckReport) {
                     }),
                     q_dim(1.0),
                     if empty {
-                        vec![Remedy {
-                            target: subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
-                            current: q_dim(0.0),
-                            required: q_dim(1.0),
-                            bound: RemedyBound::AtLeast,
-                            options: expected_needles.clone(),
-                            action: copy("Set a non-empty search tag containing the product id or name.", "Nicht-leeren Suchbegriff mit Produkt-Id oder Name setzen."),
-                            applicable: true,
-                        }]
+                        vec![Remedy::one_of(
+                            subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
+                            expected_needles.clone(),
+                            copy("Set a non-empty search tag containing the product id or name.", "Nicht-leeren Suchbegriff mit Produkt-Id oder Name setzen."),
+                        )]
                     } else {
                         Vec::new()
                     },
@@ -1903,15 +1925,11 @@ fn check_product_indexes(catalogue: &Catalogue, report: &mut CheckReport) {
                     }),
                     q_dim(1.0),
                     if empty {
-                        vec![Remedy {
-                            target: subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
-                            current: q_dim(0.0),
-                            required: q_dim(1.0),
-                            bound: RemedyBound::AtLeast,
-                            options: expected_needles.clone(),
-                            action: copy("Set a non-empty search tag containing the product id or name.", "Nicht-leeren Suchbegriff mit Produkt-Id oder Name setzen."),
-                            applicable: true,
-                        }]
+                        vec![Remedy::one_of(
+                            subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
+                            expected_needles.clone(),
+                            copy("Set a non-empty search tag containing the product id or name.", "Nicht-leeren Suchbegriff mit Produkt-Id oder Name setzen."),
+                        )]
                     } else {
                         Vec::new()
                     },
@@ -2073,7 +2091,70 @@ fn check_selection(catalogue: &Catalogue, selection: &SelectionRequest, report: 
     let result = helpers::select_products(catalogue, selection);
     let title = copy("Product selection", "Produktauswahl");
     if result.matches.is_empty() {
-        report.push(fail(
+        let mut prop_metric = 0.0;
+        let mut value_opts: Vec<String> = Vec::new();
+        let mut prop_opts: Vec<String> = Vec::new();
+        for product in &catalogue.products {
+            let Some(series) = catalogue.product_series.iter().find(|s| s.id == product.series_id) else { continue };
+            if series.class_id != selection.class_id { continue; }
+            for pv in product.static_properties.iter().chain(product.variants.iter().flat_map(|v| v.property_values.iter())) {
+                match &pv.value {
+                    CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => {
+                        prop_metric += *value;
+                        prop_opts.push(value.to_string());
+                    }
+                    CatalogueValue::Integer { value } => {
+                        prop_metric += *value as f64;
+                        prop_opts.push(value.to_string());
+                    }
+                    CatalogueValue::Text { value } | CatalogueValue::Enumeration { value } | CatalogueValue::Identifier { value } => {
+                        prop_opts.push(value.clone());
+                    }
+                    _ => {}
+                }
+            }
+            for variant in &product.variants {
+                for (_k, v) in &variant.parameter_values {
+                    match v {
+                        CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => value_opts.push(value.to_string()),
+                        CatalogueValue::Integer { value } => value_opts.push(value.to_string()),
+                        _ => {}
+                    }
+                }
+            }
+        }
+        prop_opts.sort();
+        prop_opts.dedup();
+        value_opts.sort();
+        value_opts.dedup();
+        // Prefer real property values as option 0 so apply_remedy_edit clears empty selection.
+        let mut opts = prop_opts;
+        for v in value_opts {
+            if !opts.contains(&v) {
+                opts.push(v);
+            }
+        }
+        let constraint_id = selection.constraints.first().map(|c| c.id.clone()).unwrap_or_else(|| "constraint".into());
+        let mut remedies = Vec::new();
+        if !opts.is_empty() {
+            remedies.push(Remedy::one_of(
+                subject("selection", format!("selection.constraints[id={}].value.value", constraint_id), "Selection constraint value", "Auswahlbedingungswert"),
+                opts,
+                copy(
+                    "Set the selection constraint value to a real property/parameter value so at least one product index matches.",
+                    "Auswahl-Constraint-Wert auf einen realen Eigenschaft-/Parameterwert setzen, damit mindestens ein Produktindex passt.",
+                ),
+            ));
+        }
+        remedies.push(Remedy::one_of(
+            subject("selection", "selection.classId", "Selection class", "Auswahlklasse"),
+            catalogue.product_classes.iter().map(|c| c.id.clone()).collect(),
+            copy(
+                "Set selection.classId to a class that has at least one matching product index.",
+                "selection.classId auf eine Klasse mit mindestens einem passenden Produktindex setzen.",
+            ),
+        ));
+        report.push(assess(
             "iso16757.1.4.2.selection.empty",
             "1",
             "4.2",
@@ -2083,18 +2164,10 @@ fn check_selection(catalogue: &Catalogue, selection: &SelectionRequest, report: 
                 format!("Selection for class '{}' matched no products. {}", selection.class_id, result.explanations.join("; ")),
                 format!("Auswahl für Klasse '{}' fand keine Produkte. {}", selection.class_id, result.explanations.join("; ")),
             ),
-            vec![Remedy {
-                target: subject("selection", "selection.classId", "Selection class", "Auswahlklasse"),
-                current: q_dim(0.0),
-                required: q_dim(1.0),
-                bound: RemedyBound::OneOf,
-                options: catalogue.product_classes.iter().map(|c| c.id.clone()).collect(),
-                action: copy(
-                    "Set selection.classId to a class that has at least one matching product index.",
-                    "selection.classId auf eine Klasse mit mindestens einem passenden Produktindex setzen.",
-                ),
-                applicable: true,
-            }],
+            CheckStatus::Fail,
+            q_dim(prop_metric),
+            q_dim(1.0),
+            remedies,
         ));
     } else if result.ambiguity {
         report.push(assess(
@@ -2180,7 +2253,7 @@ fn check_bim_embeddings(catalogue: &Catalogue, report: &mut CheckReport) {
                 }
             }
         }
-        match helpers::resolve_bim_embedding(catalogue, &index.id, params) {
+        match helpers::resolve_bim_embedding(catalogue, &index.id, params.clone()) {
             Ok(embedding) => {
                 if embedding.resolved_geometry_id.is_none() {
                     failed += 1;
@@ -2201,18 +2274,14 @@ fn check_bim_embeddings(catalogue: &Catalogue, report: &mut CheckReport) {
                             geom_opts.sort();
                             geom_opts.dedup();
                             let variant_id = index.variant_id.clone().unwrap_or_else(|| "variant".into());
-                            vec![Remedy {
-                                target: subject(&index.id, format!("catalogue.products[id={}].variants[id={}].geometryId", index.product_id, variant_id), &index.id, &index.id),
-                                current: q_dim(0.0),
-                                required: q_dim(1.0),
-                                bound: RemedyBound::OneOf,
-                                options: geom_opts,
-                                action: copy(
+                            vec![Remedy::one_of(
+                                subject(&index.id, format!("catalogue.products[id={}].variants[id={}].geometryId", index.product_id, variant_id), &index.id, &index.id),
+                                geom_opts,
+                                copy(
                                     "Set geometryId on the resolved variant to an existing geometry object.",
                                     "geometryId der Variante auf ein vorhandenes Geometrieobjekt setzen.",
                                 ),
-                                applicable: true,
-                            }]
+                            )]
                         },
                     ));
                 }
@@ -2226,18 +2295,86 @@ fn check_bim_embeddings(catalogue: &Catalogue, report: &mut CheckReport) {
                     subject(&index.id, format!("catalogue.productIndexes[id={}]", index.id), &index.id, &index.id),
                     copy("BIM embedding geometry", "BIM-Einbettungsgeometrie"),
                     copy(format!("BIM embedding for '{}' failed: {err}", index.id), format!("BIM-Einbettung für '{}' fehlgeschlagen: {err}", index.id)),
-                    vec![Remedy {
-                        target: subject(&index.id, format!("catalogue.productIndexes[id={}].productId", index.id), &index.id, &index.id),
-                        current: q_dim(0.0),
-                        required: q_dim(1.0),
-                        bound: RemedyBound::OneOf,
-                        options: catalogue.products.iter().map(|p| p.id.clone()).collect(),
-                        action: copy(
-                            "Set productIndexes.productId to a resolvable catalogue product.",
-                            "productIndexes.productId auf ein auflösbares Katalogprodukt setzen.",
-                        ),
-                        applicable: true,
-                    }],
+{
+                        let variant_id = index.variant_id.clone().unwrap_or_else(|| "variant".into());
+                        let mut remedies = Vec::new();
+                        for (param_id, value) in &params {
+                            if let Some(domain) = product.parameter_domains.iter().find(|d| &d.parameter_id == param_id) {
+                                if !domain.allowed_values.is_empty() && !domain.allowed_values.contains(value) {
+                                    let options: Vec<String> = domain
+                                        .allowed_values
+                                        .iter()
+                                        .filter_map(|v| match v {
+                                            CatalogueValue::Decimal { value } => Some(value.to_string()),
+                                            CatalogueValue::Integer { value } => Some(value.to_string()),
+                                            CatalogueValue::Text { value } | CatalogueValue::Enumeration { value } => Some(value.clone()),
+                                            _ => None,
+                                        })
+                                        .collect();
+                                    if !options.is_empty() {
+                                        remedies.push(Remedy::one_of(
+                                            subject(
+                                                &index.id,
+                                                format!(
+                                                    "catalogue.products[id={}].variants[id={}].parameterValues.{param_id}.value",
+                                                    index.product_id, variant_id
+                                                ),
+                                                &index.id,
+                                                &index.id,
+                                            ),
+                                            options,
+                                            copy(
+                                                format!("Set parameter '{param_id}' to an allowed domain value so BIM embedding can resolve."),
+                                                format!("Parameter '{param_id}' auf einen zulässigen Bereichswert setzen, damit die BIM-Einbettung auflöst."),
+                                            ),
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                        let mut geom_opts: Vec<String> = catalogue.product_series.iter().filter_map(|s| s.geometry_id.clone()).collect();
+                        geom_opts.extend(catalogue.products.iter().flat_map(|p| p.variants.iter().filter_map(|v| v.geometry_id.clone())));
+                        geom_opts.retain(|g| !g.contains("missing"));
+                        geom_opts.sort();
+                        geom_opts.dedup();
+                        if !geom_opts.is_empty() {
+                            remedies.push(Remedy::one_of(
+                                subject(
+                                    &index.id,
+                                    format!("catalogue.products[id={}].variants[id={}].geometryId", index.product_id, variant_id),
+                                    &index.id,
+                                    &index.id,
+                                ),
+                                geom_opts,
+                                copy(
+                                    "Set geometryId on the resolved variant to an existing geometry object.",
+                                    "geometryId der Variante auf ein vorhandenes Geometrieobjekt setzen.",
+                                ),
+                            ));
+                        }
+                        let product_opts: Vec<String> = catalogue.products.iter().map(|p| p.id.clone()).filter(|id| id != &index.product_id).collect();
+                        if !product_opts.is_empty() {
+                            remedies.push(Remedy::one_of(
+                                subject(&index.id, format!("catalogue.productIndexes[id={}].productId", index.id), &index.id, &index.id),
+                                product_opts,
+                                copy(
+                                    "Set productIndexes.productId to a resolvable catalogue product.",
+                                    "productIndexes.productId auf ein auflösbares Katalogprodukt setzen.",
+                                ),
+                            ));
+                        }
+                        if remedies.is_empty() {
+                            remedies.push(Remedy::one_of(
+                                subject(&index.id, format!("catalogue.productIndexes[id={}].productId", index.id), &index.id, &index.id),
+                                catalogue.products.iter().map(|p| p.id.clone()).collect(),
+                                copy(
+                                    "Set productIndexes.productId to a resolvable catalogue product.",
+                                    "productIndexes.productId auf ein auflösbares Katalogprodukt setzen.",
+                                ),
+                            ));
+                        }
+                        remedies
+                    }
                 ));
             }
         }

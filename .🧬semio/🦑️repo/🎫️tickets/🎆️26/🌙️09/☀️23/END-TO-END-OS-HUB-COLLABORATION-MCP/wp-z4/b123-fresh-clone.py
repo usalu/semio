@@ -36,7 +36,7 @@ SCALE_GEN = '"@semio-tech/framework-os-dev:generate-scale-fixture"'
 
 LAW_ANCHOR = '          if (!["tracked", "ignored"].includes(output.inclusion)) problems.push(`${key}.inclusion must be tracked or ignored.`);\n'
 LAW_ADDED = LAW_ANCHOR + (
-    '          if (output.inclusion === "tracked" && typeof output.path === "string" && output.path.split("/").some((part) => part.replace("\\uFE0F", "") === "🤖generated")) problems.push(`${key} declares a tracked output inside 🤖️generated, which .gitignore ignores and the indexed-generated-output law never indexes: no clone has it.`);\n'
+    '          if (output.inclusion === "tracked" && typeof output.path === "string" && output.path.split("/").some((part: string) => part.replace("\\uFE0F", "") === "🤖generated")) problems.push(`${key} declares a tracked output inside 🤖️generated, which .gitignore ignores and the indexed-generated-output law never indexes: no clone has it.`);\n'
     '          if (contract.ownership === "external" && output.inclusion !== "tracked") problems.push(`${key} is an external input that is not tracked: nothing produces it, so no clone has it.`);\n'
 )
 

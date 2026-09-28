@@ -126,6 +126,5 @@ test("mutation source index captures admitted registered role files without a se
   expect(compare(vectors.cancelProbePath, expectedFiles[0]!) < 0).toBe(true);
   expect(() => rootApi.mutationTaxonomySourceIndex(run, { cancelFile: vectors.cancelFile, progress: (entry: unknown) => progress.push(entry) }, admission(run, taxonomyBytes, true))).toThrow(/cancelled during inventory/u);
   expect(progress).toEqual([]);
-  console.info(`[DEBUG] mutation source index capture fixture=${run} files=${first.files.length} digest=${first.sourceTreeDigest}`);
 });
 //#endregion 🧪️Capture

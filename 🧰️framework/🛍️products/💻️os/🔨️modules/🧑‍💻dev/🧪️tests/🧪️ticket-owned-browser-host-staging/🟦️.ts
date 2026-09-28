@@ -1102,7 +1102,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect((await glob("**/*", { cwd: join(repoRoot, primary), onlyFiles: true, dot: true })).sort()).toEqual(baseline.map((row: { path: string }) => row.path.slice(primary.length + 1)).sort());
       const canonical = join(repoRoot, playDirectory, DISTRIBUTION_LAYOUT.directory);
       expect(await checkDistributionBundle({ manifest, files: new Map(manifest.outputs.map(row => [row.path, readFileSync(join(compiled, row.path))])) }, DISTRIBUTION_LAYOUT, canonical)).toEqual([]);
-      console.log(`[DEBUG] independently checked ${manifest.outputs.length} outputs and preserved ${baseline.length} primary files`);
     });
 
     itLong("completes detached compiler configuration imports in Bun and Node", async () => {
@@ -1114,7 +1113,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       writeFileSync(config, fixture.config);
       for (const executable of ["bun", "node"]) {
         const direct = spawnSync(executable, [entry], { timeout: fixture.timeoutMs, encoding: "utf8", stdio: "pipe" });
-        console.log(`[DEBUG] ${executable} direct-cycle status=${direct.status} completion=${direct.stdout.trim() === fixture.expected}`);
         expect(execFileSync(executable, ["--input-type=module", "--eval", fixture.detached, pathToFileURL(config).href], { timeout: fixture.timeoutMs, encoding: "utf8", stdio: "pipe" }).trim()).toBe(fixture.expected);
         expect(() => execFileSync(executable, ["--input-type=module", "--eval", fixture.detached, pathToFileURL(join(sandbox, "🚫️missing.mjs")).href], { timeout: fixture.timeoutMs, stdio: "pipe" })).toThrow();
       }
@@ -1203,7 +1201,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       }
       const fonts = actual.assets.filter((row) => row.source.startsWith("node_modules/katex/dist/fonts/"));
       expect(fonts.map((row) => basename(row.source)).sort()).toEqual(readdirSync(join(repoRoot, "node_modules/katex/dist/fonts")).sort());
-      console.log(`[DEBUG] validated ${actual.chunks.length} chunk owners and ${actual.assets.length} asset owners, including all ${fonts.length} installed KaTeX fonts`);
     });
 
     itLong("emits runtime URL assets but no dead in-source-test assets in production", async () => {
@@ -1235,7 +1232,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         console.log(JSON.stringify(rows));
       `, fixturePath], { cwd: repoRoot, encoding: "utf8", timeout: 30_000, maxBuffer: 1024 * 1024 }));
       expect(result).toEqual(JSON.parse(readFileSync(fixturePath, "utf8")).assetCases);
-      console.log("[DEBUG] production retains the executable runtime asset URL without emitting test assets; test mode retains both");
     }, 40_000);
 
     itLong("validates neutral read-only build inspection records against an independent digest oracle", async () => {
@@ -1284,10 +1280,8 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
             import { createHash } from 'node:crypto';
             import { pathToFileURL } from 'node:url';
             const settings = JSON.parse(process.argv[2]);
-            console.error('[DEBUG] importing actual production configuration');
             const { default: configExport } = await import(pathToFileURL(process.argv[1]).href);
             const config = typeof configExport === 'function' ? await configExport({ command: 'build', mode: 'production', isSsrBuild: false, isPreview: false }) : await configExport;
-            console.error('[DEBUG] production configuration loaded; starting no-write Rollup build');
             const result = await build({ ...config, configFile: false, publicDir: settings.publicDir, cacheDir: process.argv[3], build: { ...config.build, write: settings.write, emptyOutDir: settings.emptyOutDir, outDir: process.argv[4] } });
             const bundles = Array.isArray(result) ? result : [result], rows = [];
             for (const bundle of bundles) for (const item of bundle.output) {
@@ -1313,7 +1307,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect(moduleIdentities.flatMap((identity: string) => boundary.deniedProductionModuleFragments.filter((fragment: string) => identity.includes(fragment)).map((fragment: string) => ({ identity, fragment })))).toEqual([]);
       expect(existsSync(join(dirname(outputPath), "vite-inspection-unwritten"))).toBe(false);
       writeFileSync(outputPath, JSON.stringify(rows, null, 2) + "\n", { flag: "wx" });
-      console.log(`[DEBUG] inspected ${rows.length} actual Rollup outputs; preserved ${Object.keys(before).length} distribution files`);
     }, 270_000);
 
     itLong("excludes test-only Node imports from production output while preserving runtime and test-mode branches", async () => {
@@ -1345,7 +1338,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       `, fixturePath, definition ?? ""], { cwd: repoRoot, encoding: "utf8", timeout: 30_000, maxBuffer: 1024 * 1024 }));
       expect(actual).toEqual(fixture.cases);
       expect(definition).toBe(fixture.productionDefinition);
-      console.log("[DEBUG] production excludes Node test imports; runtime and test-mode witnesses remain executable");
     }, 40_000);
 
     itLong("routes encoded OS installation requests through the actual adapter handler and registers its stream route", async () => {
@@ -1388,7 +1380,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         }
         request.emit("close");
       }
-      console.log(`[DEBUG] verified ${fixture.httpCases.length} encoded OS adapter request cases without filesystem mutation`);
     });
 
     itLong("serves every declared component import and tool-fixed vendor file byte-identically", async () => {
@@ -1462,7 +1453,6 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         expect(actual.equals(expected), url).toBe(true);
         expect(Buffer.from(await crypto.subtle.digest("SHA-256", new Uint8Array(actual))).toString("hex")).toBe(createHash("sha256").update(expected).digest("hex"));
       }
-      console.log(`[DEBUG] verified ${urls.size} live static assets and 345 component vendor imports`);
     }, 120_000);
   });
 

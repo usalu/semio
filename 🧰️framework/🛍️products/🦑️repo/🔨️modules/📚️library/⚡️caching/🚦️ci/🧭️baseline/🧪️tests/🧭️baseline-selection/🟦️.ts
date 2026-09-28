@@ -36,5 +36,4 @@ export async function testCiBaseline(workspace: string): Promise<void> {
     assert.ok(git.status === 0 || git.status === 1, git.stderr); return git.status === 0;
   });
   assert.equal(selected.base, parent);
-  console.log(`[DEBUG] CI baseline ${fixture.cases.length} selection vectors, full fallback, validation and native Git ancestry PASS`);
 }

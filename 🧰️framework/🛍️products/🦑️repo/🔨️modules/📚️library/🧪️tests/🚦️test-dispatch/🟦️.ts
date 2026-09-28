@@ -138,7 +138,6 @@ test("registered Go dispatch budget owns every nested process and overlay", asyn
     await Bun.sleep(200);
     expect(readFileSync(marker, "utf8")).toBe(before);
     expect(readdirSync(temporary).filter((name) => name.startsWith("semio-go-tests-"))).toEqual([]);
-    console.log(`[DEBUG] nested budget returned in ${Date.now() - started}ms after observing ${observed.length} descendants across ${new Set(observed.map((row) => row.group)).size} groups`);
   } finally {
     cleanupOwnedProcesses(observed);
     rmSync(root, { recursive: true, force: true });

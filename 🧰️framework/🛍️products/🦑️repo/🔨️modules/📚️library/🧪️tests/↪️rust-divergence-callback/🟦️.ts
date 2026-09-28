@@ -93,7 +93,6 @@ async function coldCompiler(owner: string, command: string[], budgetMs: number) 
   };
   const timer = setTimeout(() => { timedOut = true; stop(); }, Math.max(1, budgetMs));
   const sample = setInterval(() => { try { compilerPids(pid, observed); } catch (error) { observationError = String(error); stop(); } }, 250);
-  console.log("[DEBUG] cold syn compiler PID " + pid + ", explicit remaining compiler budget " + Math.round(budgetMs) + "ms");
   const outcome = await new Promise<{ exitCode: number | null; signal: NodeJS.Signals | null }>((accept, reject) => { child.once("error", reject); child.once("close", (exitCode, signal) => accept({ exitCode, signal })); }).finally(() => { clearTimeout(timer); clearInterval(sample); });
   const survivors = compilerPids(pid, observed);
   const result = { command, pid, observedPids: [...observed].sort((a, b) => a - b), ...outcome, stdout, stderr, timedOut, observationError, survivors, elapsedMs: performance.now() - started };
@@ -203,7 +202,6 @@ test("independent syn callback AST, spans, free variables and target tuples matc
   expect(result.timedOut).toBe(false); expect(result.observationError).toBeNull(); expect(result.survivors).toEqual([]);
   expect(result.exitCode, result.stderr).toBe(0);
   expect(JSON.parse(result.stdout)).toEqual({ rows: rows.map((row) => ({ id: row.id, parseable: true, candidates: row.expectedCandidates, callbacks: row.expectedCallbacks })) });
-  console.log("[DEBUG] independent syn callback AST/span/free-variable oracle matched 38 closed vectors");
 }, 120_000);
 
 for (const row of vector.attributeCompilerCases) test("actual rustc attributed callback validity: " + row.id, () => {
@@ -220,7 +218,6 @@ for (const row of vector.attributeCompilerCases) test("actual rustc attributed c
     record(owner, { command: [binary], exitCode: runtime.exitCode, stdout: runtime.stdout.toString(), stderr: runtime.stderr.toString() });
     expect(runtime.exitCode).toBe(row.runtimeExit); expect(runtime.stderr.toString()).toContain("facet.json: ");
   }
-  console.log("[DEBUG] attributed callback " + row.id + " compile=" + compile.exitCode + " runtime=" + row.runtimeExit);
 });
 
 test("actual rustc executes ordinary and divergent error paths and rejects shadowed authority", async () => {
@@ -260,5 +257,4 @@ test("actual rustc executes ordinary and divergent error paths and rejects shado
   const rejected = compile("generic-std", rows.find((row) => row.native === "compiler-rejection")!, true);
   expect(rejected.result.exitCode).not.toBe(0);
   expect(rejected.result.stderr.toString()).toMatch(/error\[E[0-9]+\]/u);
-  console.log("[DEBUG] rustc confirmed ordinary reads, actual standard panic, nondivergent shadowed panic and generic-std semantic rejection");
 }, 15_000);

@@ -52,7 +52,11 @@ EDITS = [
 }
 """),
     (SURFACE,
-     """#[semio_framework_async_macros::async_test]
+     """/// 👁️🔒 Contract §2.3 clause 1/2 — WITH TEETH: dispatches the eight frozen mutating verbs
+/// through the full `VcsArtifactApp<ViewerApp<V>>` runtime path (`handle_action` for the
+/// seven string actions, `import_media` for the eighth) and asserts every one comes back
+/// `Fault { origin: FaultOrigin::Framework, code: FaultCode::new("viewer.read-only"), .. }`.
+#[semio_framework_async_macros::async_test]
 async fn viewer_rejects_every_contract_mutating_verb() {""",
      """/// 📌️ A hub Check In validates the pair it folded through the guest codec's `print-mirror`, and a zero-op `apply-ops`
 /// batch passes a pair through: both read a POPULATED pair, whose unadopted envelope must be retired entry by entry —
@@ -61,7 +65,7 @@ async fn viewer_rejects_every_contract_mutating_verb() {""",
 #[semio_framework_async_macros::async_test]
 async fn the_codec_table_mirrors_and_passes_through_a_populated_pair_without_aborting() {
     let table = crate::app::artifact_codec_table::<EditorApp<SurfaceEditorFixture>>();
-    let genesis = (table.genesis)("surface-codec").await.expect("genesis pair");
+    let genesis = (table.genesis)("artifact-5c0dec0de5c0dec0de5c0dec0de5c0de").await.expect("genesis pair of a server-minted artifact id");
     let op = protocol::OpBinary::encode_op(&SurfaceMutation::from(SetSurfaceCount { value: 7 })).expect("encode set-surface-count");
     let populated = (table.apply_ops)(&genesis.pack, &genesis.spr, &store::os_spr::encode_ops_vec(&[op])).await.expect("one op lands one edit");
     let history = store::os_spr::decode_history(&populated.spr, &store::os_spr::DecodeOptions::default()).await.expect("populated history");
@@ -72,6 +76,10 @@ async fn the_codec_table_mirrors_and_passes_through_a_populated_pair_without_abo
     assert!(!passed.pack.is_empty() && !passed.spr.is_empty(), "an empty batch over a populated pair returns that pair");
 }
 
+/// 👁️🔒 Contract §2.3 clause 1/2 — WITH TEETH: dispatches the eight frozen mutating verbs
+/// through the full `VcsArtifactApp<ViewerApp<V>>` runtime path (`handle_action` for the
+/// seven string actions, `import_media` for the eighth) and asserts every one comes back
+/// `Fault { origin: FaultOrigin::Framework, code: FaultCode::new("viewer.read-only"), .. }`.
 #[semio_framework_async_macros::async_test]
 async fn viewer_rejects_every_contract_mutating_verb() {"""),
 ]

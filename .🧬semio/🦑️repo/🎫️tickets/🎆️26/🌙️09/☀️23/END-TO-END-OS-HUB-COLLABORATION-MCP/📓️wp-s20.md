@@ -14,6 +14,62 @@ Private cargo: `CARGO_TARGET_DIR=.tmp-ticket/wp-s20/target` (native lane, build-
 | 4 | Unowned guest reds (note/shooting import args, architect CSV picker, process format registration, puzzle2d/5d budget, remodel/shooting silent exports, forms description) + cad solid export seam | prepared patches in progress | §log |
 | 2 | Export/import through the `s` UI per kind: harness (`📜️script.ts` verb + nx target + launch row), run local + 7800, route reds | **harness written + type-checked + smoke-run** (`verify io`, os-dev); nx target + launch rows relayed to R10 (rule 17); full local run in flight; 7800 run next | §log, `.🧬semio/🌐hub/s14-s20-io/` |
 
+### Session 14b
+
+Successor agent (28 12:1x). Guest freeze ON (chain 12:02). Serve: S18's 6540 reused through `ensureDevServe` (never stopped by me);
+no hub runs (7800/B3 cannot open current-tree documents since the 12:55 channel-version alignment — coordinator 13:4x).
+
+| # | Item | State | Evidence |
+|---|---|---|---|
+| 0 | Reconcile predecessor's in-flight edits | **done**: the framework Export/Import Document host half was complete in the tree (ShellHelpers region 📤️DocumentTransfer, ShellHost handlers + palette gating, TaskManager lane `documentTransfer`, ⚛️react en/de labels, I18n keys); `verify io` routing present. tsc 2060 files strict rc 0; rule-20 boot `ready:s`, 0 pageerrors; landing rows added (were missing) | `wp-s20/generated/tsc-transfer-2.txt`, `.🧬semio/🌐hub/s14-s20-io/s20b-doc-1.log` |
+| 1 | `verify io`: mp4 (FFmpeg oracle, AV2 §S20) + `archive` format + framework document round trip in EVERY editor row + ONE acceptance record (R10) | **landed (harness TS), measured**: full local en run **32/75 kinds pass; document round trip 40/75 (+ note 1/1 on rerun = 41/75), own formats 1/19, reach 11/12** (only animate `exportVideoFromDeck`). mp4 oracle proven (x264 file ok, truncated refused) | `.🧬semio/🌐hub/s14-s20-io/s20b-local-en-2/{table.md,io-matrix.json}`, `s20b-note-1.log`, `wp-s20/generated/probe-mp4.ts` |
+| 2 | Decision (b) SDK half: `exportArtifactDocument`/`importArtifactDocument` framework-reserved verbs (manifest Rust+TS ids + definitions, SDK window chain, reserved predicate/kind, guest refusal `framework.document-transfer.shell-owned`, MCP dedup (Chrome audience), React + wgpu reserved lists, ShellHost intercept, os commands removed, harness presses the rail rows) | **prepared patch, dry-run clean 13:1x** (38 hunks, 10 files); spans agreed with P9 (P9 lands first) | `wp-s20/s20-patch-document-verbs.py`, `generated/patch-document-verbs-dry-2.txt` |
+| 3 | cad saveCurrent step/obj/stl → real solids (pane-model child seam) | **prepared patch, dry-run clean** (`collect_pane_solids` via `edit::cad_pane_working_scene`; `pane_world_solids` = viewport's mesh rule + instance TRS; empty pane refused `cad.export.empty-pane`; law `current_pane_exports_its_real_solids`) — compile proof at window 3 | `wp-s20/s20-patch-cad-solids.py`, `generated/patch-cad-solids-dry-1.txt` |
+| 4a | NEW (measured): trait-default `build_document_store_initialization_job` = `Err(envelope)` refuses every whole-document load (Import Document, example switch) of 30 editors | **prepared patch, dry-run clean**: default = bounded job (paired with the bounded default owners) in `ArtifactApp`/`ArtifactEditor`/`ArtifactViewer` + removal of 69 plugin overrides that repeat it exactly | `wp-s20/s20-patch-initializer.py`, `generated/patch-initializer-dry-4.txt` |
+| 4b | process3d export formats (`unknown process export format kind`) | **prepared patch, dry-run clean**: formats read from the linked stdio codec crates, not the per-guest global catalog | `wp-s20/s20-patch-process-formats.py` |
+| 4c | remodel `exportQcReport` / shooting export silent success | **prepared patch, dry-run clean** (refusals `remodeling.qc-report.missing`, `shooting.export.nothing-to-export`; QC file typed `.json`). Live: shooting `exportActiveShot` now writes an SVG (163 KB), so only the no-asset case remains | `wp-s20/s20-patch-silent-exports.py` |
+| 4d | note/shooting `loadRequest`, architect CSV picker, puzzle2d/5d import budget | **not patched — proposal** (§14b log 13:4x): the framework Import Document covers the canonical round trip; these per-kind whole-document pickers never matched their own exports | §14b log |
+| 6 | Decision (1): retire note/shooting `loadRequest` pickers | **prepared patch, dry-run clean** (45 hunks, 13 files + delete note `📥️load-request`): command modules/enum rows, decoders, retained ids, publication/execution contracts, manifest rows, tests, note cohort fixture (routeCount was already drifted 35 vs 34 commands → 33), shooting retained-command-limits fixture + schema (38 → 37 routes), io-matrix pins | `wp-s20/s20-patch-retire-load-request.py`, `generated/patch-retire-load-request-dry-2.txt` |
+| 7 | Decision (2): framework chunk staging for file-open imports | **prepared patch phase 1, dry-run clean** (6 files): kernel `ImportStaging` (2 runs × ≤ 128 chunks = 4 MiB, typed `file-import.*` refusals, restart/retransmission/gap/LRU), 10 language-agnostic `stagingCases` + 3 Rust laws (fixture cross-checked by a Python port: all outcomes agree), SDK admits args in `dispatch_action`/`dispatch_command`, host `dispatchOpenedFiles` progress + cancel as a Tasks-window task sharing one tracker with Import Document. Phase 2 (adopters: generation3d/puzzle3d drop private stagings, architect CSV picker, puzzle2d/5d contracts) prepared next, lands with phase 1 | `wp-s20/s20-patch-chunk-staging.py`, `wp-s20/s20-chunk-staging/`, `generated/patch-chunk-staging-dry-1.txt` |
+| 8 | Decision (3): raster Import Document never answers | **root cause narrowed + host fix prepared**: live repro (`probe-document-import.ts`): a raster archive whose op log carries the Demo image edit (one edit, 3 ops, a 25 KB PNG string) stalls at `1/1 running` forever — also when imported into a fresh editor (content-dependent, not a leak); the same image as an example's initial snapshot loads, and an empty raster archive imports in < 2 s. So the stall is in `RasterStoreInitializationAuthority`'s edit-replay phases (SeedHistory…CommitApplied) — native repro law at window 3 (native lane) before the guest fix. Host half fixed: the poll loop re-polled on microtasks only (page 5 s timers measured at ~35 s during the stall, Cancel unreachable) → macrotask yield | `wp-s20/s20-patch-archive-poll-yield.py`, `generated/probe-raster-{1,2,3}.txt`, archive `generated/probe-raster-2/*.semio-archive` |
+
+**Window-3 landing order** (each: dry-run → apply → native check/test of touched crates → tsc + one boot → io-matrix rerun):
+1. `s20-patch-initializer.py` · 2. `s20-patch-archive-poll-yield.py` · 3. `s20-patch-document-verbs.py` (after P9) ·
+4. `s20-patch-chunk-staging.py` + phase 2 · 5. `s20-patch-retire-load-request.py` · 6. `s20-patch-process-formats.py` ·
+7. `s20-patch-silent-exports.py` · 8. `s20-patch-cad-solids.py` · 9. raster native repro law → guest fix · 10. census re-measure.
+
+#### Session 14b log
+
+- 12:1x read preamble 14 (+14b), AGENTS.md, fleet tail, this report. Predecessor's last tree edits: TaskManager 20:32 (auto-commit
+  655, 21:54), ShellHelpers/ShellHost/⚛️react/I18n document-transfer hunks present after the overnight peer edits (grep: every symbol
+  has its importer). `tsc -p wp-s20/tsconfig.transfer.json` rc 0, 0 errors, 2060 files, strict (`generated/tsc-transfer-2.txt`).
+- 12:3x harness (dev test, not in the shell bundle): `IoFormat` += `mp4` (`judgeMp4File`) and `archive` (`.semio-archive`, framework
+  codec); animate pin → `mp4`; EVERY editor row drives the framework pair from the palette (`command.os.os.exportDocument` →
+  download → `importDocument` through the file chooser → new window → export again → byte compare → close); pass = document ok ∧
+  own pins ok ∧ reach ok. tsc rc 2 = only the peer's `🌎️hub/🤝️integration-harness/🟦️.ts(463)` `BunServerWebSocket`.
+- 12:4x `verify io --serve http://127.0.0.1:6540/ --tag s20b-doc-1 --only draw/drawing,puzzle/puzzle3d,note/note`: boot `ready:s`,
+  census 60/60 loaded, 75 editors, 0 faults → rule-20 proof for the predecessor's host edits; draw 28 383 B + note 925 B archives
+  round-trip byte-identical; puzzle3d refused `artifact-store.persisted-initializer-refused`.
+- 12:4x–13:1x relays: P9 (SDK spans, then reserved-predicate route), R10 (one `io-matrix` record per run; `command-reachability-live`
+  dropped), AV2 (mp4 landed 12:3x).
+- 12:5x–13:5x full run `--tag s20b-local-en-2` (pid 62265, 65 min, 6540). Document round trip causes (35 reds):
+  **30 × `artifact-store.persisted-initializer-refused`** (space/space, block 2d/3d/5d, demonstrator playground/puzzle3d, forms, gis
+  terrain, layout, norm ×15, playbook-module-procedural, puzzle 2d/3d/5d, remodel, wfc bitmap) → item 4a; generation2d +
+  demonstrator/generation3d `plugin.internal.document-archive-replacement.initializer-failed` and procedural/generation3d **wasm trap
+  `unreachable`** on archive load (owner S19); raster import never answers (chooser answered, no outcome in 180 s; owner raster);
+  note = palette-row flake → rerun `s20b-note-1` document ok (identical 1 142 B). Own formats: cad step/obj/stl 88 B spatial DSL
+  (item 3), process3d 4× unknown format (4b), remodel qc no file (4c), note/shooting picker `missing field json`, puzzle2d/5d
+  too large to import, animate video `not-ui-safe` (AV2, window 3). Expected after 4a: 71/75 document round trips.
+- 13:4x proposal (coordinator decision): retire the per-kind whole-document pickers note/shooting `loadRequest` (they accept
+  `.dsl/.spk/.ops` but decode JSON under `json`, never their own export) in favour of the framework Import Document; architect CSV
+  and puzzle2d/5d JSON imports need a framework chunk-staging helper (the file-open import arrives as `{payload, name, chunk,
+  chunkCount}` chunks of 32 KiB; generation3d and puzzle3d each hand-roll one) — a separate SDK item, not a per-kind patch.
+- 13:5x coordinator decisions: (1) retire note/shooting `loadRequest`, (2) framework chunk staging is mine (SDK spans via P9),
+  (3) raster Import Document is mine. 14:0x–14:3x prepared (1) and (2) phase 1 (see table; staging fixture cross-checked by a Python
+  port). (3) live repro on 6540 (S18's serve, restarted 12:4x): empty raster → import ok 1.2 s; Demo seated → export 25 901 B op log
+  (one edit with an embedded `image/png` 25 KB) → import `1/1 running` for > 10 min, page timers 7× slow; the same archive into a
+  fresh editor stalls too. Host poll loop patched (macrotask yield); guest stall narrowed to the raster initializer's edit replay.
+
 ### Session 14 log
 
 - 18:3x slice start; read preambles 14/13/12, AGENTS.md, `📓️fleet-14-agents.md` (no CHAIN LAUNCHED line yet), `📓️wp-t12.md`,

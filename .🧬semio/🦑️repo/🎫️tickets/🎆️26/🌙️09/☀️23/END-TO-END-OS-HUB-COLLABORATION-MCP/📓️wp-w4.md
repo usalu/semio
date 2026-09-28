@@ -8,11 +8,12 @@ data `.🧬semio/🌐hub/s14-w4-*`. Handover: [📓️wp-w3.md](📓️wp-w3.md)
 | # | Item | Status |
 |---|---|---|
 | 1 | Layout leaves `📐update-grid` + `🔒set-frame-flags` | **LANDED** 18:3x–19:38 (authority, payload schema, wire tags 26/27, every mirror surface, fixtures + fixture tests, inverse-exact flag storage, typed empty fatal target); **wasm32 green** `-p semio-s-artifact-layout-layout` 19:47 + `-p semio-s-plugin-layout` 19:58; native `--lib --tests` queued in the lane |
-| 2 | robotic + flow-text component builds | open: failure text lost in nx interleaving (no `could not compile`, no rustc error, both end in a truncated `…warningerror`); repro 1 (18:41) invalid (my zsh `$project:c` bug, fixed); repro 2 running since 19:58 but stalls in cargo lock waits (load 85, Codex default-build-dir cargos) → the chain's components step is the proof (w4_retry) |
+| 2 | robotic + flow-text component builds | **PROVEN 14b**: chain a2 components step built `process-extension-robotic-rust` + `flow-extension-text-rust` describe + materialize-dev (all 26 extensions, no error, 12:37–13:1x). Was open: failure text lost in nx interleaving (no `could not compile`, no rustc error, both end in a truncated `…warningerror`); repro 1 (18:41) invalid (my zsh `$project:c` bug, fixed); repro 2 running since 19:58 but stalls in cargo lock waits (load 85, Codex default-build-dir cargos) → the chain's components step is the proof (w4_retry) |
 | 3 | Preflight (leaf authority scan, untracked wired files, checks) | scan done (2946 leaf sources: every wired leaf has its `🔣️.json`); live peer edits listed below; checks blocked by item 7 |
 | 4 | Stale session-13 mutex waiters (31879 native, 42023 wasm) | **DONE** 18:21 (TERM is trapped by the waiter loop → SIGKILL; queues empty, no lock held) |
 | 5 | Relaunch prep | **COMMAND SENT** 20:4x: `wp-w4/w4-chain.sh final` (+ `w4-wasm-hold.sh`, `w4-green.zsh` retry-until-green, `w4-restart-7800.sh`, `w4-hub-hold.ts` rolling capture, `w4-hub-resume.sh`); failed logs archived as `s13-w3-logs/final-a1-*`; guards clean |
-| 6 | Monitor chain → `final-publish.rc` → 7800 READY on ALL → readiness/open-plan probe | waits for launch |
+| 6 | Monitor chain → `final-publish.rc` → 7800 READY on ALL → readiness/open-plan probe | **RUNNING** (14b): launched 28 12:02:46 (pid 45604); rebuild-all a1 red 12:06 (stdio docx/xlsx, overnight peer) → fixed 12:12–12:25 → green-probe #3 rc=0 → retry a2 `--from guest-framework` 12:17 |
+| 8 | 14b chain fixes (unowned overnight peer fallout) | stdio docx/xlsx + stdio-semio docx io **LANDED** (wasm32 stdio plugin rc=0); os-run AppCommand/AppFrame media-export arms written (G12 relay), native check queued; hub-prewarm rc=1 = H14's half-applied kernel-db `PlannedEntries`/`apply_one` (H14 fixing, coordinator 12:1x) |
 | 7 | Codex overlap (value-derive typed-path set, 18:35–) | **RESOLVED by the peer 19:16:54** (it added `match *self {}` for empty enums itself; my prepared `w4-value-derive-empty-enum.py` was NOT applied). Was: `semio-framework-plugin` wasm32 6×E0004 (`#[derive(ToValue, FromValue)]` on the empty `No{Config,Presence,Transient}Mutation` enums now expands `match self {}` arms) — peer's in-flight `🌱️value/✨️derive/⚙️expansion` (+933 lines); earlier (18:4x) kernel/actor/3d E0282/E0034 from the same set |
 
 ### Relaunch Command (sent to main 20:4x)
@@ -105,3 +106,39 @@ finished compile-atomically by W4. The chain copy tolerates transient reds (retr
   wasm-dev 19 GB + wasm-release 12 GB + host ≈ 45 GB → ~60 GiB free, below the 80 GiB floor. The chain stays on the default build-dir.
 - 20:1x F3 landed async activation hashing (dev activate TS, laws 56/56) → covered by the relaunch (activate-s runs it).
 - 20:4x relaunch command sent to main (item 5); recommendation: launch now, the chain's components step is the robotic/flow-text proof.
+
+### Session 14b
+
+- 12:06 successor W4 started (predecessor cut ~20:45 by the usage limit). Chain launched by main 12:02:46 (pid 45604, logs
+  `.🧬semio/🌐hub/s14-w4-logs/`); 7800 resumed on B3 12:03 (hold 45800 / hub 45803, `s13-w3-state-7800/pids.txt` = `hold=45800`,
+  so the move step's `sed -n 's/^hold=//p'` hands 45800 to `w4-restart-7800.sh` → `touch stop` + wait on `hub-hold\.ts 7800 `).
+- 12:03 hub-prewarm rc=1 (42 s): `semio-framework-os-kernel-db` 4 errors — `PlannedEntries` undefined (`🛢️db/🗿️artifact/🦀️.rs:2007/2020/2081`)
+  and replay still calls the removed `apply_one` (l.1868): a half-applied 27 20:41 plan/commit split of `submit` (auto-commit 21:54).
+  Coordinator: H14 owns + fixes it; it only gates the post-publish hub build.
+- 12:06 rebuild-all a1 red in 3/11 guest-framework (`-p semio-s-plugin-stdio` wasm32): overnight peer (04:56–05:03) left
+  docx `🧭️xml-address` without the `set_word_attr` import (E0425 ×2) and xlsx `NamedTripleDiff.order` `Option` → `Vec<K>` with 4
+  `order: None` constructions (E0308 ×4). Fixed (landing row); my first docx import swap dropped the still-used
+  `qualified_word_prefix` (check-1 red, my grep was cut by `head`) → restored (check-2). check-2 surfaced the next crate:
+  `semio-s-artifact-stdio-semio` docx importer/exporter still on the old `DocxSnapshot.document` (E0609 ×2, E0308) → importer uses
+  `project_document()`, exporter `build_minimal_docx`, tests follow. **check-3 wasm32 `-p semio-s-plugin-stdio` rc=0** (113 s).
+- 12:17 chain green-probe #3 rc=0 → RETRY rebuild-all a2 `--from guest-framework`. The forward warm lane's stdio/gis releases
+  failed on the same docx error (pre-fix); later lanes are fine.
+- 12:2x G12 relay: peer's 04:30 store `AppCommand::{Submit,Poll,Cancel}MediaExport`/`TakeMediaExportChunk` + `AppFrame::MediaExport*`
+  → `semio-framework-os-run` exhaustive matches (`frame_in_reply_to`, `app_command_seq`) completed. Other `AppFrame`/`AppCommand`
+  matches: renderer-wgpu wasm32 passed guest-framework; os-mcp fixed by G12; plugin/host/os crates are in the queued native check.
+  Native `--keep-going --lib --tests` of os-run + stdio semio/docx/xlsx queued in the native lane (pid 62084, 7th in queue).
+- 13:1x coordinator: native check is chain-critical → waiter 62084 stopped (TERM removed its ticket but the loop kept sleeping →
+  SIGKILL, my pid), requeued with `FLEET_TICKET_STAMP=20260928120000` (pid 50632). 13:36 result (`generated/s14b-native-check-2.txt`,
+  `--keep-going --lib --tests`): **os-run lib+tests 0 errors; stdio-semio lib+tests 0 errors**; docx `lib test` 10 errors, xlsx
+  `lib test` 107 errors = the overnight peer's tests never moved to the opc + xml_parts snapshots (`XlsxSnapshot.workbook`,
+  `io::encode_docx`, missing fixture `🧹️clear-main-declaration/🔣️.json`) — test-only, not chain-linked → routed to main for ST2.
+- 12:37–13:36 rebuild-all a2: guest-framework green, components (60 projects) running, no `could not compile` yet.
+- 13:50 a2 components red: `semio-s-artifact-playbook-playbook` E0432 ×2 (27 23:5x peer added `🪟️windows/🗂️files` + its imports, no mount in
+  the root `#[path]` tree) → mounted, wasm32 rc=0 13:54; `semio-s-artifact-shooting-shooting` E0308 (stdio svg `write_svg_xml` now returns
+  `Result`) → all 6 unconverted callers fixed (animate ×3, shooting, layout, note). Proactive wasm32 `--keep-going --lib` check of the 24
+  plugin crates not yet built in a2 (pid 81134) so every remaining red surfaces before the retry.
+- 14:06 proactive check: 23 of 24 plugin crates green; writer red (`docx` importer on `.document`) → `project_document()`; 14:08 wasm32
+  writer + shooting + animate + layout + note + playbook **rc=0**. Every plugin crate now passes `cargo check --lib --target wasm32-wasip2`
+  on the live tree (component features not covered). ST2 fixed the svg `📡️.protocol.semio` SHA pins ~14:1x; a2 had not described
+  stdio/gis/vcs yet.
+

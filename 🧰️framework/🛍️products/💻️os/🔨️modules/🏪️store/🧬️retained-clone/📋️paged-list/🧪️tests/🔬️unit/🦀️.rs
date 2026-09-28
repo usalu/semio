@@ -231,7 +231,7 @@ struct GrantFixture {
 }
 
 fn fixture() -> Fixture {
-    serde_json::from_str(include_str!("../../../🧫️fixtures/📦️copy/🔣️.json")).expect("paged list retained fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/📦️copy/🔣️.json")).expect("paged list retained fixture")
 }
 
 fn source(fixture: &Fixture) -> PagedList<String, 1024> {

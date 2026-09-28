@@ -660,6 +660,194 @@ impl Identified<String> for ImageLink {
     }
 }
 
+impl Identified<String> for ParagraphStyle {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for CharacterStyle {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for ParentPage {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for Spread {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch> for ParagraphStyle {
+    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(font_family) = &patch.font_family {
+            self.font_family = font_family.clone();
+        }
+        if let Some(font_size) = patch.font_size {
+            self.font_size = font_size;
+        }
+        if let Some(font_weight) = patch.font_weight {
+            self.font_weight = font_weight;
+        }
+        if let Some(leading) = patch.leading {
+            self.leading = leading;
+        }
+        if let Some(tracking) = patch.tracking {
+            self.tracking = tracking;
+        }
+        if let Some(alignment) = &patch.alignment {
+            self.alignment = alignment.clone();
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch> {
+        let mut patch = crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch::default();
+        let mut changed = false;
+        if self.name != other.name {
+            patch.name = Some(other.name.clone());
+            changed = true;
+        }
+        if self.font_family != other.font_family {
+            patch.font_family = Some(other.font_family.clone());
+            changed = true;
+        }
+        if self.font_size != other.font_size {
+            patch.font_size = Some(other.font_size);
+            changed = true;
+        }
+        if self.font_weight != other.font_weight {
+            patch.font_weight = Some(other.font_weight);
+            changed = true;
+        }
+        if self.leading != other.leading {
+            patch.leading = Some(other.leading);
+            changed = true;
+        }
+        if self.tracking != other.tracking {
+            patch.tracking = Some(other.tracking);
+            changed = true;
+        }
+        if self.alignment != other.alignment {
+            patch.alignment = Some(other.alignment.clone());
+            changed = true;
+        }
+        changed.then_some(patch)
+    }
+}
+
+impl Patchable<crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch> for CharacterStyle {
+    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(font_family) = &patch.font_family {
+            self.font_family = font_family.clone();
+        }
+        if let Some(font_size) = &patch.font_size {
+            self.font_size = *font_size;
+        }
+        if let Some(font_weight) = &patch.font_weight {
+            self.font_weight = *font_weight;
+        }
+        if let Some(italic) = &patch.italic {
+            self.italic = *italic;
+        }
+        if let Some(color) = &patch.color {
+            self.color = *color;
+        }
+        if let Some(tracking) = &patch.tracking {
+            self.tracking = *tracking;
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch> {
+        let mut patch = crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch::default();
+        let mut changed = false;
+        if self.name != other.name {
+            patch.name = Some(other.name.clone());
+            changed = true;
+        }
+        if self.font_family != other.font_family {
+            patch.font_family = Some(other.font_family.clone());
+            changed = true;
+        }
+        if self.font_size != other.font_size {
+            patch.font_size = Some(other.font_size);
+            changed = true;
+        }
+        if self.font_weight != other.font_weight {
+            patch.font_weight = Some(other.font_weight);
+            changed = true;
+        }
+        if self.italic != other.italic {
+            patch.italic = Some(other.italic);
+            changed = true;
+        }
+        if self.color != other.color {
+            patch.color = Some(other.color);
+            changed = true;
+        }
+        if self.tracking != other.tracking {
+            patch.tracking = Some(other.tracking);
+            changed = true;
+        }
+        changed.then_some(patch)
+    }
+}
+
+impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParentPagePatch> for ParentPage {
+    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::ParentPagePatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(width) = patch.width {
+            self.width = width;
+        }
+        if let Some(height) = patch.height {
+            self.height = height;
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::ParentPagePatch> {
+        let mut patch = crate::standards::v1::subsets::any::schema::diff::ParentPagePatch::default();
+        let mut changed = false;
+        if self.name != other.name {
+            patch.name = Some(other.name.clone());
+            changed = true;
+        }
+        if self.width != other.width {
+            patch.width = Some(other.width);
+            changed = true;
+        }
+        if self.height != other.height {
+            patch.height = Some(other.height);
+            changed = true;
+        }
+        changed.then_some(patch)
+    }
+}
+
+impl Patchable<crate::standards::v1::subsets::any::schema::diff::SpreadPatch> for Spread {
+    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::SpreadPatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<crate::standards::v1::subsets::any::schema::diff::SpreadPatch> {
+        (self.name != other.name).then(|| crate::standards::v1::subsets::any::schema::diff::SpreadPatch { name: Some(other.name.clone()) })
+    }
+}
+
 /// 🌱️ Sparse "one frame was inserted into this page" fragment of a {@link PagePatch} — carries the
 /// `create-frame` semantic mutation's payload verbatim plus the FINAL-state insertion index.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -679,6 +867,17 @@ pub struct PageFrameAdded {
 pub struct PageFramePatched {
     pub frame_id: String,
     pub patch: FramePatch,
+}
+
+/// 🩹 One layer on a page changed its name or flags.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(deny_unknown_fields)]
+pub struct PageLayerPatched {
+    pub layer_id: String,
+    pub name: Option<String>,
+    pub visible: Option<bool>,
+    pub locked: Option<bool>,
 }
 
 /// 📄️ Sparse scalar patch for a {@link Page} (name, size, margins, columns, one nested frame
@@ -702,6 +901,12 @@ pub struct PagePatch {
     pub frame_added: Option<PageFrameAdded>,
     pub frame_removed: Option<String>,
     pub frame_patched: Option<PageFramePatched>,
+    #[value(default)]
+    pub layer_patched: Option<PageLayerPatched>,
+    #[value(default)]
+    pub parent_page_id: Option<Option<String>>,
+    #[value(default)]
+    pub guides: Option<Vec<LayoutRect>>,
 }
 
 /// 🩹️ Pure field-apply for a {@link FramePatch} onto a {@link Frame} — no inverse capture (every
@@ -747,12 +952,30 @@ fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
                 *stroke = new;
             }
         }
-        Frame::Text { wrap_mode, columns, .. } => {
+        Frame::Text { wrap_mode, columns, story_id, thread_next, inset, .. } => {
             if let Some(new) = &patch.wrap_mode {
                 *wrap_mode = new.clone();
             }
             if let Some(new) = patch.columns {
                 *columns = new;
+            }
+            if let Some(new) = &patch.story_id {
+                *story_id = new.clone();
+            }
+            if let Some(new) = &patch.thread_next {
+                *thread_next = new.clone();
+            }
+            if let Some(new) = patch.inset_x {
+                inset.x = new;
+            }
+            if let Some(new) = patch.inset_y {
+                inset.y = new;
+            }
+            if let Some(new) = patch.inset_width {
+                inset.width = new;
+            }
+            if let Some(new) = patch.inset_height {
+                inset.height = new;
             }
         }
         Frame::Image { .. } => {}
@@ -808,6 +1031,25 @@ impl Patchable<PagePatch> for Page {
                 apply_frame_field_patch(frame, &entry.patch);
             }
         }
+        if let Some(parent) = &patch.parent_page_id {
+            self.parent_page_id = parent.clone();
+        }
+        if let Some(guides) = &patch.guides {
+            self.guides = guides.clone();
+        }
+        if let Some(entry) = &patch.layer_patched {
+            if let Some(layer) = self.layers.iter_mut().find(|layer| layer.id == entry.layer_id) {
+                if let Some(name) = &entry.name {
+                    layer.name = name.clone();
+                }
+                if let Some(visible) = entry.visible {
+                    layer.visible = visible;
+                }
+                if let Some(locked) = entry.locked {
+                    layer.locked = locked;
+                }
+            }
+        }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
@@ -859,6 +1101,8 @@ impl Patchable<PagePatch> for Page {
 #[value(deny_unknown_fields)]
 pub struct TextStoryPatch {
     pub content: Option<String>,
+    #[value(default)]
+    pub style_runs: Option<Vec<TextStyleRun>>,
 }
 
 impl Patchable<TextStoryPatch> for TextStory {
@@ -866,10 +1110,15 @@ impl Patchable<TextStoryPatch> for TextStory {
         if let Some(content) = &patch.content {
             self.content = content.clone();
         }
+        if let Some(style_runs) = &patch.style_runs {
+            self.style_runs = style_runs.clone();
+        }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
-        (self.content != other.content).then(|| TextStoryPatch { content: Some(other.content.clone()) })
+        let content = (self.content != other.content).then(|| other.content.clone());
+        let style_runs = (self.style_runs != other.style_runs).then(|| other.style_runs.clone());
+        (content.is_some() || style_runs.is_some()).then(|| TextStoryPatch { content, style_runs })
     }
 }
 
@@ -879,6 +1128,14 @@ impl Patchable<TextStoryPatch> for TextStory {
 #[value(deny_unknown_fields)]
 pub struct ImageLinkPatch {
     pub path: Option<String>,
+    #[value(default)]
+    pub width: Option<u32>,
+    #[value(default)]
+    pub height: Option<u32>,
+    #[value(default)]
+    pub dpi: Option<u32>,
+    #[value(default)]
+    pub color_profile: Option<String>,
 }
 
 impl Patchable<ImageLinkPatch> for ImageLink {
@@ -886,10 +1143,27 @@ impl Patchable<ImageLinkPatch> for ImageLink {
         if let Some(path) = &patch.path {
             self.path = path.clone();
         }
+        if let Some(width) = patch.width {
+            self.width = width;
+        }
+        if let Some(height) = patch.height {
+            self.height = height;
+        }
+        if let Some(dpi) = patch.dpi {
+            self.dpi = dpi;
+        }
+        if let Some(color_profile) = &patch.color_profile {
+            self.color_profile = (!color_profile.is_empty()).then(|| color_profile.clone());
+        }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
-        (self.path != other.path).then(|| ImageLinkPatch { path: Some(other.path.clone()) })
+        let path = (self.path != other.path).then(|| other.path.clone());
+        let width = (self.width != other.width).then_some(other.width);
+        let height = (self.height != other.height).then_some(other.height);
+        let dpi = (self.dpi != other.dpi).then_some(other.dpi);
+        let color_profile = (self.color_profile != other.color_profile).then(|| other.color_profile.clone().unwrap_or_default());
+        (path.is_some() || width.is_some() || height.is_some() || dpi.is_some() || color_profile.is_some()).then(|| ImageLinkPatch { path, width, height, dpi, color_profile })
     }
 }
 
@@ -917,6 +1191,18 @@ pub struct FramePatch {
     pub locked: Option<bool>,
     #[value(default)]
     pub visible: Option<bool>,
+    #[value(default)]
+    pub story_id: Option<String>,
+    #[value(default)]
+    pub thread_next: Option<Option<String>>,
+    #[value(default)]
+    pub inset_x: Option<f64>,
+    #[value(default)]
+    pub inset_y: Option<f64>,
+    #[value(default)]
+    pub inset_width: Option<f64>,
+    #[value(default)]
+    pub inset_height: Option<f64>,
 }
 //#endregion 🔖️CollectionSupport
 
@@ -1029,6 +1315,78 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒set-frame-flags/🧪️tests/🔒️locks-frame-1/🦀️.rs"]
                             mod tests_locks_frame_1;
+                        }
+                        #[path = "."]
+                        pub mod update_paragraph_style {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️update-paragraph-style/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_text_frame {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️update-text-frame/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_layer {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️update-layer/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_character_style {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️create-character-style/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_character_style {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-character-style/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_character_style {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️update-character-style/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_parent_page {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️update-parent-page/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_spread {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️update-spread/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_page_parent {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️set-page-parent/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_page_guides {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-page-guides/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_story_runs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️set-story-runs/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_link {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-link/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                         #[path = "."]
                         pub mod create_page {

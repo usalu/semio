@@ -3,6 +3,7 @@ times; `--dry-run` proves every anchor and prints the file list, `--write` appli
 exist yet (or equal their target when re-run)."""
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -49,6 +50,21 @@ def create(part: str, path: Path, content: str) -> None:
     counts[part] = counts.get(part, 0) + 1
 
 
+removals: list = []
+
+
+def delete_tree(part: str, path: Path, expected_files: int) -> None:
+    """Removes a whole directory (tracked and ignored files alike); a re-run after `--write` finds it gone and is a no-op."""
+    if not path.exists():
+        return
+    found = sum(1 for item in path.rglob("*") if item.is_file() and not {"pkg", "node_modules"} & set(item.relative_to(path).parts))
+    if found != expected_files:
+        problems.append(f"{part}: {path.relative_to(ROOT)}: expected {expected_files} source file(s) outside pkg/ and node_modules/, found {found}")
+        return
+    removals.append(path)
+    counts[part] = counts.get(part, 0) + 1
+
+
 def finish(doc: str) -> None:
     write = "--write" in sys.argv
     if not write and "--dry-run" not in sys.argv:
@@ -56,6 +72,10 @@ def finish(doc: str) -> None:
     if problems:
         print("\n".join(problems))
         sys.exit(f"{len(problems)} problem(s); nothing written")
+    for path in removals:
+        print(f"   {'removed' if write else 'would remove'} {path.relative_to(ROOT)}/ ({sum(1 for item in path.rglob('*') if item.is_file())} file(s))")
+        if write:
+            shutil.rmtree(path)
     changed = [path for path, content in edits.items() if originals.get(path) != content]
     for part, n in sorted(counts.items()):
         print(f"part {part}: {n} hunk(s)")

@@ -2,14 +2,16 @@
  * live half of command reachability (1.8): every verb that was `BatchOnlyPendingRewrite` must dispatch from its rail row.
  *
  * One row per editor program the shell's own catalog probe lists (`window.__semioOsCatalogProbe.programs`), opened from the
- * Home landing through the command palette. Per program with pins (`🧑‍💻dev/🧫️fixtures/🚪️io-matrix.json`): the first
- * non-empty example is seated from the navbar, every pinned export is pressed in the Actions rail and must hand the browser
- * at least one downloaded file that a third-party parser accepts (Chromium's DOMParser / image decoder, pdf.js, three.js'
- * mesh loaders; STEP, CSV, text and glTF containers by their published structure); every pinned import opens the host
- * file picker (or stages the file text into its argument), reads back the file an export produced after the program's
- * matrix verb moved the document, and the same export pressed again must write the same file (bytes, or the same
- * JSON / text up to whitespace). `reach` verbs are pressed with their first live options and must not be refused as
- * `interactive-job.not-ui-safe`. Programs without pins are rows too: a kind with no export/import control fails bar d.
+ * Home landing through the command palette, its first non-empty example seated from the navbar. Every row drives the
+ * framework's document pair from the palette — Export Document, Import Document through the host file picker (a new window
+ * of the same program), Export Document again from that window — and the canonical archive must come back byte for byte.
+ * Per program with pins (`🧑‍💻dev/🧫️fixtures/🚪️io-matrix.json`, the kind's own formats): every pinned export is pressed in
+ * the Actions rail and must hand the browser at least one downloaded file that a third-party parser accepts (Chromium's
+ * DOMParser / image decoder, pdf.js, three.js' mesh loaders, fflate, FFmpeg; STEP, CSV, text and glTF containers by their
+ * published structure); every pinned import opens the host file picker (or stages the file text into its argument), reads
+ * back the file an export produced after the program's matrix verb moved the document, and the same export pressed again
+ * must write the same file (bytes, or the same JSON / text up to whitespace). `reach` verbs are pressed with their first
+ * live options and must not be refused as `interactive-job.not-ui-safe`.
  *
  * `--hub <url>` joins the serve to that hub, signs in with `OS_HUB_PROBE_EMAIL`/`OS_HUB_PROBE_PASSWORD`, creates one
  * document per pinned creatable kind in the space the hub-document sweep uses and drives the same pins on it.
@@ -17,8 +19,10 @@
  * @see ../🗂️hub-document-sweep/🟦️.ts — sign-in, space and creation journey reused by `--hub`
  */
 
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Download, FileChooser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
@@ -26,10 +30,11 @@ import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️ex
 import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, fillStagedArgument, keyOf, readMatrixPins, readShell, roleOf, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness, type MatrixPins, type MatrixProgram } from "../🧮️program-matrix/🟦️.ts";
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️hub-document-sweep/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { decodeDocumentArchiveBytes } from "../../../../🟦️.ts";
 
 //#region 🔖️Pins
 /** 🧾️ A file format a third-party parser must accept; `any` sniffs the format from the downloaded file's name. */
-export type IoFormat = "json" | "csv" | "text" | "svg" | "png" | "pdf" | "obj" | "stl" | "ply" | "gltf" | "glb" | "step" | "zip" | "any";
+export type IoFormat = "json" | "csv" | "text" | "svg" | "png" | "pdf" | "obj" | "stl" | "ply" | "gltf" | "glb" | "step" | "zip" | "mp4" | "archive" | "any";
 
 /** 📤️ One export control: the rail verb, its staged arguments and the format its file must parse as. */
 export type IoExportPin = Readonly<{ id: string; verb: string; args?: Readonly<Record<string, string>>; format: IoFormat }>;
@@ -43,7 +48,7 @@ export type IoProgramPins = Readonly<{ exports: readonly IoExportPin[]; imports:
 /** 📌️ `semio.os-dev.io-matrix/v1`. */
 export type IoMatrixPins = Readonly<{ schema: "semio.os-dev.io-matrix/v1"; programs: Readonly<Record<string, IoProgramPins>> }>;
 
-const IO_FORMATS: readonly IoFormat[] = ["json", "csv", "text", "svg", "png", "pdf", "obj", "stl", "ply", "gltf", "glb", "step", "zip", "any"];
+const IO_FORMATS: readonly IoFormat[] = ["json", "csv", "text", "svg", "png", "pdf", "obj", "stl", "ply", "gltf", "glb", "step", "zip", "mp4", "archive", "any"];
 
 /** 📌️ Reads and checks the pins: every import reads a declared export of its own program, every format is known. */
 export function readIoMatrixPins(): IoMatrixPins {
@@ -88,6 +93,8 @@ export function formatOfFileName(name: string): IoFormat {
     [/\.glb$/u, "glb"],
     [/\.(step|stp)$/u, "step"],
     [/\.zip$/u, "zip"],
+    [/\.mp4$/u, "mp4"],
+    [/\.semio-archive$/u, "archive"],
   ];
   return table.find(([pattern]) => pattern.test(lower))?.[1] ?? "text";
 }
@@ -105,8 +112,31 @@ const utf8 = (bytes: Uint8Array): string | null => {
 
 const arrayBufferOf = (bytes: Uint8Array): ArrayBuffer => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 
+/** 🎞️ FFmpeg as the MP4 oracle: `ffprobe` must read an H.264 video stream with a size and at least one decoded frame, and
+ * `ffmpeg` must decode the whole file without an error.
+ * @see https://ffmpeg.org/ffprobe.html */
+export function judgeMp4File(bytes: Uint8Array): Readonly<{ ok: boolean; detail: string }> {
+  const dir = mkdtempSync(join(tmpdir(), "io-matrix-mp4-"));
+  const path = join(dir, "video.mp4");
+  try {
+    writeFileSync(path, bytes);
+    const probe = spawnSync("ffprobe", ["-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,nb_read_frames", "-of", "json", path], { encoding: "utf8" });
+    if (probe.error) return { ok: false, detail: `ffprobe unavailable: ${probe.error.message}` };
+    if (probe.status !== 0) return { ok: false, detail: `ffprobe exit ${String(probe.status)}: ${probe.stderr.trim().split("\n")[0] ?? ""}`.slice(0, 160) };
+    const stream = (JSON.parse(probe.stdout) as { streams?: { codec_name?: string; width?: number; height?: number; nb_read_frames?: string }[] }).streams?.[0];
+    const frames = Number(stream?.nb_read_frames ?? 0);
+    const decode = spawnSync("ffmpeg", ["-v", "error", "-i", path, "-f", "null", "-"], { encoding: "utf8" });
+    const decoded = decode.status === 0 && decode.stderr.trim().length === 0;
+    const ok = stream?.codec_name === "h264" && (stream.width ?? 0) > 0 && (stream.height ?? 0) > 0 && frames > 0 && decoded;
+    return { ok, detail: `${String(stream?.codec_name)} ${String(stream?.width)}x${String(stream?.height)}, ${frames} frames, ffmpeg decode ${decoded ? "clean" : `exit ${String(decode.status)} ${decode.stderr.trim().split("\n")[0] ?? ""}`.slice(0, 80)}` };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 /** ⚖️ Judges one downloaded file with a parser that is not ours: the page's Chromium for SVG and raster images, pdf.js for
- * PDF, three.js' loaders for OBJ/STL/PLY, fflate for ZIP; STEP, CSV, text and glTF containers by their published structure. */
+ * PDF, three.js' loaders for OBJ/STL/PLY, fflate for ZIP, FFmpeg for MP4; STEP, CSV, text and glTF containers by their
+ * published structure. */
 export async function judgeFile(page: Page, name: string, bytes: Uint8Array, declared: IoFormat): Promise<IoOracleVerdict> {
   const format = declared === "any" ? formatOfFileName(name) : declared;
   if (bytes.byteLength === 0) return { format, oracle: "size", ok: false, detail: "empty file" };
@@ -182,6 +212,12 @@ export async function judgeFile(page: Page, name: string, bytes: Uint8Array, dec
         const { unzipSync } = (await import("fflate")) as { unzipSync: (data: Uint8Array) => Record<string, Uint8Array> };
         const entries = Object.keys(unzipSync(new Uint8Array(bytes)));
         return { format, oracle: "fflate.unzipSync", ok: entries.length > 0, detail: `${entries.length} entries: ${entries.slice(0, 4).join(", ")}` };
+      }
+      case "mp4":
+        return { format, oracle: "ffprobe+ffmpeg", ...judgeMp4File(bytes) };
+      case "archive": {
+        const archive = decodeDocumentArchiveBytes(bytes);
+        return { format, oracle: "document-archive-v1", ok: archive.parent_pack.length > 0 && archive.parent_spr.length > 0, detail: `root ${archive.parent_pack.length} B, op log ${archive.parent_spr.length} B, ${archive.members.length} members` };
       }
       case "any":
         return { format, oracle: "none", ok: false, detail: "unreachable" };
@@ -427,6 +463,66 @@ async function runReach(page: Page, recorders: Recorders, verb: string, liveId: 
   return { verb, press, dispatched: press.row === "ok" && dead === null, dead };
 }
 
+/** 📤️ The framework's Export/Import Document pair as the palette lists it in every editor (`os.exportDocument` /
+ * `os.importDocument`, region 📤️DocumentTransfer of `🛠️ShellHelpers`); the query is the command's own label.
+ * @see ../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx — `ui.command.exportDocument` / `ui.command.importDocument` */
+const DOCUMENT_TRANSFER_COMMANDS = {
+  export: { item: "command.os.os.exportDocument", query: { en: "Export Document", de: "Dokument exportieren" } },
+  import: { item: "command.os.os.importDocument", query: { en: "Import Document", de: "Dokument importieren" } },
+} as const;
+
+/** 🎛️ Presses one os command from the palette as a person does: types its label, clicks its row. */
+async function pressPaletteCommand(page: Page, item: string, query: string): Promise<string> {
+  const input = await openPalette(page);
+  if ((await input.count()) === 0) return "command palette never opened";
+  await input.fill(query);
+  const row = page.locator(`[data-slot="command-item"][data-command-item-id="${item}"]`).first();
+  await row.waitFor({ state: "visible", timeout: 8_000 }).catch(() => undefined);
+  if ((await row.count()) === 0) {
+    await page.keyboard.press("Escape");
+    return `no ${item} palette row`;
+  }
+  await row.click({ timeout: 8_000 }).catch(() => row.click({ force: true }).catch(() => undefined));
+  return "ok";
+}
+
+/** 📤️ Export Document from the palette: the focused program's archive must download and decode. */
+async function exportDocumentArchive(page: Page, recorders: Recorders, locale: "en" | "de", dir: string, prefix: string) {
+  const cursor = recorders.downloads.length;
+  const noticeCursor = (await recorders.notices()).length;
+  const pressed = await pressPaletteCommand(page, DOCUMENT_TRANSFER_COMMANDS.export.item, DOCUMENT_TRANSFER_COMMANDS.export.query[locale]);
+  const files = pressed === "ok" ? await saveDownloads(page, await takeDownloads(page, recorders, cursor, 30_000, 1_500), dir, prefix, "archive") : [];
+  return { pressed, files, notices: (await recorders.notices()).slice(noticeCursor).slice(0, 3), ok: files.length === 1 && files[0]!.verdict.ok };
+}
+
+/** 🔁️ The framework document round trip every editor offers: Export Document, Import Document through the host file
+ * picker (a NEW window of the same program, loaded as a cancellable task), Export Document again from that window — the
+ * canonical archive must come back byte for byte. The imported window is closed again. */
+async function runDocumentTransfer(page: Page, recorders: Recorders, locale: "en" | "de", dir: string) {
+  const exported = await exportDocumentArchive(page, recorders, locale, dir, "document");
+  const first = exported.files[0];
+  if (!exported.ok || first === undefined) return { export: exported, import: null, ok: false };
+  const before = await windowIds(page);
+  const chooserCursor = recorders.chooser.log.length;
+  const noticeCursor = (await recorders.notices()).length;
+  recorders.chooser.pending = first.path;
+  const pressed = await pressPaletteCommand(page, DOCUMENT_TRANSFER_COMMANDS.import.item, DOCUMENT_TRANSFER_COMMANDS.import.query[locale]);
+  const began = Date.now();
+  let outcome: string | null = null;
+  while (pressed === "ok" && outcome === null && Date.now() - began < 180_000) {
+    await page.waitForTimeout(500);
+    outcome = (await recorders.notices()).slice(noticeCursor).map((line) => /^shell\.documentTransfer\.(imported|import-failed|import-unreadable|import-cancelled)\|/u.exec(line)?.[1] ?? null).find((code) => code !== null) ?? null;
+  }
+  recorders.chooser.pending = null;
+  await page.waitForTimeout(2_500);
+  const opened = (await windowIds(page)).filter((id) => !before.includes(id));
+  const second = outcome === "imported" ? await exportDocumentArchive(page, recorders, locale, dir, "document-reimported") : null;
+  const roundTrip = second?.files[0] === undefined ? null : compareExports(new Uint8Array(readFileSync(first.path)), new Uint8Array(readFileSync(second.files[0].path)));
+  await closeWindows(page, opened);
+  const imported = { pressed, chooser: recorders.chooser.log.slice(chooserCursor), outcome: outcome ?? "no outcome within 180 s", loadMs: Date.now() - began, openedWindows: opened, reexport: second, roundTrip };
+  return { export: exported, import: imported, ok: outcome === "imported" && opened.length > 0 && second?.ok === true && roundTrip?.verdict === "identical" };
+}
+
 /** 📚️ Seats the program's first non-empty example from the navbar picker, when it offers one. */
 async function seatFirstExample(page: Page): Promise<string> {
   const picker = page.locator('[id="playground.navbar.fixture"]').first();
@@ -470,6 +566,9 @@ export type IoMatrixRow = Record<string, unknown> & { key: string; appId: string
 
 /** 📊️ The whole run, rewritten after every row. */
 export type IoMatrixReport = { baseUrl: string; hubUrl: string | null; tag: string; locale: string; started: string; finished?: string; census?: unknown; rows: IoMatrixRow[]; fatal?: string; cancelled?: boolean; faultsTail?: string[] };
+
+/** 📌️ A kind with no extra formats of its own: only the framework document pair is driven. */
+const NO_KIND_PINS: IoProgramPins = { exports: [], imports: [], reach: [] };
 
 type CatalogProbe = Readonly<{ plugins: readonly Readonly<{ pluginId: string; status: string }>[]; programs: readonly MatrixProgram[] }>;
 
@@ -536,8 +635,8 @@ export function hubKindKey(kind: Readonly<{ kindId: string; plugin: string; valu
   return match ? `${match[1]}/${match[2]}` : `${kind.plugin}/${kind.kindId}`;
 }
 
-/** 🚪️ Drives one opened program's pins and returns its row fields. */
-async function driveProgram(page: Page, recorders: Recorders, key: string, pluginId: string, pins: IoProgramPins, matrixPins: MatrixPins, dir: string) {
+/** 🚪️ Drives one opened program's pins, then the framework document round trip, and returns its row fields. */
+async function driveProgram(page: Page, recorders: Recorders, key: string, pluginId: string, pins: IoProgramPins, matrixPins: MatrixPins, locale: "en" | "de", dir: string) {
   const liveId = matrixPins.liveId;
   const example = await seatFirstExample(page);
   const railToggles = await unfoldActionsRail(page);
@@ -552,6 +651,7 @@ async function driveProgram(page: Page, recorders: Recorders, key: string, plugi
     const exportPin = pins.exports.find((candidate) => candidate.id === pin.from)!;
     imports.push(await runImport(page, recorders, pin, exportPin, exports.find((entry) => entry.id === pin.from)?.files[0], move, liveId, dir));
   }
+  const document = await runDocumentTransfer(page, recorders, locale, dir);
   return {
     example,
     railToggles,
@@ -561,6 +661,7 @@ async function driveProgram(page: Page, recorders: Recorders, key: string, plugi
     imports,
     reach: reach.map((entry) => ({ verb: entry.verb, dispatched: entry.dispatched, dead: entry.dead, row: entry.press.row, submit: entry.press.submit, refusals: entry.press.refusals.slice(0, 3), notices: entry.press.notices.slice(0, 3) })),
     ioOk: exports.every((entry) => entry.ok) && imports.every((entry) => entry.ok),
+    document,
   };
 }
 
@@ -602,7 +703,7 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
     flush();
     const exports = (row.exports as { id: string; ok: boolean; files: SavedFile[] }[] | undefined) ?? [];
     const imports = (row.imports as { id: string; ok: boolean; roundTrip?: { verdict: string } }[] | undefined) ?? [];
-    log(`${row.pass ? "PASS" : "FAIL"} ${row.key} pinned=${row.pinned} exports=${exports.map((entry) => `${entry.id}:${entry.ok ? "ok" : "red"}(${entry.files.map((file) => `${file.bytes}B ${file.verdict.oracle}`).join(",")})`).join(" ")} imports=${imports.map((entry) => `${entry.id}:${entry.ok ? "ok" : "red"}:${entry.roundTrip?.verdict ?? "-"}`).join(" ")} reach=${row.reach.map((entry) => `${entry.verb}:${entry.dispatched ? "ok" : "dead"}`).join(" ")} faults=${String(row.faultCount)} ${String(row.detail ?? "")}`);
+    log(`${row.pass ? "PASS" : "FAIL"} ${row.key} document=${documentCellV1(row)} pinned=${row.pinned} exports=${exports.map((entry) => `${entry.id}:${entry.ok ? "ok" : "red"}(${entry.files.map((file) => `${file.bytes}B ${file.verdict.oracle}`).join(",")})`).join(" ")} imports=${imports.map((entry) => `${entry.id}:${entry.ok ? "ok" : "red"}:${entry.roundTrip?.verdict ?? "-"}`).join(" ")} reach=${row.reach.map((entry) => `${entry.verb}:${entry.dispatched ? "ok" : "dead"}`).join(" ")} faults=${String(row.faultCount)} ${String(row.detail ?? "")}`);
   };
   try {
     if (options.hubUrl === null) {
@@ -626,19 +727,14 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
         }
         if (done.has(key) || !selected(key, program.pluginId)) continue;
         const programPins = pins.programs[key];
-        if (programPins === undefined) {
-          report.rows.push({ key, appId: program.appId, pinned: false, pass: false, reach: [], detail: "no export/import control pinned for this kind" });
-          flush();
-          continue;
-        }
         const faultCursor = recorders.faults.length;
         const consoleCursor = recorders.console.length;
         const opened = await openProgram(page, program, programs.find((entry) => entry.pluginId === program.pluginId)?.appId === program.appId);
-        const row: IoMatrixRow = { key, appId: program.appId, pinned: true, pass: false, reach: [], windowIds: opened.windowIds, detail: opened.detail };
+        const row: IoMatrixRow = { key, appId: program.appId, pinned: programPins !== undefined, pass: false, reach: [], windowIds: opened.windowIds, detail: opened.detail };
         if (opened.windowIds.length > 0) {
-          const driven = await driveProgram(page, recorders, key, program.pluginId, programPins, matrixPins, join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
+          const driven = await driveProgram(page, recorders, key, program.pluginId, programPins ?? NO_KIND_PINS, matrixPins, options.locale === "de" ? "de" : "en", join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
           Object.assign(row, driven);
-          row.pass = !("error" in driven) && driven.ioOk && driven.reach.every((entry) => entry.dispatched);
+          row.pass = !("error" in driven) && driven.document.ok && driven.ioOk && driven.reach.every((entry) => entry.dispatched);
           await page.screenshot({ path: join(outDir, `${key.replace(/[^A-Za-z0-9]+/gu, "-")}.png`) }).catch(() => undefined);
           await closeWindows(page, opened.windowIds);
         }
@@ -665,14 +761,9 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
         }
         if (done.has(key) || !selected(key, kind.plugin)) continue;
         const programPins = pins.programs[key];
-        if (programPins === undefined) {
-          report.rows.push({ key, appId: kind.kindId, pinned: false, pass: false, reach: [], detail: "no export/import control pinned for this kind" });
-          flush();
-          continue;
-        }
         const faultCursor = recorders.faults.length;
         const consoleCursor = recorders.console.length;
-        const row: IoMatrixRow = { key, appId: kind.kindId, pinned: true, pass: false, reach: [] };
+        const row: IoMatrixRow = { key, appId: kind.kindId, pinned: programPins !== undefined, pass: false, reach: [] };
         const reopened = await openSweepSpace(page, sweep, probeRow);
         if (reopened) row.detail = reopened;
         else {
@@ -688,9 +779,9 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
           if (opened.length === 0) row.detail = "the created document never opened";
           else {
             await page.waitForTimeout(4_000);
-            const driven = await driveProgram(page, recorders, key, kind.plugin, programPins, matrixPins, join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
+            const driven = await driveProgram(page, recorders, key, kind.plugin, programPins ?? NO_KIND_PINS, matrixPins, options.locale === "de" ? "de" : "en", join(outDir, key.replace(/[^A-Za-z0-9]+/gu, "-"))).catch((error: unknown) => ({ error: String(error).split("\n")[0]!.slice(0, 200) }));
             Object.assign(row, driven);
-            row.pass = !("error" in driven) && driven.ioOk && driven.reach.every((entry) => entry.dispatched);
+            row.pass = !("error" in driven) && driven.document.ok && driven.ioOk && driven.reach.every((entry) => entry.dispatched);
           }
           await page.screenshot({ path: join(outDir, `${key.replace(/[^A-Za-z0-9]+/gu, "-")}.png`) }).catch(() => undefined);
         }
@@ -709,14 +800,24 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
   return report;
 }
 
+/** 🗃️ The framework document round trip of one row in a few words. */
+export function documentCellV1(row: IoMatrixRow): string {
+  const document = row.document as { export: { pressed: string; files: SavedFile[]; ok: boolean }; import: { outcome: string; roundTrip: { verdict: string; detail: string } | null } | null; ok: boolean } | undefined;
+  if (document === undefined) return "-";
+  const exported = document.export.files[0];
+  const first = exported === undefined ? `export ${document.export.pressed === "ok" ? "wrote no file" : document.export.pressed}` : `export ${exported.bytes}B ${exported.verdict.ok ? "ok" : `red (${exported.verdict.detail})`}`;
+  if (document.import === null) return `${document.ok ? "ok" : "red"}: ${first}`;
+  return `${document.ok ? "ok" : "red"}: ${first}, import ${document.import.outcome}, re-export ${document.import.roundTrip ? `${document.import.roundTrip.verdict} (${document.import.roundTrip.detail})` : "none"}`;
+}
+
 /** 📝️ One markdown table row per program. */
 export function ioMatrixTable(report: IoMatrixReport): string {
-  const lines = ["| program | pass | exports | imports (round trip) | reach | faults | detail |", "|---|---|---|---|---|---|---|"];
+  const lines = ["| program | pass | document (framework) | exports | imports (round trip) | reach | faults | detail |", "|---|---|---|---|---|---|---|---|"];
   for (const row of report.rows) {
     const exports = ((row.exports as { id: string; ok: boolean; files: SavedFile[] }[] | undefined) ?? []).map((entry) => `${entry.id} ${entry.ok ? "ok" : "red"} ${entry.files.map((file) => `${file.verdict.format}/${file.verdict.oracle}: ${file.verdict.detail}`).join("; ") || "no file"}`).join(" · ");
     const imports = ((row.imports as { id: string; ok: boolean; roundTrip?: { verdict: string; detail: string }; detail?: string }[] | undefined) ?? []).map((entry) => `${entry.id} ${entry.ok ? "ok" : "red"} ${entry.roundTrip ? `${entry.roundTrip.verdict} (${entry.roundTrip.detail})` : (entry.detail ?? "")}`).join(" · ");
     const reach = row.reach.map((entry) => `${entry.verb} ${entry.dispatched ? "ok" : "dead"}`).join(" · ");
-    lines.push(`| ${row.key} | ${row.pass ? "PASS" : row.pinned ? "FAIL" : "NO CONTROL"} | ${exports.replaceAll("|", "\\|")} | ${imports.replaceAll("|", "\\|")} | ${reach} | ${String(row.faultCount ?? 0)} | ${String(row.detail ?? (row.missingRows as string[] | undefined)?.join(", ") ?? "").replaceAll("|", "\\|").slice(0, 160)} |`);
+    lines.push(`| ${row.key} | ${row.pass ? "PASS" : "FAIL"} | ${documentCellV1(row).replaceAll("|", "\\|")} | ${exports.replaceAll("|", "\\|")} | ${imports.replaceAll("|", "\\|")} | ${reach} | ${String(row.faultCount ?? 0)} | ${String(row.detail ?? (row.missingRows as string[] | undefined)?.join(", ") ?? "").replaceAll("|", "\\|").slice(0, 160)} |`);
   }
   return `${lines.join("\n")}\n`;
 }
@@ -731,7 +832,8 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
  * [--space <name>] [--resume] [--install-budget-ms <n>] [--out <dir>] [--headed]` — runs the export/import matrix against the
  * serve `--serve` names (reused, or started and stopped by {@link withDevServe}; joined to `--hub` when given), writes
  * `io-matrix.json`, `table.md`, every downloaded file and one screenshot per row under `<out>/<tag>/`, publishes the
- * `io-matrix` and `command-reachability-live` acceptance records and exits non-zero unless both pass. */
+ * ONE `io-matrix` acceptance record (the kinds' export/import column and the live command-reachability column; `fail` when
+ * either fails) and exits non-zero unless it passes. */
 export async function runIoMatrixCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
   const serveUrl = flagValue(segments, "--serve");
   if (!serveUrl) throw new Error("usage: verify io --serve <url> [--hub <url>] [--locale en|de] [--tag <t>] [--only …] [--skip …] [--space <name>] [--resume] [--install-budget-ms <n>] [--out <dir>] [--headed]");
@@ -746,7 +848,7 @@ export async function runIoMatrixCli(repoRoot: string, defaultOutDir: string, se
   const blockedWithoutCredentials = hubUrl !== null && (!process.env.OS_HUB_PROBE_EMAIL || !process.env.OS_HUB_PROBE_PASSWORD);
   await withAcceptanceRecord(repoRoot, "io-matrix", async () => {
     if (blockedWithoutCredentials) {
-      for (const check of ["io-matrix", "command-reachability-live"]) publishAcceptanceCheckResult(repoRoot, acceptanceCheckResult({ check, status: "blocked", startedAt, measured: { hub: hubUrl ?? "" }, summary: { en: "--hub needs OS_HUB_PROBE_EMAIL and OS_HUB_PROBE_PASSWORD", de: "--hub braucht OS_HUB_PROBE_EMAIL und OS_HUB_PROBE_PASSWORD" } }));
+      publishAcceptanceCheckResult(repoRoot, acceptanceCheckResult({ check: "io-matrix", status: "blocked", startedAt, measured: { hub: hubUrl ?? "" }, summary: { en: "--hub needs OS_HUB_PROBE_EMAIL and OS_HUB_PROBE_PASSWORD", de: "--hub braucht OS_HUB_PROBE_EMAIL und OS_HUB_PROBE_PASSWORD" } }));
       process.exitCode = 1;
       return;
     }
@@ -770,45 +872,32 @@ export async function runIoMatrixCli(repoRoot: string, defaultOutDir: string, se
       });
       writeFileSync(join(outDir, tag, "table.md"), ioMatrixTable(report));
       const pinned = report.rows.filter((row) => row.pinned);
-      const passed = pinned.filter((row) => row.pass).length;
-      const uncovered = report.rows.filter((row) => !row.pinned).map((row) => row.key);
-      const failed = pinned.filter((row) => !row.pass).map((row) => row.key);
+      const passed = report.rows.filter((row) => row.pass).length;
+      const documents = report.rows.filter((row) => (row.document as { ok?: boolean } | undefined)?.ok === true).length;
+      const formats = pinned.filter((row) => row.pass).length;
+      const failed = report.rows.filter((row) => !row.pass).map((row) => row.key);
       const unreachable = report.rows.length === 0 && /ERR_CONNECTION_REFUSED|ECONNREFUSED|Unable to connect/u.test(report.fatal ?? "");
-      const status = unreachable ? "blocked" : report.fatal || report.cancelled || pinned.length === 0 ? "fail" : failed.length === 0 && uncovered.length === 0 ? "pass" : "fail";
-      const evidence = [join(outDir, tag, "io-matrix.json"), join(outDir, tag, "table.md")];
+      const reach = report.rows.flatMap((row) => row.reach.map((entry) => ({ ...entry, key: row.key })));
+      const dead = reach.filter((entry) => !entry.dispatched).map((entry) => `${entry.key}:${entry.verb}`);
+      const filtered = segments.includes("--only") || segments.includes("--skip");
+      const reachOk = dead.length === 0 && (reach.length > 0 || filtered);
+      const status = unreachable ? "blocked" : report.fatal || report.cancelled || report.rows.length === 0 ? "fail" : failed.length === 0 && reachOk ? "pass" : "fail";
       publishAcceptanceCheckResult(
         repoRoot,
         acceptanceCheckResult({
           check: "io-matrix",
           status,
           startedAt,
-          measured: { locale, hub: hubUrl ?? "", programs: report.rows.length, pinned: pinned.length, passed, failed: failed.length, noControl: uncovered.length, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled) },
+          measured: { locale, hub: hubUrl ?? "", programs: report.rows.length, passed, documents, pinned: pinned.length, formats, failed: failed.length, reachVerbs: reach.length, reachDispatched: reach.length - dead.length, reachDead: dead.length, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled) },
           summary: {
-            en: `${passed}/${pinned.length} kinds export and import through s${failed.length ? `; failing: ${failed.slice(0, 8).join(", ")}` : ""}; ${uncovered.length} kinds have no export/import control${report.fatal ? `; fatal: ${report.fatal.slice(0, 160)}` : ""}`,
-            de: `${passed}/${pinned.length} Arten exportieren und importieren über s${failed.length ? `; fehlgeschlagen: ${failed.slice(0, 8).join(", ")}` : ""}; ${uncovered.length} Arten haben kein Export-/Import-Bedienelement${report.fatal ? `; Abbruch: ${report.fatal.slice(0, 160)}` : ""}`,
+            en: `${passed}/${report.rows.length} kinds export and import through s; document round trip ${documents}/${report.rows.length}, own formats ${formats}/${pinned.length}${failed.length ? `; failing: ${failed.slice(0, 8).join(", ")}` : ""}; ${reach.length - dead.length}/${reach.length} formerly batch-only verbs dispatch from their rail row${dead.length ? `; dead: ${dead.slice(0, 8).join(", ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.slice(0, 160)}` : ""}`,
+            de: `${passed}/${report.rows.length} Arten exportieren und importieren über s; Dokument-Rundreise ${documents}/${report.rows.length}, eigene Formate ${formats}/${pinned.length}${failed.length ? `; fehlgeschlagen: ${failed.slice(0, 8).join(", ")}` : ""}; ${reach.length - dead.length}/${reach.length} früher nur im Stapel ausführbare Befehle lösen aus ihrer Aktionszeile aus${dead.length ? `; tot: ${dead.slice(0, 8).join(", ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.slice(0, 160)}` : ""}`,
           },
-          evidence,
+          evidence: [join(outDir, tag, "io-matrix.json"), join(outDir, tag, "table.md")],
         }),
       );
-      const reach = report.rows.flatMap((row) => row.reach.map((entry) => ({ ...entry, key: row.key })));
-      const dead = reach.filter((entry) => !entry.dispatched).map((entry) => `${entry.key}:${entry.verb}`);
-      const reachStatus = unreachable ? "blocked" : report.fatal || reach.length === 0 ? "fail" : dead.length === 0 ? "pass" : "fail";
-      publishAcceptanceCheckResult(
-        repoRoot,
-        acceptanceCheckResult({
-          check: "command-reachability-live",
-          status: reachStatus,
-          startedAt,
-          measured: { locale, hub: hubUrl ?? "", verbs: reach.length, dispatched: reach.length - dead.length, dead: dead.length },
-          summary: {
-            en: `${reach.length - dead.length}/${reach.length} formerly batch-only verbs dispatch from their rail row${dead.length ? `; dead: ${dead.slice(0, 8).join(", ")}` : ""}`,
-            de: `${reach.length - dead.length}/${reach.length} früher nur im Stapel ausführbare Befehle lösen aus ihrer Aktionszeile aus${dead.length ? `; tot: ${dead.slice(0, 8).join(", ")}` : ""}`,
-          },
-          evidence,
-        }),
-      );
-      console.log(`[io-matrix] === ${tag}: ${passed}/${pinned.length} pinned kinds pass, ${uncovered.length} without control, reach ${reach.length - dead.length}/${reach.length} → ${join(outDir, tag)} ===`);
-      if (status !== "pass" || reachStatus !== "pass") process.exitCode = 1;
+      console.log(`[io-matrix] === ${tag}: ${passed}/${report.rows.length} kinds pass, document round trip ${documents}/${report.rows.length}, own formats ${formats}/${pinned.length}, reach ${reach.length - dead.length}/${reach.length} → ${join(outDir, tag)} ===`);
+      if (status !== "pass") process.exitCode = 1;
     });
   });
   process.removeListener("SIGINT", cancel);

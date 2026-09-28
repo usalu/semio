@@ -24,5 +24,4 @@ export function testFemAssemblyStepGrantOracle(): void {
     assert.equal(admitted ? row.fuel - 1 : row.fuel, row.fuelRemaining);
     assert.equal(admitted && next.complete ? "complete" : "yield", row.outcome);
   }
-  console.log(`[DEBUG] FEM assembly step grant: ${fixture.cases.length} strict fixture cases match fast-json-patch ${fixture.oracle.version}`);
 }

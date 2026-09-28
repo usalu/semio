@@ -25,5 +25,4 @@ export function testMeshEdgeAuthority(): void {
       interior: adjacencies.filter((owners: number[]) => owners.length === 2).length,
     }, row.expected, row.id);
   }
-  console.log("[DEBUG] Mesh edge authority slots and adjacency agree with three neutral Graphlib cases");
 }

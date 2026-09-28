@@ -66,7 +66,6 @@ async function testPlanCachePrune(): Promise<{ planCachePrune: typeof import("..
   assert.equal(pruning.formatBytes(0), "0 B");
   assert.equal(pruning.formatBytes(1536), "1.50 KiB");
   assert.equal(pruning.formatBytes(80 * 1024 ** 3), "80.00 GiB");
-  console.log("[DEBUG] Cache eviction planner matches fixture and independent Python oracle for age, budget, guard (including per-area override) and lock protection PASS");
   return { planCachePrune: pruning.planCachePrune };
 }
 
@@ -179,7 +178,6 @@ async function testCargoDiskScan(output: string): Promise<void> {
   assert.equal(existsSync(join(agentsRoot, "stray-session")), false);
   assert.equal(existsSync(join(agentsRoot, "resource-leases")), true, "Lease store must never be pruned as a stray scratch dir");
   rmSync(root, { recursive: true, force: true });
-  console.log("[DEBUG] Real Cargo build/target/incremental/vite/agents scanning, Python byte oracle, cancellation, session compaction, deletion and empty-parent pruning PASS");
 }
 
 /** 🧹️ Verifies the shared cache pruner: pure eviction contract, real filesystem scanning and deletion. */

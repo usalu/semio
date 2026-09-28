@@ -31,6 +31,5 @@ export async function testNativeInventory(workspace: string, inventory: (root: s
       assert.ok(!result.violations.some((finding) => finding.entry_point === `${command.project}:${command.target}` && finding.rule === "ORCH-01"), "A native Nx executor is already inside the required scheduler");
     }
   }
-  console.log(`[DEBUG] Native Nx inventory covers all ${names.length} projects and ${commands.length} targets, preserving resolved settings and existing configuration sources PASS`);
   return result;
 }

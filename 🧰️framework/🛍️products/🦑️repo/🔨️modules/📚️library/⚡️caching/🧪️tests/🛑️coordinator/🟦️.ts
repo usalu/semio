@@ -29,5 +29,4 @@ export async function testNxCoordinator(root: string): Promise<void> {
     assert.ok(killed.length > 0, `${vector.name}: owned launch process must still be stopped`);
     assert.equal(runtime.listenerCount("SIGTERM"), 0);
   }
-  console.log("[DEBUG] Nx coordinator preserves explicit workspace data paths and stops owned launch processes after malformed or unavailable snapshots PASS");
 }

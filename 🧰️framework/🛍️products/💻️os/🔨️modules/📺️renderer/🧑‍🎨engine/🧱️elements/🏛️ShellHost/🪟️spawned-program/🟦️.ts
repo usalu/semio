@@ -232,6 +232,30 @@ export function spawnedProgramViewStateV1<T extends { activeModeId?: string; win
 }
 //#endregion 🪟️FocusedProgram
 
+//#region 🧩️ContributionsReceiver
+/** 🧩️ The session a contributions install's own effects run against. `setContributions` answers with the
+ * receiver's re-arm (one `flowEvalTick` run start per attached preview); it belongs to the program the pack was
+ * pushed into, so the pass addresses THAT program with ITS app: the live primary session when the receiver is the
+ * primary itself (its fresh view state), otherwise the receiver with the primary's view state restated for the
+ * receiver's app ({@link spawnedProgramViewStateV1}).
+ *
+ * 🏁️ The pass used to run as `{ …primary, pluginId, instanceId }`. In `s` the primary is Home, so a spawned
+ * generation3d's re-arm was dispatched as a Home action, the guest refused it, the refusal was swallowed, and the
+ * preview sat on "Computing 0/1 (0%)" — the seated example never evaluated and `exportDocument` was refused with
+ * "no preview geometry" (measured 2026-09-28 on a local-only `s` serve, ticket 26/09/23 slice S19). */
+export function contributionsReceiverSessionV1<
+  S extends {
+    readonly pluginId: string;
+    readonly instanceId: number;
+    readonly app: { readonly id: string; readonly defaultModeId?: string; readonly modes?: readonly { readonly id: string }[] };
+    readonly viewState: { activeModeId?: string; windowId?: string; activeWindowKindId?: string };
+  },
+>(receiver: S, live: S): S {
+  if (receiver.pluginId === live.pluginId && receiver.instanceId === live.instanceId) return live;
+  return { ...receiver, viewState: spawnedProgramViewStateV1(live.viewState, receiver.app) };
+}
+//#endregion 🧩️ContributionsReceiver
+
 //#region 🧾️ProgramHistory
 /** 🧾️ One program's identity as the history lane keys it — the `(pluginId, instanceId)` pair, which
  * is exactly the pair an `AppFrame::OperationCompleted` carries its `historyPatch` for. */

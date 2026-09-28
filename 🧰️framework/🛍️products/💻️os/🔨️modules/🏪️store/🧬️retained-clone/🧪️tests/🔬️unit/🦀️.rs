@@ -288,12 +288,12 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let owner = Arc::new(captured.clone());
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production snapshot read lease");
     let retained_source = RetainedCloneSource::from_snapshot_read(super::super::SnapshotRead::new(Arc::clone(&owner), lease));
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64 };
+    let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64 };
     let mut cursor = String::retained_clone_cursor();
     let mut turns = 0usize;
     let copied = loop {
         turns += 1;
-        if matches!(cursor.advance(retained_source.borrow(), grant).expect("production snapshot read copy"), RetainedCloneStep::Complete(_)) {
+        if matches!(cursor.advance(retained_source.borrow(), copy_grant).expect("production snapshot read copy"), RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("production snapshot read output");
         }
     };

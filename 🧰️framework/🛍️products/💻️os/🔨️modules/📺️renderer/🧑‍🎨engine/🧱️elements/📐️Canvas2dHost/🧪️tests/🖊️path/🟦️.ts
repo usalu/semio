@@ -28,7 +28,6 @@ it("preserves the circular midpoint through the independent Three.js SVG parser"
   const midpoint = oracle.paths[0]!.subPaths[0]!.getPoint(0.5);
   expect(midpoint.x).toBeCloseTo(Math.sqrt(50), 12);
   expect(midpoint.y).toBeCloseTo(Math.sqrt(50), 12);
-  console.info(`[DEBUG] Canvas arc midpoint agrees with Three.js: ${midpoint.x}, ${midpoint.y}`);
 });
 
 it("does not construct a path for an empty scene", () => {

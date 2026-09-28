@@ -2076,7 +2076,11 @@ fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
         | store::AppCommand::SetMergePolicy { seq, .. }
         | store::AppCommand::ResolveConflict { seq, .. }
         | store::AppCommand::ReadConflicts { seq }
-        | store::AppCommand::Presence { seq, .. } => seq,
+        | store::AppCommand::Presence { seq, .. }
+        | store::AppCommand::SubmitMediaExport { seq, .. }
+        | store::AppCommand::PollMediaExport { seq, .. }
+        | store::AppCommand::CancelMediaExport { seq, .. }
+        | store::AppCommand::TakeMediaExportChunk { seq, .. } => seq,
     }
 }
 
@@ -2105,7 +2109,10 @@ fn app_frame_reply_seq(frame: &store::AppFrame) -> Option<u64> {
         | store::AppFrame::HistorySnapshot { in_reply_to, .. }
         | store::AppFrame::TransactionProposal { in_reply_to, .. }
         | store::AppFrame::DocumentArchive { in_reply_to, .. }
-        | store::AppFrame::DocumentArchiveLoad { in_reply_to, .. } => Some(*in_reply_to),
+        | store::AppFrame::DocumentArchiveLoad { in_reply_to, .. }
+        | store::AppFrame::MediaExportSubmitted { in_reply_to, .. }
+        | store::AppFrame::MediaExportStatus { in_reply_to, .. }
+        | store::AppFrame::MediaExportChunk { in_reply_to, .. } => Some(*in_reply_to),
         store::AppFrame::Error { in_reply_to, .. } | store::AppFrame::MergeReport { in_reply_to, .. } | store::AppFrame::Conflicts { in_reply_to, .. } | store::AppFrame::UiPatch { in_reply_to, .. } => *in_reply_to,
         store::AppFrame::DocumentChanged { .. }
         | store::AppFrame::ConfigChanged { .. }
@@ -2162,6 +2169,9 @@ fn app_frame_tag(frame: &store::AppFrame) -> &'static str {
         store::AppFrame::LocalInteractionQuery { .. } => "LocalInteractionQuery",
         store::AppFrame::DocumentArchive { .. } => "DocumentArchive",
         store::AppFrame::DocumentArchiveLoad { .. } => "DocumentArchiveLoad",
+        store::AppFrame::MediaExportSubmitted { .. } => "MediaExportSubmitted",
+        store::AppFrame::MediaExportStatus { .. } => "MediaExportStatus",
+        store::AppFrame::MediaExportChunk { .. } => "MediaExportChunk",
     }
 }
 
@@ -3098,12 +3108,15 @@ pub struct RoutingArtifactChannel {
     /// here — plugin id → the artifact this workspace bound to it — so every stamp a command answers
     /// with names the artifact a client can address, not the plugin that happens to host it.
     plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>,
+    /// 🌎️ The hub's descriptor authority for this session — present exactly when the workspace is hub-bound. Every
+    /// edit reads the principal's space role from it before any guest runs ([`hub_edit_refusal`]).
+    hub: Option<Arc<HubRemoteBinding>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RoutingArtifactChannel {
-    pub fn new(catalog: Arc<Catalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>) -> Self {
-        Self { catalog, components, actor_label, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts }
+    pub fn new(catalog: Arc<Catalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>) -> Self {
+        Self { catalog, components, actor_label, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub }
     }
 
     /// 🧭️ `route` with its app named: a plugin-scope route resolves to the plugin's first editor app,
@@ -3145,18 +3158,19 @@ impl RoutingArtifactChannel {
         Some((artifact_id, document))
     }
 
-    /// 🚫️ The refusal a NEW edit on `route`'s bound hub document gets once its link is terminal — the hub
-    /// withdrew this session's access or the link expired, so nothing it authors could ever reach the hub. A
-    /// commit or rollback of a transaction already in flight and an undo still run: they only settle or revert
-    /// local state the hub never saw.
-    fn terminal_link_refusal(&self, route: &AppRoute, commands: &[AppCommand]) -> Option<Fault> {
+    /// 🚫️ The refusal a NEW edit on a hub session gets before its guest runs ([`hub_edit_refusal`]); `None` in a
+    /// folder workspace and for every command that authors no edit. A commit or rollback of a transaction already in
+    /// flight and an undo still run: they only settle or revert local state.
+    fn edit_refusal(&self, route: &AppRoute, commands: &[AppCommand]) -> Option<Fault> {
         if !commands.iter().any(|command| matches!(command, AppCommand::PureCommand { .. } | AppCommand::TransactionPrepare { .. } | AppCommand::TransactionRedo { .. })) {
             return None;
         }
-        let artifact_id = self.session_artifact_for(route)?;
-        let relay = Arc::clone(&self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&artifact_id)?.relay);
-        let code = relay.terminal()?;
-        Some(Fault { code: code.clone(), message: format!("`{artifact_id}`'s hub link is {code}: the hub takes no further edit from this session") })
+        let hub = self.hub.as_ref()?;
+        hub.await_settled(remote::HUB_AUTHORITY_SETTLE_WAIT_MS);
+        let role = hub.ready_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX)).map(|snapshot| snapshot.space.role).map_err(|error| error.message);
+        let artifact_id = self.session_artifact_for(route);
+        let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        hub_edit_refusal(role, &route.plugin_id, artifact_id.as_deref().and_then(|artifact_id| bound.get(artifact_id).map(|binding| (artifact_id, binding))))
     }
 
     /// 📥️ Takes what `route`'s bound hub document actor delivered since the last take and plans it against
@@ -3311,11 +3325,12 @@ impl ArtifactChannel for RoutingArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let route = self.resolved_route(self.route_for(instance, &commands)?, &ActivationScope::detached())?;
         let session_artifact_id = self.session_artifact_for(&route);
-        if let Some(refusal) = self.terminal_link_refusal(&route, &commands) {
+        if let Some(refusal) = self.edit_refusal(&route, &commands) {
             return Err(refusal);
         }
         let inbound = if carries_hub_inbound(&commands) { self.take_hub_inbound(&route)? } else { None };
         let session_document = self.session_document_for(&route);
+        let hub_bound = self.hub.is_some() && session_document.is_some();
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
             let channel = open_plugin_artifact_channel(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label).map_err(routing_fault)?;
@@ -3331,7 +3346,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         let egress = channel.drain_backbone_egress();
         drop(channels);
         if egress.is_empty() {
-            return frames;
+            return if hub_bound { frames.map(commits_with_nothing_relayed) } else { frames };
         }
         let (relay, since) = self.relay_backbone_egress(&route, egress)?;
         let frames = frames?;
@@ -3644,6 +3659,55 @@ struct HubRelayState {
     terminal: Option<String>,
 }
 
+/// 🚦️ Why a hub session's edit may not run, decided before any guest executes it — `None` when it may. In order: the
+/// bound document's link is terminal (the hub withdrew access or the link expired); the hub holds the principal as a
+/// spectator (a `read` delegation) or its authority is not ready; no single hub document of the verb's plugin is bound
+/// (nothing the guest authored could reach the hub — a hub session never edits a plugin's own genesis document); the
+/// bound document has no live document actor. Every edit that passes is relayed and waits for the hub's acknowledgement.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn hub_edit_refusal(role: Result<semio_framework_os_kernel::os_directory::DirectorySpaceRole, String>, plugin_id: &str, bound: Option<(&str, &PluginArtifactBinding)>) -> Option<Fault> {
+    use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
+    if let Some(code) = bound.and_then(|(_, binding)| binding.relay.terminal()) {
+        let artifact_id = bound.map_or("", |(artifact_id, _)| artifact_id);
+        return Some(Fault { code: code.clone(), message: format!("`{artifact_id}`'s hub link is {code}: the hub takes no further edit from this session") });
+    }
+    match role {
+        Ok(DirectorySpaceRole::Spectator) => {
+            return Some(Fault { code: crate::actions::VIEWER_READ_ONLY_FAULT_CODE.to_string(), message: "this agent session is a spectator of its space (its delegation's audience is read): it reads documents and never edits them".to_string() });
+        }
+        Ok(DirectorySpaceRole::Author) => {}
+        Err(detail) => return Some(Fault { code: "plugin.unavailable".to_string(), message: format!("the hub's authority for this session is not ready, so no edit may run: {detail}") }),
+    }
+    let Some((artifact_id, binding)) = bound else {
+        return Some(Fault {
+            code: crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE.to_string(),
+            message: format!("no single hub document of plugin `{plugin_id}` is open in this session — open exactly one with artifact_open; a hub session never edits a plugin's own genesis document"),
+        });
+    };
+    if binding.backbone.is_none() {
+        return Some(Fault {
+            code: crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE.to_string(),
+            message: format!("`{artifact_id}` has no live link to the hub, so no edit of it could reach the hub: {}", binding.backbone_blocked_by.as_deref().unwrap_or("this document has no open document actor")),
+        });
+    }
+    None
+}
+
+/// 📮️ A hub-bound exchange whose guest committed yet published nothing for the hub: the commit is not acknowledged,
+/// so the invoke reverts it and never reports it as a write.
+#[cfg(not(target_arch = "wasm32"))]
+fn commits_with_nothing_relayed(frames: Vec<AppFrame>) -> Vec<AppFrame> {
+    frames
+        .into_iter()
+        .map(|frame| match frame {
+            AppFrame::TransactionCommitted { txn_id, edit_id, relay: None } => {
+                AppFrame::TransactionCommitted { txn_id, edit_id, relay: Some(crate::actions::HubRelayOutcome { acknowledged: false, detail: "the guest committed without publishing an envelope for the hub".to_string(), refused: None }) }
+            }
+            other => other,
+        })
+        .collect()
+}
+
 /// 🚫️ Whether a coded message the document actor raised ends its link for good — the hub withdrew access
 /// (`access-revoked`) or a shortage outlived its bound (`link-expired`). A terminal link admits no local
 /// edit and never relinks ([`store::sync::DocumentLink`]).
@@ -3651,8 +3715,8 @@ pub fn document_link_terminal_code(code: &str) -> bool {
     code == store::sync::DocumentLinkStatus::AccessRevoked.code() || code == store::sync::DocumentLinkStatus::LinkExpired.code()
 }
 
-/// ⏱️ How long a commit waits for the hub to acknowledge the envelopes it relayed before it answers
-/// with `relay-pending` instead of `relay:acknowledged`.
+/// ⏱️ How long a commit waits for the hub to acknowledge the envelopes it relayed before it is reverted and answers
+/// `hub.relay-unacknowledged` ([`crate::actions::HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`]) instead of `relay:acknowledged`.
 pub const HUB_RELAY_ACK_WAIT_MS: u64 = 10_000;
 
 impl HubRelay {
@@ -4342,20 +4406,27 @@ impl HeadlessWorkspace {
         }
     }
 
-    /// 🗂️ Every artifact kind the INSTALLED plugins actually declare, read off their committed
-    /// descriptors (`AppIo.artifact_schema` of each editor app, plus every `ArtifactKindSpec.kind_id`
-    /// that app declares) — the real vocabulary `artifact_create{kind}` validates against, so an
-    /// unknown kind is a typed refusal naming the installed set instead of a silently generic
-    /// document. Never invented: a plugin with no decodable descriptor simply contributes nothing.
+    /// 🗂️ Every artifact kind the INSTALLED plugins actually declare, read off their descriptors
+    /// (`AppIo.artifact_schema` of each editor app, plus every `ArtifactKindSpec.kind_id` that app
+    /// declares) — the real vocabulary `artifact_create{kind}` validates against and `artifact_export`
+    /// reads its ports from, so an unknown kind is a typed refusal naming the installed set instead of a
+    /// silently generic document. Never invented: a folder workspace reads the repository's committed
+    /// descriptors (a plugin with no decodable descriptor contributes nothing); a hub workspace reads the
+    /// packages the hub's live descriptor authority selected — the same descriptors its guests run.
     ///
     /// 📤️ `media_out_ports` is [`app_media_out_ports`], not `AppDefinition.media_outputs` alone —
     /// see that function for the measurement.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn installed_artifact_kinds(&self) -> Result<Vec<InstalledArtifactKind>, GatewayError> {
-        let repo_root = self.repo_root.clone().ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "repo root not found — cannot locate the plugin registry"))?;
+        let descriptors: Vec<semio_framework::PackageDescriptor> = match &self.origin {
+            WorkspaceOrigin::Hub { .. } => self.verified_hub_catalog_selections()?.selections.iter().map(|selection| selection.descriptor.clone()).collect(),
+            WorkspaceOrigin::Folder { .. } => {
+                let repo_root = self.repo_root.clone().ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "repo root not found — cannot locate the plugin registry"))?;
+                load_plugin_registry(&repo_root)?.into_iter().filter_map(|entry| load_package_descriptor(&entry.owner_root).ok()).collect()
+            }
+        };
         let mut kinds: std::collections::BTreeMap<String, InstalledArtifactKind> = std::collections::BTreeMap::new();
-        for entry in load_plugin_registry(&repo_root)? {
-            let Ok(descriptor) = load_package_descriptor(&entry.owner_root) else { continue };
+        for descriptor in &descriptors {
             for app in &descriptor.manifest.apps {
                 if app.role != semio_framework::AppRole::Editor {
                     continue;
@@ -4662,7 +4733,7 @@ impl HeadlessWorkspace {
     /// its ONLY call site that names this method).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_routing_channel(&self) -> RoutingArtifactChannel {
-        RoutingArtifactChannel::new(self.catalog.clone(), self.plugin_components(), self.actor_label(), Arc::clone(&self.plugin_artifacts))
+        RoutingArtifactChannel::new(self.catalog.clone(), self.plugin_components(), self.actor_label(), Arc::clone(&self.plugin_artifacts), self.hub_binding.clone())
     }
 
     /// 🎬️ Lazily builds (and caches) the real `ActionAdapter` `prepare_action`/`invoke_action`

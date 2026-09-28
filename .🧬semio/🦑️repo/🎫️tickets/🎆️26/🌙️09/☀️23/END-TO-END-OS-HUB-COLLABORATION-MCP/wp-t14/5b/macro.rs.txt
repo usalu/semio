@@ -2,7 +2,8 @@
 /// @emoji 🧾️ Builds a [`DslValue`] from a JSON-shaped literal — the first-party replacement for
 /// `serde_json::json!` + `DslValue::from` at every action-argument site. Grammar: `null`, `true`,
 /// `false`, `[ … ]`, `{ key: value, … }` (a key is a string literal or any expression convertible
-/// `Into<String>`, e.g. a `const`), and any other expression, converted through [`ToValue`]. Object
+/// `Into<String>`, e.g. a `const`), and any other expression, converted through [`ToValue`] by method call
+/// (so a borrowed `&String`/`&[T]` auto-derefs to its implementation, as `serde_json::json!` accepts it). Object
 /// entries keep their written order (a `DslValue::Object` is ordered); trailing commas are
 /// accepted. The equivalence law against `serde_json::json!` lives in `🧪️tests/🔬️unit/🦀️.rs`.
 #[macro_export]
@@ -51,7 +52,10 @@ macro_rules! dsl_value {
             entries
         })
     };
-    ($other:expr) => { $crate::value::ToValue::to_value(&$other) };
+    ($other:expr) => {{
+        use $crate::value::ToValue as _;
+        (&$other).to_value()
+    }};
 }
 //#endregion 🔖️Literal
 

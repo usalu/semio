@@ -1,7 +1,8 @@
 """🪞️ Mirrors the working tree into the SH2 scratch overlay (gitignored): tracked + untracked-unignored files and the gitignored
 `🤖️generated/` dirs the kernel includes, copying only files whose size or mtime differ, and removing overlay files the tree deleted
 since the previous mirror (listed in `overlay-files.txt`); paths in `overlay-pin-head.txt` (a peer's in-flight, uncompiled worktree edit)
-take their HEAD content instead and paths in `overlay-drop.txt` (the same peer's untracked new files) are removed."""
+take their HEAD content instead, paths in `overlay-drop.txt` (the same peer's untracked new files) are removed and the gitignored
+generated single files `.gitignore` names explicitly (`overlay-extra-files.txt`, e.g. the ui token table) are mirrored as well."""
 import os, shutil, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 
@@ -12,6 +13,7 @@ LISTED = os.path.join(HERE, "overlay-files.txt")
 GENERATED = os.path.join(ROOT, ".tmp-ticket/wp-sh1/generated/ignored-generated.txt")
 PINNED = os.path.join(HERE, "overlay-pin-head.txt")
 DROPPED = os.path.join(HERE, "overlay-drop.txt")
+EXTRA = os.path.join(HERE, "overlay-extra-files.txt")
 
 
 def copy(rel: str) -> int:
@@ -51,7 +53,7 @@ def generated_files() -> list[str]:
 
 def main() -> None:
     listed = subprocess.run(["git", "ls-files", "-z", "-co", "--exclude-standard"], cwd=ROOT, capture_output=True, check=True).stdout.decode("utf-8").split("\0")
-    files = sorted({f for f in listed if f and not f.startswith(".🧬semio/🦑️repo/🎫️tickets/")} | set(generated_files()))
+    files = sorted({f for f in listed if f and not f.startswith(".🧬semio/🦑️repo/🎫️tickets/")} | set(generated_files()) | {line.strip() for line in open(EXTRA, encoding="utf-8") if line.strip()})
     previous = set(open(LISTED, encoding="utf-8").read().split("\n")) if os.path.exists(LISTED) else set()
     removed = 0
     for rel in sorted(previous - set(files)):

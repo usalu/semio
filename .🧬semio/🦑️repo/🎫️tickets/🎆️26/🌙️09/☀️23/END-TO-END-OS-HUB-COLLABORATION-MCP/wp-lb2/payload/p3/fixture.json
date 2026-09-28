@@ -1,0 +1,23 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "controller": "s.space.home",
+  "tableLabel": "Spaces",
+  "columns": ["Name", "Kind", "Visibility", "Members", "Updated", "Origin"],
+  "actionsLabel": "Actions",
+  "row": {
+    "keyPrefix": "space:",
+    "idLength": 36,
+    "cells": ["Studio Atelier Nord", "Studio", "Private", "12", "2026-09-25 23:05", "Hub"],
+    "argument": "spaceId",
+    "activation": "openSpace",
+    "actions": [
+      { "icon": "folder-open", "label": "Open", "action": "openSpace" },
+      { "icon": "pencil", "label": "Rename", "action": "renameSpace" },
+      { "icon": "link", "label": "Share", "action": "shareSpace" },
+      { "icon": "trash-2", "label": "Delete", "action": "deleteSpace" },
+      { "icon": "users", "label": "Manage", "action": "manageSpace" }
+    ]
+  },
+  "window": { "total": 500, "rows": 48 },
+  "expect": { "minRowsPerWindow": 48, "rowChildren": 0 }
+}

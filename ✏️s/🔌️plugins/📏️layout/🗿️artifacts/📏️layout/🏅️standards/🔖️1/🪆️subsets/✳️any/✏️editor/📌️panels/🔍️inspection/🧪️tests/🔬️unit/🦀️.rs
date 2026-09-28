@@ -22,6 +22,14 @@ fn selected_frame_page_and_document_expose_edit_inputs() {
     assert!(json.contains("patchPage"), "{json}");
     assert!(json.contains("patchDocument"), "{json}");
     assert!(json.contains("layout-play-inspector.patchFrame.x"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchDocument.baselineGrid"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchDocument.paragraph.body.fontSize"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchFrame.locked"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchPage.delete"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchPage.layer-1.name"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchDocument.addCharacterStyle"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchDocument.spread-1.name"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchPage.parentPageId"), "{json}");
     assert!(json.contains("\"type\":\"input\""), "{json}");
 }
 

@@ -14,7 +14,7 @@ use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 #[cfg(test)]
-use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_zip::opc::OpcTargetMode;
 use std::collections::HashMap;
 
 //#region 🔖️Mutations
@@ -493,49 +493,21 @@ pub(crate) fn fixture() -> XlsxSnapshot {
 }
 
 //#region 🔖️Fixtures
-/// 🌱 `sweep_a`/`sweep_b`: differ in EVERY mutable field, both `workbook` and `opc`. `sheets`
-/// (a true name-keyed collection) gets one removed, one modified-in-every-field (cells:
-/// removed+modified+added all in ONE direction, since `(row,col)` is real identity, not
-/// position), one added. `shared_strings` (index-keyed, i.e. position-pairwise-matched, same
-/// category as `IndexedTripleDiff`) is a DIFFERENT length in each fixture — per this ticket's
-/// "known structural trap" note, a single same-direction `between()` over such a collection
-/// can never show both `removed` AND `added` from one call, so `a -> b` exercises
-/// `removed`+`modified` and `b -> a` (asserted separately in `field_sweep`) exercises
-/// `added`+`modified`. OPC content_types/parts/relationships each get one removed, one
-/// modified, one added (all true name-keyed collections, exercised in one direction).
+/// 📦️ Content type of the sweep fixtures' binary OPC parts.
+#[cfg(test)]
+const SWEEP_BINARY_CONTENT_TYPE: &str = "application/octet-stream";
+
+/// 🌱 `sweep_a`/`sweep_b`: differ in EVERY lane the snapshot carries. The authoritative XML parts
+/// (built by `build_minimal_xlsx` from each workbook): the workbook part (sheet `toDrop` replaced by
+/// `added`), the `toModify` worksheet (cells removed + modified + added), the shared-string table
+/// (index-keyed, a different length on each side, so `a -> b` removes + modifies and `b -> a` adds +
+/// modifies). The lossless OPC lane: binary parts (one removed, one modified in bytes AND content type,
+/// one added), a content-type default and overrides, and part-owned relationships (one owner removed,
+/// one modified, one added — the added one External).
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_a() -> XlsxSnapshot {
-    let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-    opc.content_types.set_default("xml", "application/xml");
-    opc.content_types.set_default("toRemove", "application/octet-stream");
-    opc.set_part("xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", b"<workbook/>".to_vec());
-    opc.set_part("xl/toModify.xml", "application/xml", b"old".to_vec());
-    opc.set_part("xl/toRemove.xml", "application/xml", b"gone".to_vec());
-    opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
-    opc.add_relationship("", "rId9", "http://example/toRemove", "xl/toRemove.xml");
-    // 🩹 Owner key deliberately `"xl/toModify.xml"`, NOT `"xl/workbook.xml"` — the real
-    // engine (`regenerate_workbook_parts`) always populates a MULTI-entry `relationships`
-    // list under owner `"xl/workbook.xml"` (one per worksheet + one for shared strings); if
-    // this synthetic "modified owner" case reused that exact key, `inverse_law`'s two-hop
-    // `SetSnapshot` round trip against `fixture()` (an engine-built snapshot) would compose
-    // a partial-overlap MODIFY on a real multi-item Vec, which — per the diff module's own
-    // documented survivor-position convention — does not reconstruct exact Vec ORDER through
-    // two independent `between()` calls (only content). Using a synthetic owner absent from
-    // any engine-built snapshot keeps this a clean whole-owner remove+add in that scenario
-    // (captured/restored as one atomic `(owner, Vec<Rel>)` tuple, order-exact by construction)
-    // while still genuinely exercising `relationships.modified` here in `field_sweep`.
-    opc.relationships.insert("xl/toModify.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/old.xml".into(), target_mode: OpcTargetMode::Internal }]);
-    opc.relationships.insert("xl/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
-    // 🔤️ Both sweep fixtures carry their parts in this format's NORMAL FORM, the same
-    // path-ascending order `regenerate_workbook_parts` ends on and `XlsxDiff::apply` lands every
-    // applied package in. Hand-written `set_part` call order is not a third ordering policy.
-    // `content_types.overrides` stays in call order on purpose (see `sweep_b`'s own note).
-    opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
-
-    let _ = opc;
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "toModify".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }, XlsxCell { row: 2, col: 0, value: XlsxCellValue::Boolean(false) }] },
             XlsxSheet { name: "stay".into(), cells: vec![] },
@@ -548,33 +520,20 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
         // `shared_strings.modified` (index 1); `b -> a` (asserted separately in
         // `field_sweep`) exercises `shared_strings.added` (the same index 2, recurring).
         shared_strings: vec!["keep".into(), "toModify".into(), "toRemove".into()],
-    })
+    });
+    snapshot.opc.content_types.set_default("bin", SWEEP_BINARY_CONTENT_TYPE);
+    snapshot.opc.set_part("xl/media/toModify.bin", SWEEP_BINARY_CONTENT_TYPE, b"old".to_vec());
+    snapshot.opc.set_part("xl/media/toRemove.bin", SWEEP_BINARY_CONTENT_TYPE, b"gone".to_vec());
+    snapshot.opc.relationships.insert("xl/media/toModify.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "old.bin".into(), target_mode: OpcTargetMode::Internal }]);
+    snapshot.opc.relationships.insert("xl/media/toRemove.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "gone.bin".into(), target_mode: OpcTargetMode::Internal }]);
+    snapshot.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
+    snapshot
 }
 
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_b() -> XlsxSnapshot {
-    let mut opc = OpcPackage::empty();
-    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-    opc.content_types.set_default("xml", "application/xml");
-    opc.content_types.set_default("added", "application/octet-stream");
-    opc.set_part("xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", b"<workbook/>changed".to_vec());
-    opc.set_part("xl/toModify.xml", "application/xml", b"new".to_vec());
-    opc.set_part("xl/added.xml", "application/xml", b"fresh".to_vec());
-    // 🩹 AFTER the `set_part` calls above (which already appended `toModify`'s override entry
-    // at position 1): a bare `set_override` on an EXISTING key updates its VALUE in place,
-    // never its position — same convention docx's own `field_sweep` fixture documents (the OPC
-    // module's `overrides` is order-sensitive `Vec<(String,String)>` equality, not ours to
-    // change).
-    opc.content_types.set_override("xl/toModify.xml", "application/xml-modified");
-    opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
-    opc.relationships.insert("xl/toModify.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/new.xml".into(), target_mode: OpcTargetMode::Internal }]);
-    opc.relationships.insert("xl/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
-    // 🔤️ Parts in the format's normal form, as in `sweep_a` — see that fixture's own note.
-    opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
-
-    let _ = opc;
-    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+    let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
                 name: "toModify".into(),
@@ -593,7 +552,15 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
         // `shared_strings.removed` on `a -> b` (see `sweep_a`'s doc comment); the same
         // index recurs as `shared_strings.added` on `b -> a`.
         shared_strings: vec!["keep".into(), "toModify-changed".into()],
-    })
+    });
+    snapshot.opc.content_types.set_default("bin", SWEEP_BINARY_CONTENT_TYPE);
+    snapshot.opc.content_types.set_default("dat", SWEEP_BINARY_CONTENT_TYPE);
+    snapshot.opc.set_part("xl/media/toModify.bin", "application/x-semio-sweep", b"new".to_vec());
+    snapshot.opc.set_part("xl/media/added.dat", SWEEP_BINARY_CONTENT_TYPE, b"fresh".to_vec());
+    snapshot.opc.relationships.insert("xl/media/toModify.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "new.bin".into(), target_mode: OpcTargetMode::Internal }]);
+    snapshot.opc.relationships.insert("xl/media/added.dat".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "added.bin".into(), target_mode: OpcTargetMode::External }]);
+    snapshot.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
+    snapshot
 }
 //#endregion 🔖️Fixtures
 

@@ -104,7 +104,6 @@ else {
     }
   };
   let completed = false;
-  console.log("[DEBUG] Native continuous task ownership fixture: " + root);
   try {
     const first = run("first"); await until(() => events().some(row => row.phase === "consumer" && row.id === "first"), ["first"]);
     const second = run("second"); await until(() => events().some(row => row.phase === "consumer" && row.id === "second"), ["first", "second"]);
@@ -130,7 +129,6 @@ else {
       await new Promise<void>((accept, reject) => server.close(error => error ? reject(error) : accept()));
     }
     completed = true;
-    console.log(`[DEBUG] Native Nx ${scenario.name}: ${scenario.services} service owners, independent completion/cancellation and released ports PASS`);
   } finally {
     put("state/finish-first", "done"); put("state/finish-second", "done");
     for (const child of children) if (child.exitCode === null) child.kill("SIGTERM");

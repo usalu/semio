@@ -159,7 +159,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const result = await response;
           vitest.expect(equal(result, row === "acknowledged" || row === "slow-initialization" ? { kind: "accepted", value: fixture.accepted } : { kind: "refused" })).toBe(true);
           vitest.expect(requests.filter((value) => value.kind === "request")).toHaveLength(Number(row === "acknowledged" || row === "slow-initialization" || row === "close-before-response"));
-          console.log("[DEBUG] private broker acknowledgement " + row + " matched the neutral request boundary");
         } finally {
           client.close();
           channel.port1.close();
@@ -392,7 +391,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         vitest.expect(requestSignal?.aborted).toBe(cancellation === "before-request" ? undefined : true);
         vitest.expect(equal({ calls, accepted, refused }, { calls: Number(cancellation !== "before-request"), accepted: Number(cancellation === "during-delay"), refused: 0 })).toBe(true);
       }
-      console.log("[DEBUG] Shell session refresh matched the neutral serial, refusal and cancellation corpus");
     } finally {
       for (const owner of owners) owner.close();
       vitest.vi.useRealTimers();
@@ -1201,7 +1199,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           closeArtifactRuntime(state.runtimeKey);
         }
       }
-      console.log("[DEBUG] artifact-bootstrap-owner: AJV=1 node-sha256=2 early-lease-rejection=1 neutral=" + corpus.cases.length + " passed");
     });
 
     it("installs the exact neutral inline and chunked pair and reaches Live only at the authenticated tail", async () => {
@@ -1954,7 +1951,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect(equal(harness.requests.filter((entry) => entry.startsWith("POST")), [])).toBe(true);
           expect(testSeams.directoryAdministration?.phase).toBe("ready");
         }
-        console.log("[DEBUG] actual administration worker refused foreign-space, withdrawn, member, unverified, unrelated and malformed commands before POST");
       } finally {
         harness.release();
         closeDirectory();
@@ -2010,7 +2006,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(harness.posted.at(-1)).toMatchObject({ phase: "submitting", code: fixture.refreshDuringSubmit.code });
         await settleAdministrationTurns(harness);
         await settleAdministrationTurns(harness);
-        console.log("[DEBUG] administration worker ignored retired page success/failure and blocked refresh during a sealed command");
       } finally {
         harness.release();
         closeDirectory();
@@ -2057,7 +2052,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           canonical = next;
         }
         expect(harness.requests.filter((entry) => entry.startsWith("POST"))).toHaveLength(fixture.cases.length);
-        console.log("[DEBUG] actual worker applied four neutral name/visibility results only after independently SHA-256 sealed receipt and page refresh");
       } finally {
         harness.release();
         closeDirectory();
@@ -2781,7 +2775,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(equal(parse(wire[name]), wire[name])).toBe(true);
         for (const candidate of [{ ...wire[name], schema: "foreign" }, { ...wire[name], proposalHash: undefined }]) expect(() => parse(candidate)).toThrow();
       }
-      console.log("[DEBUG] browser inference consumed exact Hub nullable-hash receipt and event page");
     });
 
     it("requires verified session authority and never adopts a successor proof for retained inference", async () => {
@@ -2829,7 +2822,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       } finally {
         retained.release();
       }
-      console.log("[DEBUG] inference authority fence rejected pre-/me admission and retained an indeterminate original request across proof replacement");
     });
 
     it("refuses to start at all without a verified live execution-target lease", async () => {
@@ -2900,7 +2892,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await driveInferencePort(fixture.operationEpoch);
         expect(harness.ports().at(-1)?.phase).toBe(fixture.expectedTerminal);
         expect(equal(harness.requests, fixture.expectedRequests)).toBe(true);
-        console.log("[DEBUG] inference cancel survived pending submit and waited for exact Hub terminal");
       } finally { harness.release(); }
       }
     });
@@ -2963,7 +2954,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const closed = harness.posted.filter((message) => message.kind === fixture.closedKind);
           expect(equal(closed, [{ kind: fixture.closedKind, operationEpoch: fixture.operationEpoch, scope }])).toBe(true);
           expect(harness.requests.filter((request) => request.endsWith("/jobs"))).toHaveLength(1);
-          console.log(`[DEBUG] inference retained owner resolved ${scenario} without resubmission`);
         } finally {
           testSeams.directorySessionEpoch = sessionEpoch;
           const retained = testSeams.inferencePort;
@@ -3017,7 +3007,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect(testSeams.inferenceApprovalUndoOwner).toBeNull();
           expect(harness.posted.filter((message) => message.kind === "inference-history-status")).toHaveLength(statusCount);
           expect(equal(harness.ports().at(-1)?.phase, "applied")).toBe(true);
-          console.log(`[DEBUG] inference late ${scenario} discarded retired document Undo presentation`);
         } finally { harness.release(); }
       }
     });
@@ -3046,7 +3035,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(harness.proofs).toHaveLength(2);
         expect(harness.proofs[0]).toBe(`Bearer ${WORKER_LAW_CAPABILITY}`);
         expect(equal(harness.proofs[1], `Bearer ${fixture.successorCapability}`)).toBe(true);
-        console.log("[DEBUG] old inference response preserved successor broker proof");
       } finally { testSeams.directorySessionEpoch = epoch; harness.release(); }
     });
 
@@ -3064,7 +3052,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         if (row.accepted) expect(equal(await client.me(), JSON.parse(row.source))).toBe(true);
         else await expect(client.me()).rejects.toThrow();
       }
-      console.log("[DEBUG] Directory client consumed only canonical authenticated session authority");
     });
 
     it("binds the verified broker session and retains uncertain inference across authenticated replacement", async () => {
@@ -3109,7 +3096,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await driveInferencePort(original.operationEpoch);
         expect(harness.requests.filter((entry: string) => entry.endsWith("/jobs"))).toHaveLength(1);
         expect(harness.requests.filter((entry: string) => entry.endsWith("/cancel") || entry.endsWith("/reconcile"))).toHaveLength(0);
-        console.log("[DEBUG] authenticated broker replacement retained the original request without replay under its successor");
       } finally { testSeams.detachHubSessionPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
     });
 
@@ -3148,7 +3134,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(testSeams.inferencePort?.request).toBeNull();
         handleTsRequest({ kind: "inference-close", operationEpoch });
         expect(testSeams.inferencePort).toBeNull();
-        console.log("[DEBUG] authenticated replacement physically reopened one fresh worker document owner");
       } finally { harness.release(); }
     });
 
@@ -3190,7 +3175,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             expect(artifactState(DOCUMENT, SPACE)).toBeUndefined();
             expect(harness.posted.some((message: BackboneWorkerResponse) => message.kind === "directory-bootstrap-failed" && message.code === "unauthorized" && !message.retryable)).toBe(true);
           }
-          console.log(`[DEBUG] Directory bootstrap ${scenario} matched the authenticated authority before presentation`);
         } finally { testSeams.detachHubSessionPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
       }
     });
@@ -3259,7 +3243,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
             expect(equal(harness.proofs.at(-1), `Bearer ${retained.successorCapability}`)).toBe(true);
           }
-          console.log(`[DEBUG] session authority ${scenario} retired only its original owner`);
         } finally { release(); testSeams.detachHubSessionPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
       }
     });
@@ -3292,7 +3275,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(equal(testSeams.browserSessionAuthority, null), retained.portReplacement).toBe(true);
         expect(cancelled).toBe(true);
         expect(installHubSessionCapability(retained.successorCapability)).toBe(true);
-        console.log("[DEBUG] broker port replacement cancelled old body ownership before successor authorization");
       } finally { release(); testSeams.detachHubSessionPort(); prior.port1.close(); prior.port2.close(); successor.port1.close(); successor.port2.close(); harness.release(); }
     });
 
@@ -3322,7 +3304,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(harness.proofs).toHaveLength(2);
         expect(harness.proofs[0]).toBe(`Bearer ${WORKER_LAW_CAPABILITY}`);
         expect(equal(harness.proofs[1], `Bearer ${fixture.successorCapability}`)).toBe(true);
-        console.log("[DEBUG] replacement broker admission denied old queued work and preserved its fresh proof");
       } finally { release(); harness.release(); }
     });
 
@@ -3362,7 +3343,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           harness.bodies.push("{}");
           await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
           expect(harness.requests).toHaveLength(3);
-          console.log(`[DEBUG] queued inference ${scenario} preserved the active broker proof`);
         } finally { testSeams.directorySessionEpoch = epoch; harness.release(); }
       }
     });
@@ -4161,7 +4141,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(posted.filter((message) => message.kind === "socket-actor-failed" && message.documentId === unselectedId)).toHaveLength(corpus.firstOpen.unselectedSocketFailures);
         closeArtifact(unselectedId, scope.spaceId);
         expect(requests.map(({ stage }) => stage)).toEqual(corpus.firstOpen.requestStages);
-        console.log("[DEBUG] document-first-open requested-surface-only=1 verified-assets=3 socket=1 hello=1 authenticated-session=0 local-failures=0 unselected-refusal=1 writes=0");
       } finally {
         closeArtifactRuntime(runtimeKey);
         closeArtifact("local-first-opening");
@@ -4230,7 +4209,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             expect(state?.outbox ?? [], row.id).toHaveLength(0);
             expect(stages.includes("socket-grants"), row.id).toBe(false);
             expect(JSON.stringify(statuses)).not.toContain(plan.receipt);
-            console.log("[DEBUG] document-first-open-hostile", row.id, "requests=" + stages.length, "socket=0 grant=0 writes=0");
           } finally {
             closeArtifactRuntime(runtimeKey);
             await new Promise((resolve) => setTimeout(resolve, 0));
@@ -5585,7 +5563,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(JSON.stringify(state.config)).toBe(beforeConfig);
         expect(JSON.stringify(state.frontier)).toBe(beforeFrontier);
         await vi.waitFor(() => expect((reservation as unknown as { viewRefresh: Promise<void> | null }).viewRefresh).toBeNull());
-        console.log("[DEBUG] browser-host-context live-preference-refresh=1 artifact-config-unchanged=1 stale-opening-rejected=1");
 
         const actionRequest = createBrowserActorUiIntentRequestV1(
           {
@@ -5684,7 +5661,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(visibleViews.length - windowRendersBeforeActions).toBe(1);
         expect(commandSequences).toEqual([3]);
         expect(backboneIngress).toHaveLength(1);
-        console.log("[DEBUG] direct-browser-actor-action: skipped-sequence=1 u64-preserved=1 shell-frame=1 host-effect=1 full-turn-serialized=1 remote-echo=0 early-action-queued=1");
 
         const directActionInvocation = {
             ...actionFixture.actionInvocation,
@@ -5719,7 +5695,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(visibleViews.length - windowRendersBeforeActions).toBe(3);
         expect(commandInvocations).toEqual([earlyCommandInvocation, directActionInvocation, directCommandInvocation]);
         expect(commandViews).toEqual([earlyCommandView, directCommandView, directCommandView]);
-        console.log("[DEBUG] direct-browser-actor-command: action-invocation=1 command-invocation=1 canonical-page=1 shell-publication=1 raw-backbone-projection=1 singleton-host-effect=1");
 
         retainInferenceApprovalUndo(operation, approvalReceipt);
         reissueInferenceApprovalUndoForRebootstrap(state);
@@ -5847,7 +5822,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             renderDriver.child = retainedChild;
           }
           expect(turns).toBe(row.turns);
-          console.log("[DEBUG] browser-render-refusal: " + row.name + " turns=" + turns);
         }
         dropVerifiedColdDocumentPair(state);
         expect(() => owner!.page({ activationGeneration: reservation!.generation, instanceId: 0, guestLifetime: 1n }, 0)).toThrow("stale owner");
@@ -6243,7 +6217,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    it("keeps and resends a batch the hub refused for a transient reason, drains the outbox in bounded batches, never rebuilds", async () => {
+    it("keeps and resends a batch the hub refused for a transient reason, drains the outbox ack-clocked in bounded batches, never rebuilds", async () => {
       FakeHubWebSocket.instances = [];
       const originalWebSocket = globalThis.WebSocket;
       const originalBroadcastChannel = globalThis.BroadcastChannel;
@@ -6257,17 +6231,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const actor = `hub.v1.${"5".repeat(64)}`;
       testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: actor, expiresAtMs: Number.MAX_SAFE_INTEGER });
       const documentId = "doc-ack-transient";
-      const edit = (id: string) => encodeBackboneMessage({
+      const edit = (id: string, padding = 0) => encodeBackboneMessage({
         kind: "mutations",
-        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id + "x".repeat(padding)) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
       });
       const sentIds = (socket: FakeHubWebSocket) => socket.sent.flatMap((bytes) => {
         const decoded = decodeClientFrame(bytes).frame;
         return typeof decoded === "object" && decoded !== null && "Commands" in decoded ? [decoded.Commands.envelopes.map((envelope: { mutation_id: string }) => envelope.mutation_id)] : [];
       });
       const transient = Array.from(new TextEncoder().encode(JSON.stringify([{ level: "warning", code: "hub.unavailable", message: "DB I/O aggregate admission exhausted" }])));
+      const refuse = (state: ArtifactState, batchId: number) => handleAck(state, batchId, [{ Applied: { outcome: { Rejected: { reason: "unavailable: DB I/O aggregate admission exhausted", messages: transient } } } }] as unknown as Parameters<typeof handleAck>[2]);
       const outcomes: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => outcomes.push(message);
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
       try {
         openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
         await flushSocketGrantTurns();
@@ -6276,34 +6252,181 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const state = artifactState(documentId, "space-1")!;
         installVerifiedDocumentBackbonePair(state);
         await handleHubFrame(state, { Session: { actor, color: 1 } });
-        for (const id of ["first-edit", "second-edit"]) handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit(id) } });
-        expect(sentIds(socket)).toEqual([["first-edit"], ["second-edit"]]);
-        await handleAck(state, 0, [{ Applied: { outcome: { Rejected: { reason: "unavailable: DB I/O aggregate admission exhausted", messages: transient } } } }] as unknown as Parameters<typeof handleAck>[2]);
+        vi.useFakeTimers();
+        const send = (id: string, padding = 0) => handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit(id, padding) } });
+        for (const id of ["first-edit", "second-edit"]) send(id);
+        expect(sentIds(socket), "one batch in flight: the next waits for its Ack").toEqual([["first-edit"]]);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual(["second-edit"]);
+        await refuse(state, 0);
         expect(state.artifactRebootstrapRequired).toBe(false);
         expect(outcomes.some((message) => message.kind === "artifact-rebootstrap-required")).toBe(false);
         expect(outcomes.some((message) => message.kind === "event" && message.event.kind === "commandOutcome")).toBe(false);
-        expect(state.outbox.map((envelope) => envelope.id)).toEqual(["first-edit"]);
+        expect(state.outbox.map((envelope) => envelope.id), "the refused batch returns to the front").toEqual(["first-edit", "second-edit"]);
         expect(state.pendingMutations.map((envelope) => envelope.id)).toEqual(["first-edit", "second-edit"]);
         expect(state.transientRefusal?.batchLimit).toBe(1);
-        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit("third-edit") } });
-        expect(state.outbox.map((envelope) => envelope.id), "a later edit waits behind the refused batch").toEqual(["first-edit", "third-edit"]);
-        await handleAck(state, 1, [{ Applied: { outcome: "Accepted" } }]);
-        expect(state.transientRefusal, "an Accepted batch ends the refusal: the hub admits again").toBeNull();
-        expect(sentIds(socket).slice(2), "the refused edit goes out again first, the later one behind it").toEqual([["first-edit", "third-edit"]]);
+        send("third-edit");
+        expect(state.outbox.map((envelope) => envelope.id), "a later edit waits behind the refused batch").toEqual(["first-edit", "second-edit", "third-edit"]);
+        await vi.advanceTimersByTimeAsync(180);
+        expect(sentIds(socket), "nothing goes out during the backoff (250 ms, jittered to 187.5)").toHaveLength(1);
+        await vi.advanceTimersByTimeAsync(10);
+        expect(sentIds(socket).slice(1), "the refused edit goes out again first, bounded to half the refused batch").toEqual([["first-edit"]]);
+        await refuse(state, 1);
+        await vi.advanceTimersByTimeAsync(370);
+        expect(sentIds(socket), "a second refusal doubles the backoff (500 ms, jittered to 375)").toHaveLength(2);
+        await vi.advanceTimersByTimeAsync(10);
+        expect(sentIds(socket).slice(2)).toEqual([["first-edit"]]);
         await handleAck(state, 2, [{ Applied: { outcome: "Accepted" } }]);
+        expect(state.transientRefusal, "an Accepted batch ends the refusal: the hub admits again").toBeNull();
+        expect(sentIds(socket).slice(3), "the rest drains behind it, in order").toEqual([["second-edit", "third-edit"]]);
+        await handleAck(state, 3, [{ Applied: { outcome: "Accepted" } }]);
         expect(state.outbox).toEqual([]);
         expect(state.pendingMutations).toEqual([]);
         state.hubActorReady = false;
         const queued = Array.from({ length: 20 }, (_, index) => `queued-${index}`);
-        for (const id of queued) handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit(id) } });
+        for (const id of queued) send(id);
         expect(state.outbox.map((envelope) => envelope.id)).toEqual(queued);
         state.hubActorReady = true;
-        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit("after-shortage") } });
-        expect(sentIds(socket).slice(3), "a grown outbox drains one bounded batch at a time, in order").toEqual([queued.slice(0, 16)]);
-        await handleAck(state, 3, [{ Applied: { outcome: "Accepted" } }]);
-        expect(sentIds(socket).slice(4)).toEqual([[...queued.slice(16), "after-shortage"]]);
+        send("after-shortage");
+        expect(sentIds(socket).slice(4), "a grown outbox drains one bounded batch at a time, in order").toEqual([queued.slice(0, 16)]);
+        await handleAck(state, 4, [{ Applied: { outcome: "Accepted" } }]);
+        expect(sentIds(socket).slice(5)).toEqual([[...queued.slice(16), "after-shortage"]]);
+        await handleAck(state, 5, [{ Applied: { outcome: "Accepted" } }]);
+        state.hubActorReady = false;
+        for (const id of ["large-0", "large-1", "large-2"]) send(id, 100_000);
+        state.hubActorReady = true;
+        send("small-after-large");
+        expect(sentIds(socket).slice(6), "a batch stays within half the declared batch bytes").toEqual([["large-0"]]);
+        await handleAck(state, 6, [{ Applied: { outcome: "Accepted" } }]);
+        expect(sentIds(socket).slice(7)).toEqual([["large-1"]]);
+        await handleAck(state, 7, [{ Applied: { outcome: "Accepted" } }]);
+        expect(sentIds(socket).slice(8)).toEqual([["large-2", "small-after-large"]]);
+        send("behind-the-drop");
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual(["behind-the-drop"]);
+        socket.close();
+        expect(state.pendingBatches.size).toBe(0);
+        expect(state.outbox.map((envelope) => envelope.id), "a dropped socket's unacked batch returns AHEAD of what queued behind it").toEqual(["large-2", "small-after-large", "behind-the-drop"]);
       } finally {
         closeArtifact(documentId, "space-1");
+        vi.useRealTimers();
+        randomSpy.mockRestore();
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
+      }
+    });
+
+    it("resumes a suspended child only on the same execution target, adopting a newer checkpoint and revalidation witness", async () => {
+      const { sameExecutionTargetV1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      const { readFile } = await import("node:fs/promises");
+      const { default: equal } = await import("fast-deep-equal");
+      const fixture = JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/⏯️execution-target-resume-v1.json", source.url), "utf8")) as { current: { fixture: string; pointer: "/manifest" }; cases: { case: string; patch: unknown; resumes: boolean }[] };
+      const manifest = (JSON.parse(await readFile(new URL(`../../../${fixture.current.fixture}`, source.url), "utf8")) as { manifest: unknown }).manifest;
+      const merge = (target: unknown, patch: unknown): unknown => {
+        if (patch === null || typeof patch !== "object" || Array.isArray(patch)) return patch;
+        const merged: Record<string, unknown> = target !== null && typeof target === "object" && !Array.isArray(target) ? { ...(target as Record<string, unknown>) } : {};
+        for (const [key, value] of Object.entries(patch)) {
+          if (value === null) delete merged[key];
+          else merged[key] = merge(merged[key], value);
+        }
+        return merged;
+      };
+      type Fields = ReturnType<typeof parseDocumentExecutionTargetLeaseFieldsV1>;
+      const oracle = (current: Fields, next: Fields): boolean => {
+        const { checkpoint: currentCheckpoint, revalidation: currentWitness, ...currentTarget } = current;
+        const { checkpoint: nextCheckpoint, revalidation: nextWitness, ...nextTarget } = next;
+        const notBehind = (from: number | undefined, to: number | undefined) => (from === undefined) === (to === undefined) && (from === undefined || to! >= from);
+        return (
+          equal(currentTarget, nextTarget) &&
+          currentCheckpoint.descriptorDigestV1 === nextCheckpoint.descriptorDigestV1 &&
+          currentCheckpoint.baselineFrontier.documentId === nextCheckpoint.baselineFrontier.documentId &&
+          nextCheckpoint.baselineFrontier.headEditOrdinal >= currentCheckpoint.baselineFrontier.headEditOrdinal &&
+          nextCheckpoint.baselineFrontier.lastCommitSeq >= currentCheckpoint.baselineFrontier.lastCommitSeq &&
+          (["directoryRevision", "membershipGeneration", "sessionGeneration", "shareGeneration"] as const).every((key) => notBehind(currentWitness[key], nextWitness[key]))
+        );
+      };
+      const current = parseDocumentExecutionTargetLeaseFieldsV1(manifest);
+      expect(fixture.cases.filter((row) => row.resumes).length).toBeGreaterThan(1);
+      expect(fixture.cases.filter((row) => !row.resumes).length).toBeGreaterThan(1);
+      for (const row of fixture.cases) {
+        const next = parseDocumentExecutionTargetLeaseFieldsV1(merge(structuredClone(manifest), row.patch));
+        expect(sameExecutionTargetV1(current, next), row.case).toBe(row.resumes);
+        expect(oracle(current, next), `fast-deep-equal oracle: ${row.case}`).toBe(row.resumes);
+        expect(sameLeaseFieldsV1(current, next), `full-field relation: ${row.case}`).toBe(equal(row.patch, {}));
+      }
+    });
+
+    it("retires an unsuspendable mounted child when its socket closes, forgets its document and reopens like a first open", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      const originalBroadcastChannel = globalThis.BroadcastChannel;
+      class BoundPortBroadcastChannel {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        postMessage(): void { throw new Error("bound document backbone must not echo before server authority"); }
+        close(): void {}
+      }
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
+      const actor = `hub.v1.${"6".repeat(64)}`;
+      testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: actor, expiresAtMs: Number.MAX_SAFE_INTEGER });
+      const edit = (documentId: string, id: string) => encodeBackboneMessage({
+        kind: "mutations",
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+      });
+      const hello = (socket: FakeHubWebSocket) => {
+        const decoded = decodeClientFrame(socket.sent[0]!).frame;
+        if (typeof decoded !== "object" || decoded === null || !("SocketHelloV1" in decoded)) throw new Error("expected SocketHelloV1");
+        return decoded.SocketHelloV1;
+      };
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+      vi.useFakeTimers();
+      try {
+        const documentId = "doc-retire-mounted";
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        await flushSocketGrantTurns();
+        const socket = FakeHubWebSocket.instances.at(-1)!;
+        socket.open();
+        const state = artifactState(documentId, "space-1")!;
+        const baseline = installVerifiedDocumentBackbonePair(state);
+        state.resumeToken = "resume-before-the-cut";
+        await handleHubFrame(state, { Session: { actor, color: 1 } });
+        for (const id of ["edit-in-flight", "edit-queued"]) handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit(documentId, id) } });
+        let childClosed = false;
+        state.browserActorReservation = { suspended: false, suspendLink: () => false, close: () => { childClosed = true; state.browserActorReservation = null; } } as unknown as ArtifactState["browserActorReservation"];
+        expect(state.pendingBatches.size).toBe(1);
+        expect(state.frontier).toEqual(baseline);
+        socket.close();
+        expect(childClosed, "the unsuspendable child is retired").toBe(true);
+        expect({ pair: state.verifiedColdPair, lease: state.executionTargetLease, pack: state.currentPack, spr: state.currentSpr, frontier: state.frontier, resumeToken: state.resumeToken }, "the document the child held is forgotten").toEqual({ pair: null, lease: null, pack: null, spr: null, frontier: null, resumeToken: null });
+        expect(state.outbox.map((envelope) => envelope.id), "nothing unsent is lost, in send order").toEqual(["edit-in-flight", "edit-queued"]);
+        expect([...state.ingestedMutationIds].sort(), "their echo stays suppressed").toEqual(["edit-in-flight", "edit-queued"]);
+        expect(posted.filter((message) => message.kind === "artifact-rebootstrap-required"), "the Shell discards the stale surface").toEqual([expect.objectContaining({ documentId, retryable: true })]);
+        await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MAX_MS + 1);
+        const next = FakeHubWebSocket.instances.at(-1)!;
+        expect(next).not.toBe(socket);
+        next.open();
+        expect(hello(next), "the next connection opens like a first one").toMatchObject({ frontier: null, resume_token: null });
+        closeArtifact(documentId, "space-1");
+
+        const plainId = "doc-retire-unmounted";
+        openArtifact({ documentId: plainId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        await flushSocketGrantTurns();
+        const plainSocket = FakeHubWebSocket.instances.at(-1)!;
+        plainSocket.open();
+        const plain = artifactState(plainId, "space-1")!;
+        const plainFrontier = { document_id: plainId, head_edit_ordinal: 3, head_edit_id: "edit-3", last_commit_seq: 3, chain_hash: new Array(32).fill(3) };
+        plain.frontier = plainFrontier;
+        plain.resumeToken = "resume-plain";
+        const postedBefore = posted.length;
+        plainSocket.close();
+        expect({ frontier: plain.frontier, resumeToken: plain.resumeToken }, "a document without a mounted child resumes from where it was").toEqual({ frontier: plainFrontier, resumeToken: "resume-plain" });
+        expect(posted.slice(postedBefore).some((message) => message.kind === "artifact-rebootstrap-required")).toBe(false);
+        closeArtifact(plainId, "space-1");
+      } finally {
+        closeArtifact("doc-retire-mounted", "space-1");
+        closeArtifact("doc-retire-unmounted", "space-1");
+        vi.useRealTimers();
+        randomSpy.mockRestore();
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
       }

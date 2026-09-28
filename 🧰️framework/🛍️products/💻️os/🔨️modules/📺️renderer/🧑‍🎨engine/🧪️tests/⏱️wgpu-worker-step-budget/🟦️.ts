@@ -119,7 +119,6 @@ describe("wgpu frame-Worker step budget", () => {
         });
       }, fixture);
       expect(observed).toEqual(fixture.expected);
-      console.info("[DEBUG] Chromium retained live-window ingress, suppressed pre-terminal frames, and resumed the same-generation frame after component close");
     } finally {
       await browser.close();
     }
@@ -253,7 +252,6 @@ describe("wgpu frame-Worker step budget", () => {
         expect(observed).toEqual({ length: example.bytes, equal: true, consumed: true });
         expect(acceptsPage(Array.from({ length: observed.length }, (_, index) => index % fixture.patternPeriod))).toBe(example.accepted);
       }
-      console.info("[DEBUG] Chromium preserved response bytes and AJV enforced the exact native-page limit");
     } finally {
       await browser.close();
     }
@@ -365,7 +363,6 @@ describe("wgpu frame-Worker step budget", () => {
       expect(observed.successorToken).toBe(fixture.cancelledDecode.successorToken);
       expect(observed.successorLive).toBe(true);
       expect(observed.width).toBe(1);
-      console.info("[DEBUG] Chromium decoded the ready image, rejected its aborted publication, and retained the independent successor");
     } finally {
       await browser.close();
     }
@@ -523,7 +520,6 @@ describe("wgpu frame-Worker step budget", () => {
         expect(result.outcomes).toEqual(fixture.frameOutcomes);
         expect(result.callbacksWhileWaiting).toBe(fixture.callbacksWhileWaiting);
       }
-      console.info("[DEBUG] Chromium completion handback resumed parked presentation without idle callbacks for both wake timings");
     } finally {
       await browser.close();
     }

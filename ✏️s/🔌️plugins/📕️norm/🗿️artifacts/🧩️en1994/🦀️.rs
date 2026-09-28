@@ -252,6 +252,30 @@ impl SteelSection {
                 designation: "HEB400".into(), height_m: 0.400, width_m: 0.300, tw_m: 0.0135, tf_m: 0.0240,
                 a_m2: 0.0198, w_pl_y_m3: 3.231e-3, i_y_m4: 5.768e-4, a_v_m2: 0.0061,
             }),
+            "HEB450" => Some(Self {
+                designation: "HEB450".into(), height_m: 0.450, width_m: 0.300, tw_m: 0.0140, tf_m: 0.0260,
+                a_m2: 0.0218, w_pl_y_m3: 3.898e-3, i_y_m4: 7.986e-4, a_v_m2: 0.0068,
+            }),
+            "HEB500" => Some(Self {
+                designation: "HEB500".into(), height_m: 0.500, width_m: 0.300, tw_m: 0.0145, tf_m: 0.0280,
+                a_m2: 0.0239, w_pl_y_m3: 4.715e-3, i_y_m4: 1.072e-3, a_v_m2: 0.0075,
+            }),
+            "HEB550" => Some(Self {
+                designation: "HEB550".into(), height_m: 0.550, width_m: 0.300, tw_m: 0.0150, tf_m: 0.0290,
+                a_m2: 0.0254, w_pl_y_m3: 5.453e-3, i_y_m4: 1.366e-3, a_v_m2: 0.0081,
+            }),
+            "HEB600" => Some(Self {
+                designation: "HEB600".into(), height_m: 0.600, width_m: 0.300, tw_m: 0.0155, tf_m: 0.0300,
+                a_m2: 0.0270, w_pl_y_m3: 6.285e-3, i_y_m4: 1.710e-3, a_v_m2: 0.0087,
+            }),
+            "HEB650" => Some(Self {
+                designation: "HEB650".into(), height_m: 0.650, width_m: 0.300, tw_m: 0.0160, tf_m: 0.0310,
+                a_m2: 0.0286, w_pl_y_m3: 7.199e-3, i_y_m4: 2.112e-3, a_v_m2: 0.0094,
+            }),
+            "HEB700" => Some(Self {
+                designation: "HEB700".into(), height_m: 0.700, width_m: 0.300, tw_m: 0.0170, tf_m: 0.0320,
+                a_m2: 0.0306, w_pl_y_m3: 8.217e-3, i_y_m4: 2.569e-3, a_v_m2: 0.0102,
+            }),
             _ => None,
         }
     }
@@ -272,7 +296,7 @@ impl SteelSection {
 
     /// 📚 Heavier HEB options for OneOf remedies (wire values = designation leaf).
     pub fn heavier_heb_options(current: &str) -> Vec<String> {
-        let order = ["HEB300", "HEB320", "HEB340", "HEB360", "HEB400"];
+        let order = ["HEB300", "HEB320", "HEB340", "HEB360", "HEB400", "HEB450", "HEB500", "HEB550", "HEB600", "HEB650", "HEB700"];
         let cur = Self::normalize_designation(current);
         let idx = order.iter().position(|d| *d == cur).unwrap_or(0);
         order[idx.saturating_add(1)..].iter().map(|s| (*s).to_string()).collect()

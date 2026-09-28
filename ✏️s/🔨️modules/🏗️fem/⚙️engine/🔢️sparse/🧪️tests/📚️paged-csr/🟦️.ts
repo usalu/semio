@@ -39,7 +39,6 @@ export function testFemPagedCsrOracle(): void {
   for (const sample of fixture.actionSamples) assert(Math.abs(action[sample.index] - sample.value) <= tolerance, `NumPy action sample ${sample.index}`);
   assert(Math.abs(action.reduce((sum, value) => sum + Math.abs(value), 0) - fixture.actionL1) <= 1e-10, "NumPy action L1");
   assert(indices.length * 4 > fixture.physicalPageBytes && values.length * 8 > fixture.physicalPageBytes, "both entry arrays cross one physical page");
-  console.log(`[DEBUG] FEM paged CSR matches NumPy ${fixture.oracle.version} hashes and action across ${fixture.entryCount} entries`);
 }
 
 if (import.meta.main) testFemPagedCsrOracle();

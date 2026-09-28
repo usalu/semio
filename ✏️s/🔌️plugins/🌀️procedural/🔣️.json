@@ -1447,6 +1447,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -2919,6 +2964,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -4430,6 +4520,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -5770,6 +5905,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -7242,6 +7422,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -9776,7 +10001,53 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [],
             "capabilities": []
@@ -12618,6 +12889,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -12647,6 +12963,371 @@
               }
             },
             "actions": [
+              {
+                "id": "editMeshSelection",
+                "label": {
+                  "native": {
+                    "en": "Edit Mesh Selection",
+                    "de": "Netzauswahl bearbeiten"
+                  },
+                  "reuse": {
+                    "en": "Edit Mesh Selection",
+                    "de": "Netzauswahl bearbeiten"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "operation",
+                    "label": {
+                      "native": {
+                        "en": "Operation",
+                        "de": "Operation"
+                      },
+                      "reuse": {
+                        "en": "Operation",
+                        "de": "Operation"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "extrude",
+                          "label": {
+                            "native": {
+                              "en": "Extrude Faces",
+                              "de": "Flächen extrudieren"
+                            },
+                            "reuse": {
+                              "en": "Extrude Faces",
+                              "de": "Flächen extrudieren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "inset",
+                          "label": {
+                            "native": {
+                              "en": "Inset Faces",
+                              "de": "Flächen einziehen"
+                            },
+                            "reuse": {
+                              "en": "Inset Faces",
+                              "de": "Flächen einziehen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subdivide",
+                          "label": {
+                            "native": {
+                              "en": "Subdivide Faces",
+                              "de": "Flächen unterteilen"
+                            },
+                            "reuse": {
+                              "en": "Subdivide Faces",
+                              "de": "Flächen unterteilen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "flip",
+                          "label": {
+                            "native": {
+                              "en": "Flip Faces",
+                              "de": "Flächen umkehren"
+                            },
+                            "reuse": {
+                              "en": "Flip Faces",
+                              "de": "Flächen umkehren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "deleteFaces",
+                          "label": {
+                            "native": {
+                              "en": "Delete Faces",
+                              "de": "Flächen löschen"
+                            },
+                            "reuse": {
+                              "en": "Delete Faces",
+                              "de": "Flächen löschen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "moveVertices",
+                          "label": {
+                            "native": {
+                              "en": "Move Vertices",
+                              "de": "Eckpunkte verschieben"
+                            },
+                            "reuse": {
+                              "en": "Move Vertices",
+                              "de": "Eckpunkte verschieben"
+                            }
+                          }
+                        },
+                        {
+                          "value": "loopCut",
+                          "label": {
+                            "native": {
+                              "en": "Cut Edge Loops",
+                              "de": "Kantenschleifen schneiden"
+                            },
+                            "reuse": {
+                              "en": "Cut Edge Loops",
+                              "de": "Kantenschleifen schneiden"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true,
+                    "default": "extrude"
+                  },
+                  {
+                    "id": "amount",
+                    "label": {
+                      "native": {
+                        "en": "Distance / Inset",
+                        "de": "Abstand / Einzug"
+                      },
+                      "reuse": {
+                        "en": "Distance / Inset",
+                        "de": "Abstand / Einzug"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.1
+                  },
+                  {
+                    "id": "cuts",
+                    "label": {
+                      "native": {
+                        "en": "Loop Cuts",
+                        "de": "Schleifenschnitte"
+                      },
+                      "reuse": {
+                        "en": "Loop Cuts",
+                        "de": "Schleifenschnitte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 1.0,
+                      "max": 256.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 1
+                  },
+                  {
+                    "id": "dx",
+                    "label": {
+                      "native": {
+                        "en": "Move X",
+                        "de": "Verschieben X"
+                      },
+                      "reuse": {
+                        "en": "Move X",
+                        "de": "Verschieben X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "dy",
+                    "label": {
+                      "native": {
+                        "en": "Move Y",
+                        "de": "Verschieben Y"
+                      },
+                      "reuse": {
+                        "en": "Move Y",
+                        "de": "Verschieben Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "dz",
+                    "label": {
+                      "native": {
+                        "en": "Move Z",
+                        "de": "Verschieben Z"
+                      },
+                      "reuse": {
+                        "en": "Move Z",
+                        "de": "Verschieben Z"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.0
+                  }
+                ],
+                "inPalette": true,
+                "category": "methods",
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Edits the faces, edges, or vertices selected in the preview by inserting an adjustable mesh widget; downstream geometry and analysis follow the edit.",
+                      "de": "Bearbeitet die in der Vorschau ausgewählten Flächen, Kanten oder Eckpunkte mit einem einstellbaren Netz-Widget; nachgelagerte Geometrie und Analyse folgen der Änderung."
+                    },
+                    "reuse": {
+                      "en": "Edits the faces, edges, or vertices selected in the preview by inserting an adjustable mesh widget; downstream geometry and analysis follow the edit.",
+                      "de": "Bearbeitet die in der Vorschau ausgewählten Flächen, Kanten oder Eckpunkte mit einem einstellbaren Netz-Widget; nachgelagerte Geometrie und Analyse folgen der Änderung."
+                    }
+                  }
+                }
+              },
+              {
+                "id": "knifeMeshSelection",
+                "label": {
+                  "native": {
+                    "en": "Knife Cut Selected Face",
+                    "de": "Ausgewählte Fläche schneiden"
+                  },
+                  "reuse": {
+                    "en": "Knife Cut Selected Face",
+                    "de": "Ausgewählte Fläche schneiden"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "start",
+                    "label": {
+                      "native": {
+                        "en": "Cut Start",
+                        "de": "Schnittanfang"
+                      },
+                      "reuse": {
+                        "en": "Cut Start",
+                        "de": "Schnittanfang"
+                      }
+                    },
+                    "schema": {
+                      "kind": "vec3"
+                    },
+                    "required": true,
+                    "default": [
+                      0.0,
+                      -1.0,
+                      0.0
+                    ]
+                  },
+                  {
+                    "id": "end",
+                    "label": {
+                      "native": {
+                        "en": "Cut End",
+                        "de": "Schnittende"
+                      },
+                      "reuse": {
+                        "en": "Cut End",
+                        "de": "Schnittende"
+                      }
+                    },
+                    "schema": {
+                      "kind": "vec3"
+                    },
+                    "required": true,
+                    "default": [
+                      0.0,
+                      1.0,
+                      0.0
+                    ]
+                  }
+                ],
+                "inPalette": true,
+                "category": "methods",
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Cuts one selected mesh face along the line through two points. The cut remains editable and downstream measurements update.",
+                      "de": "Schneidet eine ausgewählte Netzfläche entlang der Geraden durch zwei Punkte. Der Schnitt bleibt einstellbar und nachgelagerte Messungen werden aktualisiert."
+                    },
+                    "reuse": {
+                      "en": "Cuts one selected mesh face along the line through two points. The cut remains editable and downstream measurements update.",
+                      "de": "Schneidet eine ausgewählte Netzfläche entlang der Geraden durch zwei Punkte. Der Schnitt bleibt einstellbar und nachgelagerte Messungen werden aktualisiert."
+                    }
+                  }
+                }
+              },
               {
                 "id": "setCamera",
                 "label": {
@@ -14394,6 +15075,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [
@@ -14402,7 +15128,8 @@
               "scale"
             ],
             "interactions": [
-              "graph"
+              "graph",
+              "geometry"
             ],
             "capabilities": []
           },
@@ -15908,6 +16635,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -17249,6 +18021,51 @@
                       "en": "Closes the panel of a finalized, aborted or failed tool run; the document is not touched.",
                       "de": "Schließt das Panel eines abgeschlossenen, abgebrochenen oder fehlgeschlagenen Werkzeuglaufs; das Dokument bleibt unberührt."
                     }
+                  }
+                }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               }
@@ -19025,6 +19842,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [
@@ -19079,6 +19941,19 @@
                         "reuse": {
                           "en": "Hexagonal Mushroom Column",
                           "de": "Sechseckige Pilzsäule"
+                        }
+                      }
+                    },
+                    {
+                      "value": "mesh-workbench",
+                      "label": {
+                        "native": {
+                          "en": "Mesh Workbench",
+                          "de": "Netzwerkstatt"
+                        },
+                        "reuse": {
+                          "en": "Mesh Workbench",
+                          "de": "Netzwerkstatt"
                         }
                       }
                     },
@@ -21145,6 +22020,20 @@
         ],
         "keybindings": [
           {
+            "keys": "mod+shift+m",
+            "action": {
+              "controllerId": "s.procedural.generation3d@1/*#editor",
+              "action": "editMeshSelection"
+            }
+          },
+          {
+            "keys": "mod+shift+k",
+            "action": {
+              "controllerId": "s.procedural.generation3d@1/*#editor",
+              "action": "knifeMeshSelection"
+            }
+          },
+          {
             "keys": "mod+z",
             "action": {
               "controllerId": "s.procedural.generation3d@1/*#editor",
@@ -22085,6 +22974,106 @@
                 "subtractive",
                 "invertive",
                 "range"
+              ],
+              "transitive": false,
+              "broadcast": true
+            }
+          },
+          {
+            "id": "geometry",
+            "label": {
+              "native": {
+                "en": "Geometry",
+                "de": "Geometrie"
+              },
+              "reuse": {
+                "en": "Geometry",
+                "de": "Geometrie"
+              }
+            },
+            "granularities": [
+              {
+                "id": "object",
+                "label": {
+                  "native": {
+                    "en": "Object",
+                    "de": "Objekt"
+                  },
+                  "reuse": {
+                    "en": "Object",
+                    "de": "Objekt"
+                  }
+                },
+                "iconId": "box"
+              },
+              {
+                "id": "vertex",
+                "label": {
+                  "native": {
+                    "en": "Vertex",
+                    "de": "Eckpunkt"
+                  },
+                  "reuse": {
+                    "en": "Vertex",
+                    "de": "Eckpunkt"
+                  }
+                },
+                "iconId": "circle"
+              },
+              {
+                "id": "edge",
+                "label": {
+                  "native": {
+                    "en": "Edge",
+                    "de": "Kante"
+                  },
+                  "reuse": {
+                    "en": "Edge",
+                    "de": "Kante"
+                  }
+                },
+                "iconId": "minus"
+              },
+              {
+                "id": "face",
+                "label": {
+                  "native": {
+                    "en": "Face",
+                    "de": "Fläche"
+                  },
+                  "reuse": {
+                    "en": "Face",
+                    "de": "Fläche"
+                  }
+                },
+                "iconId": "square"
+              }
+            ],
+            "hierarchy": {
+              "kind": "flat"
+            },
+            "hover": {
+              "enabled": true,
+              "transitive": false,
+              "channels": [
+                "pointer"
+              ],
+              "broadcast": true
+            },
+            "selection": {
+              "modes": [
+                "multiple",
+                "single"
+              ],
+              "methods": [
+                "pick",
+                "rectangle"
+              ],
+              "merges": [
+                "replace",
+                "additive",
+                "subtractive",
+                "invertive"
               ],
               "transitive": false,
               "broadcast": true
@@ -23966,6 +24955,51 @@
                     }
                   }
                 }
+              },
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
@@ -24016,6 +25050,19 @@
                         "reuse": {
                           "en": "Hexagonal Mushroom Column",
                           "de": "Sechseckige Pilzsäule"
+                        }
+                      }
+                    },
+                    {
+                      "value": "mesh-workbench",
+                      "label": {
+                        "native": {
+                          "en": "Mesh Workbench",
+                          "de": "Netzwerkstatt"
+                        },
+                        "reuse": {
+                          "en": "Mesh Workbench",
+                          "de": "Netzwerkstatt"
                         }
                       }
                     },
@@ -26578,6 +27625,26 @@
         }
       },
       {
+        "id": "mesh-workbench",
+        "label": {
+          "native": {
+            "en": "Mesh Workbench",
+            "de": "Netzwerkstatt"
+          },
+          "reuse": {
+            "en": "Mesh Workbench",
+            "de": "Netzwerkstatt"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera { x=100 y=-40 zoom=1.5 }\nlayout={\n  box=x=20 y=0 inset=x=220 y=0 extrude=x=420 y=0 analysis=x=620 y=140 preview=x=620 y=-80 amount=x=20 y=160 distance=x=220 y=160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 box@meshOut->inset@mesh\n  e2 amount@number->inset@amount\n  e3 inset@meshOut->extrude@mesh\n  e4 distance@number->extrude@distance\n  e5 extrude@meshOut->analysis@mesh\n  e6 extrude@meshOut->preview@mesh\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"amount\" label=\"Inset\" value=0.1 min=0.01 max=0.3 step=0.01\n  input-slider id=\"distance\" label=\"Extrusion\" value=0.5 min=0.01 max=2 step=0.01\n  neuron id=\"box\" neuron-kind=brep.mesh.box preview=false input-ports=[ \"width\" \"height\" \"depth\" ] output-ports=[ ] params=[ ]\n  neuron id=\"inset\" neuron-kind=brep.mesh.inset preview=false input-ports=[ \"mesh\" \"faces\" \"amount\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.mesh.extrude preview=true input-ports=[ \"mesh\" \"faces\" \"distance\" ] output-ports=[ ] params=[ ]\n  neuron id=\"analysis\" neuron-kind=brep.mesh.analyze preview=false input-ports=[ \"mesh\" ] output-ports=[ ] params=[ ]\n  neuron id=\"preview\" neuron-kind=brep.mesh.toBrep preview=false input-ports=[ \"mesh\" \"tolerance\" ] output-ports=[ ] params=[ ]\n}\n",
+        "dialect": {
+          "artifactKind": "s.procedural.generation3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
         "id": "rectangle-extrude-volume",
         "label": {
           "native": {
@@ -26814,7 +27881,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 18
+    "appChannelVersion": 19
   },
   "quotas": {},
   "contributions": {
@@ -27348,8 +28415,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "c1c233efd5a7d0718152f008b36a4850b28fd25dcae5a07c14a4e7cb41894b38",
-    "coreWasmSha256": "9dec5228d631d0a03578799c3433f1ef9fb5ae6548b1691047e56ec2f386908d",
-    "descriptorSha256": "9527333c27aabe456f3c0bc65c43b2cdaadf17885ed77b2d866e9d038e77e1fb"
+    "wasmSha256": "47eaf8f67651ec4e1e8856894d37f552d5c842a093c74b308c78b866006c0e48",
+    "coreWasmSha256": "a2d792bb4e9da35884a416b7a62f0b5895b359221f2df3654a120dc59b0f50ff",
+    "descriptorSha256": "f176de661edbd5f4c531f80d945c99013f6907b2e1f0049113edb62ca98e2b44"
   }
 }

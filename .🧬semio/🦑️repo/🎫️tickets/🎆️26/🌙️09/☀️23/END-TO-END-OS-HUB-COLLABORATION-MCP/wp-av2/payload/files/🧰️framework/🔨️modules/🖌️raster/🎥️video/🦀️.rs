@@ -1,11 +1,13 @@
 //! 🎥️ The video tier of the raster module: RGBA8 frames → H.264 (AVC) access units → ISO-BMFF (MP4)
 //! bytes, first-party and dependency-free on every target (including `wasm32-wasip2`).
 //!
-//! [`VideoEncoder`] is the interface every H.264 encoder answers to; [`AvcIntraPcmEncoder`] is the
-//! first-party one — every picture an IDR whose macroblocks are all `I_PCM` (ITU-T H.264 §7.3.5), so the
-//! encoder is exact (BT.601 limited-range 4:2:0 samples, no transform, no prediction) and every sample is
-//! a sync sample. [`write_avc_mp4`] muxes any encoder's samples (this one's or a platform encoder's, e.g.
-//! WebCodecs on the browser host) into a progressive MP4 (`moov` before `mdat`).
+//! [`VideoEncoder`] is the interface every H.264 encoder answers to; [`AvcPcmEncoder`] is the first-party
+//! one — every new picture an IDR whose macroblocks are all `I_PCM` (ITU-T H.264 §7.3.5, exact BT.601
+//! limited-range 4:2:0 samples, no transform, no prediction), every repeat of it a P picture whose
+//! macroblocks are all `P_Skip` (§7.3.4, a few bytes that decode to the reference unchanged), so a still
+//! slide costs one picture however long it plays. [`write_avc_mp4`] muxes any encoder's samples (this
+//! one's or a platform encoder's, e.g. WebCodecs on the browser host) into a progressive MP4 (`moov`
+//! before `mdat`).
 //!
 //! The TypeScript twin is `🟦️.ts` beside this file; both answer `🧫️fixtures/🔣️.json` byte for byte.
 //! <https://www.itu.int/rec/T-REC-H.264> · <https://www.iso.org/standard/83102.html> (ISO/IEC 14496-12) ·
@@ -96,7 +98,23 @@ pub enum VideoEncodeError {
     FrameBytes { expected: usize, actual: usize },
     ContainerTooLarge { bytes: u64 },
     Empty,
+    NothingToRepeat,
     Cancelled,
+}
+
+impl VideoEncodeError {
+    /// 🔤️ The fixture's error code for this refusal (the TypeScript twin's `VideoEncodeError.code`).
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::Dimensions { .. } => "dimensions",
+            Self::FrameRate { .. } => "frameRate",
+            Self::FrameBytes { .. } => "frameBytes",
+            Self::ContainerTooLarge { .. } => "containerTooLarge",
+            Self::Empty => "empty",
+            Self::NothingToRepeat => "nothingToRepeat",
+            Self::Cancelled => "cancelled",
+        }
+    }
 }
 
 impl std::fmt::Display for VideoEncodeError {
@@ -107,6 +125,7 @@ impl std::fmt::Display for VideoEncodeError {
             Self::FrameBytes { expected, actual } => write!(formatter, "video frame carries {actual} RGBA bytes, the stream needs {expected}"),
             Self::ContainerTooLarge { bytes } => write!(formatter, "video media data of {bytes} bytes exceeds the 32-bit MP4 chunk offset range"),
             Self::Empty => formatter.write_str("video has no frames"),
+            Self::NothingToRepeat => formatter.write_str("video frame repeats a picture before any picture was encoded"),
             Self::Cancelled => formatter.write_str("video encoding was cancelled"),
         }
     }
@@ -218,31 +237,44 @@ pub struct EncodedVideoSample {
     pub sync: bool,
 }
 
-/// 🔌️ The interface every H.264 encoder of this tier answers to: the decoder configuration it writes
-/// and one AVCC sample per RGBA8 frame. A platform encoder plugs in behind this trait; nothing outside
-/// the tier names its types.
+/// 🔌️ The interface every H.264 encoder of this tier answers to: the decoder configuration it writes,
+/// one AVCC sample per new RGBA8 picture and one per repeat of the previous picture. A platform encoder
+/// plugs in behind this trait; nothing outside the tier names its types.
 pub trait VideoEncoder {
     fn parameters(&self) -> VideoStreamParameters;
     fn configuration(&self) -> &AvcDecoderConfiguration;
     fn encode(&mut self, rgba: &[u8]) -> Result<EncodedVideoSample, VideoEncodeError>;
+    fn repeat(&mut self) -> Result<EncodedVideoSample, VideoEncodeError>;
 }
 
-/// 🧱️ First-party H.264 encoder: every picture one IDR slice of `I_PCM` macroblocks.
-pub struct AvcIntraPcmEncoder {
+/// 📐️ `log2_max_frame_num_minus4 = 0` in every SPS this tier writes: `frame_num` is 4 bits and wraps at 16.
+const AVC_FRAME_NUM_MODULUS: u32 = 16;
+
+/// 🧱️ First-party H.264 encoder: every new picture one IDR slice of `I_PCM` macroblocks, every repeat one
+/// P slice of `P_Skip` macroblocks that references the picture before it.
+pub struct AvcPcmEncoder {
     parameters: VideoStreamParameters,
     configuration: AvcDecoderConfiguration,
     idr_pic_id: u32,
+    frame_num: Option<u32>,
 }
 
-impl AvcIntraPcmEncoder {
+impl AvcPcmEncoder {
     /// 🏗️ Validates `parameters` and writes the stream's SPS and PPS.
     pub fn new(parameters: VideoStreamParameters) -> Result<Self, VideoEncodeError> {
         parameters.validate()?;
-        Ok(Self { configuration: AvcDecoderConfiguration { sps: sequence_parameter_set(&parameters), pps: picture_parameter_set() }, parameters, idr_pic_id: 0 })
+        Ok(Self { configuration: AvcDecoderConfiguration { sps: sequence_parameter_set(&parameters), pps: picture_parameter_set() }, parameters, idr_pic_id: 0, frame_num: None })
     }
 }
 
-impl VideoEncoder for AvcIntraPcmEncoder {
+fn avcc_sample(nal: &[u8], sync: bool) -> EncodedVideoSample {
+    let mut data = Vec::with_capacity(nal.len() + 4);
+    data.extend_from_slice(&(nal.len() as u32).to_be_bytes());
+    data.extend_from_slice(nal);
+    EncodedVideoSample { data, sync }
+}
+
+impl VideoEncoder for AvcPcmEncoder {
     fn parameters(&self) -> VideoStreamParameters {
         self.parameters
     }
@@ -258,10 +290,14 @@ impl VideoEncoder for AvcIntraPcmEncoder {
         }
         let slice = idr_pcm_slice(&self.parameters, rgba, self.idr_pic_id);
         self.idr_pic_id = (self.idr_pic_id + 1) % 2;
-        let mut data = Vec::with_capacity(slice.len() + 4);
-        data.extend_from_slice(&(slice.len() as u32).to_be_bytes());
-        data.extend_from_slice(&slice);
-        Ok(EncodedVideoSample { data, sync: true })
+        self.frame_num = Some(0);
+        Ok(avcc_sample(&slice, true))
+    }
+
+    fn repeat(&mut self) -> Result<EncodedVideoSample, VideoEncodeError> {
+        let frame_num = (self.frame_num.ok_or(VideoEncodeError::NothingToRepeat)? + 1) % AVC_FRAME_NUM_MODULUS;
+        self.frame_num = Some(frame_num);
+        Ok(avcc_sample(&p_skip_slice(&self.parameters, frame_num), false))
     }
 }
 
@@ -376,6 +412,24 @@ fn idr_pcm_slice(parameters: &VideoStreamParameters, rgba: &[u8], idr_pic_id: u3
         }
     }
     nal_unit(3, 5, &bits.trailing())
+}
+
+/// ⏯️ A P slice (§7.3.3) with no header overrides whose one `mb_skip_run` covers every macroblock: each
+/// `P_Skip` macroblock predicts a zero motion vector from its zero neighbours, so the picture decodes to
+/// its reference exactly (deblocking is off, as in every slice this tier writes).
+fn p_skip_slice(parameters: &VideoStreamParameters, frame_num: u32) -> Vec<u8> {
+    let mut bits = BitWriter::with_capacity(16);
+    bits.ue(0);
+    bits.ue(5);
+    bits.ue(0);
+    bits.bits(frame_num, 4);
+    bits.bit(0);
+    bits.bit(0);
+    bits.bit(0);
+    bits.se(0);
+    bits.ue(1);
+    bits.ue(parameters.macroblock_width() * parameters.macroblock_height());
+    nal_unit(2, 1, &bits.trailing())
 }
 //#endregion 🔖️Encoder
 
@@ -507,17 +561,18 @@ pub struct VideoFrameRun<'a> {
     pub frames: u32,
 }
 
-/// 📈️ Encodes `runs` with `encoder` and muxes the result, reporting `(frames done, frames total)` after
-/// every frame and stopping with [`VideoEncodeError::Cancelled`] as soon as `cancelled` answers true.
+/// 📈️ Encodes `runs` with `encoder` (each run's picture once, then a repeat per further frame) and muxes
+/// the result, reporting `(frames done, frames total)` after every frame and stopping with
+/// [`VideoEncodeError::Cancelled`] as soon as `cancelled` answers true.
 pub fn encode_video_runs(encoder: &mut dyn VideoEncoder, runs: &[VideoFrameRun<'_>], progress: &mut dyn FnMut(u32, u32), cancelled: &dyn Fn() -> bool) -> Result<Vec<u8>, VideoEncodeError> {
     let total: u32 = runs.iter().map(|run| run.frames).sum();
     let mut samples = Vec::with_capacity(total as usize);
     for run in runs {
-        for _ in 0..run.frames {
+        for frame in 0..run.frames {
             if cancelled() {
                 return Err(VideoEncodeError::Cancelled);
             }
-            samples.push(encoder.encode(run.rgba)?);
+            samples.push(if frame == 0 { encoder.encode(run.rgba)? } else { encoder.repeat()? });
             progress(samples.len() as u32, total);
         }
     }

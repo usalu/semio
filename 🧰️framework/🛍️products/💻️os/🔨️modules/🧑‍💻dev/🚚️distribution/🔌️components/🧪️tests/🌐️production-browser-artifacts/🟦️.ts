@@ -110,7 +110,5 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     await runNx();
     assert.equal(await readFile(join(root, ".compiler-invocations"), "utf8"), "build\nbuild\n");
     assert.notDeepEqual(await inventory(), cold);
-    console.log(`[DEBUG] Production Vite copies ${sources.length} declared artifact owners, runs relocated plugin and extension imports, excludes installation metadata and respects write:false PASS`);
-    console.log("[DEBUG] Generic production completion delegates to native Nx; warm and deleted-output restoration preserve every published byte without rerunning Vite, and a dependency byte change rebuilds PASS");
   } finally { await rm(root, { recursive: true, force: true }); }
 }

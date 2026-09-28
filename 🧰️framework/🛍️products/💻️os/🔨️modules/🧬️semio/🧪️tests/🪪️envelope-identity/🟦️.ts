@@ -15,5 +15,4 @@ export function testSemioEnvelopeIdentity(): void {
     assert.equal(validate(item.envelope), item.matches, item.name);
     assert.equal(matchesSemioEnvelope(item.envelope as SemioEnvelope, expected.id, expected.component as SemioEnvelope["component"], expected.version), item.matches, item.name);
   }
-  console.log(`[DEBUG] Semio exact owner/component/version admission agrees with ${vectors.cases.length} independent Ajv vectors`);
 }

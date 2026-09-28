@@ -63,7 +63,6 @@ export async function testWgpuWasmOutputs(workspace: string, output: string): Pr
     assert.equal(await value(join(root, "oracle/dist", `${fixture.crate}_bg.wasm`)), expected);
     for (const extension of [".js", "_bg.wasm"]) assert.deepEqual(readFileSync(join(root, "oracle/dist", `${fixture.crate}${extension}`)), readFileSync(join(root, `dist/wasm-${profile}`, `${fixture.crate}${extension}`)), "Renderer bytes must match the independent native Trunk oracle");
   };
-  console.log("[DEBUG] Native Trunk renderer fixture: cold compile, warm reuse and deleted-output restoration");
   let count = 0;
   for (const row of fixture.profiles) {
     await run(row.target); assert.equal(runs(), ++count);
@@ -101,6 +100,5 @@ export async function testWgpuWasmOutputs(workspace: string, output: string): Pr
   await assert.rejects(run("wasm"), /preserve the last successful renderer/);
   assert.deepEqual(files(published), retained);
   assert.ok(!existsSync(join(root, "state/staging")) || readdirSync(join(root, "state/staging")).length === 0);
-  console.log("[DEBUG] Native Nx restores executable WGPU WASM outputs for both profiles, matches independent Trunk bytes, reuses warm results and serves restored bytes through Vite and preserves publication after compiler failure PASS");
   rmSync(root, { recursive: true, force: true });
 }

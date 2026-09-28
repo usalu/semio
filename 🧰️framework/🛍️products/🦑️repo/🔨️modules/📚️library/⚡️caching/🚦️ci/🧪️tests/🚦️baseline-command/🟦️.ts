@@ -35,6 +35,5 @@ export async function testCiBaselineCommand(workspace: string, output: string): 
     assert.notEqual(invalid.status, 0); assert.match(invalid.stderr, /accepts only --full/);
     const parse = require("jsonc-parser").parse;
     for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) assert.equal(parse(readFileSync(join(workspace, file), "utf8")).configurations.filter((row: any) => row.command === `bun nx run ${fixture.project}:${fixture.target}`).length, 1);
-    console.log("[DEBUG] Native CI baseline executor preserves checkout identity, emits matching workflow outputs, rejects overrides and has one editor entry PASS");
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }

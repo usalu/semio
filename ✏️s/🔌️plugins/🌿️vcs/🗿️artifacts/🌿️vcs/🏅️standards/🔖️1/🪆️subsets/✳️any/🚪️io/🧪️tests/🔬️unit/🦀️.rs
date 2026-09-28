@@ -27,9 +27,20 @@ async fn csv_round_trips_and_a_third_party_reader_agrees() {
     assert_eq!(CsvIntoVcs::deserialize(&payload).await.expect("csv back").value, sample());
 }
 
+/// 🔮️ The third-party `calamine` reader (test-only) opens the exported workbook: one `Vcs` sheet, the header row and the
+/// values row beneath it from column A.
 #[semio_framework_async_macros::async_test]
-async fn xlsx_round_trips() {
+async fn xlsx_round_trips_and_a_third_party_reader_agrees() {
+    use calamine::Reader;
     let payload = VcsIntoXlsx::serialize(&sample()).await.expect("xlsx").value;
+    let snapshot = <semio_s_artifact_stdio_xlsx::XlsxSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack");
+    let bytes = semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&snapshot).expect("xlsx bytes");
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).expect("calamine opens the workbook");
+    assert_eq!(reference.sheet_names(), ["Vcs"]);
+    let range = reference.worksheet_range("Vcs").expect("the Vcs sheet");
+    let row = |at: u32| (0..6).map(|col| range.get_value((at, col)).map(|value| value.to_string()).unwrap_or_default()).collect::<Vec<_>>();
+    assert_eq!(row(0), crate::standards::v1::subsets::any::io::VCS_RECORD_COLUMNS);
+    assert_eq!(row(1), ["vcs.demo", "Release, final", "42", "line one\nline two", "open", "a;b"]);
     assert_eq!(XlsxIntoVcs::deserialize(&payload).await.expect("xlsx back").value, sample());
 }
 

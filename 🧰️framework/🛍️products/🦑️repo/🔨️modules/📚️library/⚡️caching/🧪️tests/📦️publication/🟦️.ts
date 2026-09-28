@@ -35,7 +35,6 @@ export async function testArtifactPublication(output: string): Promise<void> {
     await assert.rejects(() => stageArtifacts(staging, "foreign", files, { leaseDirectory }), /Unowned/);
     await assert.rejects(() => stageArtifacts(staging, fixture.owner, new Map([["../escape", files.values().next().value!]]), { leaseDirectory }), /Invalid artifact/);
     assert.deepEqual(readdirSync(staging).sort(), [".nx-artifact.json", "nested", "support.js"]);
-    console.log("[DEBUG] Artifact publication waits, cancels, preserves ownership and matches Python file content PASS");
   } finally { lease.release(); rmSync(root, { recursive: true, force: true }); }
   await testCargoArtifactPublication(output);
   testWasmArtifactPublication(output);
@@ -71,7 +70,6 @@ function testWasmArtifactPublication(output: string): void {
       assert.ok(target && !existsSync(target), "Compiler output must retire for every terminal outcome");
     } finally { rmSync(root, { recursive: true, force: true }); }
   }
-  console.log("[DEBUG] WASM compiler output retires on success, failure and missing output PASS");
 }
 
 /** 🦀️ Compares a captured executable with Cargo while retaining shared intermediates and retiring private outputs. */
@@ -97,6 +95,5 @@ async function testCargoArtifactPublication(output: string): Promise<void> {
     assert.equal(delivered.exitCode, 0, delivered.stderr.toString());
     assert.deepEqual(delivered.stdout, expected.stdout);
     assert.deepEqual(readdirSync(join(root, "dist")), ["build"], "Private Cargo outputs must retire after publication");
-    console.log("[DEBUG] Private Cargo publication matches native Cargo and retains shared compiler intermediates PASS");
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

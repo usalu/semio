@@ -27,5 +27,4 @@ export function testSnapshotReadRetirement(): void {
     });
     assert.deepEqual(actual, row.visits, row.name);
   }
-  console.log("[DEBUG] sparse read retirement matches Ajv and an independent JSON Patch occupied-slot model");
 }

@@ -31,7 +31,6 @@ const hostile = [
 for (const item of hostile) assert(!validate(item));
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/unknown/🦀️.rs"));
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/🦠️mutation/nested/🦀️.rs"));
-console.log(`[DEBUG] mutation-source-authority layoutCases=${layoutCases.length} accepted=${layoutCases.filter((item) => item.accepted).length} rejected=${layoutCases.filter((item) => !item.accepted).length} ajv=true hostileRejections=4`);
 
 const domainFixture = await Bun.file(new URL("../../🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json", import.meta.url)).json();
 const validateDomains = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityDomainsV1`)!;
@@ -46,4 +45,3 @@ for (const vector of domainFixture.cases) {
   assert.equal(independent, vector.accepted, vector.name);
   assert.equal(subject, independent, vector.name);
 }
-console.log(`[DEBUG] mutation-source-authority exactDomainCases=${domainFixture.cases.length} ajv=true independent=picomatch`);

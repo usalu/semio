@@ -76,7 +76,6 @@ test("eager policy vocabulary avoids workspace output reads while default lookup
     expect(() => actual.strictLookup()).toThrow(expected.missingActiveOutput);
     expect(workspaceReads).toBe(1);
   }
-  console.log("[DEBUG] root policy vocabulary matched both compilers; implicit workspace lookup remained strict");
 });
 
 test("field naming retains the actual Bun schema-extractor semantics", async () => {
@@ -89,13 +88,11 @@ test("field naming retains the actual Bun schema-extractor semantics", async () 
   const module = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString("base64")}`);
   for (const row of vector.fieldNames) expect(module.policySnakeToCamel(row.input)).toBe(row.output);
   for (const row of vector.fieldNames) expect(policySnakeToCamel(row.input)).toBe(row.output);
-  console.log("[DEBUG] Bun module field-name semantics", JSON.stringify(vector.fieldNames));
   const rust = `pub struct Fixture { ${vector.schemaFields.map((name: string) => `pub ${name}: String,`).join(" ")} }`;
   const protobuf = `message Fixture { ${vector.schemaFields.map((name: string, index: number) => `string ${name} = ${index + 1};`).join("\n")} }`;
   const expected = vector.schemaFields.map((name: string) => vector.fieldNames.find((row: { input: string }) => row.input === name).output);
   expect(policyExtractRustSchemaFields(rust, "Fixture").fields.map((field: { name: string }) => field.name)).toEqual(expected);
   expect(policyExtractProtobufSchemaFields(protobuf, "Fixture").fields.map((field: { name: string }) => field.name)).toEqual(expected);
-  console.log("[DEBUG] actual Rust and Protobuf policy field names", JSON.stringify(expected));
 });
 
 test("glue path discovery retains its declared targets with independent compiler parity", () => {

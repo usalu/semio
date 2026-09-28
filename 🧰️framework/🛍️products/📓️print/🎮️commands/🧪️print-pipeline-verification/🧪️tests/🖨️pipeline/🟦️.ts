@@ -36,7 +36,6 @@ export function verifyPrintToolchainManifest(): void {
   const validate = new (require("ajv").default)({ strict: false }).compile(schema);
   assert.ok(validate(manifest), JSON.stringify(validate.errors));
   assert.equal(new Set(manifest.platforms.map((row: { platform: string; architecture: string }) => `${row.platform}/${row.architecture}`)).size, manifest.platforms.length);
-  console.log("[DEBUG] Print toolchain manifest schema and exclusive platform targets PASS");
 }
 
 
@@ -143,7 +142,6 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
     assert.doesNotMatch(tableSource, /\\newcommand\{\\semio@table@long@header@(repeat|continuation)@three\}\[3\]\{%\s*\\hhline/);
 
   verifyVisualizationCoverage();
-  console.log("[DEBUG] print: unit tests passed");
 }
 
 /** 📥️ Verifies canonical macro materialization and pre-mutation collision rejection. */
@@ -204,7 +202,6 @@ export function verifyPrintMacroStaging(): void {
       assert.equal(readFileSync(join(destination, "sentinel"), "utf8"), collision.id);
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
-  console.log("[DEBUG] Print macro staging: schema, references and collision atomicity PASS");
 }
 
 /** 🧪️ Compiles the semantic graph owner twice through the production stage and independently reads its PDF. */
@@ -216,7 +213,6 @@ export async function verifyPrintMacroStagingNative(): Promise<void> {
     for (const [index, output] of outputs.entries()) await publishPrintArtifact({ id: `graph-macro-native-${index + 1}`, sourceRoot, texPath: "🧪️control.tex", sources: ["🧪️control.tex"], output, owner: `@semio-tech/print:test-macro-staging-${index + 1}`, dark: false });
     const pdfs = outputs.map(output => readFileSync(join(output, "🧪️control.pdf")));
     assert.deepEqual(pdfs[0], pdfs[1]);
-    console.log(`[DEBUG] Print macro staging PDF SHA-256 ${createHash("sha256").update(pdfs[0]!).digest("hex")}`);
     const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
     (globalThis as { DOMMatrix?: unknown }).DOMMatrix ??= canvas.DOMMatrix;
     const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs"), pdf = await getDocument({ data: new Uint8Array(pdfs[0]!) }).promise;
@@ -230,7 +226,6 @@ export async function verifyPrintMacroStagingNative(): Promise<void> {
       assert.ok(text.join(" ").replace(/\s+/g, " ").includes("Graph macro staging reached"));
     } finally { await pdf.destroy(); }
   } finally { rmSync(root, { recursive: true, force: true }); }
-  console.log("[DEBUG] Print macro staging: two deterministic native PDFs and independent PDF.js marker PASS");
 }
 
 /** 📖️ Consumes each restored document through the independent PDF.js page and text reader. */
@@ -254,11 +249,9 @@ async function verifyPrintPdfs(templates: readonly { id: string; texPath: string
       assert.ok(texts.join(" ").trim(), `${name}: no readable text`);
       if (template.id === "viz-api") for (const text of contract.vizText) assert.ok(texts.join(" ").includes(text), `${name}: missing ${text}`);
       count++;
-      console.log(`[DEBUG] Print PDF ${name}: ${pdf.numPages} pages consumed`);
     } finally { await pdf.destroy(); }
   }
   assert.equal(count, expected[collection]);
-  console.log(`[DEBUG] Print ${collection}: ${count} prepared PDFs parsed with PDF.js`);
 }
 
 /** 🧪️ Verifies the light and dark PDFs prepared by explicit Nx document prerequisites. */
@@ -304,7 +297,6 @@ export async function verifyPrintFontStaging(output = outputRoot): Promise<void>
     await assert.rejects(() => stagePrintFonts(root), /TTF/);
     assert.deepEqual(readFileSync(join(staged, catalog[0].texFilename)), prior);
   } finally { rmSync(root, { recursive: true }); }
-  console.log("[DEBUG] Print fonts: schema, native loading, byte identity and atomic replacement PASS");
 }
 
 /** 🪶️ Independently resolves production imports without loading generators or repository tests. */
@@ -319,7 +311,6 @@ export async function verifyPrintCommandBoundaries(): Promise<void> {
     const external = [...new Set(Object.values(result.metafile!.outputs).flatMap(output => output.imports).filter(item => item.external && !/^(node|bun):/u.test(item.path) && item.path !== "bun").map(item => item.path.startsWith("@") ? item.path.split("/").slice(0, 2).join("/") : item.path.split("/")[0]))].sort();
     assert.deepEqual(external, contract.externalDependencies[entry], `${entry}: external imports`);
   }
-  console.log("[DEBUG] Print production command boundaries: esbuild source graph PASS");
 }
 
 /** 📄️ Verifies document ownership against schema, gallery fixtures and Nx inference. */
@@ -354,7 +345,6 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
     assert.ok(target.dependsOn.includes("deps-tectonic"));
     assert.ok(target.dependsOn.includes("deps-tex"));
   }
-  console.log("[DEBUG] Print catalog schema, independent gallery identities and 87 exclusive Nx document owners PASS");
 }
 
 /** 📚️ Exercises locked range acquisition with language-neutral corruption vectors. */
@@ -384,5 +374,4 @@ export async function verifyPrintBundleContract(output = outputRoot): Promise<vo
       assert.equal(readdirSync(dirname(api.printBundleDirectory(root))).some(name => name.startsWith(".prepare-")), false);
     }
   } finally { globalThis.fetch = original; rmSync(root, { recursive: true }); }
-  console.log("[DEBUG] Print bundle schema, pre-cancel and four corrupt-acquisition vectors PASS");
 }

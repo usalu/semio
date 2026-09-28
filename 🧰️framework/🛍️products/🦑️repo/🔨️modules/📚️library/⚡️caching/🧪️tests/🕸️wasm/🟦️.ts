@@ -48,6 +48,5 @@ export async function testWasmOptimizer(workspace: string, output: string): Prom
       assert.equal(saturated, row.expected);
       assert.equal((instance.exports.saturate as (value: number) => number)(row.value), saturated);
     }
-    console.log("[DEBUG] Release/custom optimizer metadata and native Binaryen bulk-memory/saturating conversion execution PASS");
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }

@@ -192,5 +192,4 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   for (const [path, input] of Object.entries(producer.files)) if (input.origin === "current-compiler-context") expect(producer.read(path)).toMatchObject({ sha256: input.sha256, mode: input.mode });
   mkdirSync(join(owner, "📦️producer"));
   writeFileSync(join(owner, "📦️producer/🔣️.json"), JSON.stringify({ collectorSha256: producer.sourceSha256, modules: producer.modules, inputs: Object.entries(producer.files).map(([path, input]) => ({ path, sha256: input.sha256, mode: input.mode, origin: input.origin })) }, null, 2) + "\n", { flag: "wx" });
-  console.log("[DEBUG] Markdown and escaped JSON source transaction", JSON.stringify({ owner, moves: current.moves.length, historyEdits: 0, liveEdits: 1, rollback: "verified", retry: "committed", secondPlan: "empty" }));
 }, 15_000);

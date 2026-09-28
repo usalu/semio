@@ -1,7 +1,8 @@
 """🪞️ AV2: mirrors the working tree into the AV scratch overlay (gitignored, inherited from AV1): every tracked file plus the
 gitignored generated sources a build needs (`🤖️generated/`, `🔤️tokens/`, standalone `Cargo.lock`s), copying only files whose
 size or mtime differ, and removing overlay files the tree no longer has (except the slice's own authored files listed in
-`payload/manifest.json` "new" and anything under build/target dirs).
+`payload/manifest.json` "new" and anything under build/target dirs). The slice's EDITED files (manifest "edited") are never
+overwritten; the sync lists the ones whose live copy drifted from the patch base (`BASE`) so they can be re-based.
 
 Usage: python3 av2-overlay-sync.py [--dry-run]
 """
@@ -11,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = "/Users/ueli/Documents/semio"
 DEST = os.path.join(ROOT, ".🧬semio/🌐hub/s13-av1-overlay")
 HERE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.join(ROOT, ".🧬semio/🌐hub/s14b-av2-base")
 KEEP_IGNORED = ("🤖️generated/", "🔤️tokens/", "Cargo.lock")
 SKIP_IGNORED = ("node_modules/", "/target/", "🧑‍💻dev/🔌️plugin-modules", "🧑‍💻dev/📤️distribution", "🧑‍💻dev/🧩️extension-modules", ".semio-", "/pkg/", "__pycache__", "/bin/", "/obj/", "/dist/", ".🧬semio/", ".tmp-ticket")
 SKIP_WALK = {"target", "node_modules", ".git", ".nx", "dist", ".🧬semio", ".tmp-ticket"}
@@ -65,13 +67,17 @@ def main() -> None:
     ignored = ignored_sources()
     wanted = set(tracked) | set(ignored)
     manifest = os.path.join(HERE, "payload", "manifest.json")
-    authored = set(json.load(open(manifest, encoding="utf-8"))["new"]) if os.path.exists(manifest) else set()
+    payload = json.load(open(manifest, encoding="utf-8")) if os.path.exists(manifest) else {"new": [], "edited": []}
+    authored = set(payload["new"])
+    edited = set(payload["edited"])
+    drifted = [rel for rel in sorted(edited) if not os.path.exists(os.path.join(BASE, rel)) or open(os.path.join(ROOT, rel), "rb").read() != open(os.path.join(BASE, rel), "rb").read()]
+    wanted -= edited
     stale = []
     for directory, dirs, files in os.walk(DEST):
         dirs[:] = [d for d in dirs if d not in SKIP_WALK]
         for name in files:
             rel = os.path.relpath(os.path.join(directory, name), DEST)
-            if rel not in wanted and rel not in authored and not os.path.exists(os.path.join(ROOT, rel)):
+            if rel not in wanted and rel not in authored and rel not in edited and not os.path.exists(os.path.join(ROOT, rel)):
                 stale.append(rel)
     if dry:
         print(f"tracked={len(tracked)} ignored_sources={len(ignored)} stale={len(stale)} (dry run)")
@@ -82,7 +88,9 @@ def main() -> None:
         copied = sum(pool.map(copy, sorted(wanted)))
     for rel in stale:
         os.remove(os.path.join(DEST, rel))
-    print(f"tracked={len(tracked)} ignored_sources={len(ignored)} copied={copied} removed_stale={len(stale)}")
+    print(f"tracked={len(tracked)} ignored_sources={len(ignored)} copied={copied} removed_stale={len(stale)} edited_kept={len(edited)} drifted={len(drifted)}")
+    for rel in drifted:
+        print(f"  drifted {rel}")
 
 
 if __name__ == "__main__":

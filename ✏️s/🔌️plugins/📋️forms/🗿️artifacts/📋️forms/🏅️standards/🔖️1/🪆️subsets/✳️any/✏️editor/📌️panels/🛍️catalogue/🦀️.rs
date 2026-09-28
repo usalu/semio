@@ -58,7 +58,7 @@ fn action_row(id: &str, label: &str, icon: &str, action: (semio_framework_plugin
 }
 
 pub fn render(config: &FormsConfig, view: &semio_framework_plugin::ViewModel, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let labels = crate::editor::forms::forms_play_labels(view);
+    let labels = crate::editor::forms::terminology::forms_play_labels(view);
     let contributions = parse_contributions(config);
     let kinds = catalogue_kinds(&contributions, view);
     let text_args = crate::editor::forms::ui_value_map([("kind", crate::editor::forms::ui_value_text("text")?)])?;
