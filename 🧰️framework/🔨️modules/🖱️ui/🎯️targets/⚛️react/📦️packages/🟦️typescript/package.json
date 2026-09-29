@@ -12,6 +12,7 @@
   "exports": {
     ".": "./🟦️.tsx",
     "./runtime": "./🟦️.tsx",
+    "./i18n": "../../🌐️i18n/🟦️.ts",
     "./test": "./🟦️.ts",
     "./components.json": "../../../../components.json",
     "./🧵️.css": "../../../../🧵️styles/🎨️.css",

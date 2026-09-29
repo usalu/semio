@@ -61,7 +61,7 @@ export async function prepareTectonic(workspace = getWorkspaceRoot(), signal?: A
     console.log(`[print-toolchain] Verified ${bytes} archive bytes; extracting`);
     const extracted = join(temporary, "extracted"); mkdirSync(extracted);
     await new Promise<void>((accept, reject) => {
-      const child = spawn("tar", ["-xf", archive, "-C", extracted], { signal, stdio: "inherit" });
+      const child = spawn(process.platform === "win32" ? join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "tar", ["-xf", join("..", distribution.archive)], { cwd: extracted, signal, stdio: "inherit" });
       let failure: Error | undefined;
       child.once("error", (error) => { failure = error; });
       child.once("close", (code) => failure ? reject(failure) : code === 0 ? accept() : reject(new Error(`Tectonic archive extraction failed: ${code}`)));

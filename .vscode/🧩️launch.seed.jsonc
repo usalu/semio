@@ -1070,6 +1070,117 @@
         "order": 213.5
       }
     },
+    {
+      "name": "🛠️dev🎓️teaching🏛️architecture❓️quiz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
+        "PROCTOR_PORT": "8791"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.6
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6061)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🎓️teaching🛂️proctor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCTOR_PORT": "8791"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.61
+      }
+    },
+    {
+      "name": "🔁️rebuild🎓️teaching🛂️proctor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:rebuild",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.611
+      }
+    },
+    {
+      "name": "🧪️test❓️quiz🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.63
+      }
+    },
+    {
+      "name": "🧪️test❓️quiz⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz-react:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.64
+      }
+    },
+    {
+      "name": "🧪️test❓️quiz🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.65
+      }
+    },
+    {
+      "name": "🧪️test🎓️teaching🛂️proctor🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.66
+      }
+    },
+    {
+      "name": "🧪️test🎓️teaching🏛️architecture❓️quiz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.67
+      }
+    },
+    {
+      "name": "🛠️dev❓️quiz⚛️react🪁️typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz-react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.68
+      }
+    },
     "@generated:generator:react",
     "@generated:koordinator:react",
     "@generated:aussuchen:react",
@@ -2445,6 +2556,72 @@
       "presentation": {
         "group": "4_gate",
         "order": 11
+      }
+    },
+    {
+      "name": "📦️build🎓️teaching🏛️architecture❓️quiz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.1
+      }
+    },
+    {
+      "name": "📦️build🎓️teaching🛂️proctor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.2
+      }
+    },
+    {
+      "name": "📦️build🎓️teaching🏛️architecture❓️quiz🐳️docker-image",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:docker-image-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.3
+      }
+    },
+    {
+      "name": "✅️check🎓️teaching🏛️architecture❓️quiz📚️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.1
+      }
+    },
+    {
+      "name": "✅️check🎓️teaching🛂️proctor📚️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.15
+      }
+    },
+    {
+      "name": "⚖️gate🎓️teaching🏛️architecture❓️quiz🐳️docker-image",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:docker-image-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.2
       }
     },
     {
@@ -4551,6 +4728,15 @@
       "presentation": {
         "group": "3_dev",
         "order": 386.16
+      }
+    },
+    {
+      "name": "🧭️compound🎓️teaching🏛️architecture❓️quiz🛂️proctor",
+      "configurations": ["🛠️dev🎓️teaching🛂️proctor", "🛠️dev🎓️teaching🏛️architecture❓️quiz"],
+      "stopAll": true,
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.62
       }
     }
   ],

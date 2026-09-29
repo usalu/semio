@@ -1,0 +1,109 @@
+{
+  "schema": "semio.quiz.radar-geometry/v1",
+  "description": "Spider diagram vertices: spoke i of n points at 2πi/n from twelve o'clock, clockwise; a value sits at (value − min) / (max − min) of the radius, clamped to [0, 1]; a vertex is (cx + r·f·sin a, cy − r·f·cos a) in SVG coordinates (y down).",
+  "frame": { "cx": 120, "cy": 120, "radius": 72 },
+  "axes": [
+    { "id": "heating", "min": 0, "max": 200 },
+    { "id": "cooling", "min": 0, "max": 100 },
+    { "id": "daylight", "min": 0, "max": 1 },
+    { "id": "mass", "min": 100, "max": 1000 }
+  ],
+  "profiles": [
+    {
+      "id": "inside",
+      "values": { "heating": 15, "cooling": 5, "daylight": 0.8, "mass": 550 },
+      "fractions": [0.075, 0.05, 0.8, 0.5],
+      "points": [
+        [120, 114.6],
+        [123.6, 120],
+        [120, 177.6],
+        [84, 120]
+      ]
+    },
+    {
+      "id": "clamped",
+      "values": { "heating": 250, "cooling": -10, "daylight": 0.25, "mass": 100 },
+      "fractions": [1, 0, 0.25, 0],
+      "points": [
+        [120, 48],
+        [120, 120],
+        [120, 138],
+        [120, 120]
+      ]
+    }
+  ],
+  "wrapsDescription": "Label wrapping under a monospace measure (every code point one unit wide): white space collapses, lines break at white space, then after hyphens, and a word is split only when it alone is wider than the width, each split ending with a hyphen, carrying at least three code points over when the word has six or more, and moving back by up to four code points to just before a letter that is a consonant between a letter and a vowel (vowels: aeiouy and their accented forms, æ, ø, œ, either case); a line keeps at least one code point.",
+  "wraps": [
+    { "id": "spaces", "label": "Net energy costs for heating", "width": 10, "lines": ["Net energy", "costs for", "heating"] },
+    { "id": "after-hyphen", "label": "Netto-Energiekosten für Heizung", "width": 12, "lines": ["Netto-", "Energiekos-", "ten für", "Heizung"] },
+    { "id": "split-word", "label": "Wärmerückgewinnung", "width": 6, "lines": ["Wärme-", "rück-", "gewin-", "nung"] },
+    { "id": "hyphen-then-split", "label": "(nach PV-Gutschrift)", "width": 8, "lines": ["(nach", "PV-", "Gutsch-", "rift)"] },
+    { "id": "double-hyphen", "label": "Wert--Spanne", "width": 7, "lines": ["Wert--", "Spanne"] },
+    { "id": "fits", "label": "Heizwärmebedarf", "width": 40, "lines": ["Heizwärmebedarf"] },
+    { "id": "white-space", "label": "  Kühlbedarf \t für  26 °C ", "width": 40, "lines": ["Kühlbedarf für 26 °C"] },
+    { "id": "empty", "label": "   ", "width": 5, "lines": [] },
+    { "id": "one-per-line", "label": "abc", "width": 1, "lines": ["a-", "b-", "c"] },
+    { "id": "short-word-split", "label": "abcde", "width": 3, "lines": ["ab-", "cde"] },
+    { "id": "syllable", "label": "Lüftungswärmeverlust", "width": 18, "lines": ["Lüftungswärmever-", "lust"] },
+    { "id": "no-vowels", "label": "WWWWWWWWWW", "width": 6, "lines": ["WWWWW-", "WWWWW"] },
+    { "id": "astral", "label": "𝑥𝑦𝑧 axis", "width": 3, "lines": ["𝑥𝑦𝑧", "ax-", "is"] }
+  ],
+  "layoutsDescription": "Diagram layouts for a width and a label font size (user units = CSS pixels): every label box lies inside the view box, no line is wider than its box, label boxes keep clear of the circle and of each other, the circle lies inside the view box, the radius stays within its range and the font size is never scaled.",
+  "layouts": [
+    {
+      "id": "demand-de-phone",
+      "width": 287,
+      "fontSize": 13.6,
+      "labels": ["Heizwärmebedarf", "Kühlbedarf für 26 °C", "Lüftungswärmeverlust (Undichtheit plus Lüftung nach Wärmerückgewinnung)", "Netto-Energiekosten für Heizung, Warmwasser und Hilfsenergie (nach PV-Gutschrift)"]
+    },
+    {
+      "id": "demand-de-tablet",
+      "width": 309,
+      "fontSize": 13.6,
+      "labels": ["Heizwärmebedarf", "Kühlbedarf für 26 °C", "Lüftungswärmeverlust (Undichtheit plus Lüftung nach Wärmerückgewinnung)", "Netto-Energiekosten für Heizung, Warmwasser und Hilfsenergie (nach PV-Gutschrift)"]
+    },
+    {
+      "id": "demand-de-desktop",
+      "width": 512,
+      "fontSize": 13.6,
+      "labels": ["Heizwärmebedarf", "Kühlbedarf für 26 °C", "Lüftungswärmeverlust (Undichtheit plus Lüftung nach Wärmerückgewinnung)", "Netto-Energiekosten für Heizung, Warmwasser und Hilfsenergie (nach PV-Gutschrift)"]
+    },
+    {
+      "id": "demand-en-phone",
+      "width": 287,
+      "fontSize": 13.6,
+      "labels": ["Heating demand", "Cooling demand to keep 26 °C", "Ventilation heat loss (air leakage plus ventilation after heat recovery)", "Net energy costs for heating, hot water and auxiliary energy (after PV credit)"]
+    },
+    {
+      "id": "demand-de-large-text",
+      "width": 287,
+      "fontSize": 20.4,
+      "labels": ["Heizwärmebedarf", "Kühlbedarf für 26 °C", "Lüftungswärmeverlust (Undichtheit plus Lüftung nach Wärmerückgewinnung)", "Netto-Energiekosten für Heizung, Warmwasser und Hilfsenergie (nach PV-Gutschrift)"]
+    },
+    {
+      "id": "five-axes",
+      "width": 320,
+      "fontSize": 13.6,
+      "labels": ["Primärenergiebedarf nicht erneuerbar", "Endenergiebedarf Strom (Wärmepumpe und Hilfsenergie)", "Treibhausgasemissionen im Betrieb", "Sommerlicher Wärmeschutz (Übertemperaturgradstunden)", "Tageslichtquotient im Raummittel"]
+    },
+    {
+      "id": "nine-axes",
+      "width": 360,
+      "fontSize": 13.6,
+      "labels": [
+        "Wärme",
+        "Kälte",
+        "Lüftungswärmeverlust",
+        "Transmissionswärmeverlust über Außenwände und Fenster",
+        "Solare Gewinne",
+        "Interne Wärmegewinne durch Personen und Geräte",
+        "Speichermasse",
+        "Luftdichtheit n50",
+        "Hilfsenergie für Pumpen und Ventilatoren"
+      ]
+    },
+    { "id": "long-word", "width": 240, "fontSize": 13.6, "labels": ["Donaudampfschifffahrtsgesellschaftskapitänsmütze", "Kurz", "Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz", "Mittel lang"] },
+    { "id": "empty-labels", "width": 300, "fontSize": 13.6, "labels": ["", "", ""] },
+    { "id": "short-and-wide", "width": 900, "fontSize": 13.6, "labels": ["A", "B", "C"] }
+  ]
+}

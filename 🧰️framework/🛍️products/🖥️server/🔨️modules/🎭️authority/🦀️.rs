@@ -267,7 +267,9 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
     ///    exactly-once law, and it is the only reason a client may retry a timed-out submission.
     /// 3. **Authorize** — [`PolicyPoint::CommandAdmission`](crate::contract::PolicyPoint); a deny
     ///    becomes [`Rejection::Unauthorized`] and the actor is never even placed.
-    /// 4. **Place** — acquire the activation and its fencing lease.
+    /// 4. **Place** — acquire the activation and its fencing lease; a fresh activation is first
+    ///    rehydrated from its snapshot and durable stream, so a restarted authority decides
+    ///    against the state its history implies and appends after the last committed sequence.
     /// 5. **Fence the revision** — a stated `expected_revision` that disagrees with the activation
     ///    yields [`Rejection::RevisionConflict`] carrying the actual revision, so the client can
     ///    rebase rather than guess.
@@ -306,10 +308,17 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
         //#endregion 🔖️Authorize
 
         //#region 🔖️Place
+        let placed = self.directory.is_active(&envelope.target);
         let activation = match self.directory.activate(envelope.target.clone(), &self.holder) {
             Ok(activation) => activation,
             Err(error) => return unavailable(&envelope, Revision(0), now, &error.to_string()),
         };
+        if !placed {
+            if let Err(error) = rehydrate(&self.store, &registration.decider, &envelope.target, activation).await {
+                self.directory.passivate(&envelope.target);
+                return unavailable(&envelope, Revision(0), now, &error.to_string());
+            }
+        }
         //#endregion 🔖️Place
 
         //#region 🔖️Fence
@@ -369,6 +378,24 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
 
 /// 🏷️ The holder name a single-process authority leases actors under.
 const HOLDER: &str = "authority";
+
+/// 💧️ Rebuild a freshly placed activation from the durable store before its first decision: the
+/// newest snapshot (if any) seeds the state at its revision, and every later event is folded
+/// through the decider in order. Without it a restarted authority would decide against an empty
+/// state and append from sequence one onto a stream that already holds history.
+async fn rehydrate<S: AuthorityStore, D: Decider>(store: &S, decider: &D, actor: &ActorKey, activation: &mut Activation) -> Result<(), crate::storage::StorageError> {
+    if let Some((revision, bytes)) = store.snapshot(actor).await? {
+        activation.state = ActorState { revision, bytes };
+        activation.mailbox_seq = revision.0;
+        activation.snapshot_version = revision.0;
+    }
+    for event in store.events_since(actor, activation.mailbox_seq).await? {
+        decider.evolve(&mut activation.state, &event).await;
+        activation.mailbox_seq = event.seq;
+        activation.state.revision = Revision(event.seq);
+    }
+    Ok(())
+}
 
 /// 🧾️ The receipt describing where this command left the actor.
 fn acknowledge(envelope: &CommandEnvelope, revision: Revision, now: HybridLogicalClock) -> CommandReceipt {

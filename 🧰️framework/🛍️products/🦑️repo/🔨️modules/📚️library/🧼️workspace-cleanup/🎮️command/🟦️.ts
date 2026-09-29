@@ -7,6 +7,7 @@ import { orchestratorBudgetOpts, runCmd, runCmdStatus } from "../../🏃️proce
 import { processTableSnapshot } from "../../🏃️process/📋️process-table/🟦️.ts";
 import { Script } from "../../🏃️process/🧭️routing/🟦️.ts";
 import { runTaxonomyCliWorkflow } from "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts";
+import { cleanCollectEmptyFolderRemovals } from "../🔍️empty-folders/🟦️.ts";
 import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";
 import { cleanProtectedPrefixes, cleanProjectRemovals, CLEAN_PROTECTION_VIEW } from "../🛡️protection/🟦️.ts";
 import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts";
@@ -41,6 +42,32 @@ export class CleanScript extends Script {
       console.log(`[clean marker-only-folders] ${dry ? "dry-run" : "applied"} removals=${removals.length} bytes=${bytes}`);
       for (const row of removals) console.log(`[clean marker-only-folders] ${dry ? "would-remove" : "removed"} ${row.path} (${row.bytes})`);
       for (const path of blocked) console.log(`[clean marker-only-folders] protected ${path}`);
+      return;
+    }
+    if (segments[0] === "empty-folders") {
+      const protectedPrefixes = cleanProtectedPrefixes(this.root);
+      let totalBytes = 0;
+      let totalRemovals = 0;
+      const blocked: string[] = [];
+      for (;;) {
+        const pending = cleanCollectEmptyFolderRemovals(this.root, protectedPrefixes);
+        if (pending.length === 0) break;
+        const removals = cleanProjectRemovals(this.root, pending, protectedPrefixes, CLEAN_PROTECTION_VIEW, (path) => blocked.push(path));
+        let passBytes = 0;
+        let passCount = 0;
+        for (const row of removals) {
+          if (cleanRemovePath(this.root, resolve(this.root, row.path), dry, protectedPrefixes)) {
+            passBytes += row.bytes;
+            passCount += 1;
+            console.log(`[clean empty-folders] ${dry ? "would-remove" : "removed"} ${row.path} (${row.bytes})`);
+          } else blocked.push(row.path);
+        }
+        totalBytes += passBytes;
+        totalRemovals += passCount;
+        if (passCount === 0) break;
+      }
+      console.log(`[clean empty-folders] ${dry ? "dry-run" : "applied"} removals=${totalRemovals} bytes=${totalBytes}`);
+      for (const path of blocked) console.log(`[clean empty-folders] protected ${path}`);
       return;
     }
     if (segments[0] === "test") {

@@ -1,0 +1,10 @@
+name = "RealPartsOfPowers"
+defaultTargets = ["RealPartsOfPowers"]
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.34.0"
+
+[[lean_lib]]
+name = "RealPartsOfPowers"

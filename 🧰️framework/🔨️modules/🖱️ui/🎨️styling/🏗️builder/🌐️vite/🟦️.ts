@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -32,7 +32,7 @@ import {
 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset, type MeshDeliveryCatalog } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
-import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
+import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 import faviconDelivery from "../../🌐️favicon/🔣️.json" with { type: "json" };
 import { playgroundIframeEmbedHeadersPlugin } from "../../🌐️iframe/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -52,7 +52,7 @@ export {
 };
 
 //#region 🔖️ViteElementsAssets
-/** 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
+/** @emoji 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
 export function playgroundStaticSiteBuildOptions(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
   return {
     target: "esnext",
@@ -62,7 +62,7 @@ export function playgroundStaticSiteBuildOptions(overrides?: OwnedBuildConfig["b
   };
 }
 
-/** 🚀️ Production Vite `build` defaults: minify, strip console/debugger, no sourcemaps. */
+/** @emoji 🚀️ Production Vite `build` defaults: minify, strip console/debugger, no sourcemaps. */
 export function semioViteProductionBuild(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
   return {
     target: "es2022",
@@ -79,18 +79,18 @@ export function semioViteProductionBuild(overrides?: OwnedBuildConfig["build"]):
   };
 }
 
-/** 🧭️ Vite's URL prefix for prebundled chunks under `cacheDir`: root-relative inside `root`, `/@fs/` outside. https://vite.dev/config/shared-options.html#cachedir */
+/** @emoji 🧭️ Vite's URL prefix for prebundled chunks under `cacheDir`: root-relative inside `root`, `/@fs/` outside. https://vite.dev/config/shared-options.html#cachedir */
 export function playgroundOptimizedDepUrlPrefix(root: string, cacheDir: string): string {
   const path = relative(root, cacheDir).replaceAll("\\", "/");
   return path.startsWith("..") || isAbsolute(path) ? `/@fs/${resolve(cacheDir).replaceAll("\\", "/").replace(/^\/+/, "")}/deps/` : `/${path}/deps/`;
 }
 
-/** 🔗️ True when a percent-encoded request targets this server's Vite prebundled chunks. */
+/** @emoji 🔗️ True when a percent-encoded request targets this server's Vite prebundled chunks. */
 export function isPlaygroundOptimizedDepUrl(url: string, prefix: string): boolean {
   try { return decodeURI(url).includes(prefix); } catch { return false; }
 }
 
-/** 🧱️ Stubs vitest and testing-library when test regions enter the browser graph. */
+/** @emoji 🧱️ Stubs vitest and testing-library when test regions enter the browser graph. */
 export function playgroundVitestDevStubPlugin(): OwnedBuildPlugin {
   const vitestStubId = "\0playground-vitest-dev-stub";
   const testingLibraryStubId = "\0playground-testing-library-dev-stub";
@@ -203,7 +203,7 @@ function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, su
   return candidates;
 }
 
-/** 🧱️ Stubs missing wasm pkg imports until `nx run …:wasm` artifacts exist. */
+/** @emoji 🧱️ Stubs missing wasm pkg imports until `nx run …:wasm` artifacts exist. */
 export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlugin {
   return {
     name: "playground-flow-wasm-dev-stub",
@@ -242,7 +242,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlu
   };
 }
 
-/** 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
+/** @emoji 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
 export function playgroundPlaywrightDevStubPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-playwright-dev-stub",
@@ -260,7 +260,7 @@ export function playgroundPlaywrightDevStubPlugin(): OwnedBuildPlugin {
   };
 }
 
-/** 🔄️ Full-reload connected clients when a stale optimized-dep chunk returns 504. */
+/** @emoji 🔄️ Full-reload connected clients when a stale optimized-dep chunk returns 504. */
 export function playgroundStaleOptimizeDepPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-stale-optimize-dep",
@@ -395,11 +395,11 @@ export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<Playgro
 //#endregion 🔖️MeshCollectionAssetPlugin
 
 //#region 🔖️HostHtmlPlugin
-/** 🎬️ Inline shell paint before Tailwind finishes compiling the play stylesheet. */
+/** @emoji 🎬️ Inline shell paint before Tailwind finishes compiling the play stylesheet. */
 export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
   "html{color-scheme:light dark}html,body,#root{height:var(--ui-available-height,100dvh);margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
 
-/** 📐 Sizes the host to the available viewport before first paint.
+/** @emoji 📐 Sizes the host to the available viewport before first paint.
  *
  * `100vh` is the screen. On Android Firefox the browser navbar is drawn over that screen and a
  * `100vh` page with `overflow: hidden` is clipped underneath it. `visualViewport.height` is the
@@ -408,7 +408,7 @@ export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
 export const PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT = `(function(){var last="";function sync(){var vv=window.visualViewport;var h=vv&&vv.height>0?vv.height:window.innerHeight;if(!(h>0)||!isFinite(h))return;var px=Math.round(h)+"px";if(px===last)return;last=px;document.documentElement.style.setProperty("--ui-available-height",px)}sync();var vv=window.visualViewport;if(vv&&vv.addEventListener){vv.addEventListener("resize",sync);vv.addEventListener("scroll",sync)}window.addEventListener("resize",sync);window.addEventListener("orientationchange",sync)})();`;
 
 /**
- * 🌓️ Synchronous appearance bootstrap for every semio host `🌐️.html` head.
+ * @emoji 🌓️ Synchronous appearance bootstrap for every semio host `🌐️.html` head.
  *
  * Reads the ONE durable document the OS shell actually writes — `localStorage["semio.os.config"]`,
  * whose `preferences["os.config.ui-preferences"]` holds the append-only UI-preference event log — and
@@ -428,11 +428,11 @@ export const PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT = `(function(){var last="";fun
  */
 export const PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT = `(function(){var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)");var a=null;try{var c=JSON.parse(localStorage.getItem("semio.os.config")||"null");var l=c&&c.preferences&&c.preferences["os.config.ui-preferences"];var g=l?JSON.parse(l):null;if(g&&g.version===1&&g.events&&g.events.length){for(var i=0;i<g.events.length;i++){var e=g.events[i];if(e&&e.mutation==="setAppearance")a=e.appearance||null}}}catch(e){}var dark=a==="dark"||(a!=="light"&&m.matches);d.classList.toggle("dark",dark);d.dataset.uiAppearance=dark?"dark":"light";d.style.colorScheme=dark?"dark":"light";if(document.body){document.body.style.colorScheme=dark?"dark":"light";document.body.style.backgroundColor=dark?"#001117":"#f7f3e3";document.body.style.color=dark?"#f7f3e3":"#001117";}})();`;
 
-/** 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */
+/** @emoji 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */
 export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal(){document.documentElement.dataset.semioStyled="ready"}var link=document.getElementById("semio-play-styles");if(link){if(link.sheet)reveal();else link.addEventListener("load",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();`;
 
 /**
- * 🎨️ Synchronous active-theme bootstrap: reapplies the active CUSTOM theme's colors before
+ * @emoji 🎨️ Synchronous active-theme bootstrap: reapplies the active CUSTOM theme's colors before
  * first paint so a user-authored theme does not flash the semio defaults. Runs after
  * {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} so its resolved light/dark class wins the appearance
  * choice; this script only overrides colors.
@@ -445,7 +445,7 @@ export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal()
  */
 export const PLAYGROUND_PLAY_BOOT_THEME_SCRIPT = `(function(){try{var c=JSON.parse(localStorage.getItem("semio.os.config")||"null");var l=c&&c.preferences&&c.preferences["os.config.ui-preferences"];var g=l?JSON.parse(l):null;if(!g||g.version!==1||!g.events)return;var id=null,themes={};for(var i=0;i<g.events.length;i++){var e=g.events[i];if(!e)continue;if(e.mutation==="setTheme")id=e.themeId||null;if(e.mutation==="setCustomTheme"){if(e.theme)themes[e.themeId]=e.theme;else delete themes[e.themeId]}}var stored=id?themes[id]:null;var t=stored&&stored.config;if(!t||!t.colors)return;var d=document.documentElement;var dark=d.classList.contains("dark");for(var k in t.colors){d.style.setProperty("--color-"+k.replace(/_/g,"-"),t.colors[k])}if(t.spacing)for(var s in t.spacing){d.style.setProperty("--spacing-"+s.replace(/_/g,"-"),t.spacing[s])}d.dataset.uiTheme=id;var appearance=t.appearances&&t.appearances[dark?"dark":"light"];var chrome=appearance&&appearance.chrome;function resolveSimple(ref){return ref&&ref.token&&t.colors[ref.token]?t.colors[ref.token]:undefined}var base=chrome&&resolveSimple(chrome.base);var fg=chrome&&resolveSimple(chrome.foreground);if(document.body){if(base)document.body.style.backgroundColor=base;if(fg)document.body.style.color=fg}}catch(e){}})();`;
 
-/** 🧬️ Boot-time head tags every semio host document shares (color-scheme inline style + synchronous
+/** @emoji 🧬️ Boot-time head tags every semio host document shares (color-scheme inline style + synchronous
  * appearance/theme scripts) — single source both {@link semioHostHtmlString} and
  * {@link playgroundPlayBootHtmlPlugin} inject from, so the generalized host and playground never drift. */
 function semioHostBootHeadTags(): { readonly tag: string; readonly attrs?: Record<string, string>; readonly children?: string; readonly injectTo: "head-prepend" | "head" }[] {
@@ -457,7 +457,7 @@ function semioHostBootHeadTags(): { readonly tag: string; readonly attrs?: Recor
   ];
 }
 
-/** 🎬️ Vite: inject early appearance + theme + stylesheet link into play `🌐️.html` to avoid unstyled flashes — additive tag injection onto each play's own hand-authored `🌐️.html`, sharing its boot-head fragment ({@link semioHostBootHeadTags}) with {@link semioHostHtmlVitePlugin} instead of duplicating the style/script assembly. */
+/** @emoji 🎬️ Vite: inject early appearance + theme + stylesheet link into play `🌐️.html` to avoid unstyled flashes — additive tag injection onto each play's own hand-authored `🌐️.html`, sharing its boot-head fragment ({@link semioHostBootHeadTags}) with {@link semioHostHtmlVitePlugin} instead of duplicating the style/script assembly. */
 export function playgroundPlayBootHtmlPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-play-boot-html",
@@ -476,10 +476,10 @@ export function playgroundPlayBootHtmlPlugin(): OwnedBuildPlugin {
   };
 }
 
-/** 🔖️ Canonical semio emblem favicon `<link>` tags for playground and app `🌐️.html` heads. */
+/** @emoji 🔖️ Canonical semio emblem favicon `<link>` tags for playground and app `🌐️.html` heads. */
 export const SEMIO_FAVICON_HEAD_HTML = `<link rel="icon" href="./${faviconDelivery.svg}" type="image/svg+xml" />\n    <link rel="icon" href="./${faviconDelivery.ico}" sizes="any" />`;
 
-/** 🔖️ Repo-root paths for the round dark emblem SVG and ICO fallback (matches {@link SemioLogo}). */
+/** @emoji 🔖️ Repo-root paths for the round dark emblem SVG and ICO fallback (matches {@link SemioLogo}). */
 export function semioFaviconSources(repoRoot: string): { readonly svg: string; readonly ico: string } {
   const logoRoot = resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/🪧️logos");
   return {
@@ -490,7 +490,7 @@ export function semioFaviconSources(repoRoot: string): { readonly svg: string; r
 
 const SEMIO_FAVICON_BLEED_RECT = '<rect width="350" height="350" fill="#001117"/>';
 
-/** 🔖️ Favicon SVG with opaque bleed so ICO rasterization avoids white matte outside the round emblem. */
+/** @emoji 🔖️ Favicon SVG with opaque bleed so ICO rasterization avoids white matte outside the round emblem. */
 export function semioFaviconSvgMarkup(svgPath: string): string | undefined {
   if (!existsSync(svgPath)) {
     return undefined;
@@ -506,7 +506,7 @@ export function semioFaviconSvgMarkup(svgPath: string): string | undefined {
   return raw.replace(open, `${open}${SEMIO_FAVICON_BLEED_RECT}`);
 }
 
-/** 🔖️ Resolved favicon content for one host: inline SVG markup plus an optional ICO fallback path. */
+/** @emoji 🔖️ Resolved favicon content for one host: inline SVG markup plus an optional ICO fallback path. */
 type FaviconContent = { readonly svgMarkup?: string; readonly icoPath?: string };
 
 const STATIC_SITE_FAVICON_ALIASES = { svg: "favicon.svg", ico: "favicon.ico" } as const;
@@ -528,7 +528,7 @@ function createFaviconMiddleware(content: FaviconContent): OwnedBuildMiddleware 
   };
 }
 
-/** 🔖️ Vite: serve and copy the given emblem SVG and bookmark ICO under their exact publication names. */
+/** @emoji 🔖️ Vite: serve and copy the given emblem SVG and bookmark ICO under their exact publication names. */
 function faviconVitePlugins(content: FaviconContent): OwnedBuildPlugin[] {
   const serveFavicon = createFaviconMiddleware(content);
   let outDir = resolve(process.cwd(), "dist");
@@ -569,13 +569,13 @@ function faviconVitePlugins(content: FaviconContent): OwnedBuildPlugin[] {
   ];
 }
 
-/** 🔖️ Vite: serve and copy semio emblem favicons at `/🛡️favicon.svg` and `/🔖️favicon.ico`. */
+/** @emoji 🔖️ Vite: serve and copy semio emblem favicons at `/🛡️favicon.svg` and `/🔖️favicon.ico`. */
 export function semioFaviconVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   const favicons = semioFaviconSources(repoRoot);
   return faviconVitePlugins({ svgMarkup: semioFaviconSvgMarkup(favicons.svg), icoPath: favicons.ico });
 }
 
-/** 🏷️ The host-chrome surface of a shell brand (structural subset of `framework/core/js`'s `ShellBrand`, so this styling layer never imports framework types). */
+/** @emoji 🏷️ The host-chrome surface of a shell brand (structural subset of `framework/core/js`'s `ShellBrand`, so this styling layer never imports framework types). */
 export type ShellBrandHostChrome = {
   readonly windowTitle: string;
   readonly logoSvg?: string;
@@ -584,7 +584,7 @@ export type ShellBrandHostChrome = {
   readonly cnameHost?: string;
 };
 
-/** 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
+/** @emoji 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
  * Jekyll, e.g. GitHub Pages, silently drops files/dirs starting with `_` otherwise, breaking Vite's own
  * `__vite-browser-external-*.js` shim chunk) and `dist/CNAME` when a brand declares `cnameHost`. */
 export function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
@@ -609,7 +609,7 @@ export function staticDeployMarkerVitePlugins(cnameHost: string | undefined): Ow
   ];
 }
 
-/** 🧭️ Rewrites Vite's SPA fallback target `/index.html` onto the constitutional emoji entry path. */
+/** @emoji 🧭️ Rewrites Vite's SPA fallback target `/index.html` onto the constitutional emoji entry path. */
 export function rewriteSpaFallbackToEmojiEntry(url: string, entryPath: string): string {
   const [pathOnly, ...rest] = url.split(/(?=[?#])/);
   const base = pathOnly ?? url;
@@ -634,10 +634,10 @@ function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): OwnedBuildMiddlew
   };
 }
 
-/** 📄️ Conventional static-host entry filenames emitted beside the constitutional emoji HTML entry. */
+/** @emoji 📄️ Conventional static-host entry filenames emitted beside the constitutional emoji HTML entry. */
 export const STATIC_SITE_HTML_ALIASES = ["index.html", "404.html"] as const;
 
-/** 🌐️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
+/** @emoji 🌐️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
  * `index.html` name does not match the constitutional emoji entry filename. */
 export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️.html"): OwnedBuildPlugin {
   const entry = `/${fileName}`;
@@ -683,7 +683,7 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
   };
 }
 
-/** 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
+/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
 export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): OwnedBuildPlugin[] {
   if (!brand) return [...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined)];
   return [
@@ -699,7 +699,7 @@ export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHos
   ];
 }
 
-/** 🧬️ Full-document spec for a semio host `🌐️.html`: title, entry module, mount point, and
+/** @emoji 🧬️ Full-document spec for a semio host `🌐️.html`: title, entry module, mount point, and
  * optional CSP + pre-mount loading copy — everything an app needs beyond the shared boot scripts so it
  * stops hand-authoring its own splash screen and `<style>` blocks. */
 export type SemioHostHtmlSpec = {
@@ -714,7 +714,7 @@ export type SemioHostHtmlSpec = {
   readonly cnameHost?: string;
 };
 
-/** 🪧️ Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
+/** @emoji 🪧️ Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
  * replaces it — inline-styled so it renders before any external stylesheet loads. */
 function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
   if (!loading) {
@@ -723,7 +723,7 @@ function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
   return `<div style="display:flex;align-items:center;justify-content:center;height:100%;font:14px system-ui,sans-serif">${loading.title}</div>`;
 }
 
-/** 📄️ Generates a complete semio host `🌐️.html` document: doctype/head (title, favicon,
+/** @emoji 📄️ Generates a complete semio host `🌐️.html` document: doctype/head (title, favicon,
  * optional CSP, boot style + appearance/theme scripts) and body (`#{rootId}` mount with pre-mount loading
  * copy, the reveal script, and the entry module script) — the single source of truth
  * {@link semioHostHtmlVitePlugin} renders from, reusable as-is by non-Vite hosts such as a VS Code webview. */
@@ -751,7 +751,7 @@ export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
 `;
 }
 
-/** 🎬️ Vite: renders {@link semioHostHtmlString} as the app's `🌐️.html` on every request/build
+/** @emoji 🎬️ Vite: renders {@link semioHostHtmlString} as the app's `🌐️.html` on every request/build
  * (full-document replace, `order: "pre"` so later plugins such as `@vitejs/plugin-react`'s HMR preamble
  * still layer on top), bundles semio favicon serving ({@link semioFaviconVitePlugin}), and writes the
  * static-deploy markers ({@link staticDeployMarkerVitePlugins} — `.nojekyll` always, `CNAME` when
@@ -775,7 +775,7 @@ export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpe
 //#endregion 🔖️HostHtmlPlugin
 
 //#region 🔖️StatusSurfaceHtml
-/** 🎨️ Light/dark background+foreground hex pair mirrored from {@link PLAYGROUND_PLAY_BOOT_INLINE_STYLE}
+/** @emoji 🎨️ Light/dark background+foreground hex pair mirrored from {@link PLAYGROUND_PLAY_BOOT_INLINE_STYLE}
  * / {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} — this file has no `../🎨️styling/🔣️.json` import, so these are the
  * canonical values already baked into every other boot surface here, not new ones. */
 const SEMIO_STATUS_SURFACE_COLORS = { lightBg: "#f7f3e3", lightFg: "#001117", darkBg: "#001117", darkFg: "#f7f3e3" } as const;
@@ -787,7 +787,7 @@ function semioStatusSurfaceInlineStyle(): string {
   return `html{color-scheme:light dark}html,body{height:100dvh;margin:0}body{background-color:${c.lightBg};color:${c.lightFg};display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif}@media (prefers-color-scheme: dark){body{background-color:${c.darkBg};color:${c.darkFg}}}`;
 }
 
-/** 🚦️ Minimal, standalone status document (empty/error/loading) for host-agnostic contexts that
+/** @emoji 🚦️ Minimal, standalone status document (empty/error/loading) for host-agnostic contexts that
  * can't run React — e.g. a WebView2 navigation-failure page — fully inline-styled so it renders with zero
  * external CSS/JS dependency, reusing the same light/dark hex values every other boot surface in this
  * file uses. */
@@ -814,7 +814,7 @@ export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "lo
 //#endregion 🔖️StatusSurfaceHtml
 
 //#region 🔖️ServeClose
-/** 🧷️ The part of a dev serve's HTTP server that closing it needs; an HTTP/2 server has no `closeAllConnections`. */
+/** @emoji 🧷️ The part of a dev serve's HTTP server that closing it needs; an HTTP/2 server has no `closeAllConnections`. */
 export type ServeCloseHttpServer = {
   close(callback?: (error?: Error) => void): unknown;
   closeAllConnections(): void;
@@ -822,12 +822,12 @@ export type ServeCloseHttpServer = {
   emit(event: "close"): boolean;
 };
 
-/** 🔎️ Whether a serve's HTTP server can close every connection it holds. */
+/** @emoji 🔎️ Whether a serve's HTTP server can close every connection it holds. */
 export function isServeCloseHttpServer(value: object | null): value is ServeCloseHttpServer {
   return value !== null && typeof (value as Partial<ServeCloseHttpServer>).closeAllConnections === "function" && typeof (value as Partial<ServeCloseHttpServer>).close === "function";
 }
 
-/** 🚪️ Makes closing a dev serve mean what Vite asks of it under every runtime: every open connection gone, `close`
+/** @emoji 🚪️ Makes closing a dev serve mean what Vite asks of it under every runtime: every open connection gone, `close`
  * emitted once, the callback called. Vite destroys the sockets it tracked and then waits for `server.close`; Bun 1.3's
  * `node:http` ignores `socket.destroy()` on a served connection, so its graceful `close` never completes while a browser holds
  * a keep-alive connection. `server.restart()` (every edit of the config entry) then stopped listening and never listened
@@ -864,7 +864,7 @@ export function semioServeCloseVitePlugin() {
 /** 🗂️ Canonical repo-relative root of the asset-owned public namespace. */
 export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets";
 
-/** 📂 Resolves and validates the merged Semio asset package root (fonts required). */
+/** @emoji 📂 Resolves and validates the merged Semio asset package root (fonts required). */
 export function resolveSemioAssetRoot(repoRoot: string): string {
   const assetsRoot = resolve(repoRoot, SEMIO_ASSET_ROOT);
   const fontDir = resolve(assetsRoot, "🔤️fonts");
@@ -915,7 +915,50 @@ export function semioAssetsVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   return uiAssetsVitePluginsForRoot(resolveSemioAssetRoot(repoRoot));
 }
 
-/** 🛝️ Playground app kind for Vite play harness config (validated against manifest scan). */
+/** 🌐️ Serves `/🖼️assets/*` like {@link semioAssetsVitePlugin}, but a build copies only the asset files the written bundle
+ * references (the fonts of an imported palette, an icon named in CSS) instead of the whole asset root — for a site that
+ * ships a handful of files rather than the library's every font, mesh and image. */
+export function semioReferencedAssetsVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
+  const assetsRoot = resolveSemioAssetRoot(repoRoot);
+  const serveAssets = createUiAssetsMiddleware(assetsRoot);
+  const reference = new RegExp(`${SEMIO_ASSET_ROUTE}/[^"'()\\s?#]+`, "gu");
+  let outDir = resolve(process.cwd(), "dist");
+  let writeOutput = true;
+  const referenced = (directory: string, found: Set<string>): Set<string> => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory() && entry.name !== SEMIO_ASSET_DIRECTORY) referenced(path, found);
+      else if (entry.isFile() && /\.(?:css|html|js|mjs)$/u.test(entry.name)) for (const [match] of readFileSync(path, "utf8").matchAll(reference)) found.add(assetPathFromRequest(match) ?? "");
+    }
+    return found;
+  };
+  return [
+    {
+      name: "semio-referenced-assets",
+      configureServer(server) {
+        server.middlewares.use(serveAssets);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveAssets);
+      },
+      configResolved(config) {
+        outDir = resolve(config.root, config.build.outDir);
+        writeOutput = config.build.write !== false;
+      },
+      closeBundle() {
+        if (!writeOutput || !existsSync(outDir)) return;
+        for (const asset of referenced(outDir, new Set())) {
+          if (!asset) continue;
+          const target = resolve(outDir, SEMIO_ASSET_DIRECTORY, asset);
+          mkdirSync(dirname(target), { recursive: true });
+          copyFileSync(resolve(assetsRoot, asset), target);
+        }
+      },
+    },
+  ];
+}
+
+/** @emoji 🛝️ Playground app kind for Vite play harness config (validated against manifest scan). */
 export type PlaygroundRendererPuzzleKind = string;
 
 function namedImportSpecifiersForModule(source: string, moduleId: string): string[] {
@@ -937,7 +980,7 @@ function namedImportSpecifiersForModule(source: string, moduleId: string): strin
   return names;
 }
 
-/** 🔁️ Named import specifiers duplicated within the same module import block(s). */
+/** @emoji 🔁️ Named import specifiers duplicated within the same module import block(s). */
 export function duplicateNamedImportsForModule(source: string, moduleId: string): string[] {
   const names = namedImportSpecifiersForModule(source, moduleId);
   const seen = new Set<string>();
@@ -951,7 +994,7 @@ export function duplicateNamedImportsForModule(source: string, moduleId: string)
 
 const PRESENTATION_RENDERER_VITEST_START = "//#region 🧪️Tests";
 
-/** ✂️ Drops vitest regions from animate present renderer in browser dev. */
+/** @emoji ✂️ Drops vitest regions from animate present renderer in browser dev. */
 export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath: string): OwnedBuildPlugin {
   return {
     name: "animate-present-renderer-vitest-strip",
@@ -971,7 +1014,7 @@ export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath:
 export type PlaygroundPlayViteOptions = {
   readonly playDir: string;
   readonly repoRoot: string;
-  /** 🎯️ When set, `import.meta.env.PLAYGROUND_APP_KIND` gates browser boot in that play's `index.ts`. */
+  /** @emoji 🎯️ When set, `import.meta.env.PLAYGROUND_APP_KIND` gates browser boot in that play's `index.ts`. */
   readonly playEntryKind?: string;
   readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
   readonly extraPlugins?: readonly OwnedBuildPlugin[];
@@ -982,10 +1025,10 @@ export type PlaygroundPlayViteOptions = {
   readonly resolveDedupe?: readonly string[];
 };
 
-/** 🎬️ R3F packages that must resolve once with {@link sceneHostPort} and drei controls. */
+/** @emoji 🎬️ R3F packages that must resolve once with {@link sceneHostPort} and drei controls. */
 export const PLAYGROUND_SCENE_HOST_DEDUPE = ["@react-three/fiber", "@react-three/drei"] as const;
 
-/** 🎬️ Vite aliases that pin R3F to a single node_modules entry (avoids duplicate Canvas stores). */
+/** @emoji 🎬️ Vite aliases that pin R3F to a single node_modules entry (avoids duplicate Canvas stores). */
 export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> {
   return [
     { find: /^@react-three\/fiber$/, replacement: resolve(repoRoot, "node_modules/@react-three/fiber/dist/react-three-fiber.esm.js") },
@@ -993,7 +1036,7 @@ export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArr
   ];
 }
 
-/** 🎬️ CommonJS leaves an EXCLUDED R3F package still reaches — fiber → `scheduler`; drei → `stats.js`;
+/** @emoji 🎬️ CommonJS leaves an EXCLUDED R3F package still reaches — fiber → `scheduler`; drei → `stats.js`;
  * drei → `tunnel-rat` → (nested) `zustand` → `use-sync-external-store/shim{,/with-selector}.js`, and top-level
  * `zustand/esm/react.mjs` → the same shims. Vite serves an excluded package's files raw and rewrites their bare
  * imports to a prebundled copy only when that dependency IS in the optimizer — so without these entries a fresh
@@ -1005,14 +1048,14 @@ export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArr
  * `react-use-measure`, `stats-gl`, `three-stdlib`, `maath`, …) and is served raw on purpose. */
 export const PLAYGROUND_SCENE_HOST_CJS_INCLUDE = ["scheduler", "stats.js", "use-sync-external-store/shim/index.js", "use-sync-external-store/shim/with-selector.js"] as const;
 
-/** 📦️ ESM packages the EXCLUDED R3F graph reaches through a barrel and that the optimizer must bundle anyway. Every
+/** @emoji 📦️ ESM packages the EXCLUDED R3F graph reaches through a barrel and that the optimizer must bundle anyway. Every
  * drei control imports `three-stdlib`'s index, and an import from an excluded package is never scanned, so Vite served the
  * whole barrel as separate raw modules on every cold boot: 282 files, 15.7 MB — a third of the shell's boot requests after
  * drei's own barrel was cut (measured on :6580, ticket 26/09/23 F2). Prebundled, it is one module; `three` stays one instance
  * because the optimizer bundles `three` too and shares it between both. */
 export const PLAYGROUND_SCENE_HOST_ESM_INCLUDE = ["three-stdlib"] as const;
 
-/** 🎬️ `optimizeDeps` preset for configs that use {@link playgroundSceneHostResolveAliases}: never prebundle R3F — a `.vite/deps` fiber copy and the aliased ESM entry are two Canvas stores, and drei's `PerspectiveCamera` then throws outside Canvas — but DO prebundle the CJS shims R3F's excluded graph imports ({@link PLAYGROUND_SCENE_HOST_CJS_INCLUDE}). */
+/** @emoji 🎬️ `optimizeDeps` preset for configs that use {@link playgroundSceneHostResolveAliases}: never prebundle R3F — a `.vite/deps` fiber copy and the aliased ESM entry are two Canvas stores, and drei's `PerspectiveCamera` then throws outside Canvas — but DO prebundle the CJS shims R3F's excluded graph imports ({@link PLAYGROUND_SCENE_HOST_CJS_INCLUDE}). */
 export function playgroundSceneHostOptimizeDeps(extra?: Pick<NonNullable<OwnedBuildConfig["optimizeDeps"]>, "include" | "exclude">): NonNullable<OwnedBuildConfig["optimizeDeps"]> {
   const include = ["three", ...PLAYGROUND_SCENE_HOST_CJS_INCLUDE, ...PLAYGROUND_SCENE_HOST_ESM_INCLUDE, ...(extra?.include ?? [])].filter((id) => !PLAYGROUND_SCENE_HOST_DEDUPE.includes(id as (typeof PLAYGROUND_SCENE_HOST_DEDUPE)[number]));
   const exclude = [...PLAYGROUND_SCENE_HOST_DEDUPE, ...(extra?.exclude ?? [])];
@@ -1020,10 +1063,10 @@ export function playgroundSceneHostOptimizeDeps(extra?: Pick<NonNullable<OwnedBu
 }
 
 //#region 🔖️MapTileCache
-/** 🗺️ Compliant User-Agent for OSM / MapLibre demotiles in map play. */
+/** @emoji 🗺️ Compliant User-Agent for OSM / MapLibre demotiles in map play. */
 export const GIS_MAP_TILE_USER_AGENT = "ComposeGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)";
 
-/** 🗺️ Default dev prefetch bounds (Switzerland) for GIS map play. */
+/** @emoji 🗺️ Default dev prefetch bounds (Switzerland) for GIS map play. */
 export const GIS_MAP_DEFAULT_PREFETCH_BOUNDS = {
   west: 5.95,
   south: 45.82,
@@ -1039,13 +1082,13 @@ export type GisMapPrefetchBounds = {
 };
 
 export const GIS_MAP_OSM_TILE_MAX_Z = 19;
-/** 🗺️ OpenFreeMap / OpenMapTiles planet MVT (OSM); matches raster detail up to z14. */
+/** @emoji 🗺️ OpenFreeMap / OpenMapTiles planet MVT (OSM); matches raster detail up to z14. */
 export const GIS_MAP_VECTOR_TILE_MAX_Z = 14;
 export const GIS_MAP_OPENFREEMAP_TILEJSON = "https://tiles.openfreemap.org/planet";
-/** 🗺️ Highest zoom prefetched for offline map play (matches `GIS_MAP_LOD_TILE_Z` building band). */
+/** @emoji 🗺️ Highest zoom prefetched for offline map play (matches `GIS_MAP_LOD_TILE_Z` building band). */
 export const GIS_MAP_PREFETCH_RASTER_Z_MAX = 13;
 
-/** 🗺️ `fetch` loads missing tiles at runtime; `bundle` serves only cached tiles and copies them into `dist` on build. */
+/** @emoji 🗺️ `fetch` loads missing tiles at runtime; `bundle` serves only cached tiles and copies them into `dist` on build. */
 export type GisMapTileServeMode = "fetch" | "bundle";
 
 export const GIS_MAP_TILE_SERVE_MODE_ENV = "GIS_MAP_TILE_SERVE_MODE";
@@ -1061,7 +1104,7 @@ export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; rea
   };
 }
 
-/** 🧭️ Web Mercator tile index for a lon/lat at zoom `z`. */
+/** @emoji 🧭️ Web Mercator tile index for a lon/lat at zoom `z`. */
 export function lonLatToTileXY(lon: number, lat: number, z: number): { x: number; y: number } {
   const n = 2 ** z;
   const x = Math.floor(((lon + 180) / 360) * n);
@@ -1070,7 +1113,7 @@ export function lonLatToTileXY(lon: number, lat: number, z: number): { x: number
   return { x: Math.max(0, Math.min(n - 1, x)), y: Math.max(0, Math.min(n - 1, y)) };
 }
 
-/** 📐️ Inclusive OSM tile index range covering `bounds` at zoom `z`. */
+/** @emoji 📐️ Inclusive OSM tile index range covering `bounds` at zoom `z`. */
 export function tileRangeForBounds(bounds: GisMapPrefetchBounds, z: number): { x0: number; x1: number; y0: number; y1: number } {
   const sw = lonLatToTileXY(bounds.west, bounds.south, z);
   const ne = lonLatToTileXY(bounds.east, bounds.north, z);
@@ -1084,7 +1127,7 @@ export function tileRangeForBounds(bounds: GisMapPrefetchBounds, z: number): { x
 
 export type GisMapTileCoord = { readonly z: number; readonly x: number; readonly y: number };
 
-/** 📋️ Lists every tile in `bounds` for zoom levels `zMin`…`zMax` (inclusive). */
+/** @emoji 📋️ Lists every tile in `bounds` for zoom levels `zMin`…`zMax` (inclusive). */
 export function listMapTilesForBounds(bounds: GisMapPrefetchBounds, zMin: number, zMax: number): GisMapTileCoord[] {
   const lo = Math.max(0, Math.min(zMin, zMax));
   const hi = Math.max(lo, zMax);
@@ -1184,7 +1227,7 @@ async function fetchVtTileToCache(cacheRoot: string, z: number, x: number, y: nu
   return true;
 }
 
-/** ⬇️ Prefetch OSM PNG and MapLibre MVT tiles into `.🧬semio/🗺️map` for offline map play. */
+/** @emoji ⬇️ Prefetch OSM PNG and MapLibre MVT tiles into `.🧬semio/🗺️map` for offline map play. */
 export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promise<PrefetchMapTilesResult> {
   const {
     repoRoot,
@@ -1257,7 +1300,7 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
 //#endregion 🔖️MapTileCache
 
 //#region 🔖️TileProxyAssetPlugin
-/** 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
+/** @emoji 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
 function tileProxyExtFromTemplate(template: string): string {
   const clean = template.split(/[?#]/, 1)[0] ?? template;
   const ext = clean.split(".").pop();
@@ -1273,7 +1316,7 @@ function contentTypeForTileExt(ext: string): string {
 const tileProxyTemplateCache = ephemeralMap<string, { readonly template: string; readonly at: number }>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.tileProxyTemplateCache");
 const TILE_PROXY_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** 🧭️ Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used
+/** @emoji 🧭️ Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used
  * directly when it already contains `{z}`, otherwise treated as a TileJSON endpoint and resolved
  * (cached, 7-day TTL) — generalizes the previous OpenFreeMap-only MVT template resolution so any
  * TileJSON-backed upstream (not just OpenFreeMap) works the same way. */
@@ -1321,7 +1364,7 @@ async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z:
   return { ok: true, ext };
 }
 
-/** 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
+/** @emoji 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
  * (and caching) from `upstream` on a miss — generalizes the previous OSM/OpenFreeMap/Terrarium
  * middlewares into one route-driven implementation. */
 function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: GisMapTileServeMode): OwnedBuildMiddleware {
@@ -1367,7 +1410,7 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
   };
 }
 
-/** 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
+/** @emoji 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
  * previous `gisMapTilesVitePlugins`/`terrainTilesVitePlugins`/`osmTileProxyVitePlugin`/
  * `mapLibreVectorTileProxyVitePlugin` quartet with a single spec-driven implementation. */
 export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
@@ -1409,7 +1452,7 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   return plugins;
 }
 
-/** 🌐️ Standalone HTTP server for every declared playground asset kind (tile-proxy, mesh-collection,
+/** @emoji 🌐️ Standalone HTTP server for every declared playground asset kind (tile-proxy, mesh-collection,
  * static-dir) — wgpu Trunk proxies and native-bin `SEMIO_ASSET_BASE_URL` hit this instead of Vite. */
 export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
   const seen = new Set<string>();
@@ -1443,7 +1486,7 @@ export function startAssetServer(repoRoot: string, port: number, specs: readonly
 //#endregion 🔖️TileProxyAssetPlugin
 
 //#region 🔖️PlaygroundAssetVitePlugins
-/** 🚦️ Dispatches every declared `[[package.metadata.semio.assets]]` spec to its generic Vite
+/** @emoji 🚦️ Dispatches every declared `[[package.metadata.semio.assets]]` spec to its generic Vite
  * plugin factory — the single driver a dev `vite.config` calls with a playground's resolved `assets`
  * metadata instead of hand-picking per-app plugin factories. */
 export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
@@ -1467,7 +1510,7 @@ export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly Pla
 }
 //#endregion 🔖️PlaygroundAssetVitePlugins
 
-/** 🦀️ Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
+/** @emoji 🦀️ Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
 export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-core",
   "@semio-tech/flow-module-math",
@@ -1478,7 +1521,7 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-draw",
 ] as const;
 
-/** 🧭️ Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
+/** @emoji 🧭️ Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
 export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = []): Pick<OwnedBuildConfig, "resolve" | "server" | "optimizeDeps"> {
   return {
     resolve: {
@@ -1520,7 +1563,7 @@ export function contentTypeForStaticDirAsset(filePath: string): string | undefin
   return undefined;
 }
 
-/** 🏷️ Serves one file with HTTP validators: a weak `ETag` from its size and nanosecond mtime, `Last-Modified`,
+/** @emoji 🏷️ Serves one file with HTTP validators: a weak `ETag` from its size and nanosecond mtime, `Last-Modified`,
  * `Content-Length` and `Cache-Control: no-cache` (always revalidate — a restage rewrites files in place). A request whose
  * `If-None-Match` names the current tag (weak comparison, RFC 9110 §13.1.2), or — without one — whose `If-Modified-Since`
  * is not older than the file, is answered `304` with no body; `HEAD` gets the headers only.
@@ -1556,7 +1599,7 @@ export function serveFileWithValidatorsV1(req: IncomingMessage, res: ServerRespo
   createReadStream(filePath).pipe(res);
 }
 
-/** 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
+/** @emoji 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
 function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildMiddleware {
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
@@ -1590,7 +1633,7 @@ function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAss
   };
 }
 
-/** 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
+/** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
  * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
  * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
 export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildPlugin[] {
@@ -1634,7 +1677,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   ];
 }
 
-/** 🪜️ Serves several `static-dir` roots as ONE route table. Each mount answers 404 for a file its
+/** @emoji 🪜️ Serves several `static-dir` roots as ONE route table. Each mount answers 404 for a file its
  * root lacks (never the SPA fallback), so two roots on one route shadow each other — the second becomes
  * unreachable — and a parent route registered before a nested one swallows the nested one's requests.
  * The table therefore refuses a route claimed twice and orders the halves by nesting: serving
@@ -1652,17 +1695,17 @@ export function staticDirMountVitePlugins(repoRoot: string, specs: readonly Extr
   ];
 }
 
-/** 🌐️ Reference-plane assets every `*-play` static bundle serves unconditionally. */
+/** @emoji 🌐️ Reference-plane assets every `*-play` static bundle serves unconditionally. */
 export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
   { kind: "static-dir", route: "/infinite-assets", root: "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" },
 ];
 //#endregion 🔖️StaticDirAssetPlugin
 
-/** 🚫️ Directory names [[findWorkspacePackages]] never descends into: installed dependencies and
+/** @emoji 🚫️ Directory names [[findWorkspacePackages]] never descends into: installed dependencies and
  * build output, none of which may contribute a workspace package name. */
 const WORKSPACE_PACKAGE_SCAN_SKIP: ReadonlySet<string> = new Set(["node_modules", "dist", "target", "storybook-static", "🗑️generated", "🤖️generated"]);
 
-/** 🧠️ Memo for [[findWorkspacePackages]], keyed by repo root.
+/** @emoji 🧠️ Memo for [[findWorkspacePackages]], keyed by repo root.
  *
  * 🩸️ The scan costs 14–27 s on this tree and every vite config that calls
  * [[createWorkspaceViteResolveConfig]] runs it at module load, so a process loading several configs paid
@@ -1673,7 +1716,7 @@ const WORKSPACE_PACKAGE_SCAN_SKIP: ReadonlySet<string> = new Set(["node_modules"
  * `optimizeDeps`. */
 const workspacePackagesByRoot = new Map<string, string[]>();
 
-/** 📦️ Every `@semio-tech/*` package name in the workspace tree, for `optimizeDeps.exclude`.
+/** @emoji 📦️ Every `@semio-tech/*` package name in the workspace tree, for `optimizeDeps.exclude`.
  *
  * 🩸️ Directory entries are classified from `readdirSync`'s own `Dirent`, which never follows a link.
  * The previous `statSync(full).isDirectory()` did follow, and a hub test leaves a **self-referential**
@@ -1715,7 +1758,7 @@ export function findWorkspacePackages(repoRoot: string): string[] {
   return packages;
 }
 
-/** 🛝️ `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
+/** @emoji 🛝️ `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
   const osHubAliases =

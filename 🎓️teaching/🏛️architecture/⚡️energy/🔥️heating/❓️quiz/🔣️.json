@@ -1,0 +1,304 @@
+{
+  "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
+  "schema": "semio.quiz/v1",
+  "id": "heating",
+  "title": { "en": "Heating", "de": "Heizen" },
+  "description": {
+    "en": "U-values of building components from single glazing to the passive-house roof, and heating loads and heating demands of buildings from the 1960s to the passive house.",
+    "de": "U-Werte von Bauteilen von der Einfachverglasung bis zum Passivhausdach sowie Heizlasten und Heizwärmebedarfe von Gebäuden von den 1960ern bis zum Passivhaus."
+  },
+  "tasks": [
+    {
+      "kind": "matching",
+      "id": "u-values",
+      "title": { "en": "U-values of Building Components", "de": "U-Werte von Bauteilen" },
+      "prompt": {
+        "en": "Assign each building component its thermal transmittance (U-value) in W/(m²·K): the heat flow through 1 m² per kelvin of temperature difference. Smaller means better insulated.",
+        "de": "Ordne jedem Bauteil seinen Wärmedurchgangskoeffizienten (U-Wert) in W/(m²·K) zu: den Wärmestrom durch 1 m² je Kelvin Temperaturdifferenz. Kleiner heißt besser gedämmt."
+      },
+      "dimensions": [
+        {
+          "id": "u-value",
+          "quantity": { "label": { "en": "U-value", "de": "U-Wert" }, "unit": "W/(m²·K)", "scale": "logarithmic", "prefixed": false }
+        }
+      ],
+      "items": [
+        {
+          "id": "single-glazing",
+          "label": { "en": "Single glazing (one pane of glass)", "de": "Einfachverglasung (eine Glasscheibe)" },
+          "values": { "u-value": 5.8 },
+          "explanation": {
+            "en": "5.8 W/(m²·K) (Ug): a single pane has practically nothing but its surface resistances (0.13 + 0.04 m²·K/W). Source: BAnz AT 04.12.2020 B1, Table 3 (windows before 1979).",
+            "de": "5,8 W/(m²·K) (Ug): eine Einzelscheibe hat praktisch nur ihre Wärmeübergangswiderstände (0,13 + 0,04 m²·K/W). Quelle: BAnz AT 04.12.2020 B1, Tabelle 3 (Fenster bis 1978)."
+          }
+        },
+        {
+          "id": "aluminium-window-1970s",
+          "label": { "en": "Aluminium or steel window with double insulating glass, before 1984", "de": "Aluminium- oder Stahlfenster mit Isolierverglasung, vor 1984" },
+          "values": { "u-value": 4.3 },
+          "explanation": {
+            "en": "4.3 W/(m²·K) (Uw): the metal frame without thermal break conducts heat far better than the glass. Source: BAnz AT 04.12.2020 B1, Table 3.",
+            "de": "4,3 W/(m²·K) (Uw): der Metallrahmen ohne thermische Trennung leitet Wärme viel besser als das Glas. Quelle: BAnz AT 04.12.2020 B1, Tabelle 3."
+          }
+        },
+        {
+          "id": "roller-shutter-box",
+          "label": { "en": "Uninsulated roller-shutter box, before 1995", "de": "Ungedämmter Rollladenkasten, vor 1995" },
+          "values": { "u-value": 3.6 },
+          "explanation": {
+            "en": "3.6 W/(m²·K): only a thin wooden or chipboard cover separates the room from the ventilated box. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "3,6 W/(m²·K): nur eine dünne Holz- oder Spanplattenblende trennt den Raum vom belüfteten Kasten. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+          }
+        },
+        {
+          "id": "box-type-window",
+          "label": { "en": "Wooden box-type or coupled window with two panes, before 1995", "de": "Holz-Kasten- oder Verbundfenster mit zwei Scheiben, vor 1995" },
+          "values": { "u-value": 2.7 },
+          "explanation": {
+            "en": "2.7 W/(m²·K) (Uw): the air layer between the two panes roughly halves the loss of single glazing. Source: BAnz AT 04.12.2020 B1, Table 3.",
+            "de": "2,7 W/(m²·K) (Uw): die Luftschicht zwischen den beiden Scheiben halbiert etwa den Verlust der Einfachverglasung. Quelle: BAnz AT 04.12.2020 B1, Tabelle 3."
+          }
+        },
+        {
+          "id": "solid-roof-1950s",
+          "label": { "en": "Uninsulated solid (concrete) roof, before 1958", "de": "Ungedämmtes massives Dach (Beton), vor 1958" },
+          "values": { "u-value": 2.1 },
+          "explanation": {
+            "en": "2.1 W/(m²·K): a concrete slab without any insulation layer. Source: BAnz AT 04.12.2020 B1, Table 2 (roof, solid construction, up to 1957).",
+            "de": "2,1 W/(m²·K): eine Betondecke ganz ohne Dämmschicht. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2 (Dach, massive Konstruktion, bis 1957)."
+          }
+        },
+        {
+          "id": "front-door-geg",
+          "label": { "en": "Front door of the GEG reference building", "de": "Haustür des GEG-Referenzgebäudes" },
+          "values": { "u-value": 1.8 },
+          "explanation": {
+            "en": "1.8 W/(m²·K): reference value for external doors. Source: Gebäudeenergiegesetz (GEG) 2024, Annex 1.",
+            "de": "1,8 W/(m²·K): Referenzwert für Außentüren. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
+          }
+        },
+        {
+          "id": "half-timbered-wall",
+          "label": { "en": "Half-timbered wall with clay infill, uninsulated, before 1958", "de": "Fachwerkwand mit Lehmausfachung, ungedämmt, vor 1958" },
+          "values": { "u-value": 1.5 },
+          "explanation": {
+            "en": "1.5 W/(m²·K): timber frame with clay infill up to 25 cm thick including plaster. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "1,5 W/(m²·K): Holzfachwerk mit Lehmausfachung bis 25 cm Dicke einschließlich Putz. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+          }
+        },
+        {
+          "id": "window-geg",
+          "label": { "en": "Window of the GEG reference building", "de": "Fenster des GEG-Referenzgebäudes" },
+          "values": { "u-value": 1.3 },
+          "explanation": {
+            "en": "1.3 W/(m²·K) (Uw): double low-e glazing with argon in an insulated frame. Source: Gebäudeenergiegesetz (GEG) 2024, Annex 1.",
+            "de": "1,3 W/(m²·K) (Uw): Zweifach-Wärmeschutzverglasung mit Argon im gedämmten Rahmen. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
+          }
+        },
+        {
+          "id": "hollow-brick-wall-1970s",
+          "label": { "en": "Wall of perforated bricks or hollow blocks, 1969–1978", "de": "Wand aus Hochlochziegeln oder Hohlblocksteinen, 1969–1978" },
+          "values": { "u-value": 1.0 },
+          "explanation": {
+            "en": "1.0 W/(m²·K): porous, perforated masonry insulates better than solid brick, but there is no insulation layer yet. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "1,0 W/(m²·K): poröses, gelochtes Mauerwerk dämmt besser als Vollziegel, aber noch ohne Dämmschicht. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+          }
+        },
+        {
+          "id": "window-passive-house",
+          "label": { "en": "Passive-house window (triple glazing, insulated frame)", "de": "Passivhausfenster (Dreifachverglasung, gedämmter Rahmen)" },
+          "values": { "u-value": 0.8 },
+          "explanation": {
+            "en": "0.8 W/(m²·K) (Uw): criterion for passive-house suitable windows in the cool-temperate climate, so that no radiator is needed below the window. Source: Passive House Institute.",
+            "de": "0,8 W/(m²·K) (Uw): Kriterium für passivhaustaugliche Fenster im kühl-gemäßigten Klima, damit unter dem Fenster kein Heizkörper nötig ist. Quelle: Passivhaus Institut."
+          }
+        },
+        {
+          "id": "masonry-wall-1980s",
+          "label": { "en": "Masonry wall, 1984–1994 (Thermal Insulation Ordinance 1982)", "de": "Mauerwerkswand, 1984–1994 (Wärmeschutzverordnung 1982)" },
+          "values": { "u-value": 0.6 },
+          "explanation": {
+            "en": "0.6 W/(m²·K): porous perforated bricks or a thin insulation layer to meet the WSchVO 1982. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "0,6 W/(m²·K): porosierte Hochlochziegel oder eine dünne Dämmschicht zur Erfüllung der WSchVO 1982. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+          }
+        },
+        {
+          "id": "triple-glazing",
+          "label": { "en": "Triple insulating glass (glazing only)", "de": "Dreifach-Wärmeschutzverglasung (nur Glas)" },
+          "values": { "u-value": 0.5 },
+          "explanation": {
+            "en": "0.5 W/(m²·K) (Ug): three panes, two low-e coatings and two gas-filled cavities (calculated per EN 673). The glass alone beats the whole window, whose frame and spacer are weaker.",
+            "de": "0,5 W/(m²·K) (Ug): drei Scheiben, zwei Low-E-Beschichtungen und zwei gasgefüllte Zwischenräume (berechnet nach EN 673). Das Glas allein ist besser als das ganze Fenster, dessen Rahmen und Randverbund schwächer sind."
+          }
+        },
+        {
+          "id": "floor-geg",
+          "label": { "en": "Floor slab or basement ceiling of the GEG reference building", "de": "Bodenplatte oder Kellerdecke des GEG-Referenzgebäudes" },
+          "values": { "u-value": 0.35 },
+          "explanation": {
+            "en": "0.35 W/(m²·K): reference value for components against the ground or unheated rooms; the ground is warmer than winter air, so less insulation pays off. Source: GEG 2024, Annex 1.",
+            "de": "0,35 W/(m²·K): Referenzwert für Bauteile gegen Erdreich oder unbeheizte Räume; das Erdreich ist wärmer als die Winterluft, daher lohnt weniger Dämmung. Quelle: GEG 2024, Anlage 1."
+          }
+        },
+        {
+          "id": "wall-geg",
+          "label": { "en": "External wall of the GEG reference building", "de": "Außenwand des GEG-Referenzgebäudes" },
+          "values": { "u-value": 0.28 },
+          "explanation": {
+            "en": "0.28 W/(m²·K): e.g. masonry with about 12 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+            "de": "0,28 W/(m²·K): z. B. Mauerwerk mit rund 12 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
+          }
+        },
+        {
+          "id": "roof-geg",
+          "label": { "en": "Roof of the GEG reference building", "de": "Dach des GEG-Referenzgebäudes" },
+          "values": { "u-value": 0.2 },
+          "explanation": {
+            "en": "0.20 W/(m²·K): reference value for roofs and top-floor ceilings, roughly 17 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+            "de": "0,20 W/(m²·K): Referenzwert für Dächer und oberste Geschossdecken, rund 17 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
+          }
+        },
+        {
+          "id": "wall-passive-house",
+          "label": { "en": "External wall of a passive house", "de": "Außenwand eines Passivhauses" },
+          "values": { "u-value": 0.15 },
+          "explanation": {
+            "en": "0.15 W/(m²·K): guide value for opaque components of passive houses in the cool-temperate climate, about 24 cm of insulation. Source: Passive House Institute.",
+            "de": "0,15 W/(m²·K): Richtwert für opake Bauteile von Passivhäusern im kühl-gemäßigten Klima, rund 24 cm Dämmung. Quelle: Passivhaus Institut."
+          }
+        },
+        {
+          "id": "roof-passive-house",
+          "label": { "en": "Roof of a passive house", "de": "Dach eines Passivhauses" },
+          "values": { "u-value": 0.1 },
+          "explanation": {
+            "en": "0.10 W/(m²·K): about 35 cm of insulation (λ = 0.035 W/(m·K), R ≈ 10 m²·K/W), typical for passive-house roofs. Source: Passive House Institute.",
+            "de": "0,10 W/(m²·K): rund 35 cm Dämmung (λ = 0,035 W/(m·K), R ≈ 10 m²·K/W), typisch für Passivhausdächer. Quelle: Passivhaus Institut."
+          }
+        }
+      ],
+      "draw": 10
+    },
+    {
+      "kind": "matching",
+      "id": "heating-load-and-demand",
+      "title": { "en": "Heating Load and Heating Demand", "de": "Heizlast und Heizwärmebedarf" },
+      "prompt": {
+        "en": "Assign each building its specific design heating load in W/m² (the heat flow needed on the coldest design day) and its annual heating demand in kWh/(m²·a) (the useful heat per year), both per m² of heated floor area.",
+        "de": "Ordne jedem Gebäude seine spezifische Heizlast in W/m² (den Wärmestrom am kältesten Auslegungstag) und seinen Jahres-Heizwärmebedarf in kWh/(m²·a) (die Nutzwärme pro Jahr) zu, beide je m² beheizter Fläche."
+      },
+      "dimensions": [
+        {
+          "id": "heating-load",
+          "quantity": { "label": { "en": "Specific heating load", "de": "Spezifische Heizlast" }, "unit": "W/m²", "scale": "logarithmic", "prefixed": false }
+        },
+        {
+          "id": "heating-demand",
+          "quantity": { "label": { "en": "Annual heating demand", "de": "Jahres-Heizwärmebedarf" }, "unit": "kWh/(m²·a)", "scale": "logarithmic", "prefixed": false }
+        }
+      ],
+      "items": [
+        {
+          "id": "passive-house",
+          "label": { "en": "New passive house", "de": "Neues Passivhaus" },
+          "values": { "heating-load": 10, "heating-demand": 15 },
+          "explanation": {
+            "en": "At most 10 W/m² or 15 kWh/(m²·a): the certification criteria of the Passive House Institute, so little that the fresh supply air alone can carry the heat.",
+            "de": "Höchstens 10 W/m² bzw. 15 kWh/(m²·a): die Zertifizierungskriterien des Passivhaus Instituts, so wenig, dass die frische Zuluft allein die Wärme bringen kann."
+          }
+        },
+        {
+          "id": "gruenderzeit-retrofit",
+          "label": { "en": "Gründerzeit apartment building (1860–1918) retrofitted with passive-house components", "de": "Gründerzeit-Mehrfamilienhaus (1860–1918), mit Passivhaus-Komponenten saniert" },
+          "values": { "heating-load": 16, "heating-demand": 20 },
+          "explanation": {
+            "en": "About 16 W/m² and 20 kWh/(m²·a): IWU modernisation package 2 for type MFH_B (0.39 W/(m²·K) transmission per m² plus heat-recovery ventilation). A compact old building can reach new-build level. Source: IWU German residential building typology 2015.",
+            "de": "Rund 16 W/m² und 20 kWh/(m²·a): IWU-Modernisierungspaket 2 für den Typ MFH_B (0,39 W/(m²·K) Transmission je m² plus Lüftung mit Wärmerückgewinnung). Ein kompakter Altbau erreicht Neubauniveau. Quelle: IWU Deutsche Wohngebäudetypologie 2015."
+          }
+        },
+        {
+          "id": "kfw-40",
+          "label": { "en": "New single-family house, KfW Efficiency House 40", "de": "Neues Einfamilienhaus, KfW-Effizienzhaus 40" },
+          "values": { "heating-load": 20, "heating-demand": 26 },
+          "explanation": {
+            "en": "About 20 W/m² and 26 kWh/(m²·a): envelope loss H′T at most 55 % of the GEG reference building plus heat-recovery ventilation; IWU calculates 21.7 kWh/(m²·a) per usable floor area A_N, about 26 per m² of living area (German residential building typology 2015, Table 26).",
+            "de": "Rund 20 W/m² und 26 kWh/(m²·a): Hüllflächenverlust H′T höchstens 55 % des GEG-Referenzgebäudes plus Lüftung mit Wärmerückgewinnung; das IWU berechnet 21,7 kWh/(m²·a) je Gebäudenutzfläche A_N, rund 26 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
+          }
+        },
+        {
+          "id": "kfw-55",
+          "label": { "en": "New single-family house, KfW Efficiency House 55", "de": "Neues Einfamilienhaus, KfW-Effizienzhaus 55" },
+          "values": { "heating-load": 25, "heating-demand": 35 },
+          "explanation": {
+            "en": "About 25 W/m² and 35 kWh/(m²·a): envelope loss H′T at most 70 % of the GEG reference building; IWU calculates 29.9 kWh/(m²·a) per usable floor area A_N, about 35 per m² of living area (German residential building typology 2015, Table 26).",
+            "de": "Rund 25 W/m² und 35 kWh/(m²·a): Hüllflächenverlust H′T höchstens 70 % des GEG-Referenzgebäudes; das IWU berechnet 29,9 kWh/(m²·a) je Gebäudenutzfläche A_N, rund 35 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
+          }
+        },
+        {
+          "id": "geg-2024",
+          "label": { "en": "New single-family house to GEG 2024 with the minimum envelope and a heat pump", "de": "Neues Einfamilienhaus nach GEG 2024 mit Mindest-Gebäudehülle und Wärmepumpe" },
+          "values": { "heating-load": 40, "heating-demand": 50 },
+          "explanation": {
+            "en": "About 40 W/m² (design practice for new builds since 2016: 30–50 W/m²) and 50 kWh/(m²·a): § 16 GEG still allows an envelope loss H′T up to that of the reference building (Annex 1: wall 0.28, window 1.3 W/(m²·K)); the 55 % primary-energy limit of § 15 is met by the heat pump, not by insulation. IWU calculates 43.7 kWh/(m²·a) per usable floor area A_N at this envelope level (Table 26), about 50 per m² of living area.",
+            "de": "Rund 40 W/m² (Auslegungspraxis für Neubauten seit 2016: 30–50 W/m²) und 50 kWh/(m²·a): § 16 GEG erlaubt weiterhin einen Hüllflächenverlust H′T bis zu dem des Referenzgebäudes (Anlage 1: Wand 0,28, Fenster 1,3 W/(m²·K)); die 55-%-Primärenergiegrenze des § 15 erfüllt die Wärmepumpe, nicht die Dämmung. Das IWU berechnet auf diesem Hüllenniveau 43,7 kWh/(m²·a) je Gebäudenutzfläche A_N (Tabelle 26), rund 50 je m² Wohnfläche."
+          }
+        },
+        {
+          "id": "sfh-2000s",
+          "label": { "en": "Single-family house 2002–2009 (EnEV 2002)", "de": "Einfamilienhaus 2002–2009 (EnEV 2002)" },
+          "values": { "heating-load": 50, "heating-demand": 89 },
+          "explanation": {
+            "en": "About 50 W/m² and 89 kWh/(m²·a): IWU type EFH_J with 1.14 W/(m²·K) transmission per m² of living area; load = (transmission + ventilation at 0.5 1/h, the airtight envelope required since EnEV 2002) × 32 K (20 °C inside, −12 °C outside).",
+            "de": "Rund 50 W/m² und 89 kWh/(m²·a): IWU-Typ EFH_J mit 1,14 W/(m²·K) Transmission je m² Wohnfläche; Last = (Transmission + Lüftung mit 0,5 1/h, der seit der EnEV 2002 geforderten luftdichten Hülle) × 32 K (20 °C innen, −12 °C außen)."
+          }
+        },
+        {
+          "id": "plattenbau",
+          "label": { "en": "GDR large-panel apartment block 1969–1978, unrenovated", "de": "DDR-Plattenbau 1969–1978, unsaniert" },
+          "values": { "heating-load": 60, "heating-demand": 122 },
+          "explanation": {
+            "en": "About 60 W/m² and 122 kWh/(m²·a): thin concrete sandwich panels, but a very compact block with little envelope per m² of floor. Source: IWU German residential building typology 2015, type NBL_GMH_F.",
+            "de": "Rund 60 W/m² und 122 kWh/(m²·a): dünne Beton-Sandwichplatten, aber ein sehr kompakter Block mit wenig Hüllfläche je m² Wohnfläche. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ NBL_GMH_F."
+          }
+        },
+        {
+          "id": "sfh-1990s",
+          "label": { "en": "Single-family house 1995–2001 (WSchVO 1995)", "de": "Einfamilienhaus 1995–2001 (WSchVO 1995)" },
+          "values": { "heating-load": 73, "heating-demand": 135 },
+          "explanation": {
+            "en": "About 73 W/m² and 135 kWh/(m²·a): IWU type EFH_I with 1.78 W/(m²·K) transmission per m² of living area; a detached house has much envelope per m² of floor.",
+            "de": "Rund 73 W/m² und 135 kWh/(m²·a): IWU-Typ EFH_I mit 1,78 W/(m²·K) Transmission je m² Wohnfläche; ein freistehendes Haus hat viel Hülle je m² Wohnfläche."
+          }
+        },
+        {
+          "id": "gruenderzeit",
+          "label": { "en": "Gründerzeit apartment building 1860–1918, unrenovated", "de": "Gründerzeit-Mehrfamilienhaus 1860–1918, unsaniert" },
+          "values": { "heating-load": 95, "heating-demand": 197 },
+          "explanation": {
+            "en": "About 95 W/m² and 197 kWh/(m²·a): thick brick walls and shared party walls keep it well below a detached house of similar age. Source: IWU German residential building typology 2015, type MFH_B.",
+            "de": "Rund 95 W/m² und 197 kWh/(m²·a): dicke Ziegelwände und gemeinsame Brandwände halten es deutlich unter einem freistehenden Haus ähnlichen Alters. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ MFH_B."
+          }
+        },
+        {
+          "id": "sfh-1970s",
+          "label": { "en": "Single-family house 1969–1978, unrenovated", "de": "Einfamilienhaus 1969–1978, unsaniert" },
+          "values": { "heating-load": 115, "heating-demand": 224 },
+          "explanation": {
+            "en": "About 115 W/m² and 224 kWh/(m²·a): built just before the first Thermal Insulation Ordinance of 1977. Source: IWU German residential building typology 2015, type EFH_F.",
+            "de": "Rund 115 W/m² und 224 kWh/(m²·a): gebaut kurz vor der ersten Wärmeschutzverordnung von 1977. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_F."
+          }
+        },
+        {
+          "id": "sfh-1960s",
+          "label": { "en": "Single-family house 1958–1968, unrenovated", "de": "Einfamilienhaus 1958–1968, unsaniert" },
+          "values": { "heating-load": 160, "heating-demand": 303 },
+          "explanation": {
+            "en": "About 160 W/m² and 303 kWh/(m²·a): 4.5 W/(m²·K) transmission per m² of living area (IWU type EFH_E). Measured consumption is typically about 40 % lower than this calculated demand (prebound effect).",
+            "de": "Rund 160 W/m² und 303 kWh/(m²·a): 4,5 W/(m²·K) Transmission je m² Wohnfläche (IWU-Typ EFH_E). Der gemessene Verbrauch liegt meist rund 40 % unter diesem berechneten Bedarf (Prebound-Effekt)."
+          }
+        }
+      ],
+      "draw": 8
+    }
+  ]
+}

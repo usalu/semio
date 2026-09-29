@@ -537,6 +537,33 @@
       "name": "norm-react-attach",
       "url": "http://localhost:6091",
       "port": 6091
+    },
+    {
+      "name": "teaching-proctor",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@teaching/proctor:dev"
+      ],
+      "port": 8791,
+      "env": {
+        "PROCTOR_PORT": "8791"
+      }
+    },
+    {
+      "name": "architecture-quiz",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@teaching/architecture-quiz:dev"
+      ],
+      "port": 6061,
+      "env": {
+        "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
+        "PROCTOR_PORT": "8791"
+      }
     }
   ]
 }

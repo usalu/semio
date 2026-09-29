@@ -2637,16 +2637,19 @@ function bunArgsForVite(args: readonly string[]): string[] {
 }
 //#endregion ⚙️ViteConfigLoader
 
+/** 🧭️ The workspace's own Vite CLI entry (`vite/bin/vite.js`), resolved through the package instead of `node_modules/.bin`,
+ * whose extensionless `vite` is a POSIX shell shim on Windows whenever another package manager wrote it. */
+function viteCliEntry(cwd: string): string {
+  return join(dirname(createRequire(join(findRepoRoot(cwd), "package.json")).resolve("vite/package.json")), "bin/vite.js");
+}
+
 function bunxCmdArgs(args: readonly string[], cwd: string): string[] {
   const formatted = bunArgsForVite(args);
   const viteIdx = formatted.indexOf("vite");
   if (viteIdx >= 0) {
-    const resolved = resolveWorkspaceBin("vite", cwd);
-    if (resolved) {
-      const copy = [...formatted];
-      copy[viteIdx] = resolved;
-      return copy;
-    }
+    const copy = [...formatted];
+    copy[viteIdx] = viteCliEntry(cwd);
+    return copy;
   }
   const binName = formatted[0];
   if (binName && binName !== "x") {
@@ -2715,9 +2718,7 @@ export function runViteDev(bundleRoot: string, segments: string[], opts: { confi
 
 /** ▶️Vite production build. */
 export function runViteBuild(bundleRoot: string, segments: string[], config: string): void {
-  const workspace = findRepoRoot(bundleRoot);
-  const cli = join(dirname(createRequire(join(workspace, "package.json")).resolve("vite/package.json")), "bin/vite.js");
-  runCmd(process.execPath, [cli, "build", "--config", config, "--configLoader", "bundle", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
+  runCmd(process.execPath, [viteCliEntry(bundleRoot), "build", "--config", config, "--configLoader", "bundle", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
 }
 
 /**

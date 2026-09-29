@@ -1,0 +1,88 @@
+{
+  "$schema": "../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Catalog",
+  "schema": "semio.quiz.catalog/v1",
+  "id": "architecture",
+  "title": { "en": "Architecture and Technology Quizzes", "de": "Quizze Architektur und Technologie" },
+  "introduction": {
+    "title": { "en": "How the quizzes work", "de": "So funktionieren die Quizze" },
+    "paragraphs": [
+      {
+        "en": "These quizzes train your feeling for the numbers behind energy-efficient architecture: power and energy, U-values, heating and cooling loads, air change rates and energy demands. Each quiz consists of a few tasks in which you classify, sort or match.",
+        "de": "Diese Quizze trainieren dein Gefühl für die Zahlen hinter energieeffizienter Architektur: Leistung und Energie, U-Werte, Heiz- und Kühllasten, Luftwechselraten und Energiebedarfe. Jedes Quiz besteht aus wenigen Aufgaben, in denen du klassifizierst, sortierst oder zuordnest."
+      },
+      {
+        "en": "Every run draws and shuffles the items anew, so no two runs look the same. A run only counts as a whole: answer every task, then submit. Your answers are saved as you go, and you may repeat a quiz as often as you like; your best run counts.",
+        "de": "Jeder Durchgang zieht und mischt die Elemente neu, daher gleicht kein Durchgang dem anderen. Ein Durchgang zählt nur als Ganzes: Beantworte alle Aufgaben und gib dann ab. Deine Antworten werden laufend gespeichert, und du kannst jedes Quiz beliebig oft wiederholen; dein bester Durchgang zählt."
+      },
+      {
+        "en": "Every task earns between 0 and 100 %, and partially correct answers earn partial points. In sorting and matching tasks, every pair in the wrong order costs the more, the further apart the true values are, measured on a logarithmic scale where the values span orders of magnitude: swapping two neighbours costs little, mistaking a tea light for a power plant costs a lot. In classifications with spider diagrams, a similar profile still earns partial credit.",
+        "de": "Jede Aufgabe bringt zwischen 0 und 100 %, und teilweise richtige Antworten bringen Teilpunkte. Beim Sortieren und Zuordnen kostet jedes falsch geordnete Paar umso mehr, je weiter die wahren Werte auseinanderliegen, gemessen auf einer logarithmischen Skala, wo die Werte Größenordnungen umfassen: Zwei Nachbarn zu vertauschen kostet wenig, ein Teelicht mit einem Kraftwerk zu verwechseln kostet viel. Bei Klassifikationen mit Netzdiagrammen bringt ein ähnliches Profil noch Teilpunkte."
+      },
+      {
+        "en": "You decide how you appear: anonymously, under a pseudonym or with your name. There is no password: whoever later enters the same pseudonym or name continues the same record, so choose something distinctive if your results should stay yours.",
+        "de": "Du entscheidest, wie du erscheinst: anonym, unter einem Pseudonym oder mit deinem Namen. Es gibt kein Passwort: Wer später dasselbe Pseudonym oder denselben Namen eingibt, setzt dieselbe Aufzeichnung fort. Wähle also etwas Unverwechselbares, wenn deine Ergebnisse deine bleiben sollen."
+      },
+      {
+        "en": "Flawless runs earn badges: for a perfect quiz, for sorting or classifying without a single mistake, and for completing every quiz. The leaderboard ranks everyone by the sum of their best quiz scores.",
+        "de": "Fehlerfreie Durchgänge bringen Abzeichen: für ein perfektes Quiz, für Sortieren oder Klassifizieren ganz ohne Fehler und dafür, jedes Quiz abgeschlossen zu haben. Die Bestenliste ordnet alle nach der Summe ihrer besten Quiz-Ergebnisse."
+      }
+    ]
+  },
+  "quizzes": [
+    "../⚡️energy/🧲️physics/❓️quiz/🔣️.json",
+    "../⚡️energy/🔥️heating/❓️quiz/🔣️.json",
+    "../⚡️energy/❄️cooling/❓️quiz/🔣️.json",
+    "../⚡️energy/📊️demand/❓️quiz/🔣️.json"
+  ],
+  "badges": [
+    {
+      "id": "physics-expert",
+      "emoji": "🧲",
+      "label": { "en": "Physics Expert", "de": "Physik-Profi" },
+      "description": { "en": "Scored 100 % in a run of the Physical Understanding quiz.", "de": "100 % in einem Durchgang des Quiz „Physikalisches Verständnis“." },
+      "rule": { "kind": "perfect-quiz", "quiz": "physics" }
+    },
+    {
+      "id": "heating-expert",
+      "emoji": "🔥",
+      "label": { "en": "Heating Expert", "de": "Heiz-Profi" },
+      "description": { "en": "Scored 100 % in a run of the Heating quiz.", "de": "100 % in einem Durchgang des Quiz „Heizen“." },
+      "rule": { "kind": "perfect-quiz", "quiz": "heating" }
+    },
+    {
+      "id": "cooling-expert",
+      "emoji": "❄️",
+      "label": { "en": "Cooling Expert", "de": "Kühl-Profi" },
+      "description": { "en": "Scored 100 % in a run of the Cooling quiz.", "de": "100 % in einem Durchgang des Quiz „Kühlen“." },
+      "rule": { "kind": "perfect-quiz", "quiz": "cooling" }
+    },
+    {
+      "id": "demand-expert",
+      "emoji": "📊",
+      "label": { "en": "Energy Demand Expert", "de": "Energiebedarfs-Profi" },
+      "description": { "en": "Scored 100 % in a run of the Energy Demand quiz.", "de": "100 % in einem Durchgang des Quiz „Energiebedarf“." },
+      "rule": { "kind": "perfect-quiz", "quiz": "demand" }
+    },
+    {
+      "id": "numerical-brain",
+      "emoji": "🧮",
+      "label": { "en": "Numerical Brain", "de": "Zahlenhirn" },
+      "description": { "en": "Sorted every sorting task of the catalog without a single mistake.", "de": "Jede Sortieraufgabe des Katalogs ganz ohne Fehler sortiert." },
+      "rule": { "kind": "perfect-tasks", "taskKind": "sorting" }
+    },
+    {
+      "id": "pattern-seer",
+      "emoji": "🔍",
+      "label": { "en": "Pattern Seer", "de": "Musterblick" },
+      "description": { "en": "Solved every classification task of the catalog without a single mistake.", "de": "Jede Klassifikationsaufgabe des Katalogs ganz ohne Fehler gelöst." },
+      "rule": { "kind": "perfect-tasks", "taskKind": "classification" }
+    },
+    {
+      "id": "completionist",
+      "emoji": "🏁",
+      "label": { "en": "Completionist", "de": "Rundum dabei" },
+      "description": { "en": "Submitted at least one run of every quiz.", "de": "Mindestens einen Durchgang jedes Quiz abgegeben." },
+      "rule": { "kind": "completed-quizzes" }
+    }
+  ]
+}

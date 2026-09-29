@@ -6,6 +6,12 @@ const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 /** 🔤️ Resolves semantic filenames to names accepted by TeX auxiliary-file handling. */
 export function printCompilerName(name: string): string {
   if (name === "📐️.tex") return "_.tex";
+  // 📐 The staged library root is itself a compiler search path, so a child
+  // directory named "latex" would shadow the "latex" *format* the engine loads
+  // before any input file — tectonic opens the directory and aborts with
+  // "could not open format file latex". The package directory therefore stages
+  // under a name no TeX format can claim.
+  if (name === "🖋️latex") return "semio-latex";
   const first = segmenter.segment(name)[Symbol.iterator]().next().value?.segment ?? "";
   return /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(first) ? name.slice(first.length) : name;
 }

@@ -149,12 +149,14 @@ members = [
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust",
     "🌎️hub/📦️packages/🦀️rust",
+    "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust",
@@ -356,6 +358,7 @@ semio-framework-value-resident = { path = "🧰️framework/🔨️modules/🌱�
 semio-framework-pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-framework-server = { path = "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
+semio-framework-quiz = { path = "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust" }
 semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

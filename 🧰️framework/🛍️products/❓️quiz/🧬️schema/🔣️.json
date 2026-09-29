@@ -1,0 +1,875 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/product/quiz/schema.json",
+  "title": "Quiz",
+  "description": "Render-independent declarative quizzes, their catalogs, badges, the randomized solution-free sheet of a run, answers, results, and the run lifecycle commands, events and queries a proctor serves.",
+  "$ref": "#/$defs/Quiz",
+  "$defs": {
+    "Slug": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "Id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "Timestamp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Milliseconds since the Unix epoch."
+    },
+    "Score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "Text": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A learner-visible text in every supported language; there is no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Scale": {
+      "description": "How distances between values are measured: logarithmic for quantities spanning orders of magnitude, linear otherwise.",
+      "enum": ["linear", "logarithmic"]
+    },
+    "TaskKind": {
+      "enum": ["classification", "sorting", "matching"]
+    },
+    "Quantity": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A measured quantity: its label, unit symbol, distance scale, and whether display scales the unit with SI prefixes (W → kW → MW …).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "unit", "scale", "prefixed"],
+      "properties": {
+        "label": { "$ref": "#/$defs/Text" },
+        "unit": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "scale": { "$ref": "#/$defs/Scale" },
+        "prefixed": { "type": "boolean" }
+      }
+    },
+    "Dimension": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "One quantity a matching task asks for per item.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "quantity"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "quantity": { "$ref": "#/$defs/Quantity" }
+      }
+    },
+    "Axis": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "One spoke of a profile (spider diagram); values normalise to (value − min) / (max − min).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "unit", "min", "max"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "label": { "$ref": "#/$defs/Text" },
+        "unit": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    },
+    "Profile": {
+      "description": "Values of a category on every axis of its task, keyed by axis id.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/Slug" },
+      "additionalProperties": { "type": "number" }
+    },
+    "Category": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "label": { "$ref": "#/$defs/Text" },
+        "description": { "$ref": "#/$defs/Text" },
+        "profile": { "$ref": "#/$defs/Profile" }
+      }
+    },
+    "ClassificationItem": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "category"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "label": { "$ref": "#/$defs/Text" },
+        "category": { "$ref": "#/$defs/Slug" },
+        "explanation": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "SortingItem": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "value"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "label": { "$ref": "#/$defs/Text" },
+        "value": { "type": "number" },
+        "explanation": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "MatchingItem": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "values"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "label": { "$ref": "#/$defs/Text" },
+        "values": {
+          "description": "The true value per dimension id.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "type": "number" }
+        },
+        "explanation": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "ClassificationTask": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Assign every item to one category. Categories may carry profiles on shared axes (spider diagrams); a wrong profile earns partial credit by profile similarity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "title", "prompt", "categories", "items"],
+      "properties": {
+        "kind": { "const": "classification" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "prompt": { "$ref": "#/$defs/Text" },
+        "axes": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/Axis" } },
+        "categories": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/Category" } },
+        "items": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/ClassificationItem" } },
+        "draw": { "type": "integer", "minimum": 2 }
+      }
+    },
+    "SortingTask": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Order the items ascending by their quantity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "title", "prompt", "quantity", "items"],
+      "properties": {
+        "kind": { "const": "sorting" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "prompt": { "$ref": "#/$defs/Text" },
+        "quantity": { "$ref": "#/$defs/Quantity" },
+        "items": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/SortingItem" } },
+        "draw": { "type": "integer", "minimum": 2 }
+      }
+    },
+    "MatchingTask": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "For every dimension, assign each item one of the offered value cards (the multiset of the drawn items' true values).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "title", "prompt", "dimensions", "items"],
+      "properties": {
+        "kind": { "const": "matching" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "prompt": { "$ref": "#/$defs/Text" },
+        "dimensions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Dimension" } },
+        "items": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/MatchingItem" } },
+        "draw": { "type": "integer", "minimum": 2 }
+      }
+    },
+    "Task": {
+      "oneOf": [
+        { "$ref": "#/$defs/ClassificationTask" },
+        { "$ref": "#/$defs/SortingTask" },
+        { "$ref": "#/$defs/MatchingTask" }
+      ]
+    },
+    "Quiz": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A quiz: an ordered set of tasks. A run presents them randomized and is scored only as a whole.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "id", "title", "description", "tasks"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "schema": { "const": "semio.quiz/v1" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "description": { "$ref": "#/$defs/Text" },
+        "tasks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Task" } }
+      }
+    },
+    "BadgeRule": {
+      "description": "perfect-quiz: one run of the quiz scored 1. perfect-tasks: every catalog task matching the selector scored 1 in some run. completed-quizzes: every catalog quiz has a submitted run.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "quiz"],
+          "properties": { "kind": { "const": "perfect-quiz" }, "quiz": { "$ref": "#/$defs/Slug" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "perfect-tasks" },
+            "taskKind": { "$ref": "#/$defs/TaskKind" },
+            "quiz": { "$ref": "#/$defs/Slug" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "completed-quizzes" } }
+        }
+      ]
+    },
+    "Badge": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "emoji", "label", "description", "rule"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "emoji": { "type": "string", "minLength": 1, "maxLength": 16 },
+        "label": { "$ref": "#/$defs/Text" },
+        "description": { "$ref": "#/$defs/Text" },
+        "rule": { "$ref": "#/$defs/BadgeRule" }
+      }
+    },
+    "Introduction": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "paragraphs"],
+      "properties": {
+        "title": { "$ref": "#/$defs/Text" },
+        "paragraphs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Text" } }
+      }
+    },
+    "Catalog": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The quizzes one site offers, its introduction, and the badges that span its quizzes. Quiz paths are relative to the catalog file.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "id", "title", "introduction", "quizzes", "badges"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "schema": { "const": "semio.quiz.catalog/v1" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "introduction": { "$ref": "#/$defs/Introduction" },
+        "quizzes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "badges": { "type": "array", "items": { "$ref": "#/$defs/Badge" } }
+      }
+    },
+    "SheetClassificationTask": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "title", "prompt", "categories", "items"],
+      "properties": {
+        "kind": { "const": "classification" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "prompt": { "$ref": "#/$defs/Text" },
+        "axes": { "type": "array", "items": { "$ref": "#/$defs/Axis" } },
+        "categories": { "type": "array", "items": { "$ref": "#/$defs/Category" } },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/SheetItem" } }
+      }
+    },
+    "SheetSortingTask": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "title", "prompt", "quantity", "items"],
+      "properties": {
+        "kind": { "const": "sorting" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "prompt": { "$ref": "#/$defs/Text" },
+        "quantity": { "$ref": "#/$defs/Quantity" },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/SheetItem" } }
+      }
+    },
+    "SheetDimension": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "quantity", "cards"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "quantity": { "$ref": "#/$defs/Quantity" },
+        "cards": { "description": "Card values in presentation order; a card is addressed by its index.", "type": "array", "items": { "type": "number" } }
+      }
+    },
+    "SheetMatchingTask": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "title", "prompt", "dimensions", "items"],
+      "properties": {
+        "kind": { "const": "matching" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "prompt": { "$ref": "#/$defs/Text" },
+        "dimensions": { "type": "array", "items": { "$ref": "#/$defs/SheetDimension" } },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/SheetItem" } }
+      }
+    },
+    "SheetItem": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "label": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "SheetTask": {
+      "oneOf": [
+        { "$ref": "#/$defs/SheetClassificationTask" },
+        { "$ref": "#/$defs/SheetSortingTask" },
+        { "$ref": "#/$defs/SheetMatchingTask" }
+      ]
+    },
+    "Sheet": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The randomized, solution-free presentation of a quiz for one run seed: task order, drawn items in order, category order and card order. A pure function of (quiz, seed).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quiz", "seed", "title", "description", "tasks"],
+      "properties": {
+        "quiz": { "$ref": "#/$defs/Slug" },
+        "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "title": { "$ref": "#/$defs/Text" },
+        "description": { "$ref": "#/$defs/Text" },
+        "tasks": { "type": "array", "items": { "$ref": "#/$defs/SheetTask" } }
+      }
+    },
+    "ClassificationAnswer": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "assignments"],
+      "properties": {
+        "kind": { "const": "classification" },
+        "assignments": {
+          "description": "Category id per item id.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "$ref": "#/$defs/Slug" }
+        }
+      }
+    },
+    "SortingAnswer": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "order"],
+      "properties": {
+        "kind": { "const": "sorting" },
+        "order": { "description": "Item ids, smallest first.", "type": "array", "items": { "$ref": "#/$defs/Slug" } }
+      }
+    },
+    "MatchingAnswer": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "assignments"],
+      "properties": {
+        "kind": { "const": "matching" },
+        "assignments": {
+          "description": "Per dimension id: the card index per item id.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": {
+            "type": "object",
+            "propertyNames": { "$ref": "#/$defs/Slug" },
+            "additionalProperties": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "Answer": {
+      "oneOf": [
+        { "$ref": "#/$defs/ClassificationAnswer" },
+        { "$ref": "#/$defs/SortingAnswer" },
+        { "$ref": "#/$defs/MatchingAnswer" }
+      ]
+    },
+    "ClassificationItemResult": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "assigned", "correct", "credit"],
+      "properties": {
+        "item": { "$ref": "#/$defs/Slug" },
+        "assigned": { "$ref": "#/$defs/Slug" },
+        "correct": { "$ref": "#/$defs/Slug" },
+        "credit": { "$ref": "#/$defs/Score" },
+        "explanation": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "SortingItemResult": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "value", "position", "rank"],
+      "properties": {
+        "item": { "$ref": "#/$defs/Slug" },
+        "value": { "type": "number" },
+        "position": { "description": "Zero-based position in the learner's order.", "type": "integer", "minimum": 0 },
+        "rank": { "description": "Zero-based position in the true ascending order.", "type": "integer", "minimum": 0 },
+        "explanation": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "MatchingItemResult": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "assigned", "correct"],
+      "properties": {
+        "item": { "$ref": "#/$defs/Slug" },
+        "assigned": { "type": "number" },
+        "correct": { "type": "number" },
+        "explanation": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "DimensionResult": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "score", "items"],
+      "properties": {
+        "dimension": { "$ref": "#/$defs/Slug" },
+        "score": { "$ref": "#/$defs/Score" },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/MatchingItemResult" } }
+      }
+    },
+    "TaskResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "task", "score", "items"],
+          "properties": {
+            "kind": { "const": "classification" },
+            "task": { "$ref": "#/$defs/Slug" },
+            "score": { "$ref": "#/$defs/Score" },
+            "items": { "type": "array", "items": { "$ref": "#/$defs/ClassificationItemResult" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "task", "score", "items"],
+          "properties": {
+            "kind": { "const": "sorting" },
+            "task": { "$ref": "#/$defs/Slug" },
+            "score": { "$ref": "#/$defs/Score" },
+            "items": { "description": "In the learner's order.", "type": "array", "items": { "$ref": "#/$defs/SortingItemResult" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "task", "score", "dimensions"],
+          "properties": {
+            "kind": { "const": "matching" },
+            "task": { "$ref": "#/$defs/Slug" },
+            "score": { "$ref": "#/$defs/Score" },
+            "dimensions": { "type": "array", "items": { "$ref": "#/$defs/DimensionResult" } }
+          }
+        }
+      ]
+    },
+    "RunResult": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The scored run: the quiz score is the mean of its task scores; tasks follow the sheet order.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quiz", "score", "tasks"],
+      "properties": {
+        "quiz": { "$ref": "#/$defs/Slug" },
+        "score": { "$ref": "#/$defs/Score" },
+        "tasks": { "type": "array", "items": { "$ref": "#/$defs/TaskResult" } }
+      }
+    },
+    "Identity": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "How a learner appears. Anonymous learners are always new; pseudonyms and names share one handle namespace and are recalled without a password.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "anonymous" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "handle"],
+          "properties": {
+            "kind": { "enum": ["pseudonym", "name"] },
+            "handle": { "type": "string", "minLength": 1, "maxLength": 64 }
+          }
+        }
+      ]
+    },
+    "Command": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Learner intent. Every command carries a client-generated id so a retry after a connection shortage is applied exactly once.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "id", "learner", "identity"],
+          "properties": {
+            "type": { "const": "identify-learner" },
+            "id": { "$ref": "#/$defs/Id" },
+            "learner": { "description": "The id a new learner receives; ignored when the handle is recalled.", "$ref": "#/$defs/Id" },
+            "identity": { "$ref": "#/$defs/Identity" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "id", "learner", "run", "quiz"],
+          "properties": {
+            "type": { "const": "start-run" },
+            "id": { "$ref": "#/$defs/Id" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "run": { "$ref": "#/$defs/Id" },
+            "quiz": { "$ref": "#/$defs/Slug" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "id", "learner", "run", "task", "answer"],
+          "properties": {
+            "type": { "const": "record-answer" },
+            "id": { "$ref": "#/$defs/Id" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "run": { "$ref": "#/$defs/Id" },
+            "task": { "$ref": "#/$defs/Slug" },
+            "answer": { "$ref": "#/$defs/Answer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "id", "learner", "run"],
+          "properties": {
+            "type": { "const": "submit-run" },
+            "id": { "$ref": "#/$defs/Id" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "run": { "$ref": "#/$defs/Id" }
+          }
+        }
+      ]
+    },
+    "Rejection": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "enum": [
+        "unknown-learner",
+        "unknown-quiz",
+        "unknown-run",
+        "unknown-task",
+        "run-open",
+        "run-closed",
+        "run-incomplete",
+        "answer-invalid",
+        "quiz-revised",
+        "handle-invalid"
+      ]
+    },
+    "Event": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Facts of the learner stream. The quiz revision is the content hash the run was started against.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner", "identity", "at"],
+          "properties": {
+            "type": { "const": "learner-registered" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "identity": { "$ref": "#/$defs/Identity" },
+            "at": { "$ref": "#/$defs/Timestamp" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner", "at"],
+          "properties": {
+            "type": { "const": "learner-recalled" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "at": { "$ref": "#/$defs/Timestamp" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner", "run", "quiz", "revision", "seed", "at"],
+          "properties": {
+            "type": { "const": "run-started" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "run": { "$ref": "#/$defs/Id" },
+            "quiz": { "$ref": "#/$defs/Slug" },
+            "revision": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "at": { "$ref": "#/$defs/Timestamp" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner", "run", "at"],
+          "properties": {
+            "type": { "const": "run-voided" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "run": { "$ref": "#/$defs/Id" },
+            "at": { "$ref": "#/$defs/Timestamp" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner", "run", "task", "answer", "at"],
+          "properties": {
+            "type": { "const": "answer-recorded" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "run": { "$ref": "#/$defs/Id" },
+            "task": { "$ref": "#/$defs/Slug" },
+            "answer": { "$ref": "#/$defs/Answer" },
+            "at": { "$ref": "#/$defs/Timestamp" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner", "run", "result", "at"],
+          "properties": {
+            "type": { "const": "run-submitted" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "run": { "$ref": "#/$defs/Id" },
+            "result": { "$ref": "#/$defs/RunResult" },
+            "at": { "$ref": "#/$defs/Timestamp" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner", "badge", "run", "at"],
+          "properties": {
+            "type": { "const": "badge-awarded" },
+            "learner": { "$ref": "#/$defs/Id" },
+            "badge": { "$ref": "#/$defs/Slug" },
+            "run": { "$ref": "#/$defs/Id" },
+            "at": { "$ref": "#/$defs/Timestamp" }
+          }
+        }
+      ]
+    },
+    "CatalogQuizView": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "description", "tasks"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "description": { "$ref": "#/$defs/Text" },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "title"],
+            "properties": {
+              "id": { "$ref": "#/$defs/Slug" },
+              "kind": { "$ref": "#/$defs/TaskKind" },
+              "title": { "$ref": "#/$defs/Text" }
+            }
+          }
+        }
+      }
+    },
+    "CatalogView": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The solution-free catalog a client renders.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "introduction", "quizzes", "badges"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "introduction": { "$ref": "#/$defs/Introduction" },
+        "quizzes": { "type": "array", "items": { "$ref": "#/$defs/CatalogQuizView" } },
+        "badges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "emoji", "label", "description"],
+            "properties": {
+              "id": { "$ref": "#/$defs/Slug" },
+              "emoji": { "type": "string" },
+              "label": { "$ref": "#/$defs/Text" },
+              "description": { "$ref": "#/$defs/Text" }
+            }
+          }
+        }
+      }
+    },
+    "RunStatus": {
+      "enum": ["open", "submitted", "voided"]
+    },
+    "RunView": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run", "learner", "quiz", "status", "sheet", "answers", "startedAt"],
+      "properties": {
+        "run": { "$ref": "#/$defs/Id" },
+        "learner": { "$ref": "#/$defs/Id" },
+        "quiz": { "$ref": "#/$defs/Slug" },
+        "status": { "$ref": "#/$defs/RunStatus" },
+        "sheet": { "$ref": "#/$defs/Sheet" },
+        "answers": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "$ref": "#/$defs/Answer" }
+        },
+        "result": { "$ref": "#/$defs/RunResult" },
+        "startedAt": { "$ref": "#/$defs/Timestamp" },
+        "submittedAt": { "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "RunSummary": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run", "quiz", "status", "startedAt"],
+      "properties": {
+        "run": { "$ref": "#/$defs/Id" },
+        "quiz": { "$ref": "#/$defs/Slug" },
+        "status": { "$ref": "#/$defs/RunStatus" },
+        "score": { "$ref": "#/$defs/Score" },
+        "startedAt": { "$ref": "#/$defs/Timestamp" },
+        "submittedAt": { "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "BadgeAward": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["badge", "run", "at"],
+      "properties": {
+        "badge": { "$ref": "#/$defs/Slug" },
+        "run": { "$ref": "#/$defs/Id" },
+        "at": { "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "LearnerView": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["learner", "identity", "runs", "badges", "best", "total"],
+      "properties": {
+        "learner": { "$ref": "#/$defs/Id" },
+        "identity": { "$ref": "#/$defs/Identity" },
+        "runs": { "description": "Newest first.", "type": "array", "items": { "$ref": "#/$defs/RunSummary" } },
+        "badges": { "type": "array", "items": { "$ref": "#/$defs/BadgeAward" } },
+        "best": {
+          "description": "Best submitted score per quiz id.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "$ref": "#/$defs/Score" }
+        },
+        "total": { "description": "Sum of the best scores over the catalog quizzes, in points (score × 100).", "type": "number", "minimum": 0 }
+      }
+    },
+    "LeaderboardRow": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A public leaderboard row. It never carries the learner id: without passwords that id is the only thing standing between an anonymous learner and anyone acting as them.",
+      "required": ["rank", "tag", "identity", "total", "reachedAt", "best", "badges", "runs", "lastActivity"],
+      "properties": {
+        "rank": { "type": "integer", "minimum": 1 },
+        "tag": { "description": "Public, non-reversible learner tag: fnv1a32 of the learner id as 8 lowercase hex digits; a client recognises its own row by computing it from its own id.", "type": "string", "pattern": "^[0-9a-f]{8}$" },
+        "identity": { "$ref": "#/$defs/Identity" },
+        "total": { "type": "number", "minimum": 0 },
+        "reachedAt": { "description": "When the current total was reached: the submission that last raised a best score.", "$ref": "#/$defs/Timestamp" },
+        "best": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "$ref": "#/$defs/Score" }
+        },
+        "badges": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "runs": { "description": "Submitted runs.", "type": "integer", "minimum": 0 },
+        "lastActivity": { "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "Leaderboard": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Every learner with at least one submitted run, ordered by total descending, then badge count descending, then reachedAt ascending, then learner id ascending; rank is the 1-based position.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows"],
+      "properties": {
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/LeaderboardRow" } }
+      }
+    },
+    "Query": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": { "type": { "const": "catalog" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "learner"],
+          "properties": { "type": { "const": "learner" }, "learner": { "$ref": "#/$defs/Id" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "run"],
+          "properties": { "type": { "const": "run" }, "run": { "$ref": "#/$defs/Id" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": { "type": { "const": "leaderboard" } }
+        }
+      ]
+    }
+  }
+}

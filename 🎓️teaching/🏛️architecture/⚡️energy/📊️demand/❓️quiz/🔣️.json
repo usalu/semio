@@ -1,0 +1,238 @@
+{
+  "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
+  "schema": "semio.quiz/v1",
+  "id": "demand",
+  "title": { "en": "Energy Demand", "de": "Energiebedarf" },
+  "description": {
+    "en": "Recognise energy standards by their profiles and estimate how much final energy buildings with different supply systems have to buy.",
+    "de": "Energiestandards an ihren Profilen erkennen und abschätzen, wie viel Endenergie Gebäude mit unterschiedlicher Anlagentechnik beziehen müssen."
+  },
+  "tasks": [
+    {
+      "kind": "classification",
+      "id": "standard-profiles",
+      "title": { "en": "Energy Standards and Their Profiles", "de": "Energiestandards und ihre Profile" },
+      "prompt": {
+        "en": "Each spider diagram shows the typical profile of one residential energy standard per m² of floor area and year: heating demand, cooling demand, ventilation heat loss and net energy costs. Assign each standard to its profile.",
+        "de": "Jedes Netzdiagramm zeigt das typische Profil eines Wohngebäude-Energiestandards je m² Fläche und Jahr: Heizwärmebedarf, Kühlbedarf, Lüftungswärmeverlust und Netto-Energiekosten. Ordne jedem Standard sein Profil zu."
+      },
+      "axes": [
+        {
+          "id": "heating",
+          "label": { "en": "Heating demand", "de": "Heizwärmebedarf" },
+          "unit": "kWh/(m²·a)",
+          "min": 0,
+          "max": 350
+        },
+        {
+          "id": "cooling",
+          "label": { "en": "Cooling demand to keep 26 °C", "de": "Kühlbedarf für 26 °C" },
+          "unit": "kWh/(m²·a)",
+          "min": 0,
+          "max": 10
+        },
+        {
+          "id": "ventilation",
+          "label": { "en": "Ventilation heat loss (air leakage plus ventilation after heat recovery)", "de": "Lüftungswärmeverlust (Undichtheit plus Lüftung nach Wärmerückgewinnung)" },
+          "unit": "kWh/(m²·a)",
+          "min": 0,
+          "max": 70
+        },
+        {
+          "id": "costs",
+          "label": { "en": "Net energy costs for heating, hot water and auxiliary energy (after PV credit)", "de": "Netto-Energiekosten für Heizung, Warmwasser und Hilfsenergie (nach PV-Gutschrift)" },
+          "unit": "€/(m²·a)",
+          "min": -5,
+          "max": 55
+        }
+      ],
+      "categories": [
+        {
+          "id": "profile-a",
+          "label": { "en": "Profile A", "de": "Profil A" },
+          "profile": { "heating": 26, "cooling": 4, "ventilation": 9, "costs": 4.2 }
+        },
+        {
+          "id": "profile-b",
+          "label": { "en": "Profile B", "de": "Profil B" },
+          "profile": { "heating": 303, "cooling": 8, "ventilation": 61, "costs": 50 }
+        },
+        {
+          "id": "profile-c",
+          "label": { "en": "Profile C", "de": "Profil C" },
+          "profile": { "heating": 20, "cooling": 7, "ventilation": 8, "costs": -2 }
+        },
+        {
+          "id": "profile-d",
+          "label": { "en": "Profile D", "de": "Profil D" },
+          "profile": { "heating": 135, "cooling": 6, "ventilation": 43, "costs": 23 }
+        },
+        {
+          "id": "profile-e",
+          "label": { "en": "Profile E", "de": "Profil E" },
+          "profile": { "heating": 15, "cooling": 2, "ventilation": 6.5, "costs": 3.7 }
+        },
+        {
+          "id": "profile-f",
+          "label": { "en": "Profile F", "de": "Profil F" },
+          "profile": { "heating": 55, "cooling": 5, "ventilation": 32, "costs": 10 }
+        }
+      ],
+      "items": [
+        {
+          "id": "unrenovated-old-building",
+          "label": { "en": "Unrenovated old building (1960s single-family house)", "de": "Unsanierter Altbau (Einfamilienhaus der 1960er)" },
+          "category": "profile-b",
+          "explanation": {
+            "en": "Profile B: about 300 kWh/(m²·a) heating (IWU type EFH_E), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh.",
+            "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh."
+          }
+        },
+        {
+          "id": "wschvo-1995",
+          "label": { "en": "House to the Thermal Insulation Ordinance 1995 (WSchVO 1995)", "de": "Haus nach Wärmeschutzverordnung 1995 (WSchVO 1995)" },
+          "category": "profile-d",
+          "explanation": {
+            "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler.",
+            "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel."
+          }
+        },
+        {
+          "id": "enev-2014",
+          "label": { "en": "New build to EnEV 2014", "de": "Neubau nach EnEV 2014" },
+          "category": "profile-f",
+          "explanation": {
+            "en": "Profile F: about 55 kWh/(m²·a) heating (slightly above today's minimum envelope, which EnEV 2016 tightened by about 20 %), airtight to n50 ≈ 1.5 1/h but ventilated by windows or exhaust fans without heat recovery (about 32 kWh/(m²·a)), and about 10 €/(m²·a) with a gas condensing boiler.",
+            "de": "Profil F: rund 55 kWh/(m²·a) Heizwärme (etwas über der heutigen Mindest-Hülle, die die EnEV 2016 um rund 20 % verschärfte), luftdicht bis n50 ≈ 1,5 1/h, aber über Fenster oder Abluftventilatoren ohne Wärmerückgewinnung gelüftet (rund 32 kWh/(m²·a)), und rund 10 €/(m²·a) mit einem Gas-Brennwertkessel."
+          }
+        },
+        {
+          "id": "kfw-40",
+          "label": { "en": "KfW Efficiency House 40", "de": "KfW-Effizienzhaus 40" },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Profile A: about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a).",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a)."
+          }
+        },
+        {
+          "id": "passive-house",
+          "label": { "en": "Passive house", "de": "Passivhaus" },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Profile E: at most 15 kWh/(m²·a) heating and n50 ≤ 0.6 1/h with at least 75 % heat recovery (Passive House Institute), about 6.5 kWh/(m²·a) ventilation loss, the lowest cooling demand thanks to planned shading, and about 4 €/(m²·a) with a compact heat pump.",
+            "de": "Profil E: höchstens 15 kWh/(m²·a) Heizwärme und n50 ≤ 0,6 1/h mit mindestens 75 % Wärmerückgewinnung (Passivhaus Institut), rund 6,5 kWh/(m²·a) Lüftungswärmeverlust, der kleinste Kühlbedarf dank geplanter Verschattung und rund 4 €/(m²·a) mit einem Kompaktgerät mit Wärmepumpe."
+          }
+        },
+        {
+          "id": "plus-energy-house",
+          "label": { "en": "Plus-energy house", "de": "Plusenergiehaus" },
+          "category": "profile-c",
+          "explanation": {
+            "en": "Profile C: a passive-house-like envelope with heat pump and a large PV roof that exports more electricity than the building buys, so the net costs are negative (about −2 €/(m²·a) at 30 ct purchase and 8 ct feed-in); larger glazing raises the cooling demand.",
+            "de": "Profil C: eine passivhausähnliche Hülle mit Wärmepumpe und einem großen PV-Dach, das mehr Strom einspeist, als das Gebäude bezieht, daher sind die Nettokosten negativ (rund −2 €/(m²·a) bei 30 ct Bezug und 8 ct Einspeisung); größere Verglasung erhöht den Kühlbedarf."
+          }
+        }
+      ]
+    },
+    {
+      "kind": "matching",
+      "id": "final-energy",
+      "title": { "en": "Final Energy Demand", "de": "Endenergiebedarf" },
+      "prompt": {
+        "en": "Assign each building with its supply system its total specific final energy demand for heating, hot water and auxiliary energy in kWh/(m²·a): the energy bought at the building boundary (gas, electricity), before primary energy factors and PV credits.",
+        "de": "Ordne jedem Gebäude mit seiner Anlagentechnik seinen gesamten spezifischen Endenergiebedarf für Heizung, Warmwasser und Hilfsenergie in kWh/(m²·a) zu: die an der Gebäudegrenze bezogene Energie (Gas, Strom), vor Primärenergiefaktoren und PV-Gutschriften."
+      },
+      "dimensions": [
+        {
+          "id": "final-energy",
+          "quantity": { "label": { "en": "Final energy demand", "de": "Endenergiebedarf" }, "unit": "kWh/(m²·a)", "scale": "logarithmic", "prefixed": false }
+        }
+      ],
+      "items": [
+        {
+          "id": "kfw-40-heat-pump",
+          "label": { "en": "KfW Efficiency House 40 with heat pump and heat-recovery ventilation", "de": "KfW-Effizienzhaus 40 mit Wärmepumpe und Wärmerückgewinnungslüftung" },
+          "values": { "final-energy": 14 },
+          "explanation": {
+            "en": "About 14 kWh/(m²·a): (26 heating + 12.5 hot water) ÷ seasonal performance factor 3.5 + 3 for fans and pumps; the heat pump takes more than two thirds of the heat from the environment.",
+            "de": "Rund 14 kWh/(m²·a): (26 Heizwärme + 12,5 Warmwasser) ÷ Jahresarbeitszahl 3,5 + 3 für Ventilatoren und Pumpen; die Wärmepumpe holt mehr als zwei Drittel der Wärme aus der Umwelt."
+          }
+        },
+        {
+          "id": "deep-retrofit-heat-pump",
+          "label": { "en": "1960s single-family house, deeply retrofitted with passive-house components and a heat pump", "de": "Einfamilienhaus der 1960er, tiefgreifend mit Passivhaus-Komponenten und Wärmepumpe saniert" },
+          "values": { "final-energy": 23 },
+          "explanation": {
+            "en": "About 23 kWh/(m²·a): the heating demand falls from 303 to 54 kWh/(m²·a) (IWU package 2, type EFH_E); (54 + 12.5) ÷ seasonal performance factor 3.3 + 3.",
+            "de": "Rund 23 kWh/(m²·a): der Heizwärmebedarf sinkt von 303 auf 54 kWh/(m²·a) (IWU-Paket 2, Typ EFH_E); (54 + 12,5) ÷ Jahresarbeitszahl 3,3 + 3."
+          }
+        },
+        {
+          "id": "passive-house-direct-electric",
+          "label": { "en": "Passive house with direct-electric heating and hot water", "de": "Passivhaus mit Direktstromheizung und elektrischer Warmwasserbereitung" },
+          "values": { "final-energy": 30 },
+          "explanation": {
+            "en": "About 30 kWh/(m²·a): 15 heating + 12.5 hot water + 3 ventilation, all bought as electricity one to one, which is acceptable only because the demand is so small.",
+            "de": "Rund 30 kWh/(m²·a): 15 Heizwärme + 12,5 Warmwasser + 3 Lüftung, alles eins zu eins als Strom bezogen, was nur vertretbar ist, weil der Bedarf so klein ist."
+          }
+        },
+        {
+          "id": "kfw-55-gas-solar",
+          "label": { "en": "KfW Efficiency House 55 with gas condensing boiler and solar hot water", "de": "KfW-Effizienzhaus 55 mit Gas-Brennwertkessel und Solarthermie" },
+          "values": { "final-energy": 48 },
+          "explanation": {
+            "en": "About 48 kWh/(m²·a): 35 heating ÷ 0.9 + the 40 % of the 12.5 hot water not covered by the collectors ÷ 0.8 + 3 auxiliary energy.",
+            "de": "Rund 48 kWh/(m²·a): 35 Heizwärme ÷ 0,9 + die 40 % der 12,5 Warmwasser, die die Kollektoren nicht decken, ÷ 0,8 + 3 Hilfsenergie."
+          }
+        },
+        {
+          "id": "enev-2014-gas",
+          "label": { "en": "New house to EnEV 2014 with gas condensing boiler", "de": "Neubau nach EnEV 2014 mit Gas-Brennwertkessel" },
+          "values": { "final-energy": 80 },
+          "explanation": {
+            "en": "About 80 kWh/(m²·a): 55 heating ÷ 0.9 + 12.5 hot water (the standard value of DIN V 4108-6) ÷ 0.8 + 3 auxiliary energy.",
+            "de": "Rund 80 kWh/(m²·a): 55 Heizwärme ÷ 0,9 + 12,5 Warmwasser (der Standardwert der DIN V 4108-6) ÷ 0,8 + 3 Hilfsenergie."
+          }
+        },
+        {
+          "id": "old-house-heat-pump",
+          "label": { "en": "Unrenovated 1960s single-family house with an air-source heat pump", "de": "Unsaniertes Einfamilienhaus der 1960er mit Luft-Wärmepumpe" },
+          "values": { "final-energy": 122 },
+          "explanation": {
+            "en": "About 122 kWh/(m²·a): (303 + 12.5) ÷ seasonal performance factor 2.7 + 5; even without insulation, a heat pump cuts the purchased energy to less than a third (field tests in existing buildings measured about 3, Fraunhofer ISE).",
+            "de": "Rund 122 kWh/(m²·a): (303 + 12,5) ÷ Jahresarbeitszahl 2,7 + 5; selbst ohne Dämmung senkt eine Wärmepumpe die bezogene Energie auf weniger als ein Drittel (Feldtests im Bestand maßen etwa 3, Fraunhofer ISE)."
+          }
+        },
+        {
+          "id": "wschvo-1995-gas",
+          "label": { "en": "Single-family house to WSchVO 1995 with low-temperature gas boiler", "de": "Einfamilienhaus nach WSchVO 1995 mit Niedertemperatur-Gaskessel" },
+          "values": { "final-energy": 182 },
+          "explanation": {
+            "en": "About 182 kWh/(m²·a): 135 heating (IWU type EFH_I) ÷ 0.85 + 12.5 hot water ÷ 0.65 + 4 auxiliary energy.",
+            "de": "Rund 182 kWh/(m²·a): 135 Heizwärme (IWU-Typ EFH_I) ÷ 0,85 + 12,5 Warmwasser ÷ 0,65 + 4 Hilfsenergie."
+          }
+        },
+        {
+          "id": "gruenderzeit-gas",
+          "label": { "en": "Unrenovated Gründerzeit apartment building with gas central heating", "de": "Unsaniertes Gründerzeit-Mehrfamilienhaus mit Gas-Zentralheizung" },
+          "values": { "final-energy": 274 },
+          "explanation": {
+            "en": "About 274 kWh/(m²·a): 197 heating (IWU type MFH_B) ÷ 0.8 + 12.5 hot water ÷ 0.5 (storage and circulation losses) + 3 auxiliary energy.",
+            "de": "Rund 274 kWh/(m²·a): 197 Heizwärme (IWU-Typ MFH_B) ÷ 0,8 + 12,5 Warmwasser ÷ 0,5 (Speicher- und Zirkulationsverluste) + 3 Hilfsenergie."
+          }
+        },
+        {
+          "id": "old-house-gas",
+          "label": { "en": "Unrenovated 1960s single-family house with old gas boiler", "de": "Unsaniertes Einfamilienhaus der 1960er mit altem Gaskessel" },
+          "values": { "final-energy": 409 },
+          "explanation": {
+            "en": "About 409 kWh/(m²·a): 303 heating (IWU type EFH_E) ÷ 0.8 + 12.5 hot water ÷ 0.5 + 5 auxiliary energy, far beyond the 250 kWh/(m²·a) that marks efficiency class H in the energy certificate (GEG Annex 10).",
+            "de": "Rund 409 kWh/(m²·a): 303 Heizwärme (IWU-Typ EFH_E) ÷ 0,8 + 12,5 Warmwasser ÷ 0,5 + 5 Hilfsenergie, weit jenseits der 250 kWh/(m²·a), ab denen der Energieausweis Effizienzklasse H zeigt (GEG Anlage 10)."
+          }
+        }
+      ],
+      "draw": 7
+    }
+  ]
+}

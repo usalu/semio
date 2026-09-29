@@ -187,9 +187,12 @@ async function testCaseProjects(configFiles, _options, context) {
   const javascript = policy.toolchains.javascript;
   let commandInputs;
 
-  for (const configFile of configFiles) {
+  const featureCandidates = discoverCaseDirs(workspaceRoot).map((dir) => `${dir}/${featureFilename}`);
+  for (const configFile of featureCandidates) {
     if (configFile.includes("\uFFFD")) continue;
     const rel = nxPath(configFile);
+    if (rel.startsWith(".generation") && rel.includes("-link/")) continue;
+    if (!existsSync(join(workspaceRoot, rel))) continue;
     if (isExcluded(vocabulary, rel)) continue;
     const caseRel = dirname(rel);
     const testsRel = dirname(caseRel);
@@ -253,7 +256,13 @@ function testCaseDependencies(_options, context) {
   return Object.entries(context.projects).flatMap(([source, project]) => {
     if (!project.tags?.includes("type:test")) return [];
     const targets = new Set(Object.values(project.targets ?? {}).flatMap((target) => (target.inputs ?? []).flatMap((input) => input.input === "nativeSources" ? input.projects : [])));
-    const sourceFile = `${project.root}/${filenameForKind(vocabulary, vocabulary.testFeatureFileKindId)}`;
+    const featureName = filenameForKind(vocabulary, vocabulary.testFeatureFileKindId);
+    const preferred = `${project.root}/${featureName}`;
+    const files = context.fileMap?.projectFileMap?.[source];
+    const sourceFile = files?.find((entry) => entry.file === preferred)?.file
+      ?? files?.find((entry) => entry.file.endsWith(`/${featureName}`))?.file
+      ?? preferred;
+    if (!existsSync(join(context.workspaceRoot, sourceFile))) return [];
     return [...targets].map((target) => {
       if (!context.projects[target]) throw new Error(`Test dependency has no Nx project: ${source} → ${target}`);
       return { source, target, sourceFile, type: "static" };
@@ -273,7 +282,10 @@ async function invokeCurrentImplementation(kind, args) {
   return kind === "nodes" ? current.default.createNodesV2[1](...args) : current.createDependencies(...args);
 }
 
-export function createDependencies(...args) { return invokeCurrentImplementation("dependencies", args); }
+export function createDependencies(...args) {
+  if (process.platform === "win32") return [];
+  return invokeCurrentImplementation("dependencies", args);
+}
 
 /**
  * 🧩️ One Nx project configuration this plugin generates, as its consumers read it.
@@ -310,7 +322,7 @@ export function discoverCaseDirs(workspaceRoot) {
       } catch {
         continue;
       }
-      if (!stats.isDirectory()) continue;
+      if (stats.isSymbolicLink() || !stats.isDirectory()) continue;
       const rel = nxPath(relative(workspaceRoot, abs));
       if (isExcluded(vocabulary, rel) || entry === "node_modules" || entry === ".git") continue;
       if (entry === vocabulary.testsDirName) {

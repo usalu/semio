@@ -1,0 +1,36 @@
+{
+  "schema": "semio.quiz.quantity-formatting/v1",
+  "description": "Displayed values of quantities per locale. Prefixed quantities show an SI-prefixed unit with a mantissa of at most four significant digits in [1, 1000); unprefixed ones keep up to six decimals between 10^-3 and 10^15 and switch to scientific notation beyond. A no-break space separates value and unit, except before degree and arc signs.",
+  "vectors": [
+    { "id": "kilo", "value": 1500, "unit": "W", "prefixed": true, "en": "1.5\u00a0kW", "de": "1,5\u00a0kW" },
+    { "id": "mega-rounded", "value": 2345678, "unit": "W", "prefixed": true, "en": "2.346\u00a0MW", "de": "2,346\u00a0MW" },
+    { "id": "prefix-carry", "value": 999.96, "unit": "W", "prefixed": true, "en": "1\u00a0kW", "de": "1\u00a0kW" },
+    { "id": "tie-away-from-zero", "value": 1234.5, "unit": "W", "prefixed": true, "en": "1.235\u00a0kW", "de": "1,235\u00a0kW" },
+    { "id": "milli", "value": 0.0042, "unit": "W", "prefixed": true, "en": "4.2\u00a0mW", "de": "4,2\u00a0mW" },
+    { "id": "micro", "value": 0.0000031, "unit": "m", "prefixed": true, "en": "3.1\u00a0µm", "de": "3,1\u00a0µm" },
+    { "id": "tera", "value": 7.2e12, "unit": "Wh", "prefixed": true, "en": "7.2\u00a0TWh", "de": "7,2\u00a0TWh" },
+    { "id": "unprefixed-base", "value": 20, "unit": "g", "prefixed": true, "en": "20\u00a0g", "de": "20\u00a0g" },
+    { "id": "zero", "value": 0, "unit": "W", "prefixed": true, "en": "0\u00a0W", "de": "0\u00a0W" },
+    { "id": "negative", "value": -12500, "unit": "W", "prefixed": true, "en": "-12.5\u00a0kW", "de": "-12,5\u00a0kW" },
+    { "id": "grouped", "value": 2400, "unit": "kg/m³", "prefixed": false, "en": "2,400\u00a0kg/m³", "de": "2.400\u00a0kg/m³" },
+    { "id": "decimal", "value": 0.035, "unit": "W/(m·K)", "prefixed": false, "en": "0.035\u00a0W/(m·K)", "de": "0,035\u00a0W/(m·K)" },
+    { "id": "celsius", "value": 21.5, "unit": "°C", "prefixed": false, "en": "21.5\u00a0°C", "de": "21,5\u00a0°C" },
+    { "id": "degree", "value": 90, "unit": "°", "prefixed": false, "en": "90°", "de": "90°" },
+    { "id": "scientific-small", "value": 0.00012, "unit": "m", "prefixed": false, "en": "1.2E-4\u00a0m", "de": "1,2E-4\u00a0m" }
+  ],
+  "scoresDescription": "Scores in [0, 1] as percentages: whole when whole, else one decimal; a score short of 1 never reads 100 % and a score above 0 never reads 0 %.",
+  "scores": [
+    { "id": "perfect", "score": 1, "en": "100%", "de": "100\u00a0%" },
+    { "id": "short-of-perfect", "score": 0.997, "en": "99.7%", "de": "99,7\u00a0%" },
+    { "id": "rounds-to-perfect", "score": 0.9996, "en": "99.9%", "de": "99,9\u00a0%" },
+    { "id": "whole-with-float-noise", "score": 0.29, "en": "29%", "de": "29\u00a0%" },
+    { "id": "eighth", "score": 0.125, "en": "12.5%", "de": "12,5\u00a0%" },
+    { "id": "rounds-to-zero", "score": 0.0004, "en": "0.1%", "de": "0,1\u00a0%" },
+    { "id": "zero", "score": 0, "en": "0%", "de": "0\u00a0%" }
+  ],
+  "points": [
+    { "id": "whole", "points": 300, "en": "300", "de": "300" },
+    { "id": "one-decimal", "points": 299.7, "en": "299.7", "de": "299,7" },
+    { "id": "rounds-to-whole", "points": 399.96, "en": "399.9", "de": "399,9" }
+  ]
+}

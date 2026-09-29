@@ -1,4 +1,4 @@
-{
+﻿{
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 
   "version": "0.2.0",
@@ -1959,6 +1959,117 @@
       "presentation": {
         "group": "3_dev",
         "order": 213.5
+      }
+    },
+    {
+      "name": "🛠️dev🎓️teaching🏛️architecture❓️quiz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
+        "PROCTOR_PORT": "8791"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.6
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6061)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🎓️teaching🛂️proctor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCTOR_PORT": "8791"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.61
+      }
+    },
+    {
+      "name": "🔁️rebuild🎓️teaching🛂️proctor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:rebuild",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.611
+      }
+    },
+    {
+      "name": "🧪️test❓️quiz🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.63
+      }
+    },
+    {
+      "name": "🧪️test❓️quiz⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz-react:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.64
+      }
+    },
+    {
+      "name": "🧪️test❓️quiz🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.65
+      }
+    },
+    {
+      "name": "🧪️test🎓️teaching🛂️proctor🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.66
+      }
+    },
+    {
+      "name": "🧪️test🎓️teaching🏛️architecture❓️quiz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.67
+      }
+    },
+    {
+      "name": "🛠️dev❓️quiz⚛️react🪁️typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/quiz-react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.68
       }
     },
     {
@@ -4368,6 +4479,72 @@
       "presentation": {
         "group": "4_gate",
         "order": 11
+      }
+    },
+    {
+      "name": "📦️build🎓️teaching🏛️architecture❓️quiz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.1
+      }
+    },
+    {
+      "name": "📦️build🎓️teaching🛂️proctor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.2
+      }
+    },
+    {
+      "name": "📦️build🎓️teaching🏛️architecture❓️quiz🐳️docker-image",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:docker-image-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.3
+      }
+    },
+    {
+      "name": "✅️check🎓️teaching🏛️architecture❓️quiz📚️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.1
+      }
+    },
+    {
+      "name": "✅️check🎓️teaching🛂️proctor📚️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/proctor:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.15
+      }
+    },
+    {
+      "name": "⚖️gate🎓️teaching🏛️architecture❓️quiz🐳️docker-image",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:docker-image-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.2
       }
     },
     {
@@ -15907,6 +16084,39 @@
       }
     },
     {
+      "name": "📦️build-lean💤️realparts-of-powers-z-n",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @leutwiler/realparts-of-powers-z-n:build-lean",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.003
+      }
+    },
+    {
+      "name": "📦️build-notes💤️realparts-of-powers-z-n",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @leutwiler/realparts-of-powers-z-n:build-notes",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.0031
+      }
+    },
+    {
+      "name": "📦️build-proof💤️realparts-of-powers-z-n",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @leutwiler/realparts-of-powers-z-n:build-proof",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.0032
+      }
+    },
+    {
       "name": "⚖️document-retirement-check💻️os🖥️host🦀️",
       "type": "node-terminal",
       "request": "launch",
@@ -16156,7 +16366,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0031
+        "order": 900.0033
       }
     },
     {
@@ -16310,7 +16520,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0032
+        "order": 900.0034
       }
     },
     {
@@ -16585,7 +16795,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0033
+        "order": 900.0035
       }
     },
     {
@@ -16673,7 +16883,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0034
+        "order": 900.0036
       }
     },
     {
@@ -16706,7 +16916,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0035
+        "order": 900.0037
       }
     },
     {
@@ -16717,7 +16927,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0036
+        "order": 900.0038
       }
     },
     {
@@ -16728,7 +16938,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0037
+        "order": 900.0039
       }
     },
     {
@@ -16739,7 +16949,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0038
+        "order": 900.004
       }
     },
     {
@@ -16761,7 +16971,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0039
+        "order": 900.0041
       }
     },
     {
@@ -16772,7 +16982,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.004
+        "order": 900.0042
       }
     },
     {
@@ -16783,7 +16993,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0041
+        "order": 900.0043
       }
     },
     {
@@ -16794,7 +17004,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0042
+        "order": 900.0044
       }
     },
     {
@@ -16893,7 +17103,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0043
+        "order": 900.0045
       }
     },
     {
@@ -17542,7 +17752,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0044
+        "order": 900.0046
       }
     },
     {
@@ -17718,7 +17928,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0045
+        "order": 900.0047
       }
     },
     {
@@ -17894,7 +18104,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0046
+        "order": 900.0048
       }
     },
     {
@@ -17905,7 +18115,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0047
+        "order": 900.0049
       }
     },
     {
@@ -17916,7 +18126,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0048
+        "order": 900.005
       }
     },
     {
@@ -17927,7 +18137,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0049
+        "order": 900.0051
       }
     },
     {
@@ -17938,7 +18148,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.005
+        "order": 900.0052
       }
     },
     {
@@ -17949,7 +18159,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0051
+        "order": 900.0053
       }
     },
     {
@@ -17960,7 +18170,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0052
+        "order": 900.0054
       }
     },
     {
@@ -17971,7 +18181,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0053
+        "order": 900.0055
       }
     },
     {
@@ -17982,7 +18192,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0054
+        "order": 900.0056
       }
     },
     {
@@ -17993,7 +18203,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0055
+        "order": 900.0057
       }
     },
     {
@@ -18169,7 +18379,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0056
+        "order": 900.0058
       }
     },
     {
@@ -18202,7 +18412,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0057
+        "order": 900.0059
       }
     },
     {
@@ -18268,7 +18478,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0058
+        "order": 900.006
       }
     },
     {
@@ -18345,7 +18555,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0059
+        "order": 900.0061
       }
     },
     {
@@ -18356,7 +18566,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.006
+        "order": 900.0062
       }
     },
     {
@@ -18367,7 +18577,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0061
+        "order": 900.0063
       }
     },
     {
@@ -18521,7 +18731,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0062
+        "order": 900.0064
       }
     },
     {
@@ -18719,7 +18929,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0063
+        "order": 900.0065
       }
     },
     {
@@ -18730,7 +18940,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0064
+        "order": 900.0066
       }
     },
     {
@@ -18741,7 +18951,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0065
+        "order": 900.0067
       }
     },
     {
@@ -18796,7 +19006,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0066
+        "order": 900.0068
       }
     },
     {
@@ -18807,7 +19017,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0067
+        "order": 900.0069
       }
     },
     {
@@ -18862,7 +19072,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0068
+        "order": 900.007
       }
     },
     {
@@ -18873,7 +19083,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0069
+        "order": 900.0071
       }
     },
     {
@@ -18972,7 +19182,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.007
+        "order": 900.0072
       }
     },
     {
@@ -19269,7 +19479,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0071
+        "order": 900.0073
       }
     },
     {
@@ -19280,7 +19490,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0072
+        "order": 900.0074
       }
     },
     {
@@ -19291,7 +19501,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0073
+        "order": 900.0075
       }
     },
     {
@@ -19335,7 +19545,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0074
+        "order": 900.0076
       }
     },
     {
@@ -19346,7 +19556,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0075
+        "order": 900.0077
       }
     },
     {
@@ -19357,7 +19567,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0076
+        "order": 900.0078
       }
     },
     {
@@ -19368,7 +19578,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0077
+        "order": 900.0079
       }
     },
     {
@@ -19379,7 +19589,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0078
+        "order": 900.008
       }
     },
     {
@@ -19390,7 +19600,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0079
+        "order": 900.0081
       }
     },
     {
@@ -19401,7 +19611,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.008
+        "order": 900.0082
       }
     },
     {
@@ -19412,7 +19622,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0081
+        "order": 900.0083
       }
     },
     {
@@ -19423,7 +19633,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0082
+        "order": 900.0084
       }
     },
     {
@@ -19434,7 +19644,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 900.0083
+        "order": 900.0085
       }
     }
   ],
@@ -19464,6 +19674,15 @@
       "presentation": {
         "group": "3_dev",
         "order": 386.16
+      }
+    },
+    {
+      "name": "🧭️compound🎓️teaching🏛️architecture❓️quiz🛂️proctor",
+      "configurations": ["🛠️dev🎓️teaching🛂️proctor", "🛠️dev🎓️teaching🏛️architecture❓️quiz"],
+      "stopAll": true,
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.62
       }
     }
   ],
@@ -19672,6 +19891,7 @@
       "type": "pickString",
       "description": "Project whose build target runs",
       "options": [
+        "@leutwiler/realparts-of-powers-z-n",
         "@semio-tech/animate-presentation-rs",
         "@semio-tech/architect-program-rs",
         "@semio-tech/assets",
@@ -19738,6 +19958,7 @@
         "@semio-tech/puzzle-2d-rs",
         "@semio-tech/puzzle-3d-rs",
         "@semio-tech/puzzle-5d-rs",
+        "@semio-tech/quiz-rs",
         "@semio-tech/raster-raster-rs",
         "@semio-tech/reasoning-wires-rs",
         "@semio-tech/remodel-remodeling-rs",
@@ -19864,6 +20085,8 @@
         "@semio-tech/wfc-grid2d-rs",
         "@semio-tech/wfc-grid3d-rs",
         "@semio-tech/writer-writer-rs",
+        "@teaching/architecture-quiz",
+        "@teaching/proctor",
         "os-hub",
         "os-hub-admin",
         "repo-mcp",
@@ -20043,6 +20266,8 @@
         "@semio-tech/wfc-grid2d-rs",
         "@semio-tech/wfc-grid3d-rs",
         "@semio-tech/writer-writer-rs",
+        "@teaching/architecture-quiz",
+        "@teaching/proctor",
         "semio-framework-os-flow-core",
         "semio-framework-os-infinite"
       ]
@@ -20080,6 +20305,7 @@
       "type": "pickString",
       "description": "Project whose deps target runs",
       "options": [
+        "@leutwiler/realparts-of-powers-z-n",
         "@semio-tech/energy-oracle-py",
         "@semio-tech/repo-test-dotnet",
         "@semio-tech/ui-styling-dotnet",
@@ -20102,6 +20328,8 @@
         "@semio-tech/repo-vscode",
         "@semio-tech/semio-tech-play",
         "@semio-tech/ui-react",
+        "@teaching/architecture-quiz",
+        "@teaching/proctor",
         "os-hub",
         "os-hub-admin",
         "workspace"
@@ -20260,6 +20488,7 @@
       "type": "pickString",
       "description": "Project whose test target runs",
       "options": [
+        "@leutwiler/realparts-of-powers-z-n",
         "@semio-tech/animate-js",
         "@semio-tech/animate-plugin",
         "@semio-tech/animate-presentation-rs",
@@ -20447,6 +20676,9 @@
         "@semio-tech/puzzle-5d-rs",
         "@semio-tech/puzzle-js",
         "@semio-tech/puzzle-plugin",
+        "@semio-tech/quiz",
+        "@semio-tech/quiz-react",
+        "@semio-tech/quiz-rs",
         "@semio-tech/raster-js",
         "@semio-tech/raster-plugin",
         "@semio-tech/raster-raster-rs",
@@ -20651,6 +20883,8 @@
         "@semio-tech/writer-js",
         "@semio-tech/writer-plugin",
         "@semio-tech/writer-writer-rs",
+        "@teaching/architecture-quiz",
+        "@teaching/proctor",
         "os-hub",
         "os-hub-admin",
         "os-hub-ts",
@@ -20759,6 +20993,9 @@
         "@semio-tech/process-extension-wood-rust",
         "@semio-tech/process-plugin",
         "@semio-tech/puzzle-plugin",
+        "@semio-tech/quiz",
+        "@semio-tech/quiz-react",
+        "@semio-tech/quiz-rs",
         "@semio-tech/raster-plugin",
         "@semio-tech/reasoning-plugin",
         "@semio-tech/remodel-plugin",
@@ -20850,6 +21087,7 @@
         "@semio-tech/vcs-plugin",
         "@semio-tech/wfc-plugin",
         "@semio-tech/writer-plugin",
+        "@teaching/proctor",
         "os-hub",
         "os-hub-ts",
         "repo-mcp",
@@ -20956,6 +21194,9 @@
         "@semio-tech/process-extension-wood-rust",
         "@semio-tech/process-plugin",
         "@semio-tech/puzzle-plugin",
+        "@semio-tech/quiz",
+        "@semio-tech/quiz-react",
+        "@semio-tech/quiz-rs",
         "@semio-tech/raster-plugin",
         "@semio-tech/reasoning-plugin",
         "@semio-tech/remodel-plugin",
@@ -21047,6 +21288,7 @@
         "@semio-tech/vcs-plugin",
         "@semio-tech/wfc-plugin",
         "@semio-tech/writer-plugin",
+        "@teaching/proctor",
         "os-hub",
         "os-hub-ts",
         "repo-mcp",
@@ -21158,6 +21400,9 @@
         "@semio-tech/process-plugin",
         "@semio-tech/puzzle-5d-react",
         "@semio-tech/puzzle-plugin",
+        "@semio-tech/quiz",
+        "@semio-tech/quiz-react",
+        "@semio-tech/quiz-rs",
         "@semio-tech/raster-plugin",
         "@semio-tech/reasoning-plugin",
         "@semio-tech/remodel-plugin",
@@ -21249,6 +21494,7 @@
         "@semio-tech/vcs-plugin",
         "@semio-tech/wfc-plugin",
         "@semio-tech/writer-plugin",
+        "@teaching/proctor",
         "os-hub",
         "os-hub-ts",
         "repo-mcp",
@@ -21280,6 +21526,7 @@
         "@semio-tech/framework-os",
         "@semio-tech/framework-renderer-react",
         "@semio-tech/plugin-window-kits",
+        "@semio-tech/quiz-react",
         "@semio-tech/repo-lib",
         "@semio-tech/ui-react",
         "os-hub-ts"

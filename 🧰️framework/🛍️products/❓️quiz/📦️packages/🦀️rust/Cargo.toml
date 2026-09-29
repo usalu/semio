@@ -1,0 +1,27 @@
+[package]
+name = "semio-framework-quiz"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Quiz product core: the quiz contract types, bit-exact randomness, solution-free sheets, validation, partial-credit scoring, badges, the learner lifecycle (pure decide/evolve) and the proctor read models. Pure functions only; the TypeScript twin is @semio-tech/quiz."
+
+[package.metadata.semio]
+role = "product"
+id = "quiz"
+
+[lints]
+workspace = true
+
+[lib]
+name = "quiz"
+path = "🦀️.rs"
+
+[features]
+sut = ["dep:serde_json"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

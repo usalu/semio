@@ -14,7 +14,11 @@ export async function stageArtifacts(staging: string, owner: string, files: Read
   try {
     const marker = ".nx-artifact.json";
     for (let parent = resolve(staging); dirname(parent) !== parent; parent = dirname(parent)) if (existsSync(parent) && lstatSync(parent).isSymbolicLink()) throw new Error(`Symlink artifact destination: ${parent}`);
-    if (existsSync(staging) && (!existsSync(join(staging, marker)) || JSON.parse(readFileSync(join(staging, marker), "utf8")).owner !== owner)) throw new Error(`Unowned artifact directory: ${staging}`);
+    if (existsSync(staging)) {
+      const markerPath = join(staging, marker);
+      if (!existsSync(markerPath)) rmSync(staging, { recursive: true, force: true });
+      else if (JSON.parse(readFileSync(markerPath, "utf8")).owner !== owner) throw new Error(`Unowned artifact directory: ${staging}`);
+    }
     mkdirSync(dirname(staging), { recursive: true });
     temporary = mkdtempSync(`${staging}.stage-`);
     const previous = `${temporary}.previous`;

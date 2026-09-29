@@ -11,17 +11,35 @@ import { type ShellLocale, type ShellTerminology } from "@semio-tech/framework";
 // #region I18n
 export type UiLocale = ShellLocale;
 
-/** 🪁️ Label pair resolved by the active driver's `labelTier` axis. */
+/** @emoji 🪁️ Label pair resolved by the active driver's `labelTier` axis. */
 export type UiLabelPair = { readonly normal: string; readonly beginner: string };
 
-/** 🪁️ Translation leaf with optional manual and tutorial metadata. */
+/** @emoji 🪁️ Translation leaf with optional manual and tutorial metadata. */
 export type UiLabelValue = {
   readonly label: UiLabelPair;
   readonly manual?: string;
   readonly tutorial?: string;
 };
 
-/** 🪁️ Ribbon collection ids for ribbon collection toggles. */
+function uiLabelTierText(value: unknown, tier: keyof UiLabelPair): string | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const tiers = value as Readonly<Record<string, unknown>>;
+  const picked = (tier === "beginner" ? (["beginner", "normal"] as const) : (["normal", "beginner"] as const)).find((candidate) => tiers[candidate] !== undefined);
+  return picked === undefined ? undefined : String(tiers[picked]);
+}
+
+/** @emoji 🏷️ The text of a raw translation value at a label tier — a string, `{ label: string }`,
+ * `{ label: { normal, beginner } }` or `{ normal, beginner }` — preferring `tier` and falling back to the
+ * other tier; `undefined` for anything else. Pure: the tier is the caller's (the chrome passes its driver's). */
+export function resolveUiLabel(value: unknown, tier: keyof UiLabelPair): string | undefined {
+  if (typeof value === "string") return value;
+  if (!value || typeof value !== "object") return undefined;
+  const label = (value as Readonly<Record<string, unknown>>).label;
+  if (typeof label === "string") return label;
+  return uiLabelTierText(label, tier) ?? uiLabelTierText(value, tier);
+}
+
+/** @emoji 🪁️ Ribbon collection ids for ribbon collection toggles. */
 export type UiRibbonParentCategory =
   | "history"
   | "hand"
@@ -44,7 +62,7 @@ export type UiRibbonParentCategory =
   | "utilities"
   | "sync";
 
-/** 🪁️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
+/** @emoji 🪁️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
 export const UI_RIBBON_PARENT_CATEGORIES: readonly UiRibbonParentCategory[] = [
   "history",
   "hand",
@@ -86,7 +104,7 @@ export type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiL
             [K in keyof T & string]: DeepUiTranslationKeys<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
           }[keyof T & string];
 
-/** 🪁️ Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
+/** @emoji 🪁️ Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
 export type UiTranslationSchema = {
   readonly ui: {
     readonly nav: {
@@ -317,8 +335,10 @@ export type UiTranslationSchema = {
       readonly setDriver: UiLabelValue;
       readonly openTaskManager: UiLabelValue;
       readonly openHub: UiLabelValue;
+      readonly exportDocument: UiLabelValue;
+      readonly importDocument: UiLabelValue;
     };
-    /** 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
+    /** @emoji 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
      * activate/close/split/open-in-new-window, panel toggle/tab) — logged into the plugin's session-only command-history panel. */
     readonly shellCommand: {
       readonly dockMove: UiLabelValue;
@@ -483,8 +503,6 @@ export type UiTranslationSchema = {
       readonly iconRenderFailed: UiLabelValue;
       readonly documentPlaceholder: UiLabelValue;
       readonly languageDocument: UiLabelValue;
-      readonly editor: UiLabelValue;
-      readonly languageEditor: UiLabelValue;
       readonly iconShot: UiLabelValue;
       readonly projection: UiLabelValue;
       readonly frameVisible: UiLabelValue;
@@ -764,37 +782,37 @@ export type UiTranslationSchema = {
   };
 };
 
-/** 🪁️ Dot-path union of keys in {@link UiTranslationSchema}. */
+/** @emoji 🪁️ Dot-path union of keys in {@link UiTranslationSchema}. */
 export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
 
-/** 🪁️ Compile-time check that ribbon collection ids have chrome translation keys. */
+/** @emoji 🪁️ Compile-time check that ribbon collection ids have chrome translation keys. */
 export type AssertUiRibbonParentKeysCovered<Categories extends string> = {
   readonly [K in Categories]: `ui.ribbon.parent.${K}` extends UiTranslationKey ? true : false;
 }[Categories] extends true
   ? true
   : false;
 
-/** 🪁️ Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
+/** @emoji 🪁️ Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
 export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
   readonly [L in Locales]: `ui.settings.language.${L}` extends UiTranslationKey ? true : false;
 }[Locales] extends true
   ? true
   : false;
 
-/** 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
+/** @emoji 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
 export type UiChromeTerminologyId = ShellTerminology;
 
-/** 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
+/** @emoji 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
 export type AssertUiSettingsTerminologyKeysCovered<Ids extends string> = {
   readonly [I in Ids]: `ui.settings.terminology.${I}` extends UiTranslationKey ? true : false;
 }[Ids] extends true
   ? true
   : false;
 
-/** 🪁️ Typed translate function for domain-neutral chrome keys. */
+/** @emoji 🪁️ Typed translate function for domain-neutral chrome keys. */
 export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
 
-/** 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
+/** @emoji 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
 export interface UiI18nPort {
   readonly t: UiTranslateFn;
   /** Whether the live bundles define `key` — for a caller holding an open id space that only sometimes names a label. */
@@ -806,7 +824,7 @@ export interface UiI18nPort {
 }
 
 declare const uiRegisteredTranslationKeyBrand: unique symbol;
-/** 🪁️ Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
+/** @emoji 🪁️ Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
  * returns, so a value of this type provably exists in every {@link UiLocale} bundle registered together
  * with it. Products (coda, compose, …) hold this instead of hand-rolling their own translation-key union
  * and casting into `useLabel`. */

@@ -35,9 +35,12 @@ print/asset/font/
 *-dark.tex
 #--------------------------------------MIT-BESTAND--------------------------------------
 ♻️mit-bestand/📋️bericht/**/dist/
+#--------------------------------------LEUTWILER--------------------------------------
+👴️leutwiler/**/.lake/
 #--------------------------------------SEMIO--------------------------------------
 /.semio/
 .🧬semio/🌐hub/
+.🧬semio/🎓️teaching/
 .🧬semio/🔗space/
 .🧬semio/🗺️map/
 .🧬semio/🦑️repo/⚡️cache/

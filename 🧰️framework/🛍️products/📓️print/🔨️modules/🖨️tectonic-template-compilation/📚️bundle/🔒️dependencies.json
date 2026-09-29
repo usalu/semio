@@ -2231,6 +2231,12 @@
       "sha256": "f0f7166465ba4f2e5ccdc81dd2153d241d01963c091c2a5ad42239d0f6596a53"
     },
     {
+      "name": "pgflibrarypatterns.code.tex",
+      "offset": 27978240,
+      "bytes": 7936,
+      "sha256": "0a0a790434c4064847cd05249bc93bd08cdf903e892b06e57a7688ebd0a29ea5"
+    },
+    {
       "name": "pgflibraryplothandlers.code.tex",
       "offset": 28003328,
       "bytes": 32995,
@@ -2733,6 +2739,12 @@
       "offset": 27289600,
       "bytes": 4202,
       "sha256": "54735190b6f46d00fe5509d35ee4c97e579052010a7cbb7c9ab8687c0687c09d"
+    },
+    {
+      "name": "tikzlibrarypatterns.code.tex",
+      "offset": 27310080,
+      "bytes": 770,
+      "sha256": "27327333540a339d82b43b8cf717c063e9bd62e8816cd5050b72a665ae332551"
     },
     {
       "name": "tikzlibrarypositioning.code.tex",

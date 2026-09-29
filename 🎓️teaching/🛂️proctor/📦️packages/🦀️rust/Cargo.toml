@@ -1,0 +1,55 @@
+[package]
+name = "teaching-proctor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Teaching proctor: the quiz lifecycle (identity without passwords, randomized runs, whole-run scoring, badges, leaderboard) as a CQRS/event-sourced instance of the framework server product over one SQLite file, serving the built quiz site."
+
+# 🛂️ A deployable instance of the server product, like the hub it mirrors.
+[package.metadata.semio]
+role = "hub"
+id = "teaching-proctor"
+
+[lints]
+workspace = true
+
+[lib]
+name = "proctor"
+path = "🦀️.rs"
+
+[[bin]]
+name = "proctor"
+path = "../../🏗️bootstrap/🦀️.rs"
+
+[dependencies]
+semio-framework-quiz = { workspace = true }
+semio-framework-server = { workspace = true }
+semio-framework-replication = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+axum = { version = "0.8" }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "fs", "signal", "sync"] }
+# 🗄️ The workspace's one SQLite binding (a workspace may link a single native `sqlite3`), bundled so
+# every platform builds it without a system package — the same requirement hub states.
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+
+[dev-dependencies]
+# 🔬️ Compiles the server product's backend-generic storage laws for this crate's tests only.
+semio-framework-server = { workspace = true, features = ["conformance"] }
+# 🔮️ Third-party oracles: `sha2` for the quiz revision digest, `ureq` as an independent HTTP client
+# driving the real gateway in the end-to-end test.
+sha2 = "0.10.9"
+ureq = { version = "2", default-features = false }
+
+# 🔬️ The four storage roles over SQLite held to the framework's conformance laws.
+[[test]]
+name = "conformance"
+path = "../../🧪️tests/🔬️conformance/🦀️.rs"
+
+# 🌐️ The proctor on an ephemeral port, driven through its real HTTP API.
+[[test]]
+name = "end_to_end"
+path = "../../🧪️tests/🌐️end-to-end/🦀️.rs"

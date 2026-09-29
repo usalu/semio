@@ -1,4 +1,5 @@
-# 🐳️ Build-context exclusions for 🌎️hub/Dockerfile (see its header).
+# 🐳️ Build-context exclusions for every image built from the repository root: 🌎️hub/Dockerfile and
+# 🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile (see their headers).
 # Only host-local state and compiler output that the builder stage recreates. Committed `🤖️generated`
 # sources are NOT excluded — several crates and the plugin catalog are generated-then-committed, and
 # dropping them would break the build inside the image. `.🧬semio` is the repository's host-local state

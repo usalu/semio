@@ -1,0 +1,92 @@
+{
+  "name": "@teaching/proctor",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "root": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+  "sourceRoot": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+  "projectType": "application",
+  "tags": [
+    "lang:rust",
+    "role:hub",
+    "family:quiz"
+  ],
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "rebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts rebuild"
+      },
+      "cache": false
+    }
+  }
+}

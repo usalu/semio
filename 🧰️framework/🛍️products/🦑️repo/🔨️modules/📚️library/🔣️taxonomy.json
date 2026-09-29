@@ -2173,6 +2173,13 @@
       ],
       "role": "configuration"
     },
+    "lean-source": {
+      "emoji": "🧘️",
+      "extensionChains": [
+        ".lean"
+      ],
+      "role": "specification"
+    },
     "typescript-source": {
       "emoji": "🟦️",
       "extensionChains": [
@@ -2817,6 +2824,11 @@
     "physical-toml-toml": {
       "extensionChain": ".toml",
       "fileKindId": "toml",
+      "priority": 0
+    },
+    "physical-lean-source-lean": {
+      "extensionChain": ".lean",
+      "fileKindId": "lean-source",
       "priority": 0
     },
     "physical-typescript-source-cts": {
@@ -6619,6 +6631,109 @@
     "semio-tech": {
       "emoji": "🏢️",
       "slugPattern": "^semio-tech$",
+      "allowEmojiOnly": false
+    },
+    "leutwiler": {
+      "emoji": "👴️",
+      "slugPattern": "^leutwiler$",
+      "allowEmojiOnly": false
+    },
+    "leutwiler-realparts-of-powers-z-n": {
+      "emoji": "💤️",
+      "slugPattern": "^realparts-of-powers-z-n$",
+      "allowEmojiOnly": false
+    },
+    "leutwiler-notes": {
+      "emoji": "📯️",
+      "slugPattern": "^notes$",
+      "allowEmojiOnly": false
+    },
+    "leutwiler-proof": {
+      "emoji": "🏆️",
+      "slugPattern": "^proof$",
+      "allowEmojiOnly": false
+    },
+    "leutwiler-lean": {
+      "emoji": "🧘️",
+      "slugPattern": "^lean$",
+      "allowEmojiOnly": false
+    },
+    "teaching": {
+      "emoji": "🎓️",
+      "slugPattern": "^teaching$",
+      "allowEmojiOnly": false
+    },
+    "teaching-proctor": {
+      "emoji": "🛂️",
+      "slugPattern": "^proctor$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching"
+      ]
+    },
+    "teaching-architecture": {
+      "emoji": "🏛️",
+      "slugPattern": "^architecture$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching"
+      ]
+    },
+    "teaching-energy": {
+      "emoji": "⚡️",
+      "slugPattern": "^energy$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "teaching-physics": {
+      "emoji": "🧲️",
+      "slugPattern": "^physics$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
+    "teaching-heating": {
+      "emoji": "🔥️",
+      "slugPattern": "^heating$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
+    "teaching-cooling": {
+      "emoji": "❄️",
+      "slugPattern": "^cooling$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
+    "teaching-demand": {
+      "emoji": "📊️",
+      "slugPattern": "^demand$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
+    "teaching-quiz": {
+      "emoji": "❓️",
+      "slugPattern": "^quiz$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture",
+        "teaching-physics",
+        "teaching-heating",
+        "teaching-cooling",
+        "teaching-demand"
+      ]
+    },
+    "deploy": {
+      "emoji": "🚀️",
+      "slugPattern": "^deploy$",
       "allowEmojiOnly": false
     },
     "asset-subject": {
@@ -10765,7 +10880,22 @@
         "🪪️kind-identity",
         "🧊️mutate-gltf-2-0",
         "📊️table-row-grid",
-        "🏠️row-capacity"
+        "🏠️row-capacity",
+        "✅️answer-validation",
+        "🃏️sheet-assembly",
+        "🎲️seeded-randomness",
+        "🏅️badge-rules",
+        "🏆️leaderboard",
+        "📏️sorting-concordance",
+        "🔀️matching-concordance",
+        "🕸️profile-similarity",
+        "🧬️schema-conformance",
+        "🧾️learner-lifecycle",
+        "⚡️power",
+        "🏠️homes",
+        "📚️catalog",
+        "📐️quantity-formatting",
+        "🕷️radar-geometry"
       ],
       "source": "registry"
     },
@@ -11813,6 +11943,70 @@
       ],
       "source": "registry"
     },
+    "members-of-leutwiler": {
+      "ownerKindIds": [
+        "leutwiler"
+      ],
+      "memberNames": [
+        "💤️realparts-of-powers-z-n"
+      ],
+      "source": "registry"
+    },
+    "members-of-leutwiler-realparts-of-powers-z-n": {
+      "ownerKindIds": [
+        "leutwiler-realparts-of-powers-z-n"
+      ],
+      "memberNames": [
+        "📯️notes",
+        "🏆️proof",
+        "🧘️lean"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching": {
+      "ownerKindIds": [
+        "teaching"
+      ],
+      "memberNames": [
+        "🛂️proctor",
+        "🏛️architecture"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-architecture": {
+      "ownerKindIds": [
+        "teaching-architecture"
+      ],
+      "memberNames": [
+        "❓️quiz",
+        "⚡️energy"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-energy": {
+      "ownerKindIds": [
+        "teaching-energy"
+      ],
+      "memberNames": [
+        "🧲️physics",
+        "🔥️heating",
+        "❄️cooling",
+        "📊️demand"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-topics": {
+      "ownerKindIds": [
+        "teaching-physics",
+        "teaching-heating",
+        "teaching-cooling",
+        "teaching-demand"
+      ],
+      "memberNames": [
+        "❓️quiz"
+      ],
+      "source": "registry"
+    },
     "members-of-modes": {
       "ownerKindIds": [
         "modes"
@@ -11943,7 +12137,38 @@
         "🪪️identity",
         "📡️live",
         "🗜️deflate",
-        "🖌️raster"
+        "🖌️raster",
+        "❓️queries",
+        "🌐️site",
+        "🎭️actors",
+        "📚️catalog",
+        "🔭️projections",
+        "🧩️instance",
+        "↕️sorting",
+        "🃏️matching",
+        "🌐️i18n",
+        "🎛️preferences",
+        "🏠️home",
+        "👋️introduction",
+        "💾️persistence",
+        "📏️quantity",
+        "📮️outbox",
+        "🕸️radar",
+        "🗂️classification",
+        "🤏️drag",
+        "🧩️task",
+        "🧭️session",
+        "🛂️proctor",
+        "✅️validation",
+        "🃏️sheet",
+        "🎲️randomness",
+        "🏅️badges",
+        "👁️views",
+        "📏️scoring",
+        "🧾️lifecycle",
+        "▶️run",
+        "🏁️results",
+        "🏆️leaderboard"
       ],
       "source": "registry"
     },
@@ -12078,7 +12303,8 @@
       ],
       "memberNames": [
         "📓️print",
-        "🖥️server"
+        "🖥️server",
+        "❓️quiz"
       ],
       "source": "registry"
     },
@@ -15283,7 +15509,33 @@
         "🧵️video-render-job",
         "🎞️ffmpeg-decode",
         "✂️text-splice",
-        "📊️table-row-grid"
+        "📊️table-row-grid",
+        "⚖️partial-credit-scoring",
+        "✅️answer-validation",
+        "🃏️sheet-assembly",
+        "🌀️mt19937-generator",
+        "🎲️seeded-randomness",
+        "🎴️sheet-randomization",
+        "🏅️badge-rules",
+        "🏆️leaderboard",
+        "📏️sorting-concordance",
+        "🔀️matching-concordance",
+        "🕸️profile-similarity",
+        "🧬️schema-conformance",
+        "🧾️learner-lifecycle",
+        "🩺️document-validation",
+        "🔬️conformance",
+        "🎖️badge-awards",
+        "👁️read-views",
+        "🔁️run-lifecycle",
+        "🌐️end-to-end",
+        "⌨️task-keyboard",
+        "📐️quantity-formatting",
+        "📬️outbox-delivery",
+        "🕷️radar-geometry",
+        "🗃️shared-vectors",
+        "🗣️translation-completeness",
+        "🚶️learner-journey"
       ],
       "source": "registry"
     },
@@ -21804,6 +22056,50 @@
       "verification": "cargo metadata",
       "expires": null
     },
+    "lake-manifest": {
+      "pathPattern": "👴️leutwiler/*/🧘️lean/lakefile.toml",
+      "authority": "Lake",
+      "reason": "Lake package configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "lake build",
+      "expires": null
+    },
+    "lake-lock": {
+      "pathPattern": "👴️leutwiler/*/🧘️lean/lake-manifest.json",
+      "authority": "Lake",
+      "reason": "Lake resolved dependency manifest discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "lake build",
+      "expires": null
+    },
+    "lean-toolchain": {
+      "pathPattern": "👴️leutwiler/*/🧘️lean/lean-toolchain",
+      "authority": "Lake",
+      "reason": "elan toolchain discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "lean --version",
+      "expires": null
+    },
+    "lean-module-source": {
+      "pathPattern": "👴️leutwiler/*/🧘️lean/RealPartsOfPowers.lean",
+      "authority": "Lake",
+      "reason": "Lean derives the module name from the source basename",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "lake build",
+      "expires": null
+    },
     "print-latex-semio-graph": {
       "pathPattern": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-graph.sty",
       "authority": "LaTeX package lookup",
@@ -23466,6 +23762,17 @@
         "kind": "path-pattern"
       },
       "verification": "caddy validate",
+      "expires": null
+    },
+    "docker-compose": {
+      "pathPattern": "**/compose.yaml",
+      "authority": "Docker Compose",
+      "reason": "Compose file discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "docker compose config",
       "expires": null
     },
     "gitignore": {
@@ -29658,6 +29965,8 @@
     "🌎️hub": "clean",
     "♻️mit-bestand": "clean",
     "🏢️semio-tech": "clean",
+    "👴️leutwiler": "clean",
+    "🎓️teaching": "clean",
     "🧰️framework/🛍️products/🦑️repo": "clean",
     ".🧬semio/🦑️repo/🎫️tickets": "exempt"
   },
@@ -29667,7 +29976,9 @@
     "✏️s": "implementation",
     "🌎️hub": "implementation",
     "♻️mit-bestand": "implementation",
-    "🏢️semio-tech": "implementation"
+    "🏢️semio-tech": "implementation",
+    "👴️leutwiler": "implementation",
+    "🎓️teaching": "implementation"
   },
   "_mutationOwnershipComment": "🧬️ Every concrete 🧬️mutations/<emoji><verb>-<noun>/ directory directly owns one 🦀️.rs holding only its payload and dispatch. This is a PLACEMENT rule, not a completeness one: whenever a mutation's own apply/payload-definition, diff, or inverse behavior exists, it lives in its own facet directory — 🦠️mutation, 🔺️diff, ↩️inverse (mutationBehaviorFacetDirs) — and must never be inlined back into the direct leaf; mutationDirectLeafForbiddenRegionMarkers names the exact region marker whose presence in the direct leaf proves an inlining regression for 🔺️diff/↩️inverse. 🧩️plan, 📝️text, 💾️binary and 🧬️schema remain optional organizational facets (mutationOrganizationalFacetDirs), genuinely absent for many mutations and never a completeness requirement. The 🧬️mutations root is transparent assembly only.",
   "mutationDirectoryPattern": "^.+\\uFE0F[a-z][a-z0-9]*(?:-[a-z0-9]+)+$",

@@ -139,12 +139,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/bunfig.toml",
       "{workspaceRoot}/tsconfig.json",
-      {
-        "json": "{workspaceRoot}/package.json",
-        "fields": [
-          "packageManager"
-        ]
-      },
+      "{workspaceRoot}/package.json",
       {
         "runtime": "bun --version"
       },
@@ -288,12 +283,7 @@
         "browserBootSources",
         "{workspaceRoot}/bunfig.toml",
         "{workspaceRoot}/tsconfig.json",
-        {
-          "json": "{workspaceRoot}/package.json",
-          "fields": [
-            "packageManager"
-          ]
-        },
+        "{workspaceRoot}/package.json",
         {
           "runtime": "bun --version"
         },
@@ -309,22 +299,8 @@
         {
           "dependentTasksOutputFiles": "**/🎮️playgrounds/🟦️.ts"
         },
-        {
-          "json": "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-          "fields": [
-            "pathEmojiPolicy.genericEmojiIdentities",
-            "generatorContracts.wgpu-frame-worker.packageGeneration.browserProfile",
-            "generatorContracts.wgpu-frame-worker.outputRoots",
-            "generatorContracts.wgpu-frame-worker.target",
-            "pathExclusions"
-          ]
-        },
-        {
-          "json": "{workspaceRoot}/📋️project.json",
-          "fields": [
-            "metadata.semio.taxonomy"
-          ]
-        }
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/📋️project.json"
       ],
       "outputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js"
@@ -343,16 +319,7 @@
       "cache": true,
       "inputs": [
         "frameWorkerSources",
-        {
-          "json": "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-          "fields": [
-            "pathEmojiPolicy.genericEmojiIdentities",
-            "generatorContracts.wgpu-frame-worker.packageGeneration.browserProfile",
-            "generatorContracts.wgpu-frame-worker.outputRoots",
-            "generatorContracts.wgpu-frame-worker.target",
-            "pathExclusions"
-          ]
-        },
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         {
           "dependentTasksOutputFiles": "**/🎚️ui-axes/🟦️.ts"
         },
@@ -362,12 +329,7 @@
         {
           "dependentTasksOutputFiles": "**/🧩️plugins/🟦️.ts"
         },
-        {
-          "json": "{workspaceRoot}/📋️project.json",
-          "fields": [
-            "metadata.semio.taxonomy"
-          ]
-        }
+        "{workspaceRoot}/📋️project.json"
       ],
       "outputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js"

@@ -3,6 +3,7 @@ import { prepareTectonic, preparedTectonic } from "./🔧️toolchain/📜️scr
 import { preparedPrintBundle } from "./📚️bundle/📜️script.ts";
 import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
 import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { basename, dirname, join, relative } from "node:path";
@@ -209,6 +210,14 @@ async function compilePrintDocumentWithPanels(tectonic: string, texPath: string,
   }
 }
 
+// 🪟 Tectonic parses --bundle as a URL first; on Windows a bare "C:\…" path reads
+// as the scheme "c" and is rejected with "doesn't specify a valid bundle", so the
+// directory bundle is handed over as a percent-encoded file URL (which also keeps
+// the emoji cache segments intact) on every platform.
+export function printBundleArgument(directory: string): string {
+  return pathToFileURL(directory).href;
+}
+
 async function compilePrintDocument(tectonic: string, texPath: string, outDirectory: string, workDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
   const jobname = basename(texPath, ".tex");
   mkdirSync(outDirectory, { recursive: true });
@@ -217,7 +226,7 @@ async function compilePrintDocument(tectonic: string, texPath: string, outDirect
   const libraryPackages = join(libraryRoot, printCompilerName("🖋️latex")), searchPaths = [libraryPackages, libraryRoot, workDirectory, outDirectory, ...printFontSearchPaths()];
   signal?.throwIfAborted();
   await new Promise<void>((accept, reject) => {
-    const child = spawn(tectonic, ["--bundle", preparedPrintBundle(workspaceRoot), "--keep-logs", "--keep-intermediates", "-Z", "deterministic-mode", ...searchPaths.flatMap((path) => ["-Z", `search-path=${path}`]), "--outdir", outDirectory, relative(workDirectory, texPath).replaceAll("\\", "/")], { cwd: workDirectory, env: tectonicEnvironment(workDirectory, outDirectory, libraryRoot), signal, stdio: "inherit", timeout: buildBudgetMs() });
+    const child = spawn(tectonic, ["--bundle", printBundleArgument(preparedPrintBundle(workspaceRoot)), "--keep-logs", "--keep-intermediates", "-Z", "deterministic-mode", ...searchPaths.flatMap((path) => ["-Z", `search-path=${path}`]), "--outdir", outDirectory, relative(workDirectory, texPath).replaceAll("\\", "/")], { cwd: workDirectory, env: tectonicEnvironment(workDirectory, outDirectory, libraryRoot), signal, stdio: "inherit", timeout: buildBudgetMs() });
     let failure: Error | undefined;
     child.once("error", error => { failure = error; });
     child.once("close", code => failure ? reject(failure) : code === 0 ? accept() : reject(new Error(`Tectonic compilation failed: ${code}`)));

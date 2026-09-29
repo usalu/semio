@@ -29,6 +29,16 @@
       ]
     },
     {
+      "id": "phd",
+      "texPath": "🧾️template/🎓️phd/🎓️phd.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/🎓️phd/🎓️phd.tex",
+        "🧾️template/🎓️phd/🧩️phd.content.tex",
+        "🧾️template/🎓️phd/📚️references.bib"
+      ]
+    },
+    {
       "id": "flyer",
       "texPath": "🧾️template/📰️flyer/📰️flyer.tex",
       "collection": "templates",

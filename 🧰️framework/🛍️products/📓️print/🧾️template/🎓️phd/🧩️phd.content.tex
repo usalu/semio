@@ -1,0 +1,77 @@
+\title{Semio Dissertation Template}
+\subtitle{A chapter-sectioned thesis with the full examination apparatus}
+\author{Semio Research}
+\date{2026}
+
+\university{Leibniz Universität Hannover}
+\faculty{Faculty of Architecture and Landscape Sciences}
+\institute{Institute of Design and Construction}
+\degree{Doctor of Engineering (Dr.-Ing.)}
+\discipline{Computational Design}
+\supervisor{Prof. Dr.-Ing. A. Example}
+\reviewers{Prof. Dr.-Ing. B. Example\par Prof. Dr. C. Example}
+\place{Hannover}
+\submissiondate{2026-09-21}
+\defensedate{2026-12-04}
+\orcid{0000-0002-1825-0097}
+
+\addbibresource{📚️references.bib}
+
+\begin{document}
+
+\makedissertationtitle
+
+\begin{Abstract}
+  This template shows how a dissertation is written against the semio print framework: one document kind, one title page carrying the examination metadata, and the same window chrome, registers and visualization library every other semio document uses
+\end{Abstract}
+
+\begin{Kurzfassung}
+  Diese Vorlage zeigt, wie eine Dissertation im semio-Drucksatz entsteht: eine Dokumentart, ein Titelblatt mit den Prüfungsangaben und dieselben Fensterelemente, Verzeichnisse und Diagramme wie in jedem anderen semio-Dokument
+\end{Kurzfassung}
+
+\begin{Acknowledgements}
+  The acknowledgements are an unnumbered chapter in the frontmatter, so they never shift the numbering of the thesis chapters
+\end{Acknowledgements}
+
+\makedeclaration
+
+\clearpage
+\tableofcontents
+
+\makemainmatter
+
+\chapter{Introduction}
+A dissertation is a chapter-sectioned report with a wider binding gutter and a title page a faculty can archive \cite{semio2026}
+
+\section{Scope}
+\begin{Window}[title=Document Kind]
+  The kind \texttt{type=phd} loads the same chapter machinery as \texttt{type=report} and adds the dissertation apparatus from \texttt{semio-phd.sty}
+\end{Window}
+
+\subsection{Frontmatter}
+Abstract, Kurzfassung, acknowledgements and declaration are unnumbered chapters on roman page numerals, which run until \texttt{\textbackslash makemainmatter}
+
+\chapter{Method}
+The examination metadata is declarative: every field left unset simply omits its window from the title page \cite{expl32024}
+
+\begin{Figure}[title=Apparatus, height=3cm, anchor=center, justify=center]
+  Title page, abstracts, acknowledgements, appendices, declaration and registers
+\end{Figure}
+
+\chapter{Results}
+\begin{Blockquote}
+  The thesis compiles in the light and the dark theme from one canonical source, like every other registered template
+\end{Blockquote}
+A cumulative thesis cites its own constituent works the same way \cite{dissertation2026}
+
+\chapter{Conclusion}
+Extending the print product with a document kind costs one class branch, one package and one template, and every existing component keeps working unchanged
+
+\makeappendices
+\appendixchapter[SD]{Supplementary Data}
+Derivations and measurement tables referenced from the main text
+
+\appendixchapter{Registers}
+\makeregisters
+
+\end{document}

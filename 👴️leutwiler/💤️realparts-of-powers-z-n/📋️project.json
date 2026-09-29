@@ -1,0 +1,99 @@
+{
+  "name": "@leutwiler/realparts-of-powers-z-n",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "deps": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
+        "command": "bun ./📜️script.ts deps"
+      }
+    },
+    "build-lean": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [
+        "deps"
+      ],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/🟦️.ts",
+        "{projectRoot}/🧘️lean/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
+        "command": "bun ./📜️script.ts build lean"
+      }
+    },
+    "build-notes": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [
+        "deps"
+      ],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/🟦️.ts",
+        "{projectRoot}/📯️notes/**/*"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/📯️notes"
+      ],
+      "options": {
+        "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
+        "command": "bun ./📜️script.ts build 📯️notes"
+      }
+    },
+    "build-proof": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [
+        "deps"
+      ],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/🟦️.ts",
+        "{projectRoot}/🏆️proof/**/*"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/🏆️proof"
+      ],
+      "options": {
+        "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
+        "command": "bun ./📜️script.ts build 🏆️proof"
+      }
+    },
+    "build": {
+      "executor": "nx:noop",
+      "dependsOn": [
+        "build-lean",
+        "build-notes",
+        "build-proof"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [
+        "build-lean"
+      ],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/🟦️.ts",
+        "{projectRoot}/🧘️lean/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

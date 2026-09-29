@@ -1,0 +1,5 @@
+/* 🎨️ The site's brand layer: the semio palette (colors, font interfaces and their @font-face rules) compiled by Tailwind into
+   plain custom properties on :root. `theme(static)` emits every palette variable, because the quiz renderer reads them
+   through `var()` in a stylesheet Tailwind never scans; `source(none)` generates no utility classes, since the site uses none. */
+@import "../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css" theme(static);
+@tailwind utilities source(none);

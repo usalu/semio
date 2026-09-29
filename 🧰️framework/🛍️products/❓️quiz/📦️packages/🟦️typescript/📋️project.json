@@ -1,0 +1,48 @@
+{
+  "name": "@semio-tech/quiz",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🔨️modules/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

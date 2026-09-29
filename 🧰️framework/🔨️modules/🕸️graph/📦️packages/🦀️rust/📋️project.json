@@ -38,6 +38,11 @@
   "targets": {
     "generate": {
       "executor": "nx:run-commands",
+      "dependsOn": [
+        "semio-framework-os-flow-core:wasm",
+        "@semio-tech/framework-os-dev:generate-scale-fixture",
+        "@semio-tech/framework-renderer-wgpu:generate-frame-worker"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"

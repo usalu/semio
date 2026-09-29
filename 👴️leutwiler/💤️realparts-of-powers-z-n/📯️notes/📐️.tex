@@ -1,0 +1,270 @@
+\documentclass[11pt,a4paper]{article}
+
+% !TEX program = tectonic
+% English translation of the LaTeX transcription of the three supplied handwritten pages.
+% Editorial clarifications: n is the general exponent, n=2m in the even case;
+% the multiplication rules for i,j and the domain of the polar form are explicit.
+% The conjectures in the source are retained as conjectures.
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[
+  a4paper,left=21mm,right=21mm,top=22mm,bottom=20mm,
+  headheight=14pt,headsep=7mm,footskip=10mm
+]{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\hypersetup{
+  pdftitle={Real Parts of Powers of z = x + iy + jt},
+  pdfsubject={English LaTeX version of three handwritten mathematical notes},
+  pdfauthor={},
+  pdfkeywords={Powers, Real part, Polar form, Laplace-Beltrami, Conjecture}
+}
+
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\jj}{\mathrm{j}}
+\newcommand{\I}{\mathrm{I}}
+\DeclareMathOperator{\Real}{Re}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textsc{Mathematical Notes}}
+\fancyhead[R]{\small $z=x+\ii y+\jj t$}
+\fancyfoot[L]{\small Real Parts of Powers}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\jot}{4pt}
+\setlength{\abovedisplayskip}{8pt plus 2pt minus 2pt}
+\setlength{\belowdisplayskip}{8pt plus 2pt minus 2pt}
+\setlength{\abovedisplayshortskip}{4pt plus 2pt}
+\setlength{\belowdisplayshortskip}{6pt plus 2pt minus 2pt}
+\titleformat{\section}{\Large\bfseries}{}{0pt}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{0pt}{11pt}
+\titlespacing*{\subsection}{0pt}{12pt}{5pt}
+\raggedbottom
+
+\begin{document}
+
+% -----------------------------------------------------------------------------
+% Page 1: even powers and the conjectures in the source.
+% -----------------------------------------------------------------------------
+\section*{Real Parts of the Powers \texorpdfstring{$z^n$}{z to the power n}}
+
+Let
+\[
+  z=x+\ii y+\jj t,\qquad (x,y,t)\in\R^3,
+\]
+where the quaternionic multiplication rules
+$\ii^2=\jj^2=-1$ and $\ii\jj=-\jj\ii$ are assumed.
+For even exponents, write $n=2m$, $m\in\N$, $m\geq 1$.
+
+\subsection*{Examples of even powers}
+\begin{align*}
+  \Real(z^2)
+    &=x^2-(y^2+t^2),\\
+  \Real(z^4)
+    &=x^4-6x^2(y^2+t^2)+(y^2+t^2)^2,\\
+  \Real(z^6)
+    &=x^6-15x^4(y^2+t^2)+15x^2(y^2+t^2)^2-(y^2+t^2)^3,\\
+  \Real(z^8)
+    &=x^8-28x^6(y^2+t^2)+70x^4(y^2+t^2)^2\\
+    &\qquad-28x^2(y^2+t^2)^3+(y^2+t^2)^4,\\
+  \Real(z^{10})
+    &=x^{10}-45x^8(y^2+t^2)+210x^6(y^2+t^2)^2\\
+    &\qquad-210x^4(y^2+t^2)^3+45x^2(y^2+t^2)^4-(y^2+t^2)^5.
+\end{align*}
+
+\subsection*{Conjecture concerning the Laplace--Beltrami equation}
+The real parts under consideration, $u_m(x,y,t)=\Real(z^{2m})$, have the form
+\[
+  u_m(x,y,t)
+  =\sum_{k=0}^{m}a_k\,x^{2(m-k)}(y^2+t^2)^k,
+  \qquad a_0=1,
+\]
+with real coefficients $a_k$ that depend on $m$.
+It is conjectured that these polynomials satisfy
+\[
+  \boxed{\;t\,\Delta u_m=\frac{\partial u_m}{\partial t}\;},
+  \qquad
+  \Delta=
+  \frac{\partial^2}{\partial x^2}
+  +\frac{\partial^2}{\partial y^2}
+  +\frac{\partial^2}{\partial t^2}
+\]
+where $\Delta$ denotes the Laplace operator.
+
+\subsection*{Conjectured coefficient relations}
+It is further conjectured that
+\[
+\begin{alignedat}{3}
+  a_m     &=(-1)^m,     &\qquad& m\geq 1,\\
+  a_{m-1} &=(-1)^m a_1, &      & m\geq 3,\\
+  a_{m-3} &=(-1)^m a_3, &      & m\geq 5,\\
+  a_{m-5} &=(-1)^m a_5, &      & m\geq 7,
+\end{alignedat}
+\]
+and, in general,
+\[
+  \boxed{\;
+  a_{m-(2k-1)}=(-1)^m a_{2k-1},
+  \qquad k\geq 1,\quad m\geq 2k+1.
+  \;}
+\]
+
+\newpage
+
+% -----------------------------------------------------------------------------
+% Page 2: polar form and induction.
+% -----------------------------------------------------------------------------
+\section*{Computing the Power \texorpdfstring{$z^n$}{z to the power n}}
+
+\subsection*{Polar form}
+For $\rho:=\sqrt{y^2+t^2}>0$, choose $\varphi\in(0,\pi)$ such that
+\[
+  \abs{z}^2=x^2+y^2+t^2,
+  \qquad
+  \cot\varphi=\frac{x}{\sqrt{y^2+t^2}},
+  \qquad
+  \I=\frac{\ii y+\jj t}{\sqrt{y^2+t^2}}.
+\]
+The polar form of $z$ is then
+\[
+  z=\abs{z}\bigl(\cos\varphi+\I\sin\varphi\bigr).
+\]
+The multiplication rules for $\ii$ and $\jj$ imply
+\[
+  \I^2
+  =\frac{(\ii y+\jj t)^2}{y^2+t^2}
+  =\frac{-y^2+(\ii\jj+\jj\ii)yt-t^2}{y^2+t^2}
+  =-1.
+\]
+Thus, for every integer $n\geq 1$, we have
+\begin{equation}
+  \boxed{\;
+    z^n=\abs{z}^{n}\bigl(\cos(n\varphi)+\I\sin(n\varphi)\bigr).
+  \;}
+  \tag{$*$}\label{eq:power}
+\end{equation}
+
+\subsection*{Proof by mathematical induction}
+\textit{Base case.}
+For $n=1$, \eqref{eq:power} is precisely the polar form of $z$.
+
+\textit{Inductive step.}
+Suppose that \eqref{eq:power} holds for some $n\geq 1$. Then
+\begin{align*}
+  z^{n+1}
+    &=z\,z^n\\
+    &=z\,\abs{z}^{n}\bigl(\cos(n\varphi)+\I\sin(n\varphi)\bigr)\\
+    &=\abs{z}^{n+1}
+      \bigl(\cos\varphi+\I\sin\varphi\bigr)
+      \bigl(\cos(n\varphi)+\I\sin(n\varphi)\bigr)\\
+    &=\abs{z}^{n+1}\Bigl[
+      \cos\varphi\cos(n\varphi)
+      +\I\cos\varphi\sin(n\varphi)\\
+    &\hspace{30mm}
+      +\I\sin\varphi\cos(n\varphi)
+      +\underbrace{\I^2}_{=-1}\sin\varphi\sin(n\varphi)
+      \Bigr]\\
+    &=\abs{z}^{n+1}\Bigl[
+      \underbrace{\cos\varphi\cos(n\varphi)
+      -\sin\varphi\sin(n\varphi)}_{\cos((n+1)\varphi)}\\
+    &\hspace{30mm}
+      +\I\underbrace{\bigl(\cos\varphi\sin(n\varphi)
+      +\sin\varphi\cos(n\varphi)\bigr)}_{\sin((n+1)\varphi)}
+      \Bigr]\\
+    &=\abs{z}^{n+1}
+      \bigl(\cos((n+1)\varphi)+\I\sin((n+1)\varphi)\bigr).
+\end{align*}
+This is \eqref{eq:power} with $n+1$ in place of $n$.\hfill$\square$
+
+\subsection*{Special case on the real axis}
+For $y=t=0$, the definition of $\I$ above does not apply.
+In this case, we immediately have $z=x$ and $z^n=x^n$.
+The polynomial formulas for the real parts therefore remain valid there as well.
+
+\newpage
+
+% -----------------------------------------------------------------------------
+% Page 3: trigonometric identities and the examples in the source.
+% -----------------------------------------------------------------------------
+\section*{Trigonometric Representation of the Real Parts}
+
+\subsection*{Remark on the polar form}
+From $\cot\varphi=x/\sqrt{y^2+t^2}$ and $\varphi\in(0,\pi)$, it follows that
+\begin{align*}
+  \sin\varphi
+    &=\frac{1}{\sqrt{1+\cot^2\varphi}}
+     =\frac{1}{\sqrt{1+\dfrac{x^2}{y^2+t^2}}}\\
+    &=\frac{\sqrt{y^2+t^2}}{\sqrt{x^2+y^2+t^2}}
+     =\frac{\sqrt{y^2+t^2}}{\abs{z}},\\[3pt]
+  \cos\varphi
+    &=\frac{\cot\varphi}{\sqrt{1+\cot^2\varphi}}
+     =\frac{x}{\sqrt{y^2+t^2}\,
+       \sqrt{1+\dfrac{x^2}{y^2+t^2}}}\\
+    &=\frac{x}{\sqrt{x^2+y^2+t^2}}
+     =\frac{x}{\abs{z}}.
+\end{align*}
+Hence
+\[
+  \boxed{\;
+    \sin\varphi=\frac{\sqrt{y^2+t^2}}{\abs{z}},
+    \qquad
+    \cos\varphi=\frac{x}{\abs{z}}.
+  \;}
+\]
+Since $\Real(\I)=0$, \eqref{eq:power} yields
+\[
+  \boxed{\;\Real(z^n)=\abs{z}^{n}\cos(n\varphi).\;}
+\]
+
+\subsection*{Examples}
+\begingroup
+\setlength{\jot}{3pt}
+\begin{align*}
+  \Real(z)
+    &=\abs{z}\cos\varphi
+     =\abs{z}\,\frac{x}{\abs{z}}=x,\\[3pt]
+  \Real(z^2)
+    &=\abs{z}^2\cos(2\varphi)
+     =\abs{z}^2\bigl(\cos^2\varphi-\sin^2\varphi\bigr)\\
+    &=\abs{z}^2\left(\frac{x^2}{\abs{z}^2}
+       -\frac{y^2+t^2}{\abs{z}^2}\right)
+     =x^2-(y^2+t^2),\\[3pt]
+  \Real(z^3)
+    &=\abs{z}^3\cos(3\varphi)
+     =\abs{z}^3\bigl(4\cos^3\varphi-3\cos\varphi\bigr)\\
+    &=\abs{z}^3\left(4\frac{x^3}{\abs{z}^3}
+       -3\frac{x}{\abs{z}}\right)
+     =4x^3-3x\abs{z}^2\\
+    &=4x^3-3x(x^2+y^2+t^2)
+     =x^3-3x(y^2+t^2),\\[3pt]
+  \Real(z^4)
+    &=\abs{z}^4\cos(4\varphi)
+     =\abs{z}^4\bigl(8\cos^4\varphi-8\cos^2\varphi+1\bigr)\\
+    &=\abs{z}^4\left(8\frac{x^4}{\abs{z}^4}
+       -8\frac{x^2}{\abs{z}^2}+1\right)
+     =8x^4-8x^2\abs{z}^2+\abs{z}^4\\
+    &=8x^4-8x^2(x^2+y^2+t^2)+(x^2+y^2+t^2)^2\\
+    &=8x^4-8x^4-8x^2y^2-8x^2t^2+x^4+y^4+t^4\\
+    &\qquad+2x^2y^2+2y^2t^2+2x^2t^2\\
+    &=x^4-6x^2y^2-6x^2t^2+y^4+2y^2t^2+t^4\\
+    &=x^4-6x^2(y^2+t^2)+(y^2+t^2)^2.
+\end{align*}
+\endgroup
+
+\end{document}

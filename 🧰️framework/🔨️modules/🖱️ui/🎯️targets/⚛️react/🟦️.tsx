@@ -106,7 +106,6 @@ import {
   ephemeralMap,
   ephemeralSet,
 } from "@semio-tech/framework";
-import i18next from "i18next";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import * as THREE from "three";
@@ -162,7 +161,7 @@ export type { IconName, MetabolismIconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
+import { I18nextProvider, useTranslation } from "react-i18next";
 // 🕹️wave-0: imported directly from the module's own source (not via `@semio-tech/framework`) — the
 // `🛂️manifest` module already re-exports a same-named, owned-schema-generated `MergeMode`/`SelectionMode`
 // family through that barrel, so a second barrel export of the hand-written mirror would collide.
@@ -184,7 +183,7 @@ export {
   type InteractiveJobTerminal,
 } from "../../🧱️elements/🔌️Ports/🟦️";
 
-/** 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
+/** @emoji 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {
   readonly canvas: typeof ThreeCanvas;
   readonly drei: { OrbitControls: typeof OrbitControls; Grid: typeof Grid };
@@ -205,7 +204,7 @@ export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider }
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
 // directly.
 
-/** 🔌️ Default R3F host port wired to fiber/drei adapters. */
+/** @emoji 🔌️ Default R3F host port wired to fiber/drei adapters. */
 export let threeHostPort: ThreeHostPort = {
   canvas: sceneHostPort.fiber.canvas,
   drei: { OrbitControls: sceneHostPort.drei.OrbitControls, Grid: sceneHostPort.drei.Grid },
@@ -216,7 +215,7 @@ const defaultFlowHostPort = flowHostPort;
 const defaultThreeHostPort = threeHostPort;
 const defaultSceneHostPort = sceneHostPort;
 
-/** 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
+/** @emoji 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
 export type HostPortOverrides = Partial<{
   readonly react: ReactHostPort;
   readonly flow: FlowHostPort;
@@ -225,7 +224,7 @@ export type HostPortOverrides = Partial<{
   readonly iconRender: IconRenderPort;
 }>;
 
-/** 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
+/** @emoji 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
  * so this is the only way to inject a test double or alternate adapter (e.g. Storybook's `withRenderer`
  * decorator) before a story renders. Ports are page-global (one React per page), so a merge — only the
  * keys you pass are touched, everything else keeps whatever is currently installed — is required rather
@@ -270,7 +269,7 @@ const ICON_RENDER_GLB_CACHE = ephemeralMap<string, Promise<THREE.Group>>("framew
 const ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY = "semio.iconRender.meshOutline";
 const ICON_RENDER_EDGE_GEOMETRY_CACHE = new WeakMap<THREE.BufferGeometry, THREE.EdgesGeometry>();
 
-/** 🌫️ Empty/`transparent` lets the host surface show through — mirrors world-3d environment JSON. */
+/** @emoji 🌫️ Empty/`transparent` lets the host surface show through — mirrors world-3d environment JSON. */
 export function isTransparentIconBackground(background?: string): boolean {
   return !background || background === "transparent";
 }
@@ -301,7 +300,7 @@ function applyIconMeshEdgeBorders(root: THREE.Object3D, borderColor: string): vo
   }
 }
 
-/** ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
+/** @emoji ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
 export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): [number, number, number] {
   const az = (azimuthDeg * Math.PI) / 180;
   const el = (elevationDeg * Math.PI) / 180;
@@ -374,12 +373,12 @@ function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.S
   return scene;
 }
 
-/** 📷️ Whether an icon shot uses parallel projection — mirrors world-3d `camera.projection`. */
+/** @emoji 📷️ Whether an icon shot uses parallel projection — mirrors world-3d `camera.projection`. */
 export function iconRenderCameraIsOrthographic(camera: IconRenderCamera): boolean {
   return camera.projection === "orthographic";
 }
 
-/** 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
+/** @emoji 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
 export function iconRenderOrthoZoomForRadius(radius: number, width: number, height: number, padding = 1.25): number {
   const padded = Math.max(radius * Math.max(padding, 1), 0.5);
   const zoomX = width * 0.5 / padded;
@@ -387,7 +386,7 @@ export function iconRenderOrthoZoomForRadius(radius: number, width: number, heig
   return Math.max(Math.min(zoomX, zoomY), 1e-3);
 }
 
-/** 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
+/** @emoji 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
 export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: number, aspect: number, padding = 1.25): number {
   const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
   const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
@@ -395,7 +394,7 @@ export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: n
   return Math.max((Math.max(radius, 1e-4) / Math.sin(half)) * Math.max(padding, 1), 0.5);
 }
 
-/** 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
+/** @emoji 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
  * the model's bounding-sphere centre and backed off so the sphere fills the frame (`padding` ≥ 1). */
 export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Object3D): IconRenderCamera {
   const camera = request.camera;
@@ -421,7 +420,7 @@ export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Ob
   return { ...camera, position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance], target, zoom: camera.zoom };
 }
 
-/** 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
+/** @emoji 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
 export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.Camera {
   const up = pose.up ?? [0, 0, 1];
   if (iconRenderCameraIsOrthographic(pose)) {
@@ -442,7 +441,7 @@ export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCame
   return camera;
 }
 
-/** 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
+/** @emoji 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
 export function finalizeIconSvgMarkup(svgMarkup: string, options: { readonly background?: string }): string {
   if (!isTransparentIconBackground(options.background)) return svgMarkup;
   return svgMarkup.replace(/\sstyle="background-color:[^"]*"/gi, "");
@@ -473,7 +472,7 @@ async function renderIconPng(scene: THREE.Scene, camera: THREE.Camera, width: nu
   return { dataUrl };
 }
 
-/** ⭕️ Clips rendered SVG markup to an axis-aligned ellipse inscribed in the shot bounds. */
+/** @emoji ⭕️ Clips rendered SVG markup to an axis-aligned ellipse inscribed in the shot bounds. */
 export function clipIconSvgMarkupToEllipse(svgMarkup: string, width: number, height: number): string {
   const clipId = "semio-icon-ellipse-clip";
   if (svgMarkup.includes(`id="${clipId}"`)) return svgMarkup;
@@ -539,7 +538,7 @@ async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderS
   return { dataUrl };
 }
 
-/** 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
+/** @emoji 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
 export let iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
@@ -552,7 +551,7 @@ export let iconRenderPort: IconRenderPort = {
 
 const defaultIconRenderPort = iconRenderPort;
 
-/** 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
+/** @emoji 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
 export function iconShotFrameStyle(width: number, height: number): React.CSSProperties {
   const landscape = width >= height;
   return {
@@ -564,12 +563,12 @@ export function iconShotFrameStyle(width: number, height: number): React.CSSProp
   };
 }
 
-/** 🖼️ Frame mask class for an icon shot shape. */
+/** @emoji 🖼️ Frame mask class for an icon shot shape. */
 export function iconShotFrameClass(shape: IconRenderShape): string {
   return shape === "ellipse" ? "rounded-[50%]" : "rounded-none";
 }
 
-/** 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
+/** @emoji 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
 export function IconShotFrame({
   width,
   height,
@@ -611,31 +610,31 @@ export function IconShotFrame({
 // #endregion 🔖️IconRenderPort
 
 // #region 🖼️ReferenceMedia
-/** 🖼️ Reference plane media kind for infinite-world grid underlays. */
+/** @emoji 🖼️ Reference plane media kind for infinite-world grid underlays. */
 export type ReferenceMediaKind = "image" | "svg" | "pdf";
 
-/** 🖼️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
+/** @emoji 🖼️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
 export interface ReferenceMediaSource {
   readonly url: string;
   readonly mediaKind: ReferenceMediaKind;
   readonly page?: number;
 }
 
-/** 🖼️ Loaded reference texture with intrinsic pixel dimensions. */
+/** @emoji 🖼️ Loaded reference texture with intrinsic pixel dimensions. */
 export interface ReferenceMediaLoadResult {
   readonly texture: THREE.Texture;
   readonly width: number;
   readonly height: number;
 }
 
-/** 🖼️ Port for rasterizing png/svg/pdf paths into three.js textures. */
+/** @emoji 🖼️ Port for rasterizing png/svg/pdf paths into three.js textures. */
 export interface ReferenceMediaPort {
   loadReferenceTexture(source: ReferenceMediaSource): Promise<ReferenceMediaLoadResult>;
 }
 
 const REFERENCE_MEDIA_RASTER_MAX = 4096;
 
-/** 🔎️ Infers reference media kind from a URL path extension. */
+/** @emoji 🔎️ Infers reference media kind from a URL path extension. */
 export function referenceMediaKindFromUrl(url: string): ReferenceMediaKind | null {
   const ext = url.split(/[?#]/, 1)[0]?.split(".").pop()?.toLowerCase() ?? "";
   if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "avif", "tif", "tiff"].includes(ext)) {
@@ -721,7 +720,7 @@ async function loadReferenceImageTexture(url: string): Promise<ReferenceMediaLoa
   };
 }
 
-/** 🖼️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
+/** @emoji 🖼️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
 export let referenceMediaPort: ReferenceMediaPort = {
   async loadReferenceTexture(source) {
     if (source.mediaKind === "image") {
@@ -742,30 +741,30 @@ export const HostThreeCanvas = threeHostPort.canvas;
 export const HostSceneCanvas = sceneHostPort.fiber.canvas;
 export type { ThreeEvent };
 
-/** 🌳️ Typography for measure tree leaf labels. */
+/** @emoji 🌳️ Typography for measure tree leaf labels. */
 export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
 
-/** 🌳️ Typography for measure tree group headers. */
+/** @emoji 🌳️ Typography for measure tree group headers. */
 export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-element group-hover:text-emphasized";
 
-/** 📑️ Panel tab label beside the icon. */
+/** @emoji 📑️ Panel tab label beside the icon. */
 export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
-/** 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
+/** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center overflow-visible leading-none [&_svg]:block";
 
-/** 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
+/** @emoji 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
 export const dropZoneReadyTextClass = "text-emphasized";
 
-/** 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
+/** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
 export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
 
-/** 📥️ Combined passive drop-zone treatment (fill + emphasized text/icons). */
+/** @emoji Combined passive drop-zone treatment (fill + emphasized text/icons). */
 export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
 
-/** 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
+/** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 
-/** 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
+/** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
 
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 export { cn };
@@ -829,7 +828,7 @@ import {
 export { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass, chromeControlTabActiveClass };
 
 // #region 🔖️SelectionMarquee
-/** ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
+/** @emoji ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
 export type SelectionMarqueeCoverage = "partial" | "full";
 
 export type SelectionMarqueeRect = {
@@ -849,7 +848,7 @@ export type SelectionMarqueeProps = {
   readonly className?: string;
 } & ({ readonly shape: "rect"; readonly rect: SelectionMarqueeRect } | { readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] });
 
-/** ⬚️ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
+/** @emoji ⬚️ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
 export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactElement {
   const { coverage, className } = props;
   const svgClass = cn("selection-marquee pointer-events-none absolute inset-0 h-full w-full overflow-visible", className);
@@ -873,12 +872,12 @@ export const SELECTION_DRAG_DIRECTION_THRESHOLD_PX = 2;
 
 export type SelectionMarqueeMethod = "lasso" | "rectangle";
 
-/** 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
+/** @emoji 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
 export function marqueeIsCrossing(startX: number, endX: number): boolean {
   return endX < startX;
 }
 
-/** 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
+/** @emoji 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
 export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): boolean {
   const start = path[0];
   if (!start) return false;
@@ -893,17 +892,17 @@ export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[]
   return marqueeIsCrossing(start.x, end.x);
 }
 
-/** 🖱️ Maps drag direction to marquee coverage (rectangle endpoints). */
+/** @emoji 🖱️ Maps drag direction to marquee coverage (rectangle endpoints). */
 export function marqueeCoverageFromDrag(startX: number, endX: number): SelectionMarqueeCoverage {
   return marqueeIsCrossing(startX, endX) ? "partial" : "full";
 }
 
-/** 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
+/** @emoji 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
 export function marqueeCoverageFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): SelectionMarqueeCoverage {
   return marqueeIsCrossingFromPath(path, method) ? "partial" : "full";
 }
 
-/** 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
+/** @emoji 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
 export function marqueeCoverageFromGesture(input: { readonly method: SelectionMarqueeMethod; readonly startX: number; readonly endX: number; readonly path: readonly SelectionMarqueePoint[] }): SelectionMarqueeCoverage {
   if (input.method === "lasso" && input.path.length > 0) {
     return marqueeCoverageFromPath(input.path, "lasso");
@@ -911,7 +910,7 @@ export function marqueeCoverageFromGesture(input: { readonly method: SelectionMa
   return marqueeCoverageFromDrag(input.startX, input.endX);
 }
 
-/** 🎯️ Maps shift/ctrl modifiers to a marquee-drag `MergeMode` (ctrl+shift → invertive).
+/** @emoji 🎯️ Maps shift/ctrl modifiers to a marquee-drag `MergeMode` (ctrl+shift → invertive).
  * `persistentMode` — a shell's own {@link SelectionModeStore} value, e.g. `useShellScope().selection.get()`
  * — takes precedence when set to something other than `"replace"`, mirroring the toolbar toggle in
  * `SelectionUtilityOptions`; omitted, behaves as if the toolbar is at its `"replace"` setting (was: read a
@@ -933,7 +932,7 @@ export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolea
   return "replace";
 }
 
-/** 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
+/** @emoji 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
  * an ordered topology here (see `marqueeModeFromModifiers`'s doc), so it falls back to `"replace"`. */
 export function selectionMergeIds(mode: MergeMode, current: readonly string[], incoming: readonly string[]): string[] {
   const currentSet = new Set(current);
@@ -1011,7 +1010,7 @@ export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } f
 export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework";
 export type { DockSkeleton, DockTabSkeleton, IntroductionStepDefinition, TutorialCameraKeyframe, TutorialDefinition } from "@semio-tech/framework";
 
-/** 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
+/** @emoji 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const selectTargetLabel = useLabel("ui.common.selectTarget");
@@ -1107,7 +1106,7 @@ export type CanvasPickInteraction = {
   readonly onMenuPick: (target: CanvasPickTarget) => void;
 };
 
-/** 🎯️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
+/** @emoji 🎯️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
 export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus, onSelectTarget, clickThresholdPx = 4 }: UseCanvasPickInteractionOptions): CanvasPickInteraction {
   const [pickMenu, setPickMenu] = React.useState<CanvasPickRequest | null>(null);
   const [menuHoveredKey, setMenuHoveredKey] = React.useState<string | null>(null);
@@ -1469,9 +1468,9 @@ export {
   type IconProps,
 };
 
-/** 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
+/** @emoji 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
 
-/** 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
+/** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
 
 import {
   createDOMEventBinding,
@@ -1650,7 +1649,7 @@ export {
 };
 export type { ControlKeybindingAction, ControlKeybindingDefinition, ControlKeybindingCallback, ControlKeybindingOptions, ControlKeybindingDependencies, ControlHotkeyBadgeProps };
 
-/** ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
+/** @emoji ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
 export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SHELL_KEYBINDINGS & string>> = {
   "top-left": "ui.shell.panelAnchor.topLeft",
   "top-middle": "ui.shell.panelAnchor.topMiddle",
@@ -1665,7 +1664,7 @@ export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SH
 // #endregion ⌨️UiKeybindings
 
 // #region 🌈️SurfaceChrome
-/** 🌈️ Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and driver — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
+/** @emoji 🌈️ Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and driver — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
 export type ElementsSurfaceAppearance = "system" | "light" | "dark";
 
 // 📱️ The device vocabulary and the breakpoint policy are NOT declared here: `📱️device/🟦️.ts` owns them
@@ -1691,7 +1690,7 @@ export interface ElementsSurfaceChromeInput {
   driver: UiDriver;
 }
 
-/** 🐚️ Resolves an explicit surface-chrome root (a shell's own root — e.g. its `ShellScope.rootRef`)
+/** @emoji 🐚️ Resolves an explicit surface-chrome root (a shell's own root — e.g. its `ShellScope.rootRef`)
  * or falls back to `document.documentElement` for the page-owning case; every entry point below takes
  * this same optional-root shape so a single-shell page's existing call sites (which pass none) keep
  * their exact current behavior unchanged. `undefined` in a non-browser environment (SSR/vitest without
@@ -1700,7 +1699,7 @@ function resolveElementsSurfaceChromeRoot(root?: HTMLElement): HTMLElement | und
   return root ?? (typeof document !== "undefined" ? document.documentElement : undefined);
 }
 
-/** 🐚️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
+/** @emoji 🐚️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
  * just `documentElement`, so an embedded shell's own `.semio-scope` div is visually correct even before
  * any descendant renders. When the root IS `documentElement` (the page-owning case), also mirrors onto
  * `document.body` exactly as before this was made root-scoped — unchanged behavior for that case. */
@@ -1726,7 +1725,7 @@ function clearElementsSurfaceChromeBaseColors(root: HTMLElement): void {
   }
 }
 
-/** 🌓️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
+/** @emoji 🌓️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
 export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppearance): boolean {
   if (appearance === "dark") return true;
   if (appearance === "light") return false;
@@ -1734,7 +1733,7 @@ export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppe
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-/** 🌓️ True when a surface-chrome root (`document.documentElement` by default) currently carries
+/** @emoji 🌓️ True when a surface-chrome root (`document.documentElement` by default) currently carries
  * the dark surface chrome class. */
 export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): boolean {
   const root = resolveElementsSurfaceChromeRoot(rootOverride);
@@ -1744,7 +1743,7 @@ export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): 
 type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
 
 const elementsSurfaceChromeLeaseSeq = ephemeralBox("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeaseSeq", 0);
-/** 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
+/** @emoji 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
  * meant a second mounted shell's appearance/driver/device lease silently won (last-wins) over the
  * first's for the WHOLE page instead of just its own subtree. */
 const elementsSurfaceChromeLeasesByRoot = ephemeralMap<HTMLElement, ElementsSurfaceChromeLease[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeasesByRoot");
@@ -1786,12 +1785,12 @@ function clearElementsSurfaceChromeDriverDom(root: HTMLElement): void {
 }
 
 // #region 🫥️ChromeReveal
-/** 🫥️ Extra radius (px) around a reveal region's own rect that still counts as "inside" — makes the invisible-until-hovered bar reachable. */
+/** @emoji 🫥️ Extra radius (px) around a reveal region's own rect that still counts as "inside" — makes the invisible-until-hovered bar reachable. */
 const CHROME_REVEAL_ACTIVATION_BAND_PX = 24;
-/** 🫥️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
+/** @emoji 🫥️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
 const CHROME_REVEAL_EDGE_BAND_PX = 8;
 
-/** 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
+/** @emoji 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
  * controller, which meant hovering ANY mounted shell revealed hover-reveal chrome for EVERY shell that
  * had opted into it (and a pointer-move over shell B's DOM would drive shell A's reveal state). */
 const chromeRevealBindingsByRoot = ephemeralMap<HTMLElement, ReturnType<typeof createDOMEventBinding>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealBindingsByRoot");
@@ -1869,7 +1868,7 @@ function teardownUiChromeRevealController(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>("[data-ui-reveal-region][data-ui-revealed]").forEach((region) => delete region.dataset.uiRevealed);
 }
 
-/** 🫥️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
+/** @emoji 🫥️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
 function syncUiChromeRevealController(root: HTMLElement, chrome: UiDriverReveal): void {
   if (chrome === "hover") ensureUiChromeRevealController(root);
   else teardownUiChromeRevealController(root);
@@ -1894,7 +1893,7 @@ function applyElementsSurfaceChromeAppearanceDom(root: HTMLElement, appearance: 
   setStylingAppearanceRoot(root);
 }
 
-/** 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
+/** @emoji 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
  * React/CSS load (play/static entries); does not register a surface-chrome lease. */
 export function bootstrapElementsSurfaceChromeDocument(appearance: ElementsSurfaceAppearance = "system", rootOverride?: HTMLElement): void {
   const root = resolveElementsSurfaceChromeRoot(rootOverride);
@@ -1943,7 +1942,7 @@ function syncElementsSurfaceChromeDomFromLeaseStack(root: HTMLElement): void {
   applyElementsSurfaceChromeDom(root, input);
 }
 
-/** 🐚️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
+/** @emoji 🐚️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
  * lease when the OS preference flips — the media query itself is genuinely page-global (there is only
  * one system preference), but each root's lease stack (and therefore whether it even has a "system"
  * lease) stays independent. */
@@ -1972,7 +1971,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
 }
 
 /**
- * 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
+ * @emoji 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
  * DOM state, browser default input, and the active driver. `rootOverride` scopes this lease to one
  * shell's own root (e.g. its `ShellScope.rootRef`) — omitted, it falls back to `document.documentElement`
  * (the single-shell-per-page case, unchanged from before this was made root-scoped).
@@ -2003,7 +2002,7 @@ export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput, ro
 }
 
 /**
- * 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
+ * @emoji 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
  * attrs), base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
  * `root` scopes this to one shell — omitted, targets `document.documentElement` as before. Callers reading
  * this from a ref (e.g. `ShellScope.rootRef.current`) must re-render once that ref attaches (`FrameworkOsShell`
@@ -2017,7 +2016,7 @@ export function useElementsSurfaceChrome({ appearance, device, driver }: Element
 }
 
 /**
- * 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
+ * @emoji 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
  * they change. Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect
  * every render (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render →
  * Maximum update depth). `root` scopes the observed element — omitted, observes `document.documentElement`;
@@ -2043,7 +2042,7 @@ export function useCanvasAppearanceSync(sync: () => void, enabled = true, root?:
   }, [appearanceRoot, enabled, root]);
 }
 
-/** 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
+/** @emoji 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
  * ever exercise the default `document.documentElement` root, but this clears all of them defensively). */
 export function resetElementsSurfaceChromeForTests(): void {
   for (const root of elementsSurfaceChromeDeferredClearFrames.keys()) cancelElementsSurfaceChromeDeferredClear(root);
@@ -2056,10 +2055,10 @@ export function resetElementsSurfaceChromeForTests(): void {
 
 // #region 🎛️UiChromePrefs
 
-/** 🌓️ Storage key for surface appearance (system/light/dark). */
+/** @emoji 🌓️ Storage key for surface appearance (system/light/dark). */
 export const UI_CHROME_APPEARANCE_STORAGE_KEY = "ui.chrome.appearance";
 
-/** 🌓️ Reads persisted surface appearance from the given shell's storage — a required param
+/** @emoji 🌓️ Reads persisted surface appearance from the given shell's storage — a required param
  * (not a `localStorage` default) since two shells on one page must never read/write each other's
  * appearance through a shared key. */
 export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurfaceAppearance {
@@ -2068,74 +2067,60 @@ export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurf
   return "system";
 }
 
-/** 🌓️ Persists surface appearance to the given shell's storage. */
+/** @emoji 🌓️ Persists surface appearance to the given shell's storage. */
 export function writeStoredUiChromeAppearance(storage: StoragePort, appearance: ElementsSurfaceAppearance): void {
   storage.set(UI_CHROME_APPEARANCE_STORAGE_KEY, appearance);
 }
 
-/** 📐️ User-selectable layout device; mobile is automatic and excluded here. */
+/** @emoji 📐️ User-selectable layout device; mobile is automatic and excluded here. */
 export type UiChromeLayout = "desktop" | "tablet";
 
-/** 📐️ Storage key for the user-selected desktop/tablet layout. */
+/** @emoji 📐️ Storage key for the user-selected desktop/tablet layout. */
 export const UI_CHROME_LAYOUT_STORAGE_KEY = "ui.chrome.layout";
 
-/** 📐️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
+/** @emoji 📐️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
 export function readStoredUiChromeLayout(storage: StoragePort): UiChromeLayout {
   return storage.get(UI_CHROME_LAYOUT_STORAGE_KEY) === "tablet" ? "tablet" : "desktop";
 }
 
-/** 📐️ Persists the layout preference to the given shell's storage. */
+/** @emoji 📐️ Persists the layout preference to the given shell's storage. */
 export function writeStoredUiChromeLayout(storage: StoragePort, layout: UiChromeLayout): void {
   storage.set(UI_CHROME_LAYOUT_STORAGE_KEY, layout);
 }
 
-/** 🌐️ Storage key for the active UI locale. */
-export const UI_CHROME_LOCALE_STORAGE_KEY = "ui.chrome.locale";
-
-/** 🌐️ Reads the persisted UI locale from the given shell's storage, if any. */
-export function readStoredUiChromeLocale(storage: StoragePort): UiLocale | null {
-  const raw = storage.get(UI_CHROME_LOCALE_STORAGE_KEY);
-  return raw === "en" || raw === "de" ? raw : null;
-}
-
-/** 🌐️ Persists the active UI locale to the given shell's storage. */
-export function writeStoredUiChromeLocale(storage: StoragePort, locale: UiLocale): void {
-  storage.set(UI_CHROME_LOCALE_STORAGE_KEY, locale);
-}
-
-/** 🗣️ Id of the always-available default terminology (no term substitutions). */
+/** @emoji 🗣️ Id of the always-available default terminology (no term substitutions). */
 export const UI_TERMINOLOGY_NATIVE = "native";
 
-/** 🗣️ Storage key for the active app terminology id. */
+/** @emoji 🗣️ Storage key for the active app terminology id. */
 export const UI_CHROME_TERMINOLOGY_STORAGE_KEY = "ui.chrome.terminology";
 
-/** 🗣️ Reads the persisted terminology id from the given shell's storage, defaulting to native. */
+/** @emoji 🗣️ Reads the persisted terminology id from the given shell's storage, defaulting to native. */
 export function readStoredUiChromeTerminology(storage: StoragePort): string {
   return storage.get(UI_CHROME_TERMINOLOGY_STORAGE_KEY) || UI_TERMINOLOGY_NATIVE;
 }
 
-/** 🗣️ Persists the active terminology id to the given shell's storage. */
+/** @emoji 🗣️ Persists the active terminology id to the given shell's storage. */
 export function writeStoredUiChromeTerminology(storage: StoragePort, id: string): void {
   storage.set(UI_CHROME_TERMINOLOGY_STORAGE_KEY, id);
 }
 
-/** 🎨️ Storage key for the active theme id (builtin or `custom.<slug>`). */
+/** @emoji 🎨️ Storage key for the active theme id (builtin or `custom.<slug>`). */
 export const UI_CHROME_THEME_ID_STORAGE_KEY = "ui.chrome.theme";
 
-/** 🎨️ Reads the persisted active theme id from the given shell's storage, if any. */
+/** @emoji 🎨️ Reads the persisted active theme id from the given shell's storage, if any. */
 export function readStoredUiChromeThemeId(storage: StoragePort): string | null {
   return storage.get(UI_CHROME_THEME_ID_STORAGE_KEY);
 }
 
-/** 🎨️ Persists the active theme id to the given shell's storage. */
+/** @emoji 🎨️ Persists the active theme id to the given shell's storage. */
 export function writeStoredUiChromeThemeId(storage: StoragePort, id: string): void {
   storage.set(UI_CHROME_THEME_ID_STORAGE_KEY, id);
 }
 
-/** 🎨️ Storage key for a full snapshot of the active theme (boot-time fallback before builtin/custom lookup resolves). */
+/** @emoji 🎨️ Storage key for a full snapshot of the active theme (boot-time fallback before builtin/custom lookup resolves). */
 export const UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY = "ui.chrome.theme.snapshot";
 
-/** 🎨️ Reads the persisted active theme snapshot from the given shell's storage; discards it silently if invalid. */
+/** @emoji 🎨️ Reads the persisted active theme snapshot from the given shell's storage; discards it silently if invalid. */
 export function readStoredUiChromeThemeSnapshot(storage: StoragePort): UiTheme | null {
   const raw = storage.get(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY);
   if (!raw) return null;
@@ -2146,15 +2131,15 @@ export function readStoredUiChromeThemeSnapshot(storage: StoragePort): UiTheme |
   }
 }
 
-/** 🎨️ Persists a full snapshot of the active theme to the given shell's storage. */
+/** @emoji 🎨️ Persists a full snapshot of the active theme to the given shell's storage. */
 export function writeStoredUiChromeThemeSnapshot(storage: StoragePort, theme: UiTheme): void {
   storage.set(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY, serializeUiTheme(theme));
 }
 
-/** 🎨️ Storage key for the user's saved custom themes, keyed by theme id. */
+/** @emoji 🎨️ Storage key for the user's saved custom themes, keyed by theme id. */
 export const UI_CUSTOM_THEMES_STORAGE_KEY = "ui.themes.custom";
 
-/** 🎨️ Reads the user's saved custom themes from the given shell's storage; discards any entry that fails to parse. */
+/** @emoji 🎨️ Reads the user's saved custom themes from the given shell's storage; discards any entry that fails to parse. */
 export function readStoredUiCustomThemes(storage: StoragePort): Record<string, UiTheme> {
   const raw = storage.get(UI_CUSTOM_THEMES_STORAGE_KEY);
   if (!raw) return {};
@@ -2174,15 +2159,15 @@ export function readStoredUiCustomThemes(storage: StoragePort): Record<string, U
   }
 }
 
-/** 🎨️ Persists the user's saved custom themes to the given shell's storage. */
+/** @emoji 🎨️ Persists the user's saved custom themes to the given shell's storage. */
 export function writeStoredUiCustomThemes(storage: StoragePort, themes: Record<string, UiTheme>): void {
   storage.set(UI_CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
 }
 
-/** 🧵️ Storage key for WASM compute worker thread count (`ui.chrome.*` namespace). */
+/** @emoji 🧵️ Storage key for WASM compute worker thread count (`ui.chrome.*` namespace). */
 export const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY = "ui.compute.workerCount";
 
-/** 🧵️ Default compute workers: `navigator.hardwareConcurrency` or 1. */
+/** @emoji 🧵️ Default compute workers: `navigator.hardwareConcurrency` or 1. */
 export function defaultComputeWorkerCount(): number {
   if (typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency > 0) {
     return navigator.hardwareConcurrency;
@@ -2190,7 +2175,7 @@ export function defaultComputeWorkerCount(): number {
   return 1;
 }
 
-/** 🧵️ Reads persisted compute worker count from the given shell's storage. */
+/** @emoji 🧵️ Reads persisted compute worker count from the given shell's storage. */
 export function readStoredComputeWorkerCount(storage: StoragePort): number {
   const raw = storage.get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY);
   if (raw == null || raw === "") return defaultComputeWorkerCount();
@@ -2199,33 +2184,33 @@ export function readStoredComputeWorkerCount(storage: StoragePort): number {
   return parsed;
 }
 
-/** 🧵️ Persists compute worker count to the given shell's storage. */
+/** @emoji 🧵️ Persists compute worker count to the given shell's storage. */
 export function writeStoredComputeWorkerCount(storage: StoragePort, count: number): void {
   storage.set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, String(Math.max(1, Math.floor(count))));
 }
 
-/** 🧵️ True when SharedArrayBuffer thread pools are available. */
+/** @emoji 🧵️ True when SharedArrayBuffer thread pools are available. */
 export function isCrossOriginIsolatedRuntime(): boolean {
   return typeof crossOriginIsolated !== "undefined" && crossOriginIsolated === true;
 }
 
-/** 🧵️ Effective worker count after cross-origin isolation fallback. */
+/** @emoji 🧵️ Effective worker count after cross-origin isolation fallback. */
 export function effectiveComputeWorkerCount(storage: StoragePort, requested = readStoredComputeWorkerCount(storage)): number {
   if (!isCrossOriginIsolatedRuntime()) return 1;
   return Math.max(1, Math.floor(requested));
 }
 
-/** 🎓️ Storage key prefix for whether an app's introduction has already been shown on this device. */
+/** @emoji 🎓️ Storage key prefix for whether an app's introduction has already been shown on this device. */
 export const UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX = "ui.introduction.seen.";
 
-/** 🎓️ Reads whether `appId`'s introduction has already been shown — auto-start checks this once
+/** @emoji 🎓️ Reads whether `appId`'s introduction has already been shown — auto-start checks this once
  * per app; replaying stays available via the `startIntroduction` action regardless of this flag. */
 export function readStoredIntroductionSeen(storage: StoragePort, appId: string): boolean {
   if (!appId) return false;
   return storage.get(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`) === "true";
 }
 
-/** 🎓️ Marks `appId`'s introduction as shown so it stops auto-starting on future launches. */
+/** @emoji 🎓️ Marks `appId`'s introduction as shown so it stops auto-starting on future launches. */
 export function writeStoredIntroductionSeen(storage: StoragePort, appId: string): void {
   if (!appId) return;
   storage.set(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
@@ -2309,7 +2294,7 @@ export { ChromeControlHint };
 // #region 🔑️Schema & Keys
 // Type/key-derivation machinery: locale codes, label shapes, the deep dot-path key type, and compile-time key-coverage checks.
 
-/** 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework`'s
+/** @emoji 🪁️ Supported UI locale codes — the single source is `@semio-tech/framework`'s
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 // #region UiLabel
 import { uiDataLabel, type UiLabel } from "../../🧱️elements/🎗️UiLabel/🟦️.tsx";
@@ -2359,2022 +2344,44 @@ const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocal
 
 const _assertUiSettingsTerminologyKeys: AssertUiSettingsTerminologyKeysCovered<UiChromeTerminologyId> = true;
 
-/** 🏷️ Compile-time check that every brand-lockable {@link ShellLocale} has a complete chrome bundle — closes the loop from a brand's `locks.locale` through `ShellLocale` to an actual translated `uiChromeTranslationBundles` entry. */
+/** @emoji 🏷️ Compile-time check that every brand-lockable {@link ShellLocale} has a complete chrome bundle — closes the loop from a brand's `locks.locale` through `ShellLocale` to an actual translated `uiChromeTranslationBundles` entry. */
 type AssertShellBrandLocalesBundled<L extends string> = L extends keyof typeof uiChromeTranslationBundles ? true : false;
 const _assertShellBrandLocalesBundled: AssertShellBrandLocalesBundled<ShellLocale> = true;
 
 // #endregion 🔑️Schema & Keys
 
-// #region 🇩️🇪️ German Bundle
-// German (`de`) translation bundle: ribbon-parent labels here, plus the nested `de` translation tree further below
-// inside {@link uiChromeTranslationBundles} (kept as one object so both locales satisfy the same schema).
-
-const uiRibbonParentDe: UiRibbonParentEntries = {
-  history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
-  hand: { label: { normal: "Hand", beginner: "Hand" } },
-  selection: { label: { normal: "Auswahl", beginner: "Auswahl" } },
-  lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
-  filter: { label: { normal: "Filter", beginner: "Filter" } },
-  open: { label: { normal: "Öffnen", beginner: "Öffnen" } },
-  save: { label: { normal: "Speichern", beginner: "Speichern" } },
-  transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
-  transform: { label: { normal: "Transformieren", beginner: "Transformieren" } },
-  create: { label: { normal: "Erstellen", beginner: "Erstellen" } },
-  view: { label: { normal: "Ansicht", beginner: "Ansicht" } },
-  actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
-  settings: { label: { normal: "Einstellungen", beginner: "Einstellungen" } },
-  methods: { label: { normal: "Methoden", beginner: "Methoden" } },
-  mode: { label: { normal: "Modus", beginner: "Modus" } },
-  targets: { label: { normal: "Ziele", beginner: "Ziele" } },
-  export: { label: { normal: "Export", beginner: "Export" } },
-  tools: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
-  utilities: { label: { normal: "Hilfsmittel", beginner: "Hilfsmittel" } },
-  sync: { label: { normal: "Sync", beginner: "Sync" } },
-};
-
-// #endregion 🇩️🇪️ German Bundle
-
-// #region 🇬️🇧️ English Bundle
-// English (`en`) translation bundle: ribbon-parent labels here, plus the nested `en` translation tree further below
-// inside {@link uiChromeTranslationBundles} (kept as one object so both locales satisfy the same schema).
-
-const uiRibbonParentEn: UiRibbonParentEntries = {
-  history: { label: { normal: "History", beginner: "History" } },
-  hand: { label: { normal: "Hand", beginner: "Hand" } },
-  selection: { label: { normal: "Selection", beginner: "Selection" } },
-  lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
-  filter: { label: { normal: "Filter", beginner: "Filter" } },
-  open: { label: { normal: "Open", beginner: "Open" } },
-  save: { label: { normal: "Save", beginner: "Save" } },
-  transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
-  transform: { label: { normal: "Transform", beginner: "Transform" } },
-  create: { label: { normal: "Create", beginner: "Create" } },
-  view: { label: { normal: "View", beginner: "View" } },
-  actions: { label: { normal: "Actions", beginner: "Actions" } },
-  settings: { label: { normal: "Settings", beginner: "Settings" } },
-  methods: { label: { normal: "Methods", beginner: "Methods" } },
-  mode: { label: { normal: "Mode", beginner: "Mode" } },
-  targets: { label: { normal: "Targets", beginner: "Targets" } },
-  export: { label: { normal: "Export", beginner: "Export" } },
-  tools: { label: { normal: "Tools", beginner: "Tools" } },
-  utilities: { label: { normal: "Utilities", beginner: "Utilities" } },
-  sync: { label: { normal: "Sync", beginner: "Sync" } },
-};
-
-// #endregion 🇬️🇧️ English Bundle
-
-export const uiChromeTranslationBundles = {
-  // #region 🇩️🇪️ German Bundle
-  de: {
-    translation: {
-      ui: {
-        nav: {
-          back: {
-            label: {
-              normal: "Zurück",
-              beginner: "Zurück",
-            },
-          },
-          forward: {
-            label: {
-              normal: "Vorwärts",
-              beginner: "Vorwärts",
-            },
-          },
-          up: {
-            label: {
-              normal: "Eine Ebene hoch",
-              beginner: "Eine Ebene hoch",
-            },
-          },
-        },
-        search: {
-          toggle: {
-            label: {
-              normal: "Suche",
-              beginner: "Suche",
-            },
-          },
-          close: {
-            label: {
-              normal: "Suche schließen",
-              beginner: "Suche schließen",
-            },
-          },
-          title: {
-            label: {
-              normal: "Suche",
-              beginner: "Suche",
-            },
-          },
-          description: {
-            label: {
-              normal: "Nach Elementen suchen",
-              beginner: "Nach Elementen suchen",
-            },
-          },
-          placeholder: {
-            label: {
-              normal: "Suchen...",
-              beginner: "Suchen...",
-            },
-          },
-          empty: {
-            label: {
-              normal: "Keine Ergebnisse gefunden.",
-              beginner: "Keine Ergebnisse gefunden.",
-            },
-          },
-          category: {
-            panels: { label: { normal: "Panels", beginner: "Panels" } },
-            windows: { label: { normal: "Fenster", beginner: "Fenster" } },
-            catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
-            // 🏠️ "Space" here is a deliberate, deferred duplicate of the host plugin's own manifest label
-            // (`App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space"))`,
-            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs:869) — reading it from there via
-            // `resolveManifestLabel(hostApp.label, …)` (the same pattern `appWindowLabel` already uses)
-            // is the correct fix, EXCEPT `ShellHost/🟦️.tsx`'s `hostApp` lookup (line ~1132,
-            // `manifest.apps.find(app => app.id === hostConfig?.hostAppId)`) is ALREADY always
-            // `undefined`: `hostConfig.hostAppId` is the raw Cargo.toml `host = { shell = "studio" }`
-            // alias, never the real dialect-derived `AppDefinition.id`
-            // (`s.space.studio@1/*#editor`) — a pre-existing bug the same file's own w4-h comment
-            // (lines 4112-4121) already documents and declines to fix. Wiring this label to
-            // `hostApp?.label` today would render an EMPTY category header, not "Space" — a regression.
-            // Fix plan (needs a new field, not a string-matching workaround): add
-            // `AppDefinition.host_role: Option<HostRole>` (`Landing`/`Host`) in
-            // `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` (~3034), a `.host_role(...)` builder
-            // method on `AppBuilder`/forwarded by `EditorBuilder`/`ViewerBuilder`
-            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), set it in
-            // `create_home_app()`/`create_space_app()`, regenerate the TS mirror, then have
-            // `ShellHost/🟦️.tsx:1132-1133` match on `hostRole` instead of the broken id
-            // comparison. See
-            // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️hostapp-label-layering.md`.
-            hostApp: { label: { normal: "Space", beginner: "Space" } },
-            navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
-          },
-        },
-        palette: {
-          undo: { label: { normal: "Rückgängig", beginner: "Rückgängig" } },
-          redo: { label: { normal: "Wiederholen", beginner: "Wiederholen" } },
-          goHome: { label: { normal: "Nach Hause", beginner: "Nach Hause" } },
-          spawnPrefix: { label: { normal: "Erzeugen", beginner: "Erzeugen" } },
-        },
-        panel: {
-          artifact: { label: { normal: "Dokument", beginner: "Dokument" } },
-          catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
-          inspection: { label: { normal: "Inspektion", beginner: "Inspektion" } },
-          parameters: { label: { normal: "Parameter", beginner: "Parameter" } },
-          artifactEmpty: { label: { normal: "—", beginner: "—" } },
-          spawnedAppsSuffix: { label: { normal: "gestartete App(s)", beginner: "gestartete App(s)" } },
-          sync: { label: { normal: "Synchronisierung", beginner: "Synchronisierung" } },
-          actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
-          history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
-        },
-        tree: {
-          drag: {
-            sort: { label: { normal: "Sortieren", beginner: "Zeile sortieren" } },
-            sortTarget: { label: { normal: "Linksklick gedrückt halten, um {{target}} zu ziehen", beginner: "Linksklick gedrückt halten, um {{target}} zu ziehen" } },
-            transfer: { label: { normal: "Verschieben", beginner: "In ein Fenster ziehen" } },
-            transferTarget: { label: { normal: "Linksklick gedrückt halten, um {{target}} zu ziehen", beginner: "Linksklick gedrückt halten, um {{target}} zu ziehen" } },
-          },
-        },
-        find: {
-          toggle: {
-            label: {
-              normal: "Finden",
-              beginner: "Im aktuellen Kontext finden",
-            },
-          },
-          title: {
-            label: {
-              normal: "Finden",
-              beginner: "Finden",
-            },
-          },
-          description: {
-            label: {
-              normal: "Elemente in dieser Ansicht finden",
-              beginner: "Elemente in dieser Ansicht finden",
-            },
-          },
-          placeholder: {
-            label: {
-              normal: "Finden...",
-              beginner: "Finden...",
-            },
-          },
-          empty: {
-            label: {
-              normal: "Keine Ergebnisse gefunden.",
-              beginner: "Keine Ergebnisse gefunden.",
-            },
-          },
-        },
-        fullscreen: {
-          toggle: {
-            label: {
-              normal: "Vollbild",
-              beginner: "Vollbild",
-            },
-          },
-          exit: {
-            label: {
-              normal: "Vollbild beenden",
-              beginner: "Vollbild beenden",
-            },
-          },
-        },
-        mobilePanel: {
-          toggle: {
-            label: {
-              normal: "Panel",
-              beginner: "Panel",
-            },
-          },
-          app: {
-            label: {
-              normal: "App",
-              beginner: "App",
-            },
-          },
-        },
-        panelToggle: {
-          topLeft: {
-            label: {
-              normal: "Oben links",
-              beginner: "Oben links",
-            },
-          },
-          topRight: {
-            label: {
-              normal: "Oben rechts",
-              beginner: "Oben rechts",
-            },
-          },
-          bottomLeft: {
-            label: {
-              normal: "Unten links",
-              beginner: "Unten links",
-            },
-          },
-          bottomRight: {
-            label: {
-              normal: "Unten rechts",
-              beginner: "Unten rechts",
-            },
-          },
-          display: {
-            label: {
-              normal: "Anzeige",
-              beginner: "Anzeige",
-            },
-          },
-          command: {
-            label: {
-              normal: "Befehl",
-              beginner: "Befehl",
-            },
-          },
-          tool: {
-            label: {
-              normal: "Werkzeug",
-              beginner: "Werkzeug",
-            },
-          },
-          overview: {
-            label: {
-              normal: "Übersicht",
-              beginner: "Übersicht",
-            },
-          },
-          workbench: {
-            label: {
-              normal: "Arbeitsbereich",
-              beginner: "Arbeitsbereich",
-            },
-          },
-          details: {
-            label: {
-              normal: "Details",
-              beginner: "Details",
-            },
-          },
-          settings: {
-            label: {
-              normal: "Einstellungen",
-              beginner: "Einstellungen",
-            },
-          },
-          chat: {
-            label: {
-              normal: "Chat",
-              beginner: "Chat",
-            },
-          },
-          plugins: {
-            label: {
-              normal: "Plugins",
-              beginner: "Plugins",
-            },
-          },
-          taskManager: {
-            label: {
-              normal: "Aufgaben",
-              beginner: "Aufgaben",
-            },
-          },
-        },
-        display: {
-          tab: {
-            windows: { label: { normal: "Fenster", beginner: "Fenster" } },
-            layout: { label: { normal: "Layout", beginner: "Layout" } },
-          },
-          saveLayout: { label: { normal: "Layout speichern", beginner: "Layout speichern" } },
-          saveLayoutPlaceholder: { label: { normal: "Layoutname", beginner: "Layoutname" } },
-          saveCurrentLayout: { label: { normal: "Aktuelles Layout speichern", beginner: "Aktuelles Layout speichern" } },
-          deleteLayout: { label: { normal: "Löschen", beginner: "Löschen" } },
-          emptyShell: {
-            label: {
-              normal: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
-              beginner: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
-            },
-          },
-          layouts: { label: { normal: "Layouts", beginner: "Layouts" } },
-          saved: { label: { normal: "Gespeichert", beginner: "Gespeichert" } },
-          unavailable: { label: { normal: "Anzeige nicht verfügbar", beginner: "Anzeige nicht verfügbar" } },
-        },
-        settings: {
-          tab: {
-            general: { label: { normal: "Allgemein", beginner: "Allgemein" } },
-            driver: { label: { normal: "Treiber", beginner: "Treiber" } },
-            app: { label: { normal: "App", beginner: "App" } },
-            appearance: { label: { normal: "Design", beginner: "Design" } },
-            layout: { label: { normal: "Layout", beginner: "Layout" } },
-            language: { label: { normal: "Sprache", beginner: "Sprache" } },
-            terminology: { label: { normal: "Terminologie", beginner: "Terminologie" } },
-            theme: { label: { normal: "Thema", beginner: "Thema" } },
-            keybindings: { label: { normal: "Tastenkürzel", beginner: "Tastenkürzel" } },
-          },
-          appearance: {
-            light: { label: { normal: "Hell", beginner: "Hell" } },
-            dark: { label: { normal: "Dunkel", beginner: "Dunkel" } },
-            system: { label: { normal: "System", beginner: "System" } },
-          },
-          language: {
-            en: { label: { normal: "English", beginner: "English" } },
-            de: { label: { normal: "Deutsch", beginner: "Deutsch" } },
-          },
-          terminology: {
-            native: { label: { normal: "Nativ", beginner: "Nativ" } },
-            reuse: { label: { normal: "Wiederverwendung", beginner: "Wiederverwendung" } },
-          },
-          app: {
-            name: { label: { normal: "Name", beginner: "Name" } },
-            id: { label: { normal: "App-ID", beginner: "App-ID" } },
-            controller: { label: { normal: "Controller", beginner: "Controller" } },
-            plugin: { label: { normal: "Plugin", beginner: "Plugin" } },
-          },
-          theme: {
-            select: { label: { normal: "Thema", beginner: "Thema" } },
-            save: { label: { normal: "Speichern unter", beginner: "Speichern unter" } },
-            savePlaceholder: { label: { normal: "Themenname", beginner: "Themenname" } },
-            reset: { label: { normal: "Zurücksetzen", beginner: "Zurücksetzen" } },
-            export: { label: { normal: "Exportieren", beginner: "Exportieren" } },
-            import: { label: { normal: "Importieren", beginner: "Importieren" } },
-            delete: { label: { normal: "Löschen", beginner: "Löschen" } },
-            colors: { label: { normal: "Farben", beginner: "Farben" } },
-            spacing: { label: { normal: "Abstand", beginner: "Abstand" } },
-            fonts: { label: { normal: "Schriftarten", beginner: "Schriftarten" } },
-            strokes: { label: { normal: "Strichstärken", beginner: "Strichstärken" } },
-            radii: { label: { normal: "Rundungen", beginner: "Rundungen" } },
-            opacities: { label: { normal: "Deckkraft", beginner: "Deckkraft" } },
-            metrics: { label: { normal: "Masse", beginner: "Masse" } },
-            appearances: { label: { normal: "Erscheinungsbilder", beginner: "Erscheinungsbilder" } },
-            dirty: { label: { normal: "Nicht gespeichert", beginner: "Nicht gespeichert" } },
-            appearance: {
-              light: { label: { normal: "Hell", beginner: "Hell" } },
-              dark: { label: { normal: "Dunkel", beginner: "Dunkel" } },
-            },
-            group: {
-              board: { label: { normal: "Board", beginner: "Board" } },
-              map: { label: { normal: "Karte", beginner: "Karte" } },
-              canvas: { label: { normal: "Leinwand", beginner: "Leinwand" } },
-              chrome: { label: { normal: "Oberfläche", beginner: "Oberfläche" } },
-              outcome: { label: { normal: "Ergebnis", beginner: "Farben für Fehler und Erfolg" } },
-              diagram: { label: { normal: "Diagramm", beginner: "Farben für Diagramme" } },
-            },
-            contrast: {
-              label: { label: { normal: "Kontrast", beginner: "Lesbarkeit des Textes" } },
-              aaa: { label: { normal: "AAA", beginner: "Sehr gut lesbar" } },
-              aa: { label: { normal: "AA", beginner: "Gut lesbar" } },
-              aaLarge: { label: { normal: "AA nur für grossen Text", beginner: "Nur für grosse Schrift lesbar" } },
-              fail: { label: { normal: "Unter AA — zu geringer Kontrast", beginner: "Zu schwacher Kontrast, schwer lesbar" } },
-              warning: { label: { normal: "Geringer Kontrast {{ratio}}:1 zu {{counterpart}} — WCAG AA verlangt mindestens {{minimum}}:1", beginner: "Schwer lesbar zusammen mit {{counterpart}} ({{ratio}}:1, nötig sind {{minimum}}:1)" } },
-            },
-          },
-          unavailable: { label: { normal: "Einstellungen nicht verfügbar", beginner: "Einstellungen nicht verfügbar" } },
-          resetDock: { label: { normal: "Panels zurücksetzen", beginner: "Panels zurücksetzen" } },
-        },
-        plugins: {
-          status: {
-            available: { label: { normal: "Verfügbar", beginner: "Verfügbar" } },
-            installing: { label: { normal: "Wird installiert…", beginner: "Wird installiert…" } },
-            loaded: { label: { normal: "Geladen", beginner: "Geladen" } },
-            failed: { label: { normal: "Fehlgeschlagen", beginner: "Fehlgeschlagen" } },
-            reloading: { label: { normal: "Wird neu geladen…", beginner: "Wird neu geladen…" } },
-          },
-          action: {
-            install: { label: { normal: "Installieren", beginner: "Installieren" } },
-            uninstall: { label: { normal: "Deinstallieren", beginner: "Deinstallieren" } },
-            reload: { label: { normal: "Neu laden", beginner: "Neu laden" } },
-          },
-          waitingForHost: { label: { normal: "Warte auf Host-Programm…", beginner: "Warte auf Host-Programm…" } },
-          unavailable: { label: { normal: "Plugins nicht verfügbar", beginner: "Plugins nicht verfügbar" } },
-          source: { label: { normal: "Quelle", beginner: "Quelle" } },
-          marketplace: { label: { normal: "Marktplatz", beginner: "Marktplatz" } },
-          marketplaceUnavailable: { label: { normal: "Marktplatz nicht verfügbar", beginner: "Marktplatz nicht verfügbar" } },
-          extension: {
-            enabled: { label: { normal: "aktiviert", beginner: "an" } },
-            disabled: { label: { normal: "deaktiviert", beginner: "aus" } },
-            enable: { label: { normal: "Aktivieren", beginner: "Einschalten" } },
-            disable: { label: { normal: "Deaktivieren", beginner: "Ausschalten" } },
-            install: { label: { normal: "Erweiterung installieren", beginner: "Erweiterung hinzufügen" } },
-            fromUrl: { label: { normal: "Von URL", beginner: "Aus dem Internet" } },
-            installFromUrl: { label: { normal: "Von URL installieren", beginner: "Aus dem Internet hinzufügen" } },
-            urlPrompt: { label: { normal: "URL des Erweiterungspakets", beginner: "Adresse der Erweiterung" } },
-            fromFile: { label: { normal: "Aus Datei", beginner: "Aus einer Datei" } },
-            installFromFile: { label: { normal: "Aus Datei installieren", beginner: "Aus einer Datei hinzufügen" } },
-          },
-          recovery: {
-            title: { label: { normal: "Plugin-Wiederherstellung", beginner: "Programm reparieren" } },
-            crashed: { label: { normal: "Dieses Programm ist abgestürzt.", beginner: "Dieses Programm ist abgestürzt." } },
-            quarantined: { label: { normal: "Dieses Programm wurde nach wiederholten Abstürzen isoliert.", beginner: "Dieses Programm ist mehrmals abgestürzt und wurde angehalten." } },
-            restartApp: { label: { normal: "App neu starten", beginner: "Neu starten" } },
-            disablePlugin: { label: { normal: "Plugin deaktivieren", beginner: "Programm ausschalten" } },
-          },
-        },
-        command: {
-          introduceApp: { label: { normal: "App vorstellen", beginner: "App vorstellen" } },
-          playTutorial: { label: { normal: "Tutorial abspielen", beginner: "Tutorial abspielen" } },
-          recordTutorial: { label: { normal: "Tutorial aufnehmen", beginner: "Tutorial aufnehmen" } },
-          setAppearance: { label: { normal: "Erscheinungsbild festlegen", beginner: "Erscheinungsbild festlegen" } },
-          setTheme: { label: { normal: "Thema festlegen", beginner: "Thema festlegen" } },
-          setLayout: { label: { normal: "Layout festlegen", beginner: "Layout festlegen" } },
-          setLocale: { label: { normal: "Sprache festlegen", beginner: "Sprache festlegen" } },
-          setTerminology: { label: { normal: "Terminologie festlegen", beginner: "Terminologie festlegen" } },
-          setDriver: { label: { normal: "Treiber festlegen", beginner: "Treiber festlegen" } },
-          openTaskManager: { label: { normal: "Aufgaben öffnen", beginner: "Aufgaben öffnen" } },
-          openHub: { label: { normal: "Hub und Bereiche öffnen", beginner: "Mit anderen arbeiten" } },
-        },
-        shellCommand: {
-          dockMove: { label: { normal: "Panel-Tab verschieben", beginner: "Panel-Tab verschieben" } },
-          windowResize: { label: { normal: "Fenster skalieren", beginner: "Fenster skalieren" } },
-          windowMove: { label: { normal: "Fenster neu anordnen", beginner: "Fenster neu anordnen" } },
-          windowActivate: { label: { normal: "Fenster aktivieren", beginner: "Fenster aktivieren" } },
-          windowClose: { label: { normal: "Fenster schließen", beginner: "Fenster schließen" } },
-          windowSplit: { label: { normal: "Fenster teilen", beginner: "Fenster teilen" } },
-          windowOpenInNewWindow: { label: { normal: "In neuem Fenster öffnen", beginner: "In neuem Fenster öffnen" } },
-          panelToggle: { label: { normal: "Panel umschalten", beginner: "Panel umschalten" } },
-          panelTab: { label: { normal: "Panel-Tab wechseln", beginner: "Panel-Tab wechseln" } },
-        },
-        ribbon: {
-          group: {
-            parent: {
-              label: {
-                normal: "Hilfsmittel",
-                beginner: "Hilfsmittel",
-              },
-            },
-          },
-          parent: uiRibbonParentDe,
-        },
-        selection: {
-          method: { label: { normal: "Methode", beginner: "Methode" } },
-          mode: { label: { normal: "Modus", beginner: "Modus" } },
-          rectangle: { label: { normal: "Rechteck", beginner: "Rechteck" } },
-          lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
-          selective: { label: { normal: "Selektiv", beginner: "Selektiv" } },
-          additive: { label: { normal: "Additiv", beginner: "Additiv" } },
-          subtractive: { label: { normal: "Subtraktiv", beginner: "Subtraktiv" } },
-          invertive: { label: { normal: "Invertierend", beginner: "Invertierend" } },
-        },
-        windowFault: {
-          title: { label: { normal: "Fenster reagiert nicht", beginner: "Fenster reagiert nicht" } },
-          abiMismatch: { label: { normal: "Plugin-Modul passt nicht zur Host-Schnittstelle", beginner: "Das Plugin ist veraltet und passt nicht mehr zum Programm" } },
-          interactiveCeiling: { label: { normal: "Plugin-Schritt hat die interaktive Zeitgrenze überschritten", beginner: "Das Plugin hat für einen Schritt zu lange gebraucht" } },
-          clock: { label: { normal: "Keine monotone Uhr verfügbar", beginner: "Die Zeitmessung des Systems steht nicht zur Verfügung" } },
-          pluginInternal: { label: { normal: "Interner Plugin-Laufzeitfehler", beginner: "Im Plugin ist ein interner Fehler aufgetreten" } },
-          installFailed: { label: { normal: "Plugin konnte nicht installiert werden", beginner: "Das Plugin liess sich nicht laden" } },
-          unknown: { label: { normal: "Unbekannte Fehlerursache", beginner: "Die Ursache ist unbekannt" } },
-        },
-        common: {
-          routeNotFound: { label: { normal: "Route nicht gefunden: {{path}}", beginner: "Diese Seite gibt es nicht: {{path}}" } },
-          mixedValues: {
-            label: {
-              normal: "Gemischt",
-              beginner: "Gemischt",
-            },
-          },
-          name: { label: { normal: "Name", beginner: "Name" } },
-          save: { label: { normal: "Speichern", beginner: "Speichern" } },
-          delete: { label: { normal: "Löschen", beginner: "Löschen" } },
-          loading: { label: { normal: "Lädt…", beginner: "Lädt…" } },
-          loadingPlugins: { label: { normal: "Plugins werden geladen…", beginner: "Plugins werden geladen…" } },
-          renderError: { label: { normal: "Renderfehler", beginner: "Renderfehler" } },
-          noPluginsLoaded: { label: { normal: "Keine Plugins geladen", beginner: "Keine Plugins geladen" } },
-          workerLost: { label: { normal: "Die Sitzung wurde beendet — bitte neu laden", beginner: "Die Sitzung wurde beendet — bitte die Seite neu laden" } },
-          missingWindow: { label: { normal: "Fehlendes Fenster", beginner: "Fehlendes Fenster" } },
-          home: { label: { normal: "Startseite", beginner: "Startseite" } },
-          backToWorkflow: { label: { normal: "Zurück zum Workflow", beginner: "Zurück zum Workflow" } },
-          execute: { label: { normal: "Ausführen", beginner: "Ausführen" } },
-          reset: { label: { normal: "Zurücksetzen", beginner: "Zurücksetzen" } },
-          windowOptions: { label: { normal: "Fensteroptionen", beginner: "Fensteroptionen" } },
-          focus: { label: { normal: "Fokussieren", beginner: "Fokussieren" } },
-          unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
-          example: { label: { normal: "Beispiel", beginner: "Beispiel" } },
-          noExample: { label: { normal: "Kein Beispiel", beginner: "Kein Beispiel" } },
-          loadingSurface: { label: { normal: "Oberfläche wird geladen…", beginner: "Oberfläche wird geladen…" } },
-          unknownComponent: { label: { normal: "Unbekannte Komponente", beginner: "Unbekannte Komponente" } },
-          select: { label: { normal: "Auswählen", beginner: "Auswählen" } },
-          commandPalette: { label: { normal: "Befehlspalette", beginner: "Befehlspalette" } },
-          searchForCommand: { label: { normal: "Nach einem Befehl suchen…", beginner: "Nach einem Befehl suchen…" } },
-          find: { label: { normal: "Finden…", beginner: "Finden…" } },
-          noData: { label: { normal: "Keine Daten", beginner: "Keine Daten" } },
-          noFileSystemNodes: { label: { normal: "Keine Dateisystemknoten", beginner: "Keine Dateisystemknoten" } },
-          selectTarget: { label: { normal: "Ziel auswählen", beginner: "Ziel auswählen" } },
-          selectOption: { label: { normal: "Option auswählen…", beginner: "Option auswählen…" } },
-          noOptionsFound: { label: { normal: "Keine Optionen gefunden.", beginner: "Keine Optionen gefunden." } },
-          close: { label: { normal: "Schließen", beginner: "Schließen" } },
-          newWindow: { label: { normal: "Neues Fenster", beginner: "Neues Fenster" } },
-          minimize: { label: { normal: "Minimieren", beginner: "Minimieren" } },
-          maximize: { label: { normal: "Maximieren", beginner: "Maximieren" } },
-          action: { label: { normal: "Aktion", beginner: "Aktion" } },
-          actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
-          utilities: { label: { normal: "Hilfsmittel", beginner: "Hilfsmittel" } },
-          retry: { label: { normal: "Erneut versuchen", beginner: "Erneut versuchen" } },
-          somethingWentWrong: { label: { normal: "Etwas ist schiefgelaufen", beginner: "Etwas ist schiefgelaufen" } },
-          doubleClickToEdit: { label: { normal: "Zum Bearbeiten doppelklicken", beginner: "Zum Bearbeiten doppelklicken" } },
-          importFile: { label: { normal: "Datei importieren…", beginner: "Datei importieren…" } },
-          clear: { label: { normal: "Leeren", beginner: "Leeren" } },
-          collapse: { label: { normal: "Einklappen", beginner: "Einklappen" } },
-          expand: { label: { normal: "Ausklappen", beginner: "Ausklappen" } },
-          cancel: { label: { normal: "Abbrechen", beginner: "Abbrechen" } },
-          error: { label: { normal: "Fehler", beginner: "Fehler" } },
-        },
-        window: {
-          close: { label: { normal: "Schließen", beginner: "Schließen" } },
-          focus: { label: { normal: "Fokussieren", beginner: "Fokussieren" } },
-          unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
-          newWindow: { label: { normal: "Neues Fenster", beginner: "Neues Fenster" } },
-          tabs: { label: { normal: "Fensterreiter", beginner: "Fensterreiter" } },
-        },
-        contextMenu: {
-          more: { label: { normal: "Mehr", beginner: "Mehr" } },
-          select: { label: { normal: "Auswählen", beginner: "Auswählen" } },
-          deselect: { label: { normal: "Abwählen", beginner: "Abwählen" } },
-          selectAll: { label: { normal: "Alles auswählen", beginner: "Alles auswählen" } },
-          clearSelection: { label: { normal: "Auswahl aufheben", beginner: "Auswahl aufheben" } },
-          selectSameKind: { label: { normal: "Gleiche Art auswählen", beginner: "Gleiche Art auswählen" } },
-          duplicate: { label: { normal: "Duplizieren", beginner: "Duplizieren" } },
-          delete: { label: { normal: "Löschen", beginner: "Löschen" } },
-          zoomToSelection: { label: { normal: "Auf Auswahl zoomen", beginner: "Auf Auswahl zoomen" } },
-          focusZoom: { label: { normal: "Fokus / Zoom darauf", beginner: "Fokus / Zoom darauf" } },
-          openSource: { label: { normal: "Quelle öffnen", beginner: "Quelle öffnen" } },
-          fitWorld: { label: { normal: "Welt einpassen", beginner: "Welt einpassen" } },
-          cut: { label: { normal: "Ausschneiden", beginner: "Ausschneiden" } },
-          copy: { label: { normal: "Kopieren", beginner: "Kopieren" } },
-          paste: { label: { normal: "Einfügen", beginner: "Einfügen" } },
-          rename: { label: { normal: "Umbenennen", beginner: "Umbenennen" } },
-          formatDocument: { label: { normal: "Dokument formatieren", beginner: "Dokument formatieren" } },
-          lintDocument: { label: { normal: "Dokument prüfen", beginner: "Dokument prüfen" } },
-          suggestCompletions: { label: { normal: "Vervollständigungen vorschlagen", beginner: "Vervollständigungen vorschlagen" } },
-          selectToken: { label: { normal: "Token auswählen", beginner: "Token auswählen" } },
-          selectLine: { label: { normal: "Zeile auswählen", beginner: "Zeile auswählen" } },
-          hide: { label: { normal: "Ausblenden", beginner: "Ausblenden" } },
-          show: { label: { normal: "Einblenden", beginner: "Einblenden" } },
-          lock: { label: { normal: "Sperren", beginner: "Sperren" } },
-          unlock: { label: { normal: "Entsperren", beginner: "Entsperren" } },
-        },
-        diagram: {
-          label: { label: { normal: "Knotengraph", beginner: "Diagramm aus Knoten und Verbindungen" } },
-          roleDescription: { label: { normal: "Knotengraph-Editor", beginner: "Editor für Knoten und Verbindungen" } },
-          keyboardHelp: {
-            label: {
-              normal: "Pfeiltasten: Knoten wechseln · Eingabe: auswählen · Umschalt+Eingabe: zur Auswahl hinzufügen · Esc: Auswahl aufheben",
-              beginner: "Mit den Pfeiltasten von Knoten zu Knoten springen, mit der Eingabetaste auswählen, mit Esc die Auswahl aufheben",
-            },
-          },
-          nodes: { label: { normal: "Knoten", beginner: "Knoten" } },
-          edges: { label: { normal: "Verbindungen", beginner: "Verbindungen" } },
-          empty: { label: { normal: "Leerer Graph", beginner: "Noch keine Knoten vorhanden" } },
-          focusedNode: { label: { normal: "{{node}}, {{position}} von {{count}}", beginner: "Knoten {{node}}, Nummer {{position}} von {{count}}" } },
-          selectedNode: { label: { normal: "{{node}} ausgewählt, {{count}} in der Auswahl", beginner: "{{node}} ist jetzt ausgewählt ({{count}} ausgewählt)" } },
-          deselectedNode: { label: { normal: "{{node}} aus der Auswahl entfernt, {{count}} in der Auswahl", beginner: "{{node}} ist nicht mehr ausgewählt ({{count}} ausgewählt)" } },
-          selectionCleared: { label: { normal: "Auswahl aufgehoben", beginner: "Nichts mehr ausgewählt" } },
-        },
-        host: {
-          emptyScene: { label: { normal: "Keine Szene", beginner: "Keine Szene" } },
-          tableRowRange: { label: { normal: "Zeilen {{from}}–{{to}} von {{total}}", beginner: "Zeilen {{from}} bis {{to}} von {{total}}" } },
-          preview: { label: { normal: "Vorschau", beginner: "Vorschau" } },
-          sourceAvailable: { label: { normal: "Quelle verfügbar", beginner: "Quelle verfügbar" } },
-          blockImage: { label: { normal: "Bild", beginner: "Bild" } },
-          blockTable: { label: { normal: "Tabelle", beginner: "Tabelle" } },
-          blockMath: { label: { normal: "Mathe", beginner: "Mathe" } },
-          blockInk: { label: { normal: "Tinte", beginner: "Tinte" } },
-          blockGroup: { label: { normal: "Gruppe", beginner: "Gruppe" } },
-          blockText: { label: { normal: "Text", beginner: "Text" } },
-          checkingPlacement: { label: { normal: "Prüfe kollisionsfreie Platzierungen…", beginner: "Prüfe kollisionsfreie Platzierungen…" } },
-          noPlacement: { label: { normal: "Keine kollisionsfreie Platzierung an diesem Verbinder", beginner: "Keine kollisionsfreie Platzierung an diesem Verbinder" } },
-          canvasUnavailable: { label: { normal: "Leinwand nicht verfügbar", beginner: "Leinwand nicht verfügbar" } },
-          rendering: { label: { normal: "Wird gerendert…", beginner: "Wird gerendert…" } },
-          iconRenderFailed: { label: { normal: "Symbol konnte nicht gerendert werden", beginner: "Symbol konnte nicht gerendert werden" } },
-          documentPlaceholder: { label: { normal: "Dokument", beginner: "Dokument" } },
-          languageDocument: { label: { normal: "{{language}}-Dokument", beginner: "{{language}}-Dokument" } },
-          editor: { label: { normal: "Editor", beginner: "Editor" } },
-          languageEditor: { label: { normal: "{{language}}-Editor", beginner: "{{language}}-Editor" } },
-          iconShot: { label: { normal: "Symbolbild", beginner: "Symbolbild" } },
-          projection: { label: { normal: "Projektion", beginner: "Projektion" } },
-          frameVisible: { label: { normal: "Sichtbares einpassen", beginner: "Sichtbares einpassen" } },
-          perspective: { label: { normal: "Perspektivisch", beginner: "Perspektivisch" } },
-          orthographic: { label: { normal: "Orthografisch", beginner: "Orthografisch" } },
-        },
-        blockList: {
-          steps: { label: { normal: "Schritte", beginner: "Schritte" } },
-          addStep: { label: { normal: "Schritt hinzufügen", beginner: "Schritt hinzufügen" } },
-        },
-        tableStepper: {
-          decrement: { label: { normal: "Verringern", beginner: "Weniger" } },
-          increment: { label: { normal: "Erhöhen", beginner: "Mehr" } },
-          value: { label: { normal: "Wert", beginner: "Wert" } },
-        },
-        docs: {
-          navigation: {
-            previous: {
-              label: {
-                normal: "Zurück",
-                beginner: "Zurück",
-              },
-            },
-            next: {
-              label: {
-                normal: "Weiter",
-                beginner: "Weiter",
-              },
-            },
-          },
-        },
-        ring: {
-          demo: {
-            label: {
-              normal: "Ring",
-              beginner: "Ring",
-            },
-          },
-        },
-        iconSelector: {
-          mode: {
-            url: { label: { normal: "URL", beginner: "URL" } },
-            shortcode: { label: { normal: "Kurzcode", beginner: "Kurzcode" } },
-            math: { label: { normal: "Mathe / Typst", beginner: "Mathe / Typst" } },
-            data: { label: { normal: "Daten-URL", beginner: "Daten-URL" } },
-            emoji: { label: { normal: "Emoji", beginner: "Emoji" } },
-            text: { label: { normal: "Text", beginner: "Text" } },
-            vector: { label: { normal: "Katalog / SVG", beginner: "Katalog / SVG" } },
-          },
-        },
-        stepper: {
-          demo: {
-            label: {
-              normal: "Wert",
-              beginner: "Wert",
-            },
-          },
-        },
-        engagement: {
-          actions: {
-            label: {
-              normal: "Aktionen",
-              beginner: "Schnellaktionen für den aktuellen Schritt",
-            },
-          },
-          viewport: {
-            label: {
-              normal: "Ansicht",
-              beginner: "Ansicht",
-            },
-          },
-        },
-        windowSearch: {
-          title: {
-            label: {
-              normal: "Suche",
-              beginner: "Suche",
-            },
-          },
-          action: {
-            label: {
-              normal: "Aktion",
-              beginner: "Aktion eingeben oder aus der Liste wählen",
-            },
-          },
-          actionActive: {
-            label: {
-              normal: "Aktion oder Wert",
-              beginner: "Aktion oder Zahl für den aktuellen Schritt",
-            },
-          },
-          suggestions: {
-            label: {
-              normal: "Vorschläge",
-              beginner: "Liste der passenden Aktionen öffnen",
-            },
-          },
-          noMatches: {
-            label: {
-              normal: "Keine Treffer",
-              beginner: "Keine passenden Aktionen",
-            },
-          },
-        },
-        flowSpotlight: {
-          typeToAdd: { label: { normal: "Zum Hinzufügen tippen…", beginner: "Zum Hinzufügen tippen…" } },
-          collapseSuggestions: { label: { normal: "Vorschläge einklappen", beginner: "Vorschläge einklappen" } },
-          showAllSuggestions: { label: { normal: "Alle Vorschläge anzeigen", beginner: "Alle Vorschläge anzeigen" } },
-        },
-        nodeGraph: {
-          fitGraph: { label: { normal: "Graph einpassen", beginner: "Ganzen Graph zeigen" } },
-          incompatiblePorts: { label: { normal: "{{source}} führt {{sourceType}}, {{target}} nimmt {{targetType}}", beginner: "Diese beiden Anschlüsse passen nicht zusammen: {{source}} führt {{sourceType}}, {{target}} nimmt {{targetType}}." } },
-          portType: {
-            geometry: { label: { normal: "Geometrie", beginner: "Geometrie" } },
-            vector: { label: { normal: "Vektor", beginner: "Vektor" } },
-            point: { label: { normal: "Punkt", beginner: "Punkt" } },
-            number: { label: { normal: "Zahl", beginner: "Zahl" } },
-            text: { label: { normal: "Text", beginner: "Text" } },
-            boolean: { label: { normal: "Ja/Nein", beginner: "Ja/Nein" } },
-            list: { label: { normal: "Liste", beginner: "Liste" } },
-          },
-        },
-        sync: {
-          attach: { label: { normal: "Verbinden", beginner: "Verbinden" } },
-          detach: { label: { normal: "Trennen", beginner: "Trennen" } },
-          browse: { label: { normal: "Durchsuchen", beginner: "Ordner wählen" } },
-          statusLabel: { label: { normal: "Synchronisierungsstatus", beginner: "Synchronisierungsstatus" } },
-          live: { label: { normal: "verbunden", beginner: "verbunden" } },
-          connecting: { label: { normal: "verbinde…", beginner: "verbinde…" } },
-          reconnecting: { label: { normal: "verbinde erneut…", beginner: "verbinde erneut…" } },
-          offline: { label: { normal: "offline", beginner: "nicht verbunden" } },
-          signedOut: { label: { normal: "abgemeldet", beginner: "nicht angemeldet" } },
-          peerOne: { label: { normal: "{{count}} Mitwirkender", beginner: "{{count}} Mitwirkender" } },
-          peerMany: { label: { normal: "{{count}} Mitwirkende", beginner: "{{count}} Mitwirkende" } },
-          saved: { label: { normal: "gespeichert", beginner: "gespeichert" } },
-          unsaved: { label: { normal: "ungespeichert", beginner: "nicht gespeichert" } },
-          pending: { label: { normal: "{{count}} ausstehend", beginner: "{{count}} ausstehend" } },
-          hubLabel: { label: { normal: "Hub-Verbindung", beginner: "Hub-Verbindung" } },
-          hubSignIn: { label: { normal: "Anmelden", beginner: "Anmelden" } },
-          online: { label: { normal: "online", beginner: "mit dem Hub verbunden" } },
-          localOnly: { label: { normal: "nur lokal", beginner: "nur auf diesem Gerät" } },
-          backboneFile: { label: { normal: "Dateisynchronisierung", beginner: "Mit einer Datei synchronisieren" } },
-          backboneFolder: { label: { normal: "Ordnersynchronisierung", beginner: "Mit einem Ordner synchronisieren" } },
-          backboneRemote: { label: { normal: "Hub-Synchronisierung", beginner: "Mit dem Hub synchronisieren" } },
-        },
-        ink: {
-          link: { label: { normal: "Link", beginner: "Link" } },
-          linkUrlPrompt: { label: { normal: "Link-URL", beginner: "Link-URL" } },
-        },
-        surfaceContextMenu: {
-          architecture: { label: { normal: "Architekturmenü", beginner: "Architekturmenü" } },
-          attraction: { label: { normal: "Anziehungsmenü", beginner: "Anziehungsmenü" } },
-          block: { label: { normal: "Blockmenü", beginner: "Blockmenü" } },
-          edge: { label: { normal: "Kantenmenü", beginner: "Kantenmenü" } },
-          entry: { label: { normal: "Eintragsmenü", beginner: "Eintragsmenü" } },
-          feature: { label: { normal: "Elementmenü", beginner: "Elementmenü" } },
-          group: { label: { normal: "Gruppenmenü", beginner: "Gruppenmenü" } },
-          handle: { label: { normal: "Griffmenü", beginner: "Griffmenü" } },
-          layer: { label: { normal: "Ebenenmenü", beginner: "Ebenenmenü" } },
-          object: { label: { normal: "Objektmenü", beginner: "Objektmenü" } },
-          part: { label: { normal: "Teilmenü", beginner: "Teilmenü" } },
-          path: { label: { normal: "Pfadmenü", beginner: "Pfadmenü" } },
-          pixel: { label: { normal: "Pixelmenü", beginner: "Pixelmenü" } },
-          position: { label: { normal: "Positionsmenü", beginner: "Positionsmenü" } },
-          reference: { label: { normal: "Referenzmenü", beginner: "Referenzmenü" } },
-          route: { label: { normal: "Routenmenü", beginner: "Routenmenü" } },
-          slider: { label: { normal: "Reglermenü", beginner: "Reglermenü" } },
-          vortex: { label: { normal: "Vortexmenü", beginner: "Vortexmenü" } },
-          file: { label: { normal: "Dateimenü", beginner: "Dateimenü" } },
-          workspace: { label: { normal: "Arbeitsbereichsmenü", beginner: "Arbeitsbereichsmenü" } },
-          canvas: { label: { normal: "Canvas-Menü", beginner: "Canvas-Menü" } },
-          scene: { label: { normal: "Szenenmenü", beginner: "Szenenmenü" } },
-          placementSuggestions: { label: { normal: "Platzierungsvorschläge", beginner: "Platzierungsvorschläge" } },
-          node: { label: { normal: "Knotenmenü", beginner: "Knotenmenü" } },
-          flow: { label: { normal: "Flow-Menü", beginner: "Flow-Menü" } },
-          row: { label: { normal: "Zeilenmenü", beginner: "Zeilenmenü" } },
-          paint: { label: { normal: "Malmenü", beginner: "Malmenü" } },
-          board: { label: { normal: "Board-Menü", beginner: "Board-Menü" } },
-          ink: { label: { normal: "Tintenmenü", beginner: "Tintenmenü" } },
-          history: { label: { normal: "Verlaufsmenü", beginner: "Verlaufsmenü" } },
-          step: { label: { normal: "Schrittmenü", beginner: "Schrittmenü" } },
-          diff: { label: { normal: "Vergleichsmenü", beginner: "Vergleichsmenü" } },
-          event: { label: { normal: "Ereignismenü", beginner: "Ereignismenü" } },
-          editor: { label: { normal: "Editormenü", beginner: "Editormenü" } },
-          map: { label: { normal: "Kartenmenü", beginner: "Kartenmenü" } },
-        },
-        mutation: {
-          level: {
-            info: { label: { normal: "Info", beginner: "Info" } },
-            warning: { label: { normal: "Warnung", beginner: "Warnung" } },
-            error: { label: { normal: "Fehler", beginner: "Fehler" } },
-            fatal: { label: { normal: "Kritisch", beginner: "Kritischer Fehler" } },
-          },
-          code: {
-            targetMissing: { label: { normal: "Ziel fehlt", beginner: "Das Ziel dieser Änderung existiert nicht mehr." } },
-            noOp: { label: { normal: "Keine Änderung", beginner: "Der Zustand war bereits so — nichts wurde geändert." } },
-            partial: { label: { normal: "Teilweise angewendet", beginner: "Nur ein Teil der Änderung konnte angewendet werden." } },
-            clamped: { label: { normal: "Begrenzt", beginner: "Ein Wert wurde auf den zulässigen Bereich begrenzt." } },
-            duplicateId: { label: { normal: "ID bereits vergeben", beginner: "Es existiert bereits ein Element mit dieser ID." } },
-            invariant: { label: { normal: "Ungültiger Zustand", beginner: "Diese Änderung würde einen ungültigen Zustand erzeugen." } },
-            cascade: { label: { normal: "Folgeänderung", beginner: "Diese Änderung hat weitere Änderungen ausgelöst." } },
-          },
-          policy: {
-            laissezFaire: {
-              label: { label: { normal: "Laissez-faire", beginner: "Laissez-faire" } },
-              description: { label: { normal: "Nimmt jede Änderung an, außer sie ist kritisch.", beginner: "Nimmt jede Änderung an, solange sie nicht kritisch ist." } },
-            },
-            normal: {
-              label: { label: { normal: "Normal", beginner: "Normal" } },
-              description: { label: { normal: "Lehnt fehlerhafte Änderungen ab, erlaubt Warnungen.", beginner: "Lehnt Änderungen mit Fehlern ab, lässt Warnungen aber zu." } },
-            },
-            vigilant: {
-              label: { label: { normal: "Wachsam", beginner: "Wachsam" } },
-              description: { label: { normal: "Lehnt bereits Änderungen mit Warnungen ab.", beginner: "Am strengsten: lehnt schon Änderungen mit Warnungen ab." } },
-            },
-            setting: {
-              label: { label: { normal: "Merge-Richtlinie", beginner: "Merge-Richtlinie" } },
-            },
-          },
-          rejected: {
-            title: { label: { normal: "Änderung abgelehnt", beginner: "Änderung abgelehnt" } },
-            body: { label: { normal: "Diese Änderung konnte nicht angewendet werden.", beginner: "Diese Änderung konnte nicht angewendet werden." } },
-          },
-        },
-        conflict: {
-          panel: { label: { normal: "Konflikte", beginner: "Konflikte" } },
-          accept: { label: { normal: "Übernehmen", beginner: "Übernehmen" } },
-          discard: { label: { normal: "Verwerfen", beginner: "Verwerfen" } },
-          quarantined: { label: { normal: "Zurückgehalten", beginner: "Eingehende Änderungen werden zurückgehalten, bis du entscheidest." } },
-          degraded: { label: { normal: "Beeinträchtigt", beginner: "Übernommen, aber mit Warnungen." } },
-          hubRejected: { label: { normal: "Änderung vom Hub abgelehnt", beginner: "Der Hub hat deine Änderung nicht angenommen; sie wurde zurückgenommen." } },
-          hubTransformed: { label: { normal: "Änderung angepasst", beginner: "Eine gleichzeitige Änderung hatte Vorrang; deine Änderung wurde angepasst übernommen." } },
-          hubConcurrentEdit: { label: { normal: "Jemand anderes hat gleichzeitig dieselbe Stelle geändert", beginner: "Jemand anderes hat gleichzeitig dieselbe Stelle geändert; deine Änderung wurde nicht übernommen." } },
-          hubConcurrentInvariant: { label: { normal: "Widerspricht einer gleichzeitigen Änderung", beginner: "Deine Änderung widerspricht einer gleichzeitigen Änderung einer anderen Person und wurde nicht übernommen." } },
-        },
-        presence: {
-          roster: { label: { normal: "Anwesende", beginner: "Anwesende" } },
-          empty: { label: { normal: "Niemand sonst ist hier", beginner: "Niemand sonst ist hier" } },
-          overflow: { label: { normal: "+{{count}} weitere", beginner: "+{{count}} weitere" } },
-          role: {
-            author: { label: { normal: "Bearbeitet", beginner: "Bearbeitet" } },
-            spectator: { label: { normal: "Betrachtet", beginner: "Betrachtet" } },
-          },
-          kind: {
-            agent: { label: { normal: "KI-Agent", beginner: "Ein KI-Agent, dem jemand Zugriff erteilt hat" } },
-          },
-        },
-      },
-      settings: {
-        layout: {
-          desktop: {
-            label: {
-              normal: "Desktop-Layout",
-              beginner: "Verwendet das Standard-Layout, optimiert für Maus und Tastatur.",
-            },
-          },
-          tablet: {
-            label: {
-              normal: "Tablet-Layout",
-              beginner: "Verwendet das Tablet-Layout mit größeren, touch-freundlichen Bedienelementen.",
-            },
-          },
-          mobile: {
-            label: {
-              normal: "Mobil-Layout",
-              beginner: "Verwendet das Mobil-Layout, automatisch aktiv auf kleinen Bildschirmen.",
-            },
-          },
-        },
-        driver: {
-          select: { label: { normal: "Treiber", beginner: "Treiber" } },
-          default: { label: { normal: "Standard", beginner: "Standard" } },
-          compact: { label: { normal: "Kompakt", beginner: "Kompakt" } },
-          labels: { label: { normal: "Beschriftungen", beginner: "Beschriftungen" } },
-          labelsOption: {
-            full: { label: { normal: "Voll", beginner: "Symbol und Beschriftung" } },
-            icons: { label: { normal: "Nur Symbole", beginner: "Nur Symbole" } },
-          },
-          labelTier: { label: { normal: "Beschriftungsstufe", beginner: "Beschriftungsstufe" } },
-          labelTierOption: {
-            beginner: { label: { normal: "Anfänger", beginner: "Ausführliche Beschriftungen" } },
-            normal: { label: { normal: "Normal", beginner: "Kurze Beschriftungen" } },
-          },
-          drag: { label: { normal: "Ziehen", beginner: "Ziehen" } },
-          dragOption: {
-            handle: { label: { normal: "Griff", beginner: "Eigener Ziehgriff" } },
-            surface: { label: { normal: "Fläche", beginner: "Ganzes Element ziehbar" } },
-          },
-          chrome: { label: { normal: "Oberflächenanzeige", beginner: "Oberflächenanzeige" } },
-          chromeOption: {
-            always: { label: { normal: "Immer", beginner: "Immer sichtbar" } },
-            hover: { label: { normal: "Bei Hover", beginner: "Nur bei Mauszeiger sichtbar" } },
-          },
-          gumball: { label: { normal: "Gumball-Anzeige", beginner: "Gumball-Anzeige" } },
-          gumballOption: {
-            always: { label: { normal: "Immer", beginner: "Immer sichtbar" } },
-            hover: { label: { normal: "Bei Hover", beginner: "Nur bei Mauszeiger sichtbar" } },
-          },
-          tooltips: { label: { normal: "Tooltips", beginner: "Tooltips" } },
-          tooltipsOption: {
-            full: { label: { normal: "Voll", beginner: "Mit Handbuch- und Tutorial-Links" } },
-            minimal: { label: { normal: "Minimal", beginner: "Nur Name und Tastenkürzel" } },
-            none: { label: { normal: "Keine", beginner: "Keine Tooltips" } },
-          },
-          hotkeys: { label: { normal: "Tastenkürzel", beginner: "Tastenkürzel" } },
-          hotkeysOption: {
-            inline: { label: { normal: "Inline", beginner: "Am Steuerelement" } },
-            tooltip: { label: { normal: "Tooltip", beginner: "Nur im Tooltip" } },
-            none: { label: { normal: "Keine", beginner: "Ausgeblendet" } },
-          },
-          save: { label: { normal: "Speichern unter", beginner: "Speichern unter" } },
-          savePlaceholder: { label: { normal: "Treibername", beginner: "Treibername" } },
-          delete: { label: { normal: "Löschen", beginner: "Löschen" } },
-          dirty: { label: { normal: "Nicht gespeichert", beginner: "Nicht gespeichert" } },
-        },
-        keybindings: {
-          capture: { label: { normal: "Aufnehmen", beginner: "Aufnehmen" } },
-          reset: { label: { normal: "Zurücksetzen", beginner: "Zurücksetzen" } },
-          conflict: { label: { normal: "Belegt", beginner: "Bereits vergeben" } },
-          pressKeys: { label: { normal: "Tasten drücken…", beginner: "Tasten drücken…" } },
-        },
-      },
-      tooltip: {
-        manual: {
-          label: {
-            normal: "Handbuch",
-            beginner: "Handbuch",
-          },
-        },
-        tutorial: {
-          label: {
-            normal: "Tutorial",
-            beginner: "Tutorial",
-          },
-        },
-      },
-      introduction: {
-        skip: { label: { normal: "Überspringen", beginner: "Überspringen" } },
-        back: { label: { normal: "Zurück", beginner: "Zurück" } },
-        next: { label: { normal: "Weiter", beginner: "Weiter" } },
-        done: { label: { normal: "Fertig", beginner: "Fertig" } },
-      },
-      tutorial: {
-        play: { label: { normal: "Abspielen", beginner: "Abspielen" } },
-        pause: { label: { normal: "Pause", beginner: "Pause" } },
-        stop: { label: { normal: "Tutorial beenden", beginner: "Tutorial beenden" } },
-        rate: { label: { normal: "Geschwindigkeit", beginner: "Geschwindigkeit" } },
-        mute: { label: { normal: "Ton aus", beginner: "Ton aus" } },
-        captions: { label: { normal: "Untertitel", beginner: "Untertitel" } },
-        record: { label: { normal: "Aufnehmen", beginner: "Aufnehmen" } },
-        recording: { label: { normal: "Aufnahme läuft", beginner: "Aufnahme läuft" } },
-        addChapter: { label: { normal: "Kapitel setzen", beginner: "Kapitel setzen" } },
-        chapter: { label: { normal: "Kapitel", beginner: "Kapitel" } },
-      },
-    } satisfies UiTranslationSchema,
-  },
-  // #endregion 🇩️🇪️ German Bundle
-
-  // #region 🇬️🇧️ English Bundle
-  en: {
-    translation: {
-      ui: {
-        nav: {
-          back: {
-            label: {
-              normal: "Go back",
-              beginner: "Go back",
-            },
-          },
-          forward: {
-            label: {
-              normal: "Go forward",
-              beginner: "Go forward",
-            },
-          },
-          up: {
-            label: {
-              normal: "Go up one level",
-              beginner: "Go up one level",
-            },
-          },
-        },
-        search: {
-          toggle: {
-            label: {
-              normal: "Search",
-              beginner: "Search",
-            },
-          },
-          close: {
-            label: {
-              normal: "Close search",
-              beginner: "Close search",
-            },
-          },
-          title: {
-            label: {
-              normal: "Search",
-              beginner: "Search",
-            },
-          },
-          description: {
-            label: {
-              normal: "Search for items",
-              beginner: "Search for items",
-            },
-          },
-          placeholder: {
-            label: {
-              normal: "Search...",
-              beginner: "Search...",
-            },
-          },
-          empty: {
-            label: {
-              normal: "No results found.",
-              beginner: "No results found.",
-            },
-          },
-          category: {
-            panels: { label: { normal: "Panels", beginner: "Panels" } },
-            windows: { label: { normal: "Windows", beginner: "Windows" } },
-            catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
-            // 🏠️ "Space" here is a deliberate, deferred duplicate of the host plugin's own manifest label
-            // (`App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space"))`,
-            // ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs:869) — reading it from there via
-            // `resolveManifestLabel(hostApp.label, …)` (the same pattern `appWindowLabel` already uses)
-            // is the correct fix, EXCEPT `ShellHost/🟦️.tsx`'s `hostApp` lookup (line ~1132,
-            // `manifest.apps.find(app => app.id === hostConfig?.hostAppId)`) is ALREADY always
-            // `undefined`: `hostConfig.hostAppId` is the raw Cargo.toml `host = { shell = "studio" }`
-            // alias, never the real dialect-derived `AppDefinition.id`
-            // (`s.space.studio@1/*#editor`) — a pre-existing bug the same file's own w4-h comment
-            // (lines 4112-4121) already documents and declines to fix. Wiring this label to
-            // `hostApp?.label` today would render an EMPTY category header, not "Space" — a regression.
-            // Fix plan (needs a new field, not a string-matching workaround): add
-            // `AppDefinition.host_role: Option<HostRole>` (`Landing`/`Host`) in
-            // `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` (~3034), a `.host_role(...)` builder
-            // method on `AppBuilder`/forwarded by `EditorBuilder`/`ViewerBuilder`
-            // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), set it in
-            // `create_home_app()`/`create_space_app()`, regenerate the TS mirror, then have
-            // `ShellHost/🟦️.tsx:1132-1133` match on `hostRole` instead of the broken id
-            // comparison. See
-            // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️hostapp-label-layering.md`.
-            hostApp: { label: { normal: "Space", beginner: "Space" } },
-            navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
-          },
-        },
-        palette: {
-          undo: { label: { normal: "Undo", beginner: "Undo" } },
-          redo: { label: { normal: "Redo", beginner: "Redo" } },
-          goHome: { label: { normal: "Go Home", beginner: "Go Home" } },
-          spawnPrefix: { label: { normal: "Spawn", beginner: "Spawn" } },
-        },
-        panel: {
-          artifact: { label: { normal: "Artifact", beginner: "Artifact" } },
-          catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
-          inspection: { label: { normal: "Inspection", beginner: "Inspection" } },
-          parameters: { label: { normal: "Parameters", beginner: "Parameters" } },
-          artifactEmpty: { label: { normal: "—", beginner: "—" } },
-          spawnedAppsSuffix: { label: { normal: "spawned app(s)", beginner: "spawned app(s)" } },
-          sync: { label: { normal: "Sync", beginner: "Sync" } },
-          actions: { label: { normal: "Actions", beginner: "Actions" } },
-          history: { label: { normal: "History", beginner: "History" } },
-        },
-        tree: {
-          drag: {
-            sort: { label: { normal: "Reorder", beginner: "Reorder row" } },
-            sortTarget: { label: { normal: "Click and hold left click to drag {{target}}", beginner: "Click and hold left click to drag {{target}}" } },
-            transfer: { label: { normal: "Drag to window", beginner: "Drag into a window" } },
-            transferTarget: { label: { normal: "Click and hold left click to drag {{target}}", beginner: "Click and hold left click to drag {{target}}" } },
-          },
-        },
-        find: {
-          toggle: {
-            label: {
-              normal: "Find",
-              beginner: "Find in view",
-            },
-          },
-          title: {
-            label: {
-              normal: "Find",
-              beginner: "Find",
-            },
-          },
-          description: {
-            label: {
-              normal: "Find items in this view",
-              beginner: "Find items in this view",
-            },
-          },
-          placeholder: {
-            label: {
-              normal: "Find...",
-              beginner: "Find...",
-            },
-          },
-          empty: {
-            label: {
-              normal: "No results found.",
-              beginner: "No results found.",
-            },
-          },
-        },
-        fullscreen: {
-          toggle: {
-            label: {
-              normal: "Fullscreen",
-              beginner: "Fullscreen",
-            },
-          },
-          exit: {
-            label: {
-              normal: "Exit Fullscreen",
-              beginner: "Exit Fullscreen",
-            },
-          },
-        },
-        mobilePanel: {
-          toggle: {
-            label: {
-              normal: "Panel",
-              beginner: "Panel",
-            },
-          },
-          app: {
-            label: {
-              normal: "App",
-              beginner: "App",
-            },
-          },
-        },
-        panelToggle: {
-          topLeft: {
-            label: {
-              normal: "Top Left",
-              beginner: "Top Left",
-            },
-          },
-          topRight: {
-            label: {
-              normal: "Top Right",
-              beginner: "Top Right",
-            },
-          },
-          bottomLeft: {
-            label: {
-              normal: "Bottom Left",
-              beginner: "Bottom Left",
-            },
-          },
-          bottomRight: {
-            label: {
-              normal: "Bottom Right",
-              beginner: "Bottom Right",
-            },
-          },
-          display: {
-            label: {
-              normal: "Display",
-              beginner: "Display",
-            },
-          },
-          command: {
-            label: {
-              normal: "Command",
-              beginner: "Command",
-            },
-          },
-          tool: {
-            label: {
-              normal: "Tool",
-              beginner: "Tool",
-            },
-          },
-          overview: {
-            label: {
-              normal: "Overview",
-              beginner: "Overview",
-            },
-          },
-          workbench: {
-            label: {
-              normal: "Workbench",
-              beginner: "Workbench",
-            },
-          },
-          details: {
-            label: {
-              normal: "Details",
-              beginner: "Details",
-            },
-          },
-          settings: {
-            label: {
-              normal: "Settings",
-              beginner: "Settings",
-            },
-          },
-          chat: {
-            label: {
-              normal: "Chat",
-              beginner: "Chat",
-            },
-          },
-          plugins: {
-            label: {
-              normal: "Plugins",
-              beginner: "Plugins",
-            },
-          },
-          taskManager: {
-            label: {
-              normal: "Tasks",
-              beginner: "Tasks",
-            },
-          },
-        },
-        display: {
-          tab: {
-            windows: { label: { normal: "Windows", beginner: "Windows" } },
-            layout: { label: { normal: "Layout", beginner: "Layout" } },
-          },
-          saveLayout: { label: { normal: "Save layout", beginner: "Save layout" } },
-          saveLayoutPlaceholder: { label: { normal: "Layout name", beginner: "Layout name" } },
-          saveCurrentLayout: { label: { normal: "Save current layout", beginner: "Save current layout" } },
-          deleteLayout: { label: { normal: "Delete", beginner: "Delete" } },
-          emptyShell: {
-            label: {
-              normal: "Drag windows from Display in the navbar, or restore a saved layout.",
-              beginner: "Drag windows from Display in the navbar, or restore a saved layout.",
-            },
-          },
-          layouts: { label: { normal: "Layouts", beginner: "Layouts" } },
-          saved: { label: { normal: "Saved", beginner: "Saved" } },
-          unavailable: { label: { normal: "Display unavailable", beginner: "Display unavailable" } },
-        },
-        settings: {
-          tab: {
-            general: { label: { normal: "General", beginner: "General" } },
-            driver: { label: { normal: "Driver", beginner: "Driver" } },
-            app: { label: { normal: "App", beginner: "App" } },
-            appearance: { label: { normal: "Appearance", beginner: "Appearance" } },
-            layout: { label: { normal: "Layout", beginner: "Layout" } },
-            language: { label: { normal: "Language", beginner: "Language" } },
-            terminology: { label: { normal: "Terminology", beginner: "Terminology" } },
-            theme: { label: { normal: "Theme", beginner: "Theme" } },
-            keybindings: { label: { normal: "Hotkeys", beginner: "Hotkeys" } },
-          },
-          appearance: {
-            light: { label: { normal: "Light", beginner: "Light" } },
-            dark: { label: { normal: "Dark", beginner: "Dark" } },
-            system: { label: { normal: "System", beginner: "System" } },
-          },
-          language: {
-            en: { label: { normal: "English", beginner: "English" } },
-            de: { label: { normal: "Deutsch", beginner: "Deutsch" } },
-          },
-          terminology: {
-            native: { label: { normal: "Native", beginner: "Native" } },
-            reuse: { label: { normal: "Reuse", beginner: "Reuse" } },
-          },
-          app: {
-            name: { label: { normal: "Name", beginner: "Name" } },
-            id: { label: { normal: "App id", beginner: "App id" } },
-            controller: { label: { normal: "Controller", beginner: "Controller" } },
-            plugin: { label: { normal: "Plugin", beginner: "Plugin" } },
-          },
-          theme: {
-            select: { label: { normal: "Theme", beginner: "Theme" } },
-            save: { label: { normal: "Save as", beginner: "Save as" } },
-            savePlaceholder: { label: { normal: "Theme name", beginner: "Theme name" } },
-            reset: { label: { normal: "Reset", beginner: "Reset" } },
-            export: { label: { normal: "Export", beginner: "Export" } },
-            import: { label: { normal: "Import", beginner: "Import" } },
-            delete: { label: { normal: "Delete", beginner: "Delete" } },
-            colors: { label: { normal: "Colors", beginner: "Colors" } },
-            spacing: { label: { normal: "Spacing", beginner: "Spacing" } },
-            fonts: { label: { normal: "Fonts", beginner: "Fonts" } },
-            strokes: { label: { normal: "Strokes", beginner: "Strokes" } },
-            radii: { label: { normal: "Radii", beginner: "Radii" } },
-            opacities: { label: { normal: "Opacities", beginner: "Opacities" } },
-            metrics: { label: { normal: "Metrics", beginner: "Metrics" } },
-            appearances: { label: { normal: "Appearances", beginner: "Appearances" } },
-            dirty: { label: { normal: "Unsaved", beginner: "Unsaved" } },
-            appearance: {
-              light: { label: { normal: "Light", beginner: "Light" } },
-              dark: { label: { normal: "Dark", beginner: "Dark" } },
-            },
-            group: {
-              board: { label: { normal: "Board", beginner: "Board" } },
-              map: { label: { normal: "Map", beginner: "Map" } },
-              canvas: { label: { normal: "Canvas", beginner: "Canvas" } },
-              chrome: { label: { normal: "Chrome", beginner: "Chrome" } },
-              outcome: { label: { normal: "Outcome", beginner: "Colors for errors and success" } },
-              diagram: { label: { normal: "Diagram", beginner: "Colors for diagrams" } },
-            },
-            contrast: {
-              label: { label: { normal: "Contrast", beginner: "How readable the text is" } },
-              aaa: { label: { normal: "AAA", beginner: "Very easy to read" } },
-              aa: { label: { normal: "AA", beginner: "Easy to read" } },
-              aaLarge: { label: { normal: "AA for large text only", beginner: "Readable at large sizes only" } },
-              fail: { label: { normal: "Below AA — contrast too low", beginner: "Contrast too low, hard to read" } },
-              warning: { label: { normal: "Low contrast {{ratio}}:1 with {{counterpart}} — WCAG AA needs at least {{minimum}}:1", beginner: "Hard to read together with {{counterpart}} ({{ratio}}:1, needs {{minimum}}:1)" } },
-            },
-          },
-          unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
-          resetDock: { label: { normal: "Reset panels", beginner: "Reset panels" } },
-        },
-        plugins: {
-          status: {
-            available: { label: { normal: "Available", beginner: "Available" } },
-            installing: { label: { normal: "Installing…", beginner: "Installing…" } },
-            loaded: { label: { normal: "Loaded", beginner: "Loaded" } },
-            failed: { label: { normal: "Failed", beginner: "Failed" } },
-            reloading: { label: { normal: "Reloading…", beginner: "Reloading…" } },
-          },
-          action: {
-            install: { label: { normal: "Install", beginner: "Install" } },
-            uninstall: { label: { normal: "Uninstall", beginner: "Uninstall" } },
-            reload: { label: { normal: "Reload", beginner: "Reload" } },
-          },
-          waitingForHost: { label: { normal: "Waiting for host program…", beginner: "Waiting for host program…" } },
-          unavailable: { label: { normal: "Plugins unavailable", beginner: "Plugins unavailable" } },
-          source: { label: { normal: "Source", beginner: "Source" } },
-          marketplace: { label: { normal: "Marketplace", beginner: "Marketplace" } },
-          marketplaceUnavailable: { label: { normal: "Marketplace unavailable", beginner: "Marketplace unavailable" } },
-          extension: {
-            enabled: { label: { normal: "enabled", beginner: "on" } },
-            disabled: { label: { normal: "disabled", beginner: "off" } },
-            enable: { label: { normal: "Enable", beginner: "Turn on" } },
-            disable: { label: { normal: "Disable", beginner: "Turn off" } },
-            install: { label: { normal: "Install extension", beginner: "Add an extension" } },
-            fromUrl: { label: { normal: "From URL", beginner: "From the web" } },
-            installFromUrl: { label: { normal: "Install from URL", beginner: "Add from the web" } },
-            urlPrompt: { label: { normal: "Extension package URL", beginner: "Address of the extension" } },
-            fromFile: { label: { normal: "From file", beginner: "From a file" } },
-            installFromFile: { label: { normal: "Install from file", beginner: "Add from a file" } },
-          },
-          recovery: {
-            title: { label: { normal: "Plugin Recovery", beginner: "Repair program" } },
-            crashed: { label: { normal: "This program crashed.", beginner: "This program crashed." } },
-            quarantined: { label: { normal: "This program was quarantined after repeated crashes.", beginner: "This program crashed several times and was stopped." } },
-            restartApp: { label: { normal: "Restart App", beginner: "Restart" } },
-            disablePlugin: { label: { normal: "Disable Plugin", beginner: "Turn program off" } },
-          },
-        },
-        command: {
-          introduceApp: { label: { normal: "Introduce App", beginner: "Introduce App" } },
-          playTutorial: { label: { normal: "Play Tutorial", beginner: "Play Tutorial" } },
-          recordTutorial: { label: { normal: "Record Tutorial", beginner: "Record Tutorial" } },
-          setAppearance: { label: { normal: "Set Appearance", beginner: "Set Appearance" } },
-          setTheme: { label: { normal: "Set Theme", beginner: "Set Theme" } },
-          setLayout: { label: { normal: "Set Layout", beginner: "Set Layout" } },
-          setLocale: { label: { normal: "Set Locale", beginner: "Set Locale" } },
-          setTerminology: { label: { normal: "Set Terminology", beginner: "Set Terminology" } },
-          setDriver: { label: { normal: "Set Driver", beginner: "Set Driver" } },
-          openTaskManager: { label: { normal: "Open Tasks", beginner: "Open Tasks" } },
-          openHub: { label: { normal: "Open Hub and Spaces", beginner: "Work With Others" } },
-        },
-        shellCommand: {
-          dockMove: { label: { normal: "Move Panel Tab", beginner: "Move Panel Tab" } },
-          windowResize: { label: { normal: "Resize Window", beginner: "Resize Window" } },
-          windowMove: { label: { normal: "Rearrange Windows", beginner: "Rearrange Windows" } },
-          windowActivate: { label: { normal: "Activate Window", beginner: "Activate Window" } },
-          windowClose: { label: { normal: "Close Window", beginner: "Close Window" } },
-          windowSplit: { label: { normal: "Split Window", beginner: "Split Window" } },
-          windowOpenInNewWindow: { label: { normal: "Open in New Window", beginner: "Open in New Window" } },
-          panelToggle: { label: { normal: "Toggle Panel", beginner: "Toggle Panel" } },
-          panelTab: { label: { normal: "Switch Panel Tab", beginner: "Switch Panel Tab" } },
-        },
-        ribbon: {
-          group: {
-            parent: {
-              label: {
-                normal: "Utility",
-                beginner: "Utility",
-              },
-            },
-          },
-          parent: uiRibbonParentEn,
-        },
-        selection: {
-          method: { label: { normal: "Method", beginner: "Method" } },
-          mode: { label: { normal: "Mode", beginner: "Mode" } },
-          rectangle: { label: { normal: "Rectangle", beginner: "Rectangle" } },
-          lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
-          selective: { label: { normal: "Selective", beginner: "Selective" } },
-          additive: { label: { normal: "Additive", beginner: "Additive" } },
-          subtractive: { label: { normal: "Subtractive", beginner: "Subtractive" } },
-          invertive: { label: { normal: "Invertive", beginner: "Invertive" } },
-        },
-        windowFault: {
-          title: { label: { normal: "Window is not responding", beginner: "Window is not responding" } },
-          abiMismatch: { label: { normal: "Plugin module does not match the host interface", beginner: "This plugin is out of date and no longer fits the program" } },
-          interactiveCeiling: { label: { normal: "Plugin step overran the interactive time ceiling", beginner: "The plugin took too long for one step" } },
-          clock: { label: { normal: "No monotonic clock available", beginner: "The system clock reading is unavailable" } },
-          pluginInternal: { label: { normal: "Internal plugin runtime fault", beginner: "Something went wrong inside the plugin" } },
-          installFailed: { label: { normal: "Plugin failed to install", beginner: "The plugin could not be loaded" } },
-          unknown: { label: { normal: "Unknown fault cause", beginner: "The cause is unknown" } },
-        },
-        common: {
-          routeNotFound: { label: { normal: "Route not found: {{path}}", beginner: "This page does not exist: {{path}}" } },
-          mixedValues: {
-            label: {
-              normal: "Mixed",
-              beginner: "Mixed",
-            },
-          },
-          name: { label: { normal: "Name", beginner: "Name" } },
-          save: { label: { normal: "Save", beginner: "Save" } },
-          delete: { label: { normal: "Delete", beginner: "Delete" } },
-          loading: { label: { normal: "Loading…", beginner: "Loading…" } },
-          loadingPlugins: { label: { normal: "Loading plugins…", beginner: "Loading plugins…" } },
-          renderError: { label: { normal: "Render error", beginner: "Render error" } },
-          noPluginsLoaded: { label: { normal: "No plugins loaded", beginner: "No plugins loaded" } },
-          workerLost: { label: { normal: "The session was terminated — please reload", beginner: "The session was terminated — please reload the page" } },
-          missingWindow: { label: { normal: "Missing window", beginner: "Missing window" } },
-          home: { label: { normal: "Home", beginner: "Home" } },
-          backToWorkflow: { label: { normal: "Back to Workflow", beginner: "Back to Workflow" } },
-          execute: { label: { normal: "Execute", beginner: "Execute" } },
-          reset: { label: { normal: "Reset", beginner: "Reset" } },
-          windowOptions: { label: { normal: "Window Options", beginner: "Window Options" } },
-          focus: { label: { normal: "Focus", beginner: "Focus" } },
-          unfocus: { label: { normal: "Unfocus", beginner: "Unfocus" } },
-          example: { label: { normal: "Example", beginner: "Example" } },
-          noExample: { label: { normal: "No example", beginner: "No example" } },
-          loadingSurface: { label: { normal: "Loading surface…", beginner: "Loading surface…" } },
-          unknownComponent: { label: { normal: "Unknown component", beginner: "Unknown component" } },
-          select: { label: { normal: "Select", beginner: "Select" } },
-          commandPalette: { label: { normal: "Command Palette", beginner: "Command Palette" } },
-          searchForCommand: { label: { normal: "Search for a command to run…", beginner: "Search for a command to run…" } },
-          find: { label: { normal: "Find…", beginner: "Find…" } },
-          noData: { label: { normal: "No data", beginner: "No data" } },
-          noFileSystemNodes: { label: { normal: "No file system nodes", beginner: "No file system nodes" } },
-          selectTarget: { label: { normal: "Select target", beginner: "Select target" } },
-          selectOption: { label: { normal: "Select option…", beginner: "Select option…" } },
-          noOptionsFound: { label: { normal: "No options found.", beginner: "No options found." } },
-          close: { label: { normal: "Close", beginner: "Close" } },
-          newWindow: { label: { normal: "New Window", beginner: "New Window" } },
-          minimize: { label: { normal: "Minimize", beginner: "Minimize" } },
-          maximize: { label: { normal: "Maximize", beginner: "Maximize" } },
-          action: { label: { normal: "Action", beginner: "Action" } },
-          actions: { label: { normal: "Actions", beginner: "Actions" } },
-          utilities: { label: { normal: "Utilities", beginner: "Utilities" } },
-          retry: { label: { normal: "Retry", beginner: "Retry" } },
-          somethingWentWrong: { label: { normal: "Something went wrong", beginner: "Something went wrong" } },
-          doubleClickToEdit: { label: { normal: "Double-click to edit", beginner: "Double-click to edit" } },
-          importFile: { label: { normal: "Import file…", beginner: "Import file…" } },
-          clear: { label: { normal: "Clear", beginner: "Clear" } },
-          collapse: { label: { normal: "Collapse", beginner: "Collapse" } },
-          expand: { label: { normal: "Expand", beginner: "Expand" } },
-          cancel: { label: { normal: "Cancel", beginner: "Cancel" } },
-          error: { label: { normal: "Error", beginner: "Error" } },
-        },
-        window: {
-          close: { label: { normal: "Close", beginner: "Close" } },
-          focus: { label: { normal: "Focus", beginner: "Focus" } },
-          unfocus: { label: { normal: "Unfocus", beginner: "Unfocus" } },
-          newWindow: { label: { normal: "New Window", beginner: "New Window" } },
-          tabs: { label: { normal: "Window tabs", beginner: "Window tabs" } },
-        },
-        contextMenu: {
-          more: { label: { normal: "More", beginner: "More" } },
-          select: { label: { normal: "Select", beginner: "Select" } },
-          deselect: { label: { normal: "Deselect", beginner: "Deselect" } },
-          selectAll: { label: { normal: "Select all", beginner: "Select all" } },
-          clearSelection: { label: { normal: "Clear selection", beginner: "Clear selection" } },
-          selectSameKind: { label: { normal: "Select same kind", beginner: "Select same kind" } },
-          duplicate: { label: { normal: "Duplicate", beginner: "Duplicate" } },
-          delete: { label: { normal: "Delete", beginner: "Delete" } },
-          zoomToSelection: { label: { normal: "Zoom to selection", beginner: "Zoom to selection" } },
-          focusZoom: { label: { normal: "Focus / zoom to", beginner: "Focus / zoom to" } },
-          openSource: { label: { normal: "Open source", beginner: "Open source" } },
-          fitWorld: { label: { normal: "Fit world", beginner: "Fit world" } },
-          cut: { label: { normal: "Cut", beginner: "Cut" } },
-          copy: { label: { normal: "Copy", beginner: "Copy" } },
-          paste: { label: { normal: "Paste", beginner: "Paste" } },
-          rename: { label: { normal: "Rename", beginner: "Rename" } },
-          formatDocument: { label: { normal: "Format document", beginner: "Format document" } },
-          lintDocument: { label: { normal: "Lint document", beginner: "Lint document" } },
-          suggestCompletions: { label: { normal: "Suggest completions", beginner: "Suggest completions" } },
-          selectToken: { label: { normal: "Select token", beginner: "Select token" } },
-          selectLine: { label: { normal: "Select line", beginner: "Select line" } },
-          hide: { label: { normal: "Hide", beginner: "Hide" } },
-          show: { label: { normal: "Show", beginner: "Show" } },
-          lock: { label: { normal: "Lock", beginner: "Lock" } },
-          unlock: { label: { normal: "Unlock", beginner: "Unlock" } },
-        },
-        diagram: {
-          label: { label: { normal: "Node graph", beginner: "Diagram of nodes and connections" } },
-          roleDescription: { label: { normal: "Node graph editor", beginner: "Editor for nodes and connections" } },
-          keyboardHelp: {
-            label: {
-              normal: "Arrow keys: move between nodes · Enter: select · Shift+Enter: add to selection · Esc: clear selection",
-              beginner: "Use the arrow keys to move from node to node, Enter to select one, Esc to clear the selection",
-            },
-          },
-          nodes: { label: { normal: "Nodes", beginner: "Nodes" } },
-          edges: { label: { normal: "Connections", beginner: "Connections" } },
-          empty: { label: { normal: "Empty graph", beginner: "No nodes yet" } },
-          focusedNode: { label: { normal: "{{node}}, {{position}} of {{count}}", beginner: "Node {{node}}, number {{position}} of {{count}}" } },
-          selectedNode: { label: { normal: "{{node}} selected, {{count}} in selection", beginner: "{{node}} is now selected ({{count}} selected)" } },
-          deselectedNode: { label: { normal: "{{node}} removed from selection, {{count}} in selection", beginner: "{{node}} is no longer selected ({{count}} selected)" } },
-          selectionCleared: { label: { normal: "Selection cleared", beginner: "Nothing is selected any more" } },
-        },
-        host: {
-          emptyScene: { label: { normal: "No scene", beginner: "No scene" } },
-          tableRowRange: { label: { normal: "Rows {{from}}–{{to}} of {{total}}", beginner: "Rows {{from}} to {{to}} of {{total}}" } },
-          preview: { label: { normal: "Preview", beginner: "Preview" } },
-          sourceAvailable: { label: { normal: "Source available", beginner: "Source available" } },
-          blockImage: { label: { normal: "Image", beginner: "Image" } },
-          blockTable: { label: { normal: "Table", beginner: "Table" } },
-          blockMath: { label: { normal: "Math", beginner: "Math" } },
-          blockInk: { label: { normal: "Ink", beginner: "Ink" } },
-          blockGroup: { label: { normal: "Group", beginner: "Group" } },
-          blockText: { label: { normal: "Text", beginner: "Text" } },
-          checkingPlacement: { label: { normal: "Checking collision-free placements…", beginner: "Checking collision-free placements…" } },
-          noPlacement: { label: { normal: "No collision-free placement at this connector", beginner: "No collision-free placement at this connector" } },
-          canvasUnavailable: { label: { normal: "Canvas unavailable", beginner: "Canvas unavailable" } },
-          rendering: { label: { normal: "Rendering…", beginner: "Rendering…" } },
-          iconRenderFailed: { label: { normal: "Icon rendering failed", beginner: "Icon rendering failed" } },
-          documentPlaceholder: { label: { normal: "Artifact", beginner: "Artifact" } },
-          languageDocument: { label: { normal: "{{language}} document", beginner: "{{language}} document" } },
-          editor: { label: { normal: "Editor", beginner: "Editor" } },
-          languageEditor: { label: { normal: "{{language}} editor", beginner: "{{language}} editor" } },
-          iconShot: { label: { normal: "Icon shot", beginner: "Icon shot" } },
-          projection: { label: { normal: "Projection", beginner: "Projection" } },
-          frameVisible: { label: { normal: "Frame visible", beginner: "Frame visible" } },
-          perspective: { label: { normal: "Perspective", beginner: "Perspective" } },
-          orthographic: { label: { normal: "Orthographic", beginner: "Orthographic" } },
-        },
-        blockList: {
-          steps: { label: { normal: "Steps", beginner: "Steps" } },
-          addStep: { label: { normal: "Add Step", beginner: "Add Step" } },
-        },
-        tableStepper: {
-          decrement: { label: { normal: "Decrease", beginner: "Less" } },
-          increment: { label: { normal: "Increase", beginner: "More" } },
-          value: { label: { normal: "Value", beginner: "Value" } },
-        },
-        docs: {
-          navigation: {
-            previous: {
-              label: {
-                normal: "Previous",
-                beginner: "Previous",
-              },
-            },
-            next: {
-              label: {
-                normal: "Next",
-                beginner: "Next",
-              },
-            },
-          },
-        },
-        ring: {
-          demo: {
-            label: {
-              normal: "Ring",
-              beginner: "Ring",
-            },
-          },
-        },
-        iconSelector: {
-          mode: {
-            url: { label: { normal: "URL", beginner: "URL" } },
-            shortcode: { label: { normal: "Shortcode", beginner: "Shortcode" } },
-            math: { label: { normal: "Math / Typst", beginner: "Math / Typst" } },
-            data: { label: { normal: "Data URL", beginner: "Data URL" } },
-            emoji: { label: { normal: "Emoji", beginner: "Emoji" } },
-            text: { label: { normal: "Text", beginner: "Text" } },
-            vector: { label: { normal: "Catalog / SVG", beginner: "Catalog / SVG" } },
-          },
-        },
-        stepper: {
-          demo: {
-            label: {
-              normal: "Value",
-              beginner: "Value",
-            },
-          },
-        },
-        engagement: {
-          actions: {
-            label: {
-              normal: "Actions",
-              beginner: "Quick actions for the current step",
-            },
-          },
-          viewport: {
-            label: {
-              normal: "Viewport",
-              beginner: "Viewport",
-            },
-          },
-        },
-        windowSearch: {
-          title: {
-            label: {
-              normal: "Search",
-              beginner: "Search",
-            },
-          },
-          action: {
-            label: {
-              normal: "Action",
-              beginner: "Type an action or pick one from the list",
-            },
-          },
-          actionActive: {
-            label: {
-              normal: "Action or value",
-              beginner: "Action or number for the current step",
-            },
-          },
-          suggestions: {
-            label: {
-              normal: "Suggestions",
-              beginner: "Open the list of matching actions",
-            },
-          },
-          noMatches: {
-            label: {
-              normal: "No matches",
-              beginner: "No matching actions",
-            },
-          },
-        },
-        flowSpotlight: {
-          typeToAdd: { label: { normal: "Type to add…", beginner: "Type to add…" } },
-          collapseSuggestions: { label: { normal: "Collapse suggestions", beginner: "Collapse suggestions" } },
-          showAllSuggestions: { label: { normal: "Show all suggestions", beginner: "Show all suggestions" } },
-        },
-        nodeGraph: {
-          fitGraph: { label: { normal: "Fit graph", beginner: "Show the whole graph" } },
-          incompatiblePorts: { label: { normal: "{{source}} carries {{sourceType}}, {{target}} takes {{targetType}}", beginner: "These two ports do not fit: {{source}} carries {{sourceType}}, {{target}} takes {{targetType}}." } },
-          portType: {
-            geometry: { label: { normal: "geometry", beginner: "geometry" } },
-            vector: { label: { normal: "vector", beginner: "vector" } },
-            point: { label: { normal: "point", beginner: "point" } },
-            number: { label: { normal: "number", beginner: "number" } },
-            text: { label: { normal: "text", beginner: "text" } },
-            boolean: { label: { normal: "yes/no", beginner: "yes/no" } },
-            list: { label: { normal: "list", beginner: "list" } },
-          },
-        },
-        sync: {
-          attach: { label: { normal: "Attach", beginner: "Attach" } },
-          detach: { label: { normal: "Detach", beginner: "Detach" } },
-          browse: { label: { normal: "Browse", beginner: "Pick a folder" } },
-          statusLabel: { label: { normal: "Sync status", beginner: "Sync status" } },
-          live: { label: { normal: "live", beginner: "live" } },
-          connecting: { label: { normal: "connecting…", beginner: "connecting…" } },
-          reconnecting: { label: { normal: "reconnecting…", beginner: "reconnecting…" } },
-          offline: { label: { normal: "offline", beginner: "not connected" } },
-          signedOut: { label: { normal: "signed out", beginner: "not signed in" } },
-          peerOne: { label: { normal: "{{count}} peer", beginner: "{{count}} collaborator" } },
-          peerMany: { label: { normal: "{{count}} peers", beginner: "{{count}} collaborators" } },
-          saved: { label: { normal: "saved", beginner: "saved" } },
-          unsaved: { label: { normal: "unsaved", beginner: "not saved" } },
-          pending: { label: { normal: "{{count}} pending", beginner: "{{count}} pending" } },
-          hubLabel: { label: { normal: "Hub connection", beginner: "Hub connection" } },
-          hubSignIn: { label: { normal: "Sign in", beginner: "Sign in" } },
-          online: { label: { normal: "online", beginner: "connected to the hub" } },
-          localOnly: { label: { normal: "local only", beginner: "only on this device" } },
-          backboneFile: { label: { normal: "File sync", beginner: "Sync with a file" } },
-          backboneFolder: { label: { normal: "Folder sync", beginner: "Sync with a folder" } },
-          backboneRemote: { label: { normal: "Hub sync", beginner: "Sync with the hub" } },
-        },
-        ink: {
-          link: { label: { normal: "Link", beginner: "Link" } },
-          linkUrlPrompt: { label: { normal: "Link URL", beginner: "Link URL" } },
-        },
-        surfaceContextMenu: {
-          architecture: { label: { normal: "Architecture Menu", beginner: "Architecture Menu" } },
-          attraction: { label: { normal: "Attraction Menu", beginner: "Attraction Menu" } },
-          block: { label: { normal: "Block Menu", beginner: "Block Menu" } },
-          edge: { label: { normal: "Edge Menu", beginner: "Edge Menu" } },
-          entry: { label: { normal: "Entry Menu", beginner: "Entry Menu" } },
-          feature: { label: { normal: "Feature Menu", beginner: "Feature Menu" } },
-          group: { label: { normal: "Group Menu", beginner: "Group Menu" } },
-          handle: { label: { normal: "Handle Menu", beginner: "Handle Menu" } },
-          layer: { label: { normal: "Layer Menu", beginner: "Layer Menu" } },
-          object: { label: { normal: "Object Menu", beginner: "Object Menu" } },
-          part: { label: { normal: "Part Menu", beginner: "Part Menu" } },
-          path: { label: { normal: "Path Menu", beginner: "Path Menu" } },
-          pixel: { label: { normal: "Pixel Menu", beginner: "Pixel Menu" } },
-          position: { label: { normal: "Position Menu", beginner: "Position Menu" } },
-          reference: { label: { normal: "Reference Menu", beginner: "Reference Menu" } },
-          route: { label: { normal: "Route Menu", beginner: "Route Menu" } },
-          slider: { label: { normal: "Slider Menu", beginner: "Slider Menu" } },
-          vortex: { label: { normal: "Vortex Menu", beginner: "Vortex Menu" } },
-          file: { label: { normal: "File Menu", beginner: "File Menu" } },
-          workspace: { label: { normal: "Workspace Menu", beginner: "Workspace Menu" } },
-          canvas: { label: { normal: "Canvas Menu", beginner: "Canvas Menu" } },
-          scene: { label: { normal: "Scene Menu", beginner: "Scene Menu" } },
-          placementSuggestions: { label: { normal: "Placement suggestions", beginner: "Placement suggestions" } },
-          node: { label: { normal: "Node Menu", beginner: "Node Menu" } },
-          flow: { label: { normal: "Flow Menu", beginner: "Flow Menu" } },
-          row: { label: { normal: "Row Menu", beginner: "Row Menu" } },
-          paint: { label: { normal: "Paint Menu", beginner: "Paint Menu" } },
-          board: { label: { normal: "Board Menu", beginner: "Board Menu" } },
-          ink: { label: { normal: "Ink Menu", beginner: "Ink Menu" } },
-          history: { label: { normal: "History Menu", beginner: "History Menu" } },
-          step: { label: { normal: "Step Menu", beginner: "Step Menu" } },
-          diff: { label: { normal: "Diff Menu", beginner: "Diff Menu" } },
-          event: { label: { normal: "Event Menu", beginner: "Event Menu" } },
-          editor: { label: { normal: "Editor Menu", beginner: "Editor Menu" } },
-          map: { label: { normal: "Map Menu", beginner: "Map Menu" } },
-        },
-        mutation: {
-          level: {
-            info: { label: { normal: "Info", beginner: "Info" } },
-            warning: { label: { normal: "Warning", beginner: "Warning" } },
-            error: { label: { normal: "Error", beginner: "Error" } },
-            fatal: { label: { normal: "Fatal", beginner: "Fatal error" } },
-          },
-          code: {
-            targetMissing: { label: { normal: "Target missing", beginner: "The target of this change no longer exists." } },
-            noOp: { label: { normal: "No change", beginner: "Nothing changed — the state already matched." } },
-            partial: { label: { normal: "Partially applied", beginner: "Only part of the change could be applied." } },
-            clamped: { label: { normal: "Clamped", beginner: "A value was clamped to its valid range." } },
-            duplicateId: { label: { normal: "Duplicate id", beginner: "An element with this id already exists." } },
-            invariant: { label: { normal: "Invalid state", beginner: "This change would leave the document in an invalid state." } },
-            cascade: { label: { normal: "Cascaded", beginner: "This change triggered further changes." } },
-          },
-          policy: {
-            laissezFaire: {
-              label: { label: { normal: "Laissez-faire", beginner: "Laissez-faire" } },
-              description: { label: { normal: "Accepts every change unless it is fatal.", beginner: "Accepts every change as long as it isn't fatal." } },
-            },
-            normal: {
-              label: { label: { normal: "Normal", beginner: "Normal" } },
-              description: { label: { normal: "Rejects changes with errors, allows warnings.", beginner: "Rejects any change with an error, but allows warnings through." } },
-            },
-            vigilant: {
-              label: { label: { normal: "Vigilant", beginner: "Vigilant" } },
-              description: { label: { normal: "Rejects changes with warnings too.", beginner: "Strictest: rejects a change as soon as it carries a warning." } },
-            },
-            setting: {
-              label: { label: { normal: "Merge policy", beginner: "Merge policy" } },
-            },
-          },
-          rejected: {
-            title: { label: { normal: "Change rejected", beginner: "Change rejected" } },
-            body: { label: { normal: "This change could not be applied.", beginner: "This change could not be applied." } },
-          },
-        },
-        conflict: {
-          panel: { label: { normal: "Conflicts", beginner: "Conflicts" } },
-          accept: { label: { normal: "Accept", beginner: "Accept" } },
-          discard: { label: { normal: "Discard", beginner: "Discard" } },
-          quarantined: { label: { normal: "Held back", beginner: "Incoming changes are held back until you decide." } },
-          degraded: { label: { normal: "Degraded", beginner: "Applied, but with warnings." } },
-          hubRejected: { label: { normal: "Change refused by the hub", beginner: "The hub did not accept your change; it was rolled back." } },
-          hubTransformed: { label: { normal: "Change adjusted", beginner: "A concurrent change won; your change was applied in adjusted form." } },
-          hubConcurrentEdit: { label: { normal: "Someone else changed the same part at the same time", beginner: "Someone else changed the same part at the same time; your change was not applied." } },
-          hubConcurrentInvariant: { label: { normal: "Conflicts with a simultaneous change", beginner: "Your change conflicts with someone else's simultaneous change and was not applied." } },
-        },
-        presence: {
-          roster: { label: { normal: "People here", beginner: "People here" } },
-          empty: { label: { normal: "No one else is here", beginner: "No one else is here" } },
-          overflow: { label: { normal: "+{{count}} more", beginner: "+{{count}} more" } },
-          role: {
-            author: { label: { normal: "Editing", beginner: "Editing" } },
-            spectator: { label: { normal: "Viewing", beginner: "Viewing" } },
-          },
-          kind: {
-            agent: { label: { normal: "AI agent", beginner: "An AI agent someone gave access to" } },
-          },
-        },
-      },
-      settings: {
-        layout: {
-          desktop: {
-            label: {
-              normal: "Desktop layout",
-              beginner: "Use the standard layout optimized for mouse and keyboard.",
-            },
-          },
-          tablet: {
-            label: {
-              normal: "Tablet layout",
-              beginner: "Use the tablet layout with larger, touch-friendly controls.",
-            },
-          },
-          mobile: {
-            label: {
-              normal: "Mobile layout",
-              beginner: "Uses the mobile layout automatically on small screens.",
-            },
-          },
-        },
-        driver: {
-          select: { label: { normal: "Driver", beginner: "Driver" } },
-          default: { label: { normal: "Default", beginner: "Default" } },
-          compact: { label: { normal: "Compact", beginner: "Compact" } },
-          labels: { label: { normal: "Labels", beginner: "Labels" } },
-          labelsOption: {
-            full: { label: { normal: "Full", beginner: "Icon and label" } },
-            icons: { label: { normal: "Icons only", beginner: "Icons only" } },
-          },
-          labelTier: { label: { normal: "Label Tier", beginner: "Label Tier" } },
-          labelTierOption: {
-            beginner: { label: { normal: "Beginner", beginner: "Verbose labels" } },
-            normal: { label: { normal: "Normal", beginner: "Short labels" } },
-          },
-          drag: { label: { normal: "Drag", beginner: "Drag" } },
-          dragOption: {
-            handle: { label: { normal: "Handle", beginner: "Dedicated grip handle" } },
-            surface: { label: { normal: "Surface", beginner: "Whole element draggable" } },
-          },
-          chrome: { label: { normal: "Chrome Reveal", beginner: "Chrome Reveal" } },
-          chromeOption: {
-            always: { label: { normal: "Always", beginner: "Always visible" } },
-            hover: { label: { normal: "On Hover", beginner: "Visible only near the cursor" } },
-          },
-          gumball: { label: { normal: "Gumball Reveal", beginner: "Gumball Reveal" } },
-          gumballOption: {
-            always: { label: { normal: "Always", beginner: "Always visible" } },
-            hover: { label: { normal: "On Hover", beginner: "Visible only near the cursor" } },
-          },
-          tooltips: { label: { normal: "Tooltips", beginner: "Tooltips" } },
-          tooltipsOption: {
-            full: { label: { normal: "Full", beginner: "With manual and tutorial links" } },
-            minimal: { label: { normal: "Minimal", beginner: "Name and hotkey only" } },
-            none: { label: { normal: "None", beginner: "No tooltips" } },
-          },
-          hotkeys: { label: { normal: "Hotkeys", beginner: "Hotkeys" } },
-          hotkeysOption: {
-            inline: { label: { normal: "Inline", beginner: "On the control" } },
-            tooltip: { label: { normal: "Tooltip", beginner: "In tooltip only" } },
-            none: { label: { normal: "None", beginner: "Hidden" } },
-          },
-          save: { label: { normal: "Save As", beginner: "Save As" } },
-          savePlaceholder: { label: { normal: "Driver name", beginner: "Driver name" } },
-          delete: { label: { normal: "Delete", beginner: "Delete" } },
-          dirty: { label: { normal: "Unsaved", beginner: "Unsaved" } },
-        },
-        keybindings: {
-          capture: { label: { normal: "Record", beginner: "Record" } },
-          reset: { label: { normal: "Reset", beginner: "Reset" } },
-          conflict: { label: { normal: "Conflict", beginner: "Already assigned" } },
-          pressKeys: { label: { normal: "Press keys…", beginner: "Press keys…" } },
-        },
-      },
-      tooltip: {
-        manual: {
-          label: {
-            normal: "Manual",
-            beginner: "Manual",
-          },
-        },
-        tutorial: {
-          label: {
-            normal: "Tutorial",
-            beginner: "Tutorial",
-          },
-        },
-      },
-      introduction: {
-        skip: { label: { normal: "Skip", beginner: "Skip" } },
-        back: { label: { normal: "Back", beginner: "Back" } },
-        next: { label: { normal: "Next", beginner: "Next" } },
-        done: { label: { normal: "Done", beginner: "Done" } },
-      },
-      tutorial: {
-        play: { label: { normal: "Play", beginner: "Play" } },
-        pause: { label: { normal: "Pause", beginner: "Pause" } },
-        stop: { label: { normal: "Stop Tutorial", beginner: "Stop Tutorial" } },
-        rate: { label: { normal: "Speed", beginner: "Speed" } },
-        mute: { label: { normal: "Mute", beginner: "Mute" } },
-        captions: { label: { normal: "Captions", beginner: "Captions" } },
-        record: { label: { normal: "Record", beginner: "Record" } },
-        recording: { label: { normal: "Recording", beginner: "Recording" } },
-        addChapter: { label: { normal: "Add Chapter", beginner: "Add Chapter" } },
-        chapter: { label: { normal: "Chapter", beginner: "Chapter" } },
-      },
-    } satisfies UiTranslationSchema,
-  },
-  // #endregion 🇬️🇧️ English Bundle
-} satisfies Record<UiLocale, { readonly translation: UiTranslationSchema }>;
-
 // #region 🔌️I18n Port
-// i18n "port"/wiring glue: registration functions, locale resolvers, the i18next module augmentation, and the shared port instance.
-
-export type UiTranslationLocaleCode = UiLocale;
-
-export type UiTranslationBundlesInput = {
-  readonly [L in UiLocale]: { readonly translation: Record<string, unknown> };
-};
-
-declare module "i18next" {
-  interface CustomTypeOptions {
-    defaultNS: "translation";
-    resources: {
-      readonly en: { readonly translation: UiTranslationSchema };
-      readonly de: { readonly translation: UiTranslationSchema };
-    };
-  }
-}
-
-// UiRegisteredTranslationKey imported from core I18n above/with schema import
-
-/** 🪁️ Merges additional locale bundles into the shared UI i18n instance, requiring every
- * {@link UiLocale} to register the exact same schema `S` (a compile error otherwise — the same
- * both-locales-or-nothing guarantee the domain-neutral chrome bundle gets from `satisfies
- * UiTranslationSchema`). Returns a caster from `S`'s own dot-path key union to {@link UiRegisteredTranslationKey}
- * — the only way callers should obtain a key for their registered strings; passing an unregistered
- * string does not type-check. */
-export function registerUiTranslationBundles<S extends Record<string, unknown>>(bundles: { readonly [L in UiLocale]: { readonly translation: S } }): <K extends DeepUiTranslationKeys<S>>(key: K) => UiRegisteredTranslationKey {
-  applyUiTranslationBundleTo(i18next, bundles);
-  registeredUiTranslationBundles.push(bundles);
-  for (const instance of liveShellI18nInstances) applyUiTranslationBundleTo(instance, bundles);
-  return (key) => key as UiRegisteredTranslationKey;
-}
-
-// #region 🐚️ShellI18n
-/** 🐚️ Every bundle ever registered — the chrome's own domain-neutral one plus every product's, in
- * registration order — replayed onto each new per-shell i18next instance at creation time so an
- * embedded shell has the same translations as the page-owning singleton from its very first render.
- * Seeded with `uiChromeTranslationBundles` itself since that one is loaded directly via `.init({resources})`
- * rather than through `registerUiTranslationBundles`. */
-const registeredUiTranslationBundles: { readonly [L in UiLocale]: { readonly translation: Record<string, unknown> } }[] = [uiChromeTranslationBundles];
-
-/** 🐚️ Every currently-mounted shell's own i18next instance — {@link registerUiTranslationBundles}
- * replays a late-registering bundle (e.g. a lazily-loaded product module importing after some shells
- * already mounted) into each of these too, not just the shared singleton. */
-const liveShellI18nInstances = ephemeralSet<typeof i18next>("framework.modules.ui.packages.typescript.targets.react.index.tsx.liveShellI18nInstances");
-
-function applyUiTranslationBundleTo(instance: typeof i18next, bundle: { readonly [L in UiLocale]: { readonly translation: Record<string, unknown> } }): void {
-  for (const [language, resource] of Object.entries(bundle)) {
-    instance.addResourceBundle(language, "translation", resource.translation, true, true);
-  }
-}
-
-/** 🐚️ Creates and synchronously initializes a fresh i18next instance for one shell, pre-loaded with
- * every bundle registered so far — mirrors {@link initializeUiI18n}'s own synchronous init (`initImmediate:
- * false`) so an embedded shell never flashes untranslated chrome on its first paint either. `react-i18next`
- * resolves the *nearest* `I18nextProvider` ancestor via context, so wrapping a shell's subtree in one
- * (see `FrameworkOsShell`) is the only wiring `useUiTranslation`/`useLabel` call sites need — none of
- * their many call sites throughout this file change. */
-export function createShellI18nInstance(initialLocale: UiLocale): typeof i18next {
-  const instance = i18next.createInstance();
-  instance.use(initReactI18next);
-  void instance.init({
-    resources: {},
-    fallbackLng: "en",
-    supportedLngs: ["en", "de"],
-    nonExplicitSupportedLngs: true,
-    lng: initialLocale,
-    showSupportNotice: false,
-    returnObjects: true,
-    initImmediate: false,
-    interpolation: { escapeValue: false },
-    react: { useSuspense: false, bindI18n: "languageChanged", bindI18nStore: "added removed" },
-  });
-  for (const bundle of registeredUiTranslationBundles) applyUiTranslationBundleTo(instance, bundle);
-  liveShellI18nInstances.add(instance);
-  return instance;
-}
-
-/** 🐚️ Releases a shell's i18next instance on unmount — stops it receiving future
- * {@link registerUiTranslationBundles} replays. */
-export function disposeShellI18nInstance(instance: typeof i18next): void {
-  liveShellI18nInstances.delete(instance);
-}
-// #endregion 🐚️ShellI18n
+// The port lives in `./🌐️i18n/🟦️.ts` (importable alone as `@semio-tech/ui-react/i18n`) and is re-exported here unchanged.
+import {
+  UI_CHROME_LOCALE_STORAGE_KEY,
+  createShellI18nInstance,
+  detectShellLocale,
+  disposeShellI18nInstance,
+  initUiLocaleSync,
+  readStoredUiChromeLocale,
+  registerUiTranslationBundles,
+  setUiLocale,
+  uiChromeTranslationBundles,
+  uiI18n,
+  writeStoredUiChromeLocale,
+  type UiTranslationBundlesInput,
+  type UiTranslationLocaleCode,
+} from "./🌐️i18n/🟦️.ts";
+export { UI_CHROME_LOCALE_STORAGE_KEY, createShellI18nInstance, detectShellLocale, disposeShellI18nInstance, initUiLocaleSync, readStoredUiChromeLocale, registerUiTranslationBundles, setUiLocale, uiChromeTranslationBundles, uiI18n, writeStoredUiChromeLocale };
+export type { UiTranslationBundlesInput, UiTranslationLocaleCode };
 
 //#region 🗣️TsNativeTerminology
-/** 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM plugin boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
+/** @emoji 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM plugin boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
 export type UiTerminologyLabelSet<Keys extends string> = Readonly<Record<UiLocale, Readonly<Record<Keys, string>>>>;
 
-/** 🗣️ Builds a `(terminologyId, locale) -> labels` resolver from a set of terminology-keyed label tables, falling back to `native` for unknown/undeclared ids — the TS analog of the Rust `puzzle2d_labels`-style resolver. */
+/** @emoji 🗣️ Builds a `(terminologyId, locale) -> labels` resolver from a set of terminology-keyed label tables, falling back to `native` for unknown/undeclared ids — the TS analog of the Rust `puzzle2d_labels`-style resolver. */
 export function createTerminologyLabelResolver<Keys extends string>(sets: Readonly<Record<string, UiTerminologyLabelSet<Keys>>>): (terminologyId: string, locale: UiLocale) => Readonly<Record<Keys, string>> {
   return (terminologyId, locale) => (sets[terminologyId] ?? sets[UI_TERMINOLOGY_NATIVE])![locale];
 }
 
 const uiTerminologyChangeListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.uiTerminologyChangeListeners");
 
-/** 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
+/** @emoji 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
 export function useUiTerminology(): { readonly terminology: string; readonly setTerminology: (id: string) => void } {
   const storage = shellScopeStorageOrBrowserFallback(useShellScopeOptional());
   const [terminology, setTerminologyState] = React.useState<string>(() => readStoredUiChromeTerminology(storage));
@@ -4400,110 +2407,6 @@ export function useUiTerminology(): { readonly terminology: string; readonly set
   return { terminology, setTerminology };
 }
 //#endregion 🗣️TsNativeTerminology
-
-function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
-  return language?.toLowerCase().startsWith("de") ? "de" : "en";
-}
-
-/** 🧭️ Maps a BCP47 tag (e.g. `navigator.language`, `"de-AT"`) onto a {@link ShellLocale};
- * defaults to `"en"`. Same rule the chrome's own locale detector uses — exposed so boot code
- * (renderer/demonstrator) can resolve a default before any brand lock is known. */
-export const detectShellLocale = normalizeUiLocale as (language?: string) => ShellLocale;
-
-function resolveRequestedUiLocale(): UiTranslationLocaleCode {
-  // 🐚️ The legacy shared `uiI18n` singleton (kept only for callers not yet wrapped in a `ShellScopeProvider`)
-  // is inherently page-global, so a plain browser-backed port is the correct (and only sensible) storage here.
-  const storedLocale = readStoredUiChromeLocale(createBrowserStoragePort());
-  if (storedLocale) return storedLocale;
-  return normalizeUiLocale(i18next.resolvedLanguage || i18next.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
-}
-
-function registerUiChromeTranslationBundles() {
-  registerUiTranslationBundles(uiChromeTranslationBundles);
-}
-
-function createUiI18nPort(instance: typeof i18next): UiI18nPort {
-  return {
-    t: ((key, options) => instance.t(key as never, options as never)) as UiTranslateFn,
-    exists: (key) => instance.exists(key),
-    changeLanguage: (locale) => instance.changeLanguage(locale),
-    get language() {
-      return instance.language;
-    },
-    get resolvedLanguage() {
-      return instance.resolvedLanguage;
-    },
-    get isInitialized() {
-      return instance.isInitialized;
-    },
-  };
-}
-
-function initializeUiI18n(): UiI18nPort {
-  const requestedLocale = resolveRequestedUiLocale();
-
-  if (i18next.isInitialized) {
-    registerUiChromeTranslationBundles();
-    if (i18next.language !== requestedLocale) {
-      void i18next.changeLanguage(requestedLocale);
-    }
-    return createUiI18nPort(i18next);
-  }
-
-  i18next.use(initReactI18next);
-
-  void i18next.init({
-    resources: uiChromeTranslationBundles,
-    fallbackLng: "en",
-    supportedLngs: ["en", "de"],
-    nonExplicitSupportedLngs: true,
-    lng: requestedLocale,
-    showSupportNotice: false,
-    returnObjects: true,
-    // 🚀️ Resources are bundled inline above (no backend fetch), so there is nothing to await —
-    // forces synchronous readiness instead of deferring to a microtask, which is what let the
-    // very first paint render with i18next still uninitialized (the English-chrome flash this
-    // ticket fixes; see `initUiLocaleSync`).
-    initImmediate: false,
-    interpolation: {
-      escapeValue: false,
-    },
-    react: {
-      useSuspense: false,
-      bindI18n: "languageChanged",
-      bindI18nStore: "added removed",
-    },
-  });
-
-  return createUiI18nPort(i18next);
-}
-
-/** 🪁️ Shared UI i18n port (domain-neutral bundles; extend via {@link registerUiTranslationBundles}). */
-export const uiI18n = initializeUiI18n();
-
-/** 🪁️ Sets the active UI locale on the shared i18n port (user-initiated, in-app switch —
- * for boot-time/brand-locked locale resolution, use {@link initUiLocaleSync} instead, which runs
- * before the first render rather than in a post-paint effect). */
-export function setUiLocale(locale: UiLocale): Promise<unknown> {
-  if (typeof document !== "undefined") document.documentElement.lang = locale;
-  return uiI18n.changeLanguage(locale);
-}
-
-/** 🚀️ Resolves the shell's locale synchronously, before the first React render — call this
- * at renderer/demonstrator boot (module scope or before `ReactDOM.createRoot(...).render(...)`),
- * never from a `useEffect`. A `useEffect`-based call runs after the first paint has already
- * committed, which is exactly how a German-locked brand could still flash English chrome
- * ("Skip"/"Back"/"Next"/"Done") on first load. Persists the locale (so a reload's
- * `resolveRequestedUiLocale` agrees) and sets `documentElement.lang` synchronously; also nudges the
- * already-initialized i18next instance in case this runs after `uiI18n`'s own module-load default
- * resolved differently. */
-export function initUiLocaleSync(locale: ShellLocale): void {
-  // 🐚️ Page-owning boot code only (renderer/demonstrator, before `createRoot(...).render(...)`) — a
-  // plain browser-backed port is correct here, same as `resolveRequestedUiLocale`.
-  writeStoredUiChromeLocale(createBrowserStoragePort(), locale);
-  if (typeof document !== "undefined") document.documentElement.lang = locale;
-  if (i18next.language !== locale) void i18next.changeLanguage(locale);
-}
 
 // #endregion 🔌️I18n Port
 
@@ -4533,7 +2436,7 @@ export function useActionHotkey(
   useHotkeys(finalHotkey, callback, options ?? {}, dependencies ?? []);
 }
 
-/** ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
+/** @emoji ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
 export const PANEL_TOGGLE_HOTKEYS: Record<Anchor, string> = {
   "top-left": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["top-left"]],
   "top-middle": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["top-middle"]],
@@ -4596,7 +2499,7 @@ export function useMediaQuery(query: string, defaultValue = false): boolean {
 // #region 📱️UiMobile Context
 const UiMobileContext = reactHostPort.createContext<boolean | undefined>(undefined);
 
-/** 📱️ Broadcasts the shell's authoritative mobile flag to descendants (e.g. {@link Pane}, {@link Window}) that have no `mobile` prop of their own. */
+/** @emoji 📱️ Broadcasts the shell's authoritative mobile flag to descendants (e.g. {@link Pane}, {@link Window}) that have no `mobile` prop of their own. */
 export const UiMobileProvider: React.FC<{
   readonly mobile: boolean;
   readonly children: React.ReactNode;
@@ -4604,7 +2507,7 @@ export const UiMobileProvider: React.FC<{
 
 const UiDeviceContext = reactHostPort.createContext<ElementsSurfaceDevice | undefined>(undefined);
 
-/** 📱️ Broadcasts the shell's authoritative device to descendants — the three-way twin of
+/** @emoji 📱️ Broadcasts the shell's authoritative device to descendants — the three-way twin of
  * {@link UiMobileProvider}, used when a shell pins a device from settings instead of measuring one. */
 export const UiDeviceProvider: React.FC<{
   readonly device: ElementsSurfaceDevice;
@@ -4616,7 +2519,7 @@ export const UiDeviceProvider: React.FC<{
 );
 
 /**
- * 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
+ * @emoji 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
  * measured through the ONE policy `📱️device/🟦️.ts` shares with the wgpu dock.
  *
  * `AGENTS.md` orders the devices desktop → mobile → tablet and the settings surface has always offered
@@ -4635,7 +2538,7 @@ export function useUiDevice(): ElementsSurfaceDevice {
   return elementsSurfaceDeviceForMatches({ mobile: mobileMedia, tablet: tabletMedia });
 }
 
-/** 📱️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
+/** @emoji 📱️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
 export function useUiMobile(): boolean {
   const media = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const ctx = reactHostPort.useContext(UiMobileContext);
@@ -4705,7 +2608,7 @@ export enum SectionSpecificity {
 
 const PANEL_GHOST_MOVE_THRESHOLD_PX = 4;
 
-/** 👻️ Global ghost session API (begin/end while dragging or editing). */
+/** @emoji 👻️ Global ghost session API (begin/end while dragging or editing). */
 export interface PanelGhostValue {
   readonly active: boolean;
   readonly begin: (target: EventTarget | null) => void;
@@ -4714,7 +2617,7 @@ export interface PanelGhostValue {
 
 const PanelGhostContext = reactHostPort.createContext<PanelGhostValue | undefined>(undefined);
 
-/** 👻️ Returns the global ghost controller when inside {@link GhostProvider}. */
+/** @emoji 👻️ Returns the global ghost controller when inside {@link GhostProvider}. */
 export const usePanelGhost = (): PanelGhostValue | undefined => reactHostPort.useContext(PanelGhostContext);
 
 interface InteractionCommands {
@@ -4724,7 +2627,7 @@ interface InteractionCommands {
 const InteractionContext = reactHostPort.createContext<InteractionCommands | undefined>(undefined);
 const ActiveInteractionContext = reactHostPort.createContext<string | undefined>(undefined);
 
-/** 🔤️ External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
+/** @emoji 🔤️ External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
 export const InteractionProvider: React.FC<{
   commands?: InteractionCommands;
   activeInteraction?: string;
@@ -4752,7 +2655,7 @@ function findGhostRegionAncestor(target: Element): Element | null {
   return null;
 }
 
-/** 📐️ Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
+/** @emoji 📐️ Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
 function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   const slotted = target.closest("[data-slot]");
@@ -4761,7 +2664,7 @@ function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
   return slot === "pane-resize-handle" || slot === "panel-resize-handle" || slot === "resizable-handle" || slot === "resizable-corner" || slot.startsWith("window-measures-resize");
 }
 
-/** 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
+/** @emoji 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
 export function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   if (isChromeResizeHandleTarget(target)) return false;
@@ -4866,7 +2769,7 @@ function useGhostController(): GhostController {
   return reactHostPort.useMemo(() => ({ active, begin, end, commands, activeInteraction }), [active, activeInteraction, begin, commands, end]);
 }
 
-/** 👻️ Mounts global ghost detection and interaction context for layout + panels. */
+/** @emoji 👻️ Mounts global ghost detection and interaction context for layout + panels. */
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ghost = useGhostController();
   reactHostPort.useEffect(() => {
@@ -4885,13 +2788,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
-  /** 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
+  /** @emoji 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
   clickThroughWhenGhost?: boolean;
-  /** 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
+  /** @emoji 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
   sessionGhost?: boolean;
 }
 
-/** 👻️ Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
+/** @emoji 👻️ Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
 export const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell({ children, className, style, clickThroughWhenGhost = false, sessionGhost = true, ...props }, ref) {
   const ghost = usePanelGhost();
   const ghostActive = Boolean(sessionGhost && ghost?.active);
@@ -4913,7 +2816,7 @@ interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-/** 👻️ Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
+/** @emoji 👻️ Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
 export const PanelGhostRoot = reactHostPort.forwardRef<HTMLDivElement, PanelGhostRootProps>(function PanelGhostRoot({ children, className, style, ...props }, ref) {
   const level = useLevel();
   return (
@@ -4935,17 +2838,17 @@ export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto f
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
-/** 🎓️ Converts a viewport (getBoundingClientRect) box into coordinates local to `host`. */
+/** @emoji 🎓️ Converts a viewport (getBoundingClientRect) box into coordinates local to `host`. */
 export function introductionRectRelativeToHost(rect: IntroductionRect, hostRect: IntroductionRect): IntroductionRect {
   return { top: rect.top - hostRect.top, left: rect.left - hostRect.left, width: rect.width, height: rect.height };
 }
 
-/** 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
+/** @emoji 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
 export function introductionPointRelativeToHost(point: { readonly x: number; readonly y: number }, hostRect: IntroductionRect): { readonly x: number; readonly y: number } {
   return { x: point.x - hostRect.left, y: point.y - hostRect.top };
 }
 
-/** 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
+/** @emoji 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
  * {@link elementIdSelector}), stamping every match `data-introduced="true"` (pulsing the introduced border, see
  * `framework/ui/styling/js/🎨️ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
  * window id that aliases every open instance (Top + Perspective) therefore pulses and anchors against the
@@ -5055,7 +2958,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
   return rect;
 }
 
-/** 🎓️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
+/** @emoji 🎓️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
  * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/🎨️ui.css`) on its nearest
  * `[data-slot="mode-dock-stack"]` (full window silhouette: tabs + gap + controls + body) or else its
  * nearest `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
@@ -5137,7 +3040,7 @@ type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number
 
 export const INTRODUCTION_INFO_BOX_GAP_PX = 16;
 
-/** 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
+/** @emoji 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
  * paragraph can emphasize independently on hover. */
 export function splitIntroductionBodyParagraphs(body: string): readonly string[] {
   return body
@@ -5146,7 +3049,7 @@ export function splitIntroductionBodyParagraphs(body: string): readonly string[]
     .filter((paragraph) => paragraph.length > 0);
 }
 
-/** 🧲️ Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
+/** @emoji 🧲️ Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
  * direct manipulation uses zero so every outer edge can meet the corresponding viewport border. */
 export function clampIntroductionInfoBoxPosition(
   position: IntroductionInfoBoxPosition,
@@ -5160,7 +3063,7 @@ export function clampIntroductionInfoBoxPosition(
   };
 }
 
-/** 🎓️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
+/** @emoji 🎓️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
  * viewport space; `center` (and any anchor-less step) centers the box in the viewport.
  *
  * 🧲️ EVERY branch clamps, the centered one included: centering a box that is wider or taller than the
@@ -5204,7 +3107,7 @@ export function resolveIntroductionPlacement(
 }
 
 //#region 🎬️DemonstrationProjectors
-/** 🏷️ What a surface resolver returns for `IntroductionPoint.Entity`/`Curve`/`Domain`: a viewport
+/** @emoji 🏷️ What a surface resolver returns for `IntroductionPoint.Entity`/`Curve`/`Domain`: a viewport
  * pixel anchor plus whatever richer geometry the surface can offer — `rect` for offset-within-bounds and
  * domain-to-track mapping, `polyline` (viewport px) for arc-length curve targeting, `domain` for mapping
  * a value onto `rect`. `visible: false` means "found but not currently resolvable" (off-camera, hidden,
@@ -5217,7 +3120,7 @@ export type IntroductionResolvedGeometry = {
   readonly visible: boolean;
 };
 
-/** 🧭️ A surface's live-camera/live-entity capabilities for demonstration targeting, registered per
+/** @emoji 🧭️ A surface's live-camera/live-entity capabilities for demonstration targeting, registered per
  * window element id by the surface that owns the data (a react-three-fiber `useThree` bridge, a WASM
  * canvas session, a DOM-rendered host). Every method may be omitted — a surface implements only the point
  * kinds it can genuinely resolve. All three are called every animation frame; implementations must be
@@ -5234,7 +3137,7 @@ export type IntroductionSurfaceResolver = {
 
 const introductionSurfaceResolvers = ephemeralMap<string, IntroductionSurfaceResolver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.introductionSurfaceResolvers");
 
-/** 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
+/** @emoji 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
  * `windowId` — call from the window's own host component (has the live camera/session/DOM refs),
  * unregister on unmount via the returned disposer. Multiple concurrently open instances of the same
  * window kind (split panes) last-write-wins; acceptable for a single demonstration target. */
@@ -5245,7 +3148,7 @@ export function registerIntroductionSurfaceResolver(windowId: string, resolver: 
   };
 }
 
-/** 🧊️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
+/** @emoji 🧊️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
 export function ndcToViewportPoint(ndc: { readonly x: number; readonly y: number }, rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): { readonly x: number; readonly y: number } {
   return { x: rect.left + ((ndc.x + 1) / 2) * rect.width, y: rect.top + ((1 - ndc.y) / 2) * rect.height };
 }
@@ -5254,7 +3157,7 @@ export function ndcToViewportPoint(ndc: { readonly x: number; readonly y: number
 //#region 🎬️DemonstrationResolve
 type IntroductionResolvedPoint = { readonly x: number; readonly y: number };
 
-/** 🪡️ A point at `t` (0–1, clamped) along `points` by arc length — linearly interpolates between
+/** @emoji 🪡️ A point at `t` (0–1, clamped) along `points` by arc length — linearly interpolates between
  * the two points straddling `t`'s cumulative distance. Degenerate inputs (0 or 1 points, zero-length
  * polyline) return the first point (or the origin) for every `t`, never throw. */
 export function polylinePointAt(points: readonly { readonly x: number; readonly y: number }[], t: number): { readonly x: number; readonly y: number } {
@@ -5284,7 +3187,7 @@ export function polylinePointAt(points: readonly { readonly x: number; readonly 
   return points[points.length - 1];
 }
 
-/** 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
+/** @emoji 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
  * coordinate space the caller's points are already expressed in — apply layer transforms before calling)
  * into a flat polyline via de Casteljau evaluation — the one parametric-curve evaluator this codebase has,
  * needed because `IntroductionPoint.Curve` resolves through arc-length interpolation over a polyline, not
@@ -5337,7 +3240,7 @@ export function sampleBezierSegments(
   return points;
 }
 
-/** 📌️ Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
+/** @emoji 📌️ Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
  * playing demonstration — re-resolving (rather than caching) keeps a drag path glued to a target that's
  * still moving (a resizing panel, an orbiting 3D camera, a panning 2D canvas). `null` means "not
  * resolvable yet" (element not mounted, no surface resolver registered, entity not found/hidden, or a 3D
@@ -5424,7 +3327,7 @@ type IntroductionPointerIdleState = {
   readonly lastPositionRef: React.RefObject<IntroductionPointerPosition | null>;
 };
 
-/** 💤️ Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
+/** @emoji 💤️ Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
  * demonstration plays behind — and where it last was. Any `pointerdown`/`wheel`/`keydown`, or a
  * `pointermove` with different coordinates or non-zero movement deltas, resets the timer and flips back
  * to not-idle immediately. Same-coordinate, zero-delta moves are ignored because browsers re-fire them
@@ -5503,7 +3406,7 @@ type IntroductionDemoVisual = {
   readonly showDoubleChip: boolean;
 };
 
-/** 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
+/** @emoji 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
 export function introductionDemoResolveVisual(gesture: IntroductionGesture): IntroductionDemoVisual {
   switch (gesture.kind) {
     case "leftClick":
@@ -5535,7 +3438,7 @@ function introductionDemoRippleClass(feedback: IntroductionDemoFeedbackKind, dou
   return double ? `${base} introduction-demo-ripple--double` : base;
 }
 
-/** 🌐️ A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
+/** @emoji 🌐️ A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
  * straight line between them — an `orbit` gesture reads as a curved rotation around a pivot, visually
  * distinct from `drag`'s straight-line pan/reposition. */
 export function introductionDemoArcPoint(from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, t: number): IntroductionResolvedPoint {
@@ -5586,7 +3489,7 @@ function introductionDemoLerp(a: number, b: number, t: number): number {
 
 const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
 
-/** 🎬️ Ghost-cursor gesture demonstration(s) for an introduction step, mounted by `UIIntroduction`
+/** @emoji 🎬️ Ghost-cursor gesture demonstration(s) for an introduction step, mounted by `UIIntroduction`
  * whenever it has one or more effective demonstrations. Plays them in order, one full gesture-loop each,
  * then wraps back to the first — e.g. a viewport step showing zoom, then pan, then orbit, repeating.
  * Plays only while {@link useIntroductionPointerIdle} is true — any real pointer movement hides it and
@@ -5918,7 +3821,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
   );
 };
 
-/** 🎬️ The default demonstration for a purely informational step (`interactions.length === 0`, the
+/** @emoji 🎬️ The default demonstration for a purely informational step (`interactions.length === 0`, the
  * Next/Done button is the only way to continue) — clicking `ui.introduction.next`, the stable id every
  * such button renders under regardless of its Next/Done label. Used by `UIIntroduction` whenever the step
  * doesn't declare its own `demonstration`, so authors never have to spell this out per step. */
@@ -5934,7 +3837,7 @@ export type UIIntroductionProps = {
   readonly onDismiss: (completed: boolean) => void;
 };
 
-/** 🗺️ Resolves manifest-localized copy at the UI boundary while retaining support for already-resolved TS-native strings. */
+/** @emoji 🗺️ Resolves manifest-localized copy at the UI boundary while retaining support for already-resolved TS-native strings. */
 export function resolveUiLocalizedText(value: unknown, terminology: string, locale: UiLocale): string {
   if (typeof value === "string") return value;
   if (value === null || typeof value !== "object") return "";
@@ -5946,7 +3849,7 @@ export function resolveUiLocalizedText(value: unknown, terminology: string, loca
   return typeof resolved === "string" ? resolved : "";
 }
 
-/** 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
+/** @emoji 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
  * so the row fills its full width edge-to-edge with no logo dominating over another — the height isn't
  * guessed: it's solved from the row's measured width and each logo's own natural aspect ratio (`width /
  * sum-of-aspect-ratios`, accounting for the `gap-double` between logos), so it's exactly right for
@@ -6003,7 +3906,7 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
   );
 }
 
-/** 🎓️ Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
+/** @emoji 🎓️ Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
  * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it (header {@link DragHandle} between title and step count repositions the box
@@ -6318,7 +4221,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
 // #region 🎥️Tutorial
 //#region 🎬️TutorialEngine
-/** ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */
+/** @emoji ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */
 export function formatTutorialTime(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -6326,7 +4229,7 @@ export function formatTutorialTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** ✂️ Every cue whose `[at, at + durationMs)` window covers `atMs` — shared by narration/video/gesture track lookups. */
+/** @emoji ✂️ Every cue whose `[at, at + durationMs)` window covers `atMs` — shared by narration/video/gesture track lookups. */
 export function tutorialCuesBetween<T extends { readonly at: number; readonly durationMs: number }>(cues: readonly T[], atMs: number): readonly T[] {
   return cues.filter((cue) => atMs >= cue.at && atMs < cue.at + cue.durationMs);
 }
@@ -6339,7 +4242,7 @@ function tutorialLerp3(a: readonly [number, number, number], b: readonly [number
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
-/** 🎥️ TS port of Rust `interpolate_tutorial_camera` — same semantics (log-space zoom, ease-in-out/linear/hold curves, mismatched-kind snap). Keep in lockstep with `framework/core/rs/lib.rs`'s `//#region 🔖️TutorialEngine`. */
+/** @emoji 🎥️ TS port of Rust `interpolate_tutorial_camera` — same semantics (log-space zoom, ease-in-out/linear/hold curves, mismatched-kind snap). Keep in lockstep with `framework/core/rs/lib.rs`'s `//#region 🔖️TutorialEngine`. */
 export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: TutorialCameraKeyframe, atMs: number): TutorialCameraState {
   const span = Math.max(next.at - prev.at, 1);
   const raw = Math.min(1, Math.max(0, (atMs - prev.at) / span));
@@ -6361,7 +4264,7 @@ export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: Tu
   return t < 0.5 ? prevCamera : nextCamera;
 }
 
-/** 🎥️ TS port of Rust `tutorial_camera_at`. */
+/** @emoji 🎥️ TS port of Rust `tutorial_camera_at`. */
 export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs: number): TutorialCameraState | undefined {
   const keyframes = [...def.base.cameras, ...def.tracks.camera].filter((keyframe) => keyframe.windowId === windowId);
   const first = keyframes[0];
@@ -6375,7 +4278,7 @@ export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs
   return keyframes[keyframes.length - 1].camera;
 }
 
-/** 🩹️ TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
+/** @emoji 🩹️ TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
 export function applyTutorialUiChange(state: TutorialUiSnapshot, change: TutorialUiChange): TutorialUiSnapshot {
   switch (change.kind) {
     case "activeMode":
@@ -6420,7 +4323,7 @@ export function applyTutorialUiChange(state: TutorialUiSnapshot, change: Tutoria
   }
 }
 
-/** 🧮️ TS port of Rust `compose_tutorial_ui`. */
+/** @emoji 🧮️ TS port of Rust `compose_tutorial_ui`. */
 export function composeTutorialUi(def: TutorialDefinition, atMs: number): TutorialUiSnapshot {
   let state = def.base.ui;
   let deltas: TutorialUiChange[] = [];
@@ -6437,7 +4340,7 @@ export function composeTutorialUi(def: TutorialDefinition, atMs: number): Tutori
   return state;
 }
 
-/** ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
+/** @emoji ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
 export type TutorialSlice = {
   readonly forward: boolean;
   readonly events: readonly TutorialEvent[];
@@ -6445,7 +4348,7 @@ export type TutorialSlice = {
   readonly uiChanges: readonly TutorialUiChange[];
 };
 
-/** ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
+/** @emoji ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
  * backward: newest→oldest so `Edit.backwards` unwind in the right order). Never spans a
  * `TutorialUiSample::Snapshot` boundary correctly on its own — a seek/scrub must call
  * {@link composeTutorialUi} wholesale instead, exactly like the Rust doc comment warns. */
@@ -6469,7 +4372,7 @@ export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: num
   return { forward, events, document, uiChanges };
 }
 
-/** ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
+/** @emoji ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
 export function validateTutorial(def: TutorialDefinition): string | null {
   const sortedByAt = <T,>(label: string, items: readonly T[], at: (item: T) => number): string | null => {
     let last: number | null = null;
@@ -6513,13 +4416,13 @@ export function validateTutorial(def: TutorialDefinition): string | null {
 //#endregion 🎬️TutorialEngine
 
 //#region 🎬️TutorialClock
-/** ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
+/** @emoji ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
 export type TutorialClockPort = {
   readonly getTimeMs: () => number;
   readonly subscribe: (callback: () => void) => () => void;
 };
 
-/** ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
+/** @emoji ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
 export type TutorialClock = TutorialClockPort & {
   readonly play: () => void;
   readonly pause: () => void;
@@ -6531,7 +4434,7 @@ export type TutorialClock = TutorialClockPort & {
   readonly dispose: () => void;
 };
 
-/** ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
+/** @emoji ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
 export function createTutorialClock(durationMs: number): TutorialClock {
   let tMs = 0;
   let rate = 1;
@@ -6598,14 +4501,14 @@ export function createTutorialClock(durationMs: number): TutorialClock {
   };
 }
 
-/** ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
+/** @emoji ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
 export function useTutorialClock(clock: TutorialClockPort): number {
   return reactHostPort.useSyncExternalStore(clock.subscribe, clock.getTimeMs, clock.getTimeMs);
 }
 //#endregion 🎬️TutorialClock
 
 //#region 🎬️TutorialCameraDriver
-/** 🎥️ A live 3D/2D window's imperative camera bridge for tutorial playback — modeled exactly on {@link registerIntroductionSurfaceResolver}. `get` reads the surface's current live pose (for deviation-then-play convergence); `set` writes a pose during playback/seek. */
+/** @emoji 🎥️ A live 3D/2D window's imperative camera bridge for tutorial playback — modeled exactly on {@link registerIntroductionSurfaceResolver}. `get` reads the surface's current live pose (for deviation-then-play convergence); `set` writes a pose during playback/seek. */
 export type TutorialCameraDriver = {
   readonly get: () => TutorialCameraState | null;
   readonly set: (camera: TutorialCameraState) => void;
@@ -6613,7 +4516,7 @@ export type TutorialCameraDriver = {
 
 const tutorialCameraDrivers = ephemeralMap<string, TutorialCameraDriver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.tutorialCameraDrivers");
 
-/** 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
+/** @emoji 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
 export function registerTutorialCameraDriver(windowId: string, driver: TutorialCameraDriver): () => void {
   tutorialCameraDrivers.set(windowId, driver);
   return () => {
@@ -6621,7 +4524,7 @@ export function registerTutorialCameraDriver(windowId: string, driver: TutorialC
   };
 }
 
-/** 🎥️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
+/** @emoji 🎥️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
 export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver | undefined {
   return tutorialCameraDrivers.get(windowId);
 }
@@ -6630,7 +4533,7 @@ export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver 
 //#region 🎬️TutorialBar
 const TUTORIAL_RATES = [0.5, 1, 1.5, 2] as const;
 
-/** ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
+/** @emoji ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
 function nextTutorialRate(rate: number): number {
   const index = TUTORIAL_RATES.indexOf(rate as (typeof TUTORIAL_RATES)[number]);
   return TUTORIAL_RATES[(index === -1 ? 0 : index + 1) % TUTORIAL_RATES.length];
@@ -6659,7 +4562,7 @@ export type TutorialBarProps = {
   readonly onAddChapter: () => void;
 };
 
-/** 🎥️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
+/** @emoji 🎥️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
 export const TutorialBar: React.FC<TutorialBarProps> = ({
   title,
   durationMs,
@@ -6755,7 +4658,7 @@ export type TutorialCaptionsProps = {
   readonly visible: boolean;
 };
 
-/** 💬️ Bottom-center glass strip showing the active narration cue's caption text — hidden entirely when `visible` is false (captions toggled off) or no cue currently covers the playhead. Reuses {@link GLASS_OVERLAY_BOX_CLASS}'s panel glass tier, positioned bottom-center instead of anchored. */
+/** @emoji 💬️ Bottom-center glass strip showing the active narration cue's caption text — hidden entirely when `visible` is false (captions toggled off) or no cue currently covers the playhead. Reuses {@link GLASS_OVERLAY_BOX_CLASS}'s panel glass tier, positioned bottom-center instead of anchored. */
 export const TutorialCaptions: React.FC<TutorialCaptionsProps> = ({ text, visible }) => {
   if (!visible || !text) return null;
   return (
@@ -6777,7 +4680,7 @@ export type TutorialVideoOverlayProps = {
   readonly localTimeMs: number;
 };
 
-/** 📹️ Fixed `<video>` positioned via the active cue's normalized {@link TutorialOverlayRect}, resynced to the playhead every render (hard reseek past a 300ms drift, matching the plan's tolerance) rather than played independently. */
+/** @emoji 📹️ Fixed `<video>` positioned via the active cue's normalized {@link TutorialOverlayRect}, resynced to the playhead every render (hard reseek past a 300ms drift, matching the plan's tolerance) rather than played independently. */
 export const TutorialVideoOverlay: React.FC<TutorialVideoOverlayProps> = ({ src, rect, muted, playing, rate, localTimeMs }) => {
   const videoRef = reactHostPort.useRef<HTMLVideoElement | null>(null);
   reactHostPort.useEffect(() => {
@@ -6814,7 +4717,7 @@ export type TutorialGhostPointerProps = {
   readonly progress: number;
 };
 
-/** 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
+/** @emoji 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
 export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue, progress }) => {
   const [point, setPoint] = reactHostPort.useState<{ readonly x: number; readonly y: number } | null>(null);
   // 🐚️ See `IntroductionDemonstrationOverlay`'s doc for why this falls back to `document.documentElement`.
@@ -6874,7 +4777,7 @@ export { UIDialog, type UIDialogProps, type UIDialogFieldBinding };
 // #endregion 🗨️Dialog
 
 // #region 🎈️Level Context
-/** 📚️ Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
+/** @emoji 📚️ Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
 import {
   type Level,
   LEVELS,
@@ -6912,91 +4815,91 @@ export {
   setSurfaceActiveRoot,
 };
 
-/** 📏️ Emphasized shell stroke for active/selected chrome accents. */
+/** @emoji 📏️ Emphasized shell stroke for active/selected chrome accents. */
 export const borderEmphasizedClass = "!border-emphasized";
 
-/** 📏️ Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
+/** @emoji 📏️ Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
 export const borderEmphasizedFrameClass = `box-border border border-solid ${borderEmphasizedClass}`;
 
-/** 📏️ Emphasized navbar bottom edge. */
+/** @emoji 📏️ Emphasized navbar bottom edge. */
 export const borderEmphasizedBottomClass = `border-b ${borderEmphasizedClass}`;
 
-/** 📏️ Emphasized footer top edge. */
+/** @emoji 📏️ Emphasized footer top edge. */
 export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
 
-/** 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
+/** @emoji 📏️ Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
 
-/** 📏️ Normal chrome frame (`border` + {@link borderNormalClass}); panel/pane hosts prefer {@link shellChromeFrameLayerClass} + CSS parent-hover. */
+/** @emoji 📏️ Normal chrome frame (`border` + {@link borderNormalClass}); panel/pane hosts prefer {@link shellChromeFrameLayerClass} + CSS parent-hover. */
 export const borderNormalFrameClass = `box-border border border-solid ${borderNormalClass}`;
 
-/** 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
+/** @emoji 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
 
-/** 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
+/** @emoji 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
 export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
-/** 📏️ Active window chrome line when that stack is globally active. */
+/** @emoji 📏️ Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
-/** 🪟️ Shell outline — normal gray frame; emphasized while the pointer is inside the parent `[data-slot="panel"]` / `[data-slot="pane"]`. */
+/** @emoji 🪟️ Shell outline — normal gray frame; emphasized while the pointer is inside the parent `[data-slot="panel"]` / `[data-slot="pane"]`. */
 export const shellChromeBorderClass = borderNormalFrameClass;
 
-/** 🪟️ Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
+/** @emoji 🪟️ Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
 export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 z-30 box-border bg-transparent";
 
-/** 🪟️ Frosted floating menu/popover surface for technology renderer overlays — menu tier; host element must also carry `data-level="menu"` (Radix-portal-style consumers stamp their own content root). */
+/** @emoji 🪟️ Frosted floating menu/popover surface for technology renderer overlays — menu tier; host element must also carry `data-level="menu"` (Radix-portal-style consumers stamp their own content root). */
 export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 // #region 📋️MenuItem
 import { MenuItem, menuItemClassName, type MenuItemProps } from "../../🧱️elements/📋️MenuItem/🟦️.tsx";
 export { MenuItem, menuItemClassName, type MenuItemProps };
 
-/** 🪟️ Action row inside {@link floatingMenuSurfaceClass}. */
+/** @emoji 🪟️ Action row inside {@link floatingMenuSurfaceClass}. */
 export const floatingMenuItemClass = menuItemClassName;
 // #endregion 📋️MenuItem
 
-/** 🪟️ Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
+/** @emoji 🪟️ Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
 export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", shellChromeBorderClass, glassClass);
 
-/** 🪟️ Frosted compact ribbon chrome (projection switch, align controls) — window-level chrome; host element must also carry `data-level="window"`. */
+/** @emoji 🪟️ Frosted compact ribbon chrome (projection switch, align controls) — window-level chrome; host element must also carry `data-level="window"`. */
 export const floatingRibbonSurfaceClass = cn("overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass, glassClass);
 
-/** 🪟️ Frosted inline field/action shell inside editor asides — menu tier (fallback); host element must also carry `data-level="menu"`. */
+/** @emoji 🪟️ Frosted inline field/action shell inside editor asides — menu tier (fallback); host element must also carry `data-level="menu"`. */
 export const floatingFieldSurfaceClass = cn(glassClass, "relative overflow-visible rounded-md border", borderNormalClass);
 
-/** 🪟️ Golden-window host root for technology canvases inside {@link ProductShell} — base level (the floor windows float on); host element must also carry `data-level="base"`. */
+/** @emoji 🪟️ Golden-window host root for technology canvases inside {@link ProductShell} — base level (the floor windows float on); host element must also carry `data-level="base"`. */
 export const canvasHostRootClass = cn("relative flex h-full min-h-0 w-full min-w-0 flex-col text-element font-sans", surfaceClass);
 
-/** 🪟️ Full-viewport standalone editor shell (outside golden windows) — base level. */
+/** @emoji 🪟️ Full-viewport standalone editor shell (outside golden windows) — base level. */
 export const editorShellRootClass = cn("text-element flex h-screen min-h-0 w-full flex-row font-sans", surfaceClass);
 
-/** 🏷️ Toggle chip for layer/filter controls in technology renderers. */
+/** @emoji 🏷️ Toggle chip for layer/filter controls in technology renderers. */
 export const floatingTagClass = cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs text-element", borderNormalClass);
 
 export const floatingTagOnClass = "bg-accent text-accent-foreground";
 export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 
-/** 🪟️ Canvas viewport surface inside a host root. */
+/** @emoji 🪟️ Canvas viewport surface inside a host root. */
 export const canvasViewportClass = cn("relative h-full min-h-0 w-full min-w-0 outline-none", surfaceClass);
 
-/** 📑️ Panel tab strip scroll row — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally. */
+/** @emoji 📑️ Panel tab strip scroll row — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally. */
 const panelTabBarScrollClass = "ui-scrollbar-hidden relative z-40 flex min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
-/** 📑️ Panel tab strip base — `w-full` spans chrome/mobile dividers across the row; floating panel caps omit it so the U-gap opens after the last tab. */
+/** @emoji 📑️ Panel tab strip base — `w-full` spans chrome/mobile dividers across the row; floating panel caps omit it so the U-gap opens after the last tab. */
 const panelTabBarBaseClass = cn(panelTabBarScrollClass, "w-full");
 
-/** 📑️ Panel tab strip with its divider on the content-facing side. */
+/** @emoji 📑️ Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
 
-/** 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
+/** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 
-/** 📑️ Panel tab label beside the icon. */
+/** @emoji 📑️ Panel tab label beside the icon. */
 
-/** 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
-/** 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
+/** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
+/** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
 export const panelTabButtonDividerClass = "border-e border-solid !border-normal last:border-e-0";
 
-/** 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
-/** 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
+/** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
+/** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 export const panelTabButtonClass = cn(
   "inline-flex min-h-0 shrink-0 items-center gap-tiny bg-transparent p-0",
   panelTabButtonDividerClass,
@@ -7007,13 +4910,13 @@ export const panelTabButtonClass = cn(
   hoverExcludingHandleTextEmphasizedClass,
 );
 
-/** 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
+/** @emoji 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
 export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
   return cn(panelTabBarScrollClass, "h-medium", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
 }
 
-/** 📑️ Panel tab button padding. */
-/** 📑️ Panel tab button padding. */
+/** @emoji 📑️ Panel tab button padding. */
+/** @emoji 📑️ Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
 // #region 🫳️DragAffordance
@@ -7021,8 +4924,8 @@ import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../🧱️elements/🧱�
 export { DragHandle, HANDLE_HOVER_SCOPE_ATTR };
 // #endregion 🫳️DragAffordance
 
-/** 📑️ Shared panel/mobile panel tab bar variant. */
-/** 📑️ `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
+/** @emoji 📑️ Shared panel/mobile panel tab bar variant. */
+/** @emoji 📑️ `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
 // #region 📑️PanelTabBar
 import {
   reconcileActivePath,
@@ -7074,17 +4977,17 @@ export {
 
 export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
 
-/** 🧭️ One of the eight anchors a panel or pane can grow from. */
+/** @emoji 🧭️ One of the eight anchors a panel or pane can grow from. */
 export type Anchor = (typeof ANCHORS)[number];
 
-/** 🧭️ `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
+/** @emoji 🧭️ `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
 export function anchorVertical(anchor: Anchor): "top" | "middle" | "bottom" {
   if (anchor.startsWith("top")) return "top";
   if (anchor.startsWith("bottom")) return "bottom";
   return "middle";
 }
 
-/** 🧭️ `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
+/** @emoji 🧭️ `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
 export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
   switch (anchor) {
     case "top-left":
@@ -7101,16 +5004,16 @@ export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
 }
 
 // #region 🧭️Flow Context
-/** 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
+/** @emoji 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
 import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
-/** 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
+/** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
 export function flowFromAnchor(anchor: Anchor): Flow {
   return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
 }
 
-/** 🧭️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
+/** @emoji 🧭️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
 export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
   const horizontal = anchorHorizontal(anchor);
   const vertical = anchorVertical(anchor);
@@ -7134,7 +5037,7 @@ export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
 }
 
 /**
- * 🧭️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
+ * @emoji 🧭️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
  * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
  * jumping the chips into the canvas. Navbar/footer are `h-large` with centered `h-medium` items; the offset
  * aligns the panel's `min-h-medium` cap to that centered row. Max height grows by the same overhang so the
@@ -7157,27 +5060,27 @@ export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSPro
   return style;
 }
 
-/** 🧭️ Chevron {@link IconName} that points toward where a fold's content is — the opposite state's chevron, mirrored for {@link FlowInline} `"rtl"`. `pointsOut` is `true` when the fold is collapsed (chevron points toward the hidden content) and `false` when expanded (chevron points back at the fold). */
+/** @emoji 🧭️ Chevron {@link IconName} that points toward where a fold's content is — the opposite state's chevron, mirrored for {@link FlowInline} `"rtl"`. `pointsOut` is `true` when the fold is collapsed (chevron points toward the hidden content) and `false` when expanded (chevron points back at the fold). */
 export function flowChevronIconName(inline: FlowInline, pointsOut: boolean): IconName {
   const right = inline === "rtl" ? pointsOut : !pointsOut;
   return right ? "chevron-right" : "chevron-left";
 }
 // #endregion 🧭️Flow Context
 
-/** 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
+/** @emoji 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
 // #region 🧲️PanelDock
 // Composable drag-and-drop: tabs dock between all eight anchors (pointer-capture drag, mirrors 🧭️ModeDockDrag);
 // tree units dock between leaf tabs (native HTML5 drag-and-drop, mirrors the window-template palette-drag session).
 
 //#region 🔀️Transforms
 
-/** 🔀️ True if `id` is `node.id` itself or belongs to one of its descendants. */
+/** @emoji 🔀️ True if `id` is `node.id` itself or belongs to one of its descendants. */
 export function isPanelTabInSubtree(node: PanelTabNode, id: string): boolean {
   if (node.id === id) return true;
   return node.kind === "branch" && node.children.some((child) => isPanelTabInSubtree(child, id));
 }
 
-/** 🔀️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
+/** @emoji 🔀️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
 export function findPanelTabInDock(dock: PanelDock, id: string): { readonly anchor: Anchor; readonly node: PanelTabNode } | null {
   for (const anchor of ANCHORS) {
     const path = findPanelTabPath(dock.anchors[anchor], id);
@@ -7193,18 +5096,18 @@ function collectPanelTabSubtreeIds(node: PanelTabNode, into: Set<string>): void 
   if (node.kind === "branch") node.children.forEach((child) => collectPanelTabSubtreeIds(child, into));
 }
 
-/** 🔀️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
+/** @emoji 🔀️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
 export function normalizePanelTabOrder(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   return tabs.map((tab, index) => (tab.order === index ? tab : { ...tab, order: index }));
 }
 
-/** 🔀️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
+/** @emoji 🔀️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
 export function pruneEmptyPanelBranches(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   const pruned = tabs.map((tab) => (tab.kind === "branch" ? { ...tab, children: pruneEmptyPanelBranches(tab.children) } : tab)).filter((tab) => tab.kind !== "branch" || tab.children.length > 0);
   return pruned.length === tabs.length && pruned.every((tab, index) => tab === tabs[index]) ? tabs : pruned;
 }
 
-/** 🔀️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
+/** @emoji 🔀️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
 function removePanelTabFromSiblings(tabs: readonly PanelTabNode[], id: string): { readonly tabs: readonly PanelTabNode[]; readonly removed: PanelTabNode | null } {
   const directIndex = tabs.findIndex((tab) => tab.id === id);
   if (directIndex >= 0) {
@@ -7245,10 +5148,10 @@ function appendPanelTabAsChild(tabs: readonly PanelTabNode[], parentId: string, 
   });
 }
 
-/** 🎯️ Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
+/** @emoji 🎯️ Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
 export type PanelTabDockTarget = { readonly kind: "insert"; readonly anchor: Anchor; readonly parentPath: readonly string[]; readonly index: number } | { readonly kind: "child"; readonly anchor: Anchor; readonly parentId: string };
 
-/** 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
+/** @emoji 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
 export interface PanelTabDockMove {
   readonly tabId: string;
   readonly fromAnchor: Anchor;
@@ -7293,21 +5196,21 @@ function replacePanelTabInDock(dock: PanelDock, id: string, nextNode: PanelTabNo
   return { anchors };
 }
 
-/** 🎯️ Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
+/** @emoji 🎯️ Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
 export interface PanelTreeUnitDockTarget {
   readonly anchor: Anchor;
   readonly tabId: string;
   readonly index: number;
 }
 
-/** 🎯️ A completed tree-unit drag from leaf `fromTabId` to `target`. */
+/** @emoji 🎯️ A completed tree-unit drag from leaf `fromTabId` to `target`. */
 export interface PanelTreeUnitDockMove {
   readonly unitId: string;
   readonly fromTabId: string;
   readonly target: PanelTreeUnitDockTarget;
 }
 
-/** 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
+/** @emoji 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
 export function moveTreeUnitInDock(dock: PanelDock, move: PanelTreeUnitDockMove): PanelDock {
   const from = findPanelTabInDock(dock, move.fromTabId);
   if (!from || from.node.kind !== "leaf") return dock;
@@ -7341,7 +5244,7 @@ function normalizePanelTreeUnitOrder(units: readonly PanelTreeUnit[]): readonly 
 
 //#region 🎯️HitTesting
 
-/** 🎯️ A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every anchor plus the rows along each anchor's current active path (branches not on the active path aren't visible, so aren't registered). */
+/** @emoji 🎯️ A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every anchor plus the rows along each anchor's current active path (branches not on the active path aren't visible, so aren't registered). */
 export interface PanelTabRowDropTarget {
   readonly anchor: Anchor;
   readonly parentPath: readonly string[];
@@ -7384,7 +5287,7 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
 const DOCK_DRAG_CURSOR_OFFSET_X = 8;
 const DOCK_DRAG_CURSOR_OFFSET_Y = 10;
 
-/** 🪟️ Floating label following the cursor while dragging a panel tab or tree unit. */
+/** @emoji 🪟️ Floating label following the cursor while dragging a panel tab or tree unit. */
 const DockDragChip: React.FC<{ readonly label: string; readonly x: number; readonly y: number }> = ({ label, x, y }) => (
   <div
     data-slot="dock-drag-chip"
@@ -7400,10 +5303,10 @@ const DockDragChip: React.FC<{ readonly label: string; readonly x: number; reado
 
 //#region 🌱️TreeUnitDrag
 
-/** 🌱️ `dataTransfer` MIME identifying a tree-unit drag between leaf tabs. */
+/** @emoji 🌱️ `dataTransfer` MIME identifying a tree-unit drag between leaf tabs. */
 export const PANEL_TREE_UNIT_MIME = "application/x-semio-panel-tree-unit";
 
-/** ↕️ `dataTransfer` MIME identifying a tree-section reorder drag within one {@link Tree}. */
+/** @emoji ↕️ `dataTransfer` MIME identifying a tree-section reorder drag within one {@link Tree}. */
 export const TREE_SECTION_REORDER_MIME = "application/x-semio-tree-section-reorder";
 
 export interface PanelTreeUnitDragSession {
@@ -7415,26 +5318,26 @@ export interface PanelTreeUnitDragSession {
 const activePanelTreeUnitDragSession = ephemeralBox<PanelTreeUnitDragSession | null>("framework.modules.ui.packages.typescript.targets.react.index.tsx.activePanelTreeUnitDragSession", null);
 const panelTreeUnitDragListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.panelTreeUnitDragListeners");
 
-/** 🌱️ Records the active tree-unit drag until drop or dragend. */
+/** @emoji 🌱️ Records the active tree-unit drag until drop or dragend. */
 export function beginPanelTreeUnitDrag(session: PanelTreeUnitDragSession): void {
   activePanelTreeUnitDragSession.current = session;
   panelGhostSessionBridge?.begin(null);
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
-/** 🌱️ Clears the active tree-unit drag session. */
+/** @emoji 🌱️ Clears the active tree-unit drag session. */
 export function endPanelTreeUnitDrag(): void {
   activePanelTreeUnitDragSession.current = null;
   panelGhostSessionBridge?.end();
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
-/** 🌱️ Returns the in-flight tree-unit drag, if any. */
+/** @emoji 🌱️ Returns the in-flight tree-unit drag, if any. */
 export function readActivePanelTreeUnitDrag(): PanelTreeUnitDragSession | null {
   return activePanelTreeUnitDragSession.current;
 }
 
-/** 🌱️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
+/** @emoji 🌱️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
 export function usePanelTreeUnitDragActive(): boolean {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
@@ -7468,7 +5371,7 @@ interface PanelDockPendingDrag {
   readonly startY: number;
 }
 
-/** 🎛️ Business-free ui↔shell contract shared by every {@link Panel} under one {@link PanelDockProvider}. */
+/** @emoji 🎛️ Business-free ui↔shell contract shared by every {@link Panel} under one {@link PanelDockProvider}. */
 export interface PanelDockContextValue {
   readonly dragTabId: string | null;
   readonly draggedSubtreeIds: ReadonlySet<string> | null;
@@ -7480,12 +5383,12 @@ export interface PanelDockContextValue {
 
 export const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
 
-/** 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
+/** @emoji 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
 export function usePanelDockContext(): PanelDockContextValue | null {
   return reactHostPort.useContext(PanelDockContext);
 }
 
-/** 🎛️ Props for {@link PanelDockProvider}. */
+/** @emoji 🎛️ Props for {@link PanelDockProvider}. */
 export interface PanelDockProviderProps {
   readonly dock: PanelDock;
   readonly onTabDockDrop: (move: PanelTabDockMove) => void;
@@ -7493,7 +5396,7 @@ export interface PanelDockProviderProps {
   readonly children: React.ReactNode;
 }
 
-/** 🎛️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
+/** @emoji 🎛️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
 export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTabDockDrop, onTreeUnitDockDrop, children }) => {
   const panelGhost = usePanelGhost();
   const [pendingDrag, setPendingDrag] = reactHostPort.useState<PanelDockPendingDrag | null>(null);
@@ -7601,11 +5504,11 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
 
 //#region 🎛️PanelChromeTabBar
 
-/** 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
+/** @emoji 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
 export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
   readonly anchor: Anchor;
   readonly className?: string;
-  /** 🗜️ Icon-only chips — see `PanelTabBarProps.compactLabels`. */
+  /** @emoji 🗜️ Icon-only chips — see `PanelTabBarProps.compactLabels`. */
   readonly compactLabels?: boolean;
 }
 
@@ -7680,13 +5583,13 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
 
 //#endregion 🎛️PanelChromeTabBar
 
-/** 📑️ Mobile panel tab strip height. */
+/** @emoji 📑️ Mobile panel tab strip height. */
 export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
 
-/** 📑️ Mobile panel tab button padding. */
+/** @emoji 📑️ Mobile panel tab button padding. */
 export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
 
-/** ↔ Accent stroke on the panel resize edge while hovered or dragging. */
+/** @emoji ↔ Accent stroke on the panel resize edge while hovered or dragging. */
 export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active: boolean): string | undefined {
   if (!active) return undefined;
   switch (resizeSide) {
@@ -7697,13 +5600,13 @@ export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active:
   }
 }
 
-/** 🪟️ All border effects the silhouette SVG can paint. */
+/** @emoji 🪟️ All border effects the silhouette SVG can paint. */
 export const WINDOW_SILHOUETTE_BORDER_KINDS = ["celebrated", "introduced", "loading", "waiting", "active", "normal"] as const;
 
-/** 🪟️ Which border effect the dock-stack silhouette overlay should paint. */
+/** @emoji 🪟️ Which border effect the dock-stack silhouette overlay should paint. */
 export type WindowSilhouetteBorderKind = (typeof WINDOW_SILHOUETTE_BORDER_KINDS)[number];
 
-/** 🪟️ Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
+/** @emoji 🪟️ Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
  * `[data-slot="window"]`), not a nested utility/action/tree row inside the pane. Window silhouette pulse
  * and the stack SVG border must follow only these stamps — introducing `transform` must pulse the utility
  * toggle, not the enclosing Top/Perspective silhouette. */
@@ -7718,7 +5621,7 @@ export function isWindowChromeIntroducedTarget(el: Element): boolean {
   return false;
 }
 
-/** 🪟️ Resolves silhouette border kind from the active window + stack active flag.
+/** @emoji 🪟️ Resolves silhouette border kind from the active window + stack active flag.
  * Introduction stamps `data-introduced` on the window kind id target — often the inner scroll surface
  * (`framework.window.{kind}`), not `[data-slot="window"]` itself — so window-chrome descendants count.
  * Nested introduce targets (utilities, actions) must not promote the window silhouette. `celebrated`
@@ -7743,7 +5646,7 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
   return stackActive ? "active" : "normal";
 }
 
-/** 🪟️ Maps a silhouette border kind to stroke classes and color tokens. */
+/** @emoji 🪟️ Maps a silhouette border kind to stroke classes and color tokens. */
 export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): { readonly className: string; readonly stroke: string } {
   switch (kind) {
     case "celebrated":
@@ -7764,18 +5667,18 @@ export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): {
 const WINDOW_CHROME_GAP_SELECTOR = '[data-slot="window-chrome-gap"], [data-slot="mode-dock-tab-gap"]';
 const WINDOW_CHROME_CAP_SELECTOR = '[data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"]';
 
-/** 🪟️ Whether a stack-local rect sits on the given silhouette dock edge. */
+/** @emoji 🪟️ Whether a stack-local rect sits on the given silhouette dock edge. */
 function windowSilhouetteRectOnDock(stackRect: DOMRect, rect: DOMRect, dock: "top" | "bottom"): boolean {
   return dock === "top" ? rect.top - stackRect.top <= WINDOW_SILHOUETTE_CHIP_EPSILON : stackRect.bottom - rect.bottom <= WINDOW_SILHOUETTE_CHIP_EPSILON;
 }
 
-/** 🪟️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
+/** @emoji 🪟️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
 function windowSilhouetteOwnsElement(stack: HTMLElement, element: Element): boolean {
   const owner = element.closest("[data-window-silhouette]");
   return owner === null || owner === stack;
 }
 
-/** 🖱️ Reads fused submenu wing rects for a context menu stack. */
+/** @emoji 🖱️ Reads fused submenu wing rects for a context menu stack. */
 function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: WindowSilhouetteMetrics): WindowSilhouetteMetrics {
   const fusionBody = stack.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
   if (!fusionBody) return base;
@@ -7799,7 +5702,7 @@ function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: 
   return { ...base, width, height, contextMenuFusion: fusion };
 }
 
-/** 🪟️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
+/** @emoji 🪟️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
   const stackRect = stack.getBoundingClientRect();
   const width = stackRect.width;
@@ -7831,7 +5734,7 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   return measureContextMenuFusion(stack, stackRect, base);
 }
 
-/** 📐️ Coalesced owned-chip measurement shared by silhouette content, glass, border, and hit clipping. */
+/** @emoji 📐️ Coalesced owned-chip measurement shared by silhouette content, glass, border, and hit clipping. */
 export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled = true): WindowSilhouetteGeometry {
   const [geometry, setGeometry] = reactHostPort.useState<WindowSilhouetteGeometry>(() => createWindowSilhouetteGeometry(null));
   reactHostPort.useLayoutEffect(() => {
@@ -7886,16 +5789,16 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
   return geometry;
 }
 
-/** 📏️ Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
+/** @emoji 📏️ Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
 export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
 
-/** 🪟️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
+/** @emoji 🪟️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
 export const windowGapFrameClass = "border-0 bg-transparent";
 
-/** 📏️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
+/** @emoji 📏️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
 export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 
-/** 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
+/** @emoji 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
   readonly templateColumns: string;
   readonly activeCol: number;
@@ -7906,7 +5809,7 @@ export interface ModeDockChromeGrid {
   readonly tabCol: (tabIndex: number) => number;
 }
 
-/** 📐️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
+/** @emoji 📐️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
 export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: string }[], activeId: string | undefined): ModeDockChromeGrid {
   const activeTabIndex = Math.max(
     0,
@@ -7927,37 +5830,37 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
   };
 }
 
-/** 📏️ Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
+/** @emoji 📏️ Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
  * shows the chip-cell glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */
 export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
-/** 📏️ Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
+/** @emoji 📏️ Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
 export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
-/** 📑️ Inactive panel tab inside {@link WindowChrome} — no opaque fill; the chip-cap glass is the panel boundary and must meet the body without a seam. */
+/** @emoji 📑️ Inactive panel tab inside {@link WindowChrome} — no opaque fill; the chip-cap glass is the panel boundary and must meet the body without a seam. */
 export const panelWindowInactiveTabClass = "relative z-30 box-border min-h-medium h-full shrink-0 bg-transparent";
 
-/** 🪟️ Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
+/** @emoji 🪟️ Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
 export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-visible";
 
-/** 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
+/** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 
-/** 🪧️ Static shell title (navbar app label, pane headings) — element gray at rest. */
+/** @emoji 🪧️ Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
 
-/** 🪧️ Uppercase shell section title — element gray at rest. */
+/** @emoji 🪧️ Uppercase shell section title — element gray at rest. */
 export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercase tracking-wide text-element";
 
-/** 📏️ Globally active dock tab — primary fill + emphasized label. */
+/** @emoji 📏️ Globally active dock tab — primary fill + emphasized label. */
 export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 
-/** 📏️ Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
+/** @emoji 📏️ Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
 export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
-/** 📏️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
+/** @emoji 📏️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
 export const windowControlsCapClass = "pointer-events-auto relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
-/** 🪜️ `WindowChrome`'s own internal stacking, as inline z-indexes.
+/** @emoji 🪜️ `WindowChrome`'s own internal stacking, as inline z-indexes.
  *
  * The chrome's chip rows carried Tailwind ARBITRARY z utilities (`z-[2]`/`z-[1]`), and this design
  * system's stylesheet does not emit those — measured on a served boot, cap row, body plane and footer all
@@ -7968,15 +5871,15 @@ export const windowControlsCapClass = "pointer-events-auto relative z-[2] flex s
  * `pointer-events: auto` over the entire application (26/09/02/PUZZLE-3D-END-TO-END wave B49 §1).
  * Stated inline, the order cannot silently vanish with a utility that was never generated. */
 export const WINDOW_CHROME_CHIP_ROW_STYLE: React.CSSProperties = { zIndex: 2 };
-/** 🪜️ The body plane, one level below every chip row — see {@link WINDOW_CHROME_CHIP_ROW_STYLE}. */
+/** @emoji 🪜️ The body plane, one level below every chip row — see {@link WINDOW_CHROME_CHIP_ROW_STYLE}. */
 export const WINDOW_CHROME_BODY_PLANE_STYLE: React.CSSProperties = { zIndex: 1 };
 
-/** 📏️ Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
+/** @emoji 📏️ Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
 export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
 //#region 🪟️WindowChrome
 
-/** 🪟️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
+/** @emoji 🪟️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
 export interface WindowChromeControlAction {
   readonly id: string;
   readonly slot: string;
@@ -7985,7 +5888,7 @@ export interface WindowChromeControlAction {
   readonly onClick: () => void;
 }
 
-/** 🪟️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
+/** @emoji 🪟️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
  * borderless so the painted chip-cap cell shows through and the silhouette remains the sole outline. */
 export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent");
 
@@ -8007,7 +5910,7 @@ export interface WindowChromeProps {
   readonly bodySlot?: string;
   readonly bodyStyle?: React.CSSProperties;
   readonly titleChips?: React.ReactNode;
-  /** 🧭️ Optional top-right chip content rendered ahead of enlarge/close in the controls cell. */
+  /** @emoji 🧭️ Optional top-right chip content rendered ahead of enlarge/close in the controls cell. */
   readonly capRightChips?: React.ReactNode;
   readonly body?: React.ReactNode;
   readonly enlarge?: WindowChromeControlAction;
@@ -8023,11 +5926,11 @@ export interface WindowChromeProps {
   readonly borderKind?: WindowSilhouetteBorderKind;
   readonly stackBindProps?: SurfaceActiveBindProps;
   readonly stackDataAttrs?: Record<string, string | undefined>;
-  /** 📐️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
+  /** @emoji 📐️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
   readonly capFitContent?: boolean;
-  /** 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
+  /** @emoji 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
   readonly capDock?: "top" | "bottom";
-  /** ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
+  /** @emoji ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
   readonly capRowStyle?: React.CSSProperties;
   readonly capSlot?: string;
   readonly chipSlot?: string;
@@ -8035,7 +5938,7 @@ export interface WindowChromeProps {
   readonly silhouetteSlot?: string;
 }
 
-/** 🪟️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
+/** @emoji 🪟️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
 export const WindowChromeSilhouetteBorder: React.FC<{
   readonly stack: HTMLElement | null;
   readonly geometry?: WindowSilhouetteGeometry;
@@ -8120,7 +6023,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
   );
 };
 
-/** 🪟️ Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border.
+/** @emoji 🪟️ Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border.
  * Cap glass lives only on the chip (+ controls) cells — never the full cap row — so the U-gap stays transparent
  * and shows whatever sits behind the stack (veil, canvas, page). Do not paint an absolute inset fill. */
 export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChromeProps>(
@@ -8345,7 +6248,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
 );
 WindowChrome.displayName = "WindowChrome";
 
-/** 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
+/** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
 export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }>(
   ({ title, icon, children, className, style }, ref) => {
     return (
@@ -8373,25 +6276,25 @@ ContextMenuChrome.displayName = "ContextMenuChrome";
 
 //#endregion 🪟️WindowChrome
 
-/** 🪟️ Window chrome icon button — element gray by default, emphasize on hover. */
+/** @emoji 🪟️ Window chrome icon button — element gray by default, emphasize on hover. */
 export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
 
-/** 📐️ Default unfolded width of window panes and the options rail (token-derived; matches panel default 300px). */
+/** @emoji 📐️ Default unfolded width of window panes and the options rail (token-derived; matches panel default 300px). */
 export const windowMeasuresDefaultWidthPx = domSizePx("layoutPanelRailUiSpacing");
 
-/** 📐️ Minimum unfolded width of the window options rail (token-derived). */
+/** @emoji 📐️ Minimum unfolded width of the window options rail (token-derived). */
 export const windowMeasuresMinWidthPx = domSizePx("layoutPanelMinUiSpacing");
 
-/** 📐️ Maximum unfolded width of the window options rail (token-derived). */
+/** @emoji 📐️ Maximum unfolded width of the window options rail (token-derived). */
 export const windowMeasuresMaxWidthPx = domSizePx("layoutPanelMaxUiSpacing");
 
-/** 📐️ Max width cap for window engagement (token-derived). */
+/** @emoji 📐️ Max width cap for window engagement (token-derived). */
 export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacing");
 
-/** 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
+/** @emoji 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 max-h-full flex-auto flex-col gap-half overflow-y-auto px-single";
 
-/** 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
+/** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
 import {
@@ -8417,14 +6320,14 @@ export {
   useWindowContentDeadLineScroll,
 };
 
-/** 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
+/** @emoji 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
  * anything a window's CONTENT anchors to a top corner (a scene overlay button, a status chip, the folded
  * engagement's quick-action rail). Reads the live clearance the enclosing {@link Window} publishes
  * ({@link windowChromeScrollClearanceVar}, measured off the mounted engagement/search/measures overlays)
  * and falls back to the chrome row's own token height, so content can never paint over a pane toggle. */
 export const windowChromeClearedTopOffset = `calc(var(${windowChromeScrollClearanceVar}, calc(var(--size-medium) + var(--spacing-single))) + var(--spacing-single))`;
 
-/** 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
+/** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
 export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
   const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const setScrollerRef = reactHostPort.useCallback(
@@ -8444,55 +6347,55 @@ export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivEl
 });
 ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 
-/** 📐️ Labelled icon action in window rail chrome bars (options + action). */
+/** @emoji 📐️ Labelled icon action in window rail chrome bars (options + action). */
 export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single", interactiveHoverClass);
 
-/** 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
+/** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
 
-/** 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
+/** @emoji 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
 export const WINDOW_PANE_MEASURES_ICON = "settings-2" as const satisfies IconName;
 export const WINDOW_PANE_ACTIONS_ICON = "play" as const satisfies IconName;
 export const WINDOW_PANE_SEARCH_ICON = "search" as const satisfies IconName;
 export const WINDOW_PANE_UTILITIES_ICON = "hammer" as const satisfies IconName;
 
-/** 📐️ Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
+/** @emoji 📐️ Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
 export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";
 
-/** 📐️ Vertical rhythm between top-level measure groups in the rail. */
+/** @emoji 📐️ Vertical rhythm between top-level measure groups in the rail. */
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
-/** 📐️ Single measure tile in the window rail — transparent so the {@link WindowChrome} body glass shows through, never a second glass layer of its own. */
+/** @emoji 📐️ Single measure tile in the window rail — transparent so the {@link WindowChrome} body glass shows through, never a second glass layer of its own. */
 export const windowMeasureTileClass = cn("pointer-events-auto select-none bg-transparent w-full min-w-0 shrink-0 rounded-sm border", `${borderElementClass}/40`, "px-tiny py-tiny");
 
-/** 📐️ Optional measure caption above a control. */
+/** @emoji 📐️ Optional measure caption above a control. */
 export const windowMeasureLabelClass = "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
 
-/** 📐️ Measure section title without a heavy chrome box. */
+/** @emoji 📐️ Measure section title without a heavy chrome box. */
 export const windowMeasureSectionClass = "text-muted-foreground w-full truncate px-single py-tiny text-center text-2xs font-medium uppercase tracking-wide";
 
-/** 📐️ Constrains measure controls to the rail width. */
+/** @emoji 📐️ Constrains measure controls to the rail width. */
 export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
-/** 🌳️ Compact disclosure header for a nested measure group. */
+/** @emoji 🌳️ Compact disclosure header for a nested measure group. */
 export const windowMeasureGroupHeaderClass = "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
-/** 🌳️ Indented children under a measure group (minimal chrome). */
+/** @emoji 🌳️ Indented children under a measure group (minimal chrome). */
 export const windowMeasureGroupChildrenClass = "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-s ps-tiny ms-tiny pb-0 pt-0";
 
-/** 🌳️ Nested measure leaf without an outer tile border (indent only). */
+/** @emoji 🌳️ Nested measure leaf without an outer tile border (indent only). */
 export const windowMeasureTileNestedClass = "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
 
-/** 📐️ Toggle sized to fill the measure tree row (active fill spans full width). */
+/** @emoji 📐️ Toggle sized to fill the measure tree row (active fill spans full width). */
 export const windowMeasureToggleClass =
   "!w-full min-w-0 max-w-full [&_[data-slot=toggle-group-item]]:!flex-1 [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]]:!aspect-auto [&_[data-slot=toggle-group-item]]:!shrink [&_[data-slot=inline-label]]:min-w-0 [&_[data-slot=inline-label]]:truncate";
 
-/** 📐️ Dense toggle row for nested measure groups (shorter control chrome). */
+/** @emoji 📐️ Dense toggle row for nested measure groups (shorter control chrome). */
 export const windowMeasureToggleCompactClass =
   "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:!text-tiny";
 
-/** 🌳️ Typography for measure tree group headers. */
+/** @emoji 🌳️ Typography for measure tree group headers. */
 
-/** 🌳️ Typography for measure tree leaf labels. */
+/** @emoji 🌳️ Typography for measure tree leaf labels. */
 
 // #endregion 🎈️Level Context
 
@@ -8501,7 +6404,7 @@ import { type ElementProps } from "../../🔨️modules/🆔️element-identity/
 export type { ElementProps };
 
 //#region 🧭️ElementState
-/** 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
+/** @emoji 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
  * re-export from `@semio-tech/ui-styling` (this package must not leak types from outside the codebase).
  * `state`/`status`/`hover`/`selected` mirror the Rust `UiState`/`UiStatus`/`UiPresence` model in `ui_wgpu`
  * (see `framework/ui/wgpu/rs/lib.rs`'s 🔖️Presence region) byte-for-byte. */
@@ -8516,7 +6419,7 @@ export interface UiElementStateProps {
   selected?: boolean;
 }
 
-/** 🧭️ Resolves `props` against the shared defaults and returns everything a component needs to
+/** @emoji 🧭️ Resolves `props` against the shared defaults and returns everything a component needs to
  * apply the model: whether it must render `null` (`state === "hidden"`), the `data-ui-*` attribute
  * spread for CSS-driven components, and the fill-kind for 3D/canvas components that can't use CSS. */
 export function useElementState(props: UiElementStateProps): {
@@ -8529,10 +6432,10 @@ export function useElementState(props: UiElementStateProps): {
   return { state, hidden: state.state === "hidden", attrs: elementStateAttributes(state), fillKind: resolveElementFillKind(state) };
 }
 
-/** 🎉️ Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
+/** @emoji 🎉️ Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
 export const CELEBRATE_STAMP_DURATION_MS = 2400;
 
-/** 🎉️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
+/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
  * the transient counterpart of an authored `state: "celebrating"`. Unmanaged by React (like the
  * introduction engine's `data-introduced` stamp) so re-renders can't clobber it. Returns a cancel
  * function that un-stamps immediately. */
@@ -8546,7 +6449,7 @@ export function celebrateElement(target: Element, durationMs = CELEBRATE_STAMP_D
   };
 }
 
-/** 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
+/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
  * then removes it — the selector form of {@link celebrateElement}. Returns a cancel that un-stamps
  * every match immediately. `root` scopes the search (e.g. a shell's own root) — omitted, searches the
  * whole document as before; matters because element ids/aliases are not guaranteed unique across
@@ -8556,7 +6459,7 @@ export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP
   return () => cancels.forEach((cancel) => cancel());
 }
 
-/** 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
+/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
  * element carrying a valid `data-element-alias`) for `durationMs` — the tour-finale counterpart of
  * {@link celebrateElements}. Skips the introduction chrome itself (`ui.introduction.*`) so the
  * dismiss unmount doesn't race the stamp. Returns a cancel that un-stamps every match immediately.
@@ -8746,7 +6649,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 
 type OwnedRouteTarget = { kind: "internal"; href: string };
 
-/** 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
+/** @emoji 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
 export function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
   if (typeof href !== "string" || href.length === 0 || /[\s\u0000-\u001f\u007f\\]/u.test(href)) return null;
   if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) return null;
@@ -8758,7 +6661,7 @@ export function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
   return { kind: "internal", href };
 }
 
-/** 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
+/** @emoji 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
 export function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boolean } {
   if (typeof window === "undefined" || typeof window.history?.pushState !== "function" || typeof window.PopStateEvent !== "function") return { navigated: false };
   let event: PopStateEvent;
@@ -8772,7 +6675,7 @@ export function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boole
   return { navigated: true };
 }
 
-/** 🔗️ Anchor that delegates primary internal clicks to the owned navigation command while preserving native behavior for every other target or gesture. */
+/** @emoji 🔗️ Anchor that delegates primary internal clicks to the owned navigation command while preserving native behavior for every other target or gesture. */
 export function RouteLink({ href, target, download, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
@@ -8829,7 +6732,7 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
 // Tone-based status-surface kit: badges, status chips, stat tiles, and empty/error placeholders.
 // Consumers MUST use StatusTone (never hardcoded palette colors) for tone-driven styling.
 
-/** 🚦️ Semantic tone shared by {@link Badge}, {@link StatusChip}, and {@link StatCard} deltas. */
+/** @emoji 🚦️ Semantic tone shared by {@link Badge}, {@link StatusChip}, and {@link StatCard} deltas. */
 export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 /**
@@ -8864,7 +6767,7 @@ export interface BadgeProps {
   icon?: React.ReactNode;
 }
 
-/** 🏷️ Small tone-colored pill for inline status labels. */
+/** @emoji 🏷️ Small tone-colored pill for inline status labels. */
 export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.ReactElement {
   return (
     <span id={id} data-slot="badge" className={cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
@@ -8893,7 +6796,7 @@ const STATUS_CHIP_TONE: Record<StatusChipProps["status"], StatusTone> = {
   offline: "neutral",
 };
 
-/** 🟢️ Inline dot-and-label indicator for live status (connection, task, presence). */
+/** @emoji 🟢️ Inline dot-and-label indicator for live status (connection, task, presence). */
 export function StatusChip({ id, status, label }: StatusChipProps): React.ReactElement {
   const tone = STATUS_CHIP_TONE[status];
   return (
@@ -8915,7 +6818,7 @@ export interface StatCardProps {
   icon?: React.ReactNode;
 }
 
-/** 📊️ Labelled metric tile with an optional tone-colored delta badge. */
+/** @emoji 📊️ Labelled metric tile with an optional tone-colored delta badge. */
 export function StatCard({ id, label, value, delta, icon }: StatCardProps): React.ReactElement {
   return (
     <div id={id} data-slot="stat-card" className="flex flex-col gap-single border p-single">
@@ -8942,7 +6845,7 @@ export interface EmptyStateProps {
   action?: { label: string; onClick: () => void };
 }
 
-/** 📭️ Centered placeholder for lists or panels with no content yet. */
+/** @emoji 📭️ Centered placeholder for lists or panels with no content yet. */
 export function EmptyState({ id, icon, title, description, action }: EmptyStateProps): React.ReactElement {
   return (
     <div id={id} data-slot="empty-state" className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
@@ -8968,7 +6871,7 @@ export interface ErrorViewProps {
   onRetry?: () => void;
 }
 
-/** 🚨️ Centered error placeholder with an optional retry action. */
+/** @emoji 🚨️ Centered error placeholder with an optional retry action. */
 export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): React.ReactElement {
   const somethingWentWrongLabel = useLabel("ui.common.somethingWentWrong");
   const retryLabel = useLabel("ui.common.retry");
@@ -8991,7 +6894,7 @@ export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): Reac
 // #endregion 🚦️StatusSurface
 
 //#region 🧭️UiElementRegistry
-/** 🧭️ Compile-time checklist of chrome components that must accept the shared {@link UiElementStateProps} axes. */
+/** @emoji 🧭️ Compile-time checklist of chrome components that must accept the shared {@link UiElementStateProps} axes. */
 export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slider", "TreeItem", "Action"] as const;
 //#endregion 🧭️UiElementRegistry
 
@@ -9283,13 +7186,13 @@ type FullscreenHTMLElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void;
 };
 
-/** 🖥️ Whether the browser document is in fullscreen mode. */
+/** @emoji 🖥️ Whether the browser document is in fullscreen mode. */
 export function readDocumentFullscreenActive(doc: Document = document): boolean {
   const typed = doc as FullscreenDocument;
   return !!(typed.fullscreenElement ?? typed.webkitFullscreenElement);
 }
 
-/** 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
+/** @emoji 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
  * own root (e.g. `ShellScope.rootRef.current`) so going fullscreen from within one embedded shell fills
  * the screen with just that shell's content, not the whole page (other mounted shells included);
  * omitted, defaults to `document.documentElement` (the single-shell-per-page case, unchanged). The
@@ -9307,7 +7210,7 @@ export async function toggleDocumentFullscreen(root: Element = document.document
   else typedRoot.webkitRequestFullscreen?.();
 }
 
-/** 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
+/** @emoji 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
  * fullscreen — see {@link toggleDocumentFullscreen}'s doc. */
 export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; toggle: () => void } {
   const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() => (typeof document !== "undefined" ? readDocumentFullscreenActive() : false));
@@ -9345,7 +7248,7 @@ export function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefin
   for (const listener of shellNavbarTrailingEndWidthListenersByRoot.get(key) ?? []) listener();
 }
 
-/** ↔ Measured trailing navbar chrome width (fullscreen toggle footprint) for this shell. */
+/** @emoji ↔ Measured trailing navbar chrome width (fullscreen toggle footprint) for this shell. */
 export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
   const key = resolveElementsSurfaceChromeRoot(root);
   return reactHostPort.useSyncExternalStore(
@@ -9364,13 +7267,13 @@ export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
   );
 }
 
-/** ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
+/** @emoji ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
 export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties | undefined {
   if (widthPx <= 0) return undefined;
   return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
 }
 
-/** 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it
+/** @emoji 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it
  * caps, so the fold control is laid out BESIDE the tab strip instead of underneath it.
  *
  * The cap row is a flex row of `[tab strip | gap | controls]` inside a panel root pinned to the body
@@ -9390,7 +7293,7 @@ export function chromeHostedPanelCapRowStyle(anchor: Anchor, trailingEndWidthPx:
 }
 
 // #region 🛟️ChromePanelSafeArea
-/** 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
+/** @emoji 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
  * so a caller can state a box it has not laid out yet ({@link Window}'s right-edge chrome column) as
  * readily as one it measured ({@link safeAreaBoxFromRect}). */
 export interface SafeAreaBox {
@@ -9400,19 +7303,19 @@ export interface SafeAreaBox {
   readonly bottom: number;
 }
 
-/** 🛟️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
+/** @emoji 🛟️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
 export interface ChromePanelOccupancy {
   readonly key: string;
   readonly anchor: Anchor;
   readonly box: SafeAreaBox;
 }
 
-/** 🛟️ Which axis an in-window affordance is free to yield on. Window pane toggles do not yield —
+/** @emoji 🛟️ Which axis an in-window affordance is free to yield on. Window pane toggles do not yield —
  * they stay behind anchored chrome panels. Floating content overlays (e.g. a world view rail) take
  * `"either"`, i.e. whichever single axis clears the chrome panel with the smaller displacement. */
 export type SafeAreaYield = "inline" | "block" | "either";
 
-/** 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
+/** @emoji 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
  * over it — at most one axis is ever non-zero. */
 export interface ChromePanelSafeArea {
   readonly inlinePx: number;
@@ -9422,7 +7325,7 @@ export interface ChromePanelSafeArea {
 const CHROME_PANEL_SAFE_AREA_CLEAR: ChromePanelSafeArea = Object.freeze({ inlinePx: 0, blockPx: 0 });
 const NO_CHROME_PANEL_OCCUPANCIES: readonly ChromePanelOccupancy[] = Object.freeze([]);
 
-/** 🛟️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
+/** @emoji 🛟️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
  * reflow of an unchanged panel never re-publishes and never re-renders its readers. */
 export function safeAreaBoxFromRect(rect: DOMRect): SafeAreaBox {
   return { left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
@@ -9443,7 +7346,7 @@ const shellChromePanelBoxesByRoot = ephemeralMap<HTMLElement, Map<string, Chrome
 const shellChromePanelSnapshotByRoot = ephemeralMap<HTMLElement, readonly ChromePanelOccupancy[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelSnapshotByRoot");
 const shellChromePanelListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelListenersByRoot");
 
-/** 🛟️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
+/** @emoji 🛟️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
  * viewport box. An anchored panel floats OVER the canvas region in the app root's stacking context (see
  * {@link anchorPositionStyle} and `📐️Layout`), so it is the only party that knows the box it occupies —
  * window content painted under it cannot derive that from its own layout, and cannot win the corner back
@@ -9469,7 +7372,7 @@ export function publishShellChromePanelBox(root: HTMLElement | undefined, key: s
   for (const listener of shellChromePanelListenersByRoot.get(rootKey) ?? []) listener();
 }
 
-/** 🛟️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
+/** @emoji 🛟️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
  * observable any in-window affordance reserves itself against. */
 export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePanelOccupancy[] {
   const rootKey = resolveElementsSurfaceChromeRoot(root);
@@ -9490,7 +7393,7 @@ export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePan
 }
 
 /**
- * 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted
+ * @emoji 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted
  * over it — the ONE rule both renderers obey (its wgpu twin is `chrome_panel_safe_area`, and both answer
  * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json`'s `chromePanelSafeArea` rows).
  *
@@ -9531,7 +7434,7 @@ export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, 
   return CHROME_PANEL_SAFE_AREA_CLEAR;
 }
 
-/** 🛟️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
+/** @emoji 🛟️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
  * — the flush `var(--spacing-single)` inset (or the caller's own `base`, e.g. a window content rail's
  * {@link windowChromeClearedTopOffset}) when the safe area is clear, so a shell with no open panel lays
  * out byte-for-byte as authored. A middle anchor has no edge to reserve on that axis. */
@@ -9546,7 +7449,7 @@ export function chromePanelSafeAreaStyle(anchor: Anchor, safeArea: ChromePanelSa
   return style;
 }
 
-/** 🛟️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
+/** @emoji 🛟️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
  * anchored chrome panel of the enclosing shell.
  *
  * The affordance is graded on its UNRESERVED box — its measured rect with the offset this hook currently
@@ -9624,7 +7527,7 @@ function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }
   );
 }
 
-/** 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
+/** @emoji 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
 export function NavbarTrailingChromeSlot({
   beforeFullscreen,
   showFullscreenToggle = true,
@@ -9685,14 +7588,14 @@ export { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelect
 // Draggable Electron-style window title bar with minimize/maximize/close controls.
 // Consumers MUST omit `controls` on non-Electron hosts; no control buttons render without it.
 
-/** 🪟️ Configuration for {@link DesktopTitlebar} window controls. */
+/** @emoji 🪟️ Configuration for {@link DesktopTitlebar} window controls. */
 export interface DesktopTitlebarProps {
   title: string;
   controls?: { minimize(): void; maximize(): void; close(): void };
   children?: React.ReactNode;
 }
 
-/** 🪟️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
+/** @emoji 🪟️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
 export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarProps): React.ReactElement {
   const minimizeLabel = useLabel("ui.common.minimize");
   const maximizeLabel = useLabel("ui.common.maximize");
@@ -9990,13 +7893,12 @@ import {
   type TreePanelDefinition,
   type TreePanelSource,
   staticTreePanelDefinition,
-  liveTreePanelDefinition,
   usePointerDrag,
   useNativeDragAndDrop,
   PanelTreeUnitsPane,
   PanelEmptyDockZone,
 } from "../../🧱️elements/🖼️Panel/🟦️.tsx";
-export { Panel, staticTreePanelDefinition, liveTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
+export { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
 export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource };
 // #endregion 🧭️Panel
 
@@ -10007,7 +7909,7 @@ export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource 
 // `26/07/15/RENAME-WINDOW-PANELS-TO-PANES-AND-CORNER-PANELS-TO-PANELS`): "panel" is the shell-edge dock, "pane" is
 // chrome floating inside one window.
 
-/** 🧭️ Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
+/** @emoji 🧭️ Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
  * There is no center anchor, so the dead-center zone resolves to whichever edge-middle the pointer has drifted
  * closer to (compares distance from the vertical vs. horizontal midline). */
 export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): Anchor {
@@ -10025,15 +7927,15 @@ export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { re
 }
 
 interface PaneHostContextValue {
-  /** 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
+  /** @emoji 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
   readonly containerRef: React.RefObject<HTMLDivElement | null>;
-  /** 🌱️ Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
+  /** @emoji 🌱️ Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
   readonly container: HTMLDivElement | null;
 }
 
 const PaneHostContext = reactHostPort.createContext<PaneHostContextValue | undefined>(undefined);
 
-/** 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
+/** @emoji 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
 function usePaneHostContext(): PaneHostContextValue | undefined {
   return reactHostPort.useContext(PaneHostContext);
 }
@@ -10046,7 +7948,7 @@ export interface PaneHostProps {
   readonly children?: React.ReactNode;
 }
 
-/** 🪟️ Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
+/** @emoji 🪟️ Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
  * {@link Pane} inside — direct JSX children or portaled in via {@link usePaneSlot} — shares one anchor coordinate
  * space to drag between and one DOM parent to measure drag drops against.
  *
@@ -10076,7 +7978,7 @@ export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
   );
 };
 
-/** 🪟️ Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
+/** @emoji 🪟️ Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
  * (e.g. a per-tool floating control) contribute a draggable pane without threading it through the window's props.
  * Renders nothing outside a `PaneHost`. */
 export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null {
@@ -10084,7 +7986,7 @@ export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null 
   return host?.container ? (createPortal(pane, host.container) as React.ReactPortal) : null;
 }
 
-/** ↔ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
+/** @emoji ↔ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
 function PaneResizeHandle({
   side,
   size,
@@ -10131,14 +8033,14 @@ function PaneResizeHandle({
  * Props interface for the Pane component.
  **/
 export interface PaneProps {
-  /** 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
+  /** @emoji 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
   readonly id: string;
   readonly anchor: Anchor;
-  /** 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
+  /** @emoji 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
   readonly onAnchorChange?: (anchor: Anchor) => void;
   readonly folded?: boolean;
   readonly onFoldToggle?: () => void;
-  /** 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
+  /** @emoji 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
   readonly icon: IconName;
   readonly label?: UiLabel;
   readonly size?: number;
@@ -10146,7 +8048,7 @@ export interface PaneProps {
   readonly minSize?: number;
   readonly maxSize?: number;
   readonly resizable?: boolean;
-  /** ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
+  /** @emoji ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
   readonly expanded?: boolean;
   readonly overlaySlot?: string;
   readonly overlayRef?: React.Ref<HTMLDivElement>;
@@ -10160,9 +8062,9 @@ export interface PaneProps {
   readonly toggleDisabled?: boolean;
   readonly dimWhenOpen?: boolean;
   readonly onResizeActiveChange?: (active: boolean) => void;
-  /** 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
+  /** @emoji 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
   readonly order?: number;
-  /** 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
+  /** @emoji 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
   readonly inlineEdgeReservePx?: number;
   readonly zIndex?: 10 | 20 | 30 | 40;
   readonly className?: string;
@@ -10173,7 +8075,7 @@ const PANE_DEFAULT_SIZE = 300;
 const PANE_DEFAULT_MIN_SIZE = 200;
 const PANE_DEFAULT_MAX_SIZE = 600;
 
-/** 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
+/** @emoji 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
  * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable (inner edge for
  * corners / side-middle; both edges for top/bottom-middle, matching panel grow), and (given `onAnchorChange`)
  * draggable by its handle to any of the eight anchors via {@link nearestAnchor} — dropped anywhere inside the
@@ -10364,14 +8266,14 @@ export interface EngagementStatus {
   content: React.ReactNode;
 }
 
-/** 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
+/** @emoji 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
 export interface EngagementRingOption {
   id: string;
   label: string;
   disabled?: boolean;
 }
 
-/** 🎚️ Engagement range slider for numeric values (height, distance, …). */
+/** @emoji 🎚️ Engagement range slider for numeric values (height, distance, …). */
 export interface EngagementSliderControl {
   kind: "slider";
   id?: string;
@@ -10379,7 +8281,7 @@ export interface EngagementSliderControl {
   value: number;
   min: number;
   max: number;
-  /** 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
+  /** @emoji 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
   ready?: number;
   step?: number;
   unit?: string;
@@ -10388,7 +8290,7 @@ export interface EngagementSliderControl {
   onCommit?: (value: number) => void;
 }
 
-/** 🔢️ Engagement stepper for numeric values without fixed upper bound. */
+/** @emoji 🔢️ Engagement stepper for numeric values without fixed upper bound. */
 export interface EngagementStepperControl {
   kind: "stepper";
   id?: string;
@@ -10403,7 +8305,7 @@ export interface EngagementStepperControl {
   onCommit?: (value: number) => void;
 }
 
-/** 🧫️ Engagement ring (radial dial) for angles or discrete option selection. */
+/** @emoji 🧫️ Engagement ring (radial dial) for angles or discrete option selection. */
 export interface EngagementRingControl {
   kind: "ring";
   id?: string;
@@ -10414,7 +8316,7 @@ export interface EngagementRingControl {
   onSelect?: (id: string) => void;
 }
 
-/** 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
+/** @emoji 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
 export interface EngagementToggleGroupOption {
   id: string;
   label: string;
@@ -10422,7 +8324,7 @@ export interface EngagementToggleGroupOption {
   disabled?: boolean;
 }
 
-/** 🔘️ Engagement toggle button group for small unordered enums. */
+/** @emoji 🔘️ Engagement toggle button group for small unordered enums. */
 export interface EngagementToggleGroupControl {
   kind: "toggleGroup";
   id?: string;
@@ -10433,14 +8335,14 @@ export interface EngagementToggleGroupControl {
   onSelect?: (id: string) => void;
 }
 
-/** 🔽️ One item on an engagement {@link EngagementSelectControl}. */
+/** @emoji 🔽️ One item on an engagement {@link EngagementSelectControl}. */
 export interface EngagementSelectItem {
   id: string;
   value: string;
   label: string;
 }
 
-/** 🔽️ Engagement select dropdown for large enums. */
+/** @emoji 🔽️ Engagement select dropdown for large enums. */
 export interface EngagementSelectControl {
   kind: "select";
   id?: string;
@@ -10452,20 +8354,20 @@ export interface EngagementSelectControl {
   onChange?: (value: string) => void;
 }
 
-/** 🎛️ Optional engagement UI control for the active action step. */
+/** @emoji 🎛️ Optional engagement UI control for the active action step. */
 export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
-/** 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
+/** @emoji 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
   actions: "ui.engagement.actions",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
+/** @emoji 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
   actionsAria: "Actions",
 } as const;
 
-/** 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
+/** @emoji 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
 export const UI_WINDOW_SEARCH = {
   title: "ui.windowSearch.title",
   action: "ui.windowSearch.action",
@@ -10474,7 +8376,7 @@ export const UI_WINDOW_SEARCH = {
   noMatches: "ui.windowSearch.noMatches",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** 🏷️ Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle) — for standalone REPL surfaces that build a {@link SearchSpec} outside {@link Search}'s own `useLabel` resolution. */
+/** @emoji 🏷️ Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle) — for standalone REPL surfaces that build a {@link SearchSpec} outside {@link Search}'s own `useLabel` resolution. */
 export const WINDOW_SEARCH_USER = {
   actionPlaceholder: "Action",
   actionPlaceholderActive: "Action or value",
@@ -10482,7 +8384,7 @@ export const WINDOW_SEARCH_USER = {
   noMatches: "No matches",
 } as const;
 
-/** ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
+/** @emoji ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
 export function normalizeEngagementActionText(text: string): string {
   const decimalMarker = "\u0001";
   const withProtectedDecimals = text.replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`);
@@ -10497,28 +8399,28 @@ export function normalizeEngagementActionText(text: string): string {
   return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
 }
 
-/** ⚖️ True when two engagement action tokens match after {@link normalizeEngagementActionText} (case-insensitive). */
+/** @emoji ⚖️ True when two engagement action tokens match after {@link normalizeEngagementActionText} (case-insensitive). */
 export function engagementActionTokenEquals(a: string, b: string): boolean {
   return normalizeEngagementActionText(a).toLowerCase() === normalizeEngagementActionText(b).toLowerCase();
 }
 
 // #region 🔎️WindowSearch
 
-/** ⌨️ One typed action line for a window's {@link SearchSpec}. */
+/** @emoji ⌨️ One typed action line for a window's {@link SearchSpec}. */
 export interface SearchInput {
   id?: string;
   value?: string;
   placeholder?: UiLabel;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
-  /** 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
+  /** @emoji 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
   onRepeatLast?: () => void;
-  /** ⎋️ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
+  /** @emoji ⎋️ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
   onAbort?: () => void;
   disabled?: boolean;
 }
 
-/** 🔎️ One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
+/** @emoji 🔎️ One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
 export interface SearchPossible {
   id: string;
   label: string;
@@ -10540,7 +8442,7 @@ function searchPossibleRankScore(query: string, item: SearchPossible): number {
   return -1;
 }
 
-/** 🎯️ Resolves a pointer event target to an element for search suggestion hit-testing. */
+/** @emoji 🎯️ Resolves a pointer event target to an element for search suggestion hit-testing. */
 function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Element | null {
   const target = event.target;
   if (target instanceof Element) return target;
@@ -10548,12 +8450,12 @@ function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Ele
   return null;
 }
 
-/** 🎯️ True when a pointer event targets a search suggestion action row. */
+/** @emoji 🎯️ True when a pointer event targets a search suggestion action row. */
 export function isSearchSuggestionActionTarget(event: Pick<PointerEvent, "target">): boolean {
   return Boolean(searchSuggestionPointerTarget(event)?.closest('[data-slot="command-item"]'));
 }
 
-/** 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
+/** @emoji 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
 export function filterSearchPossibles(query: string, items: readonly SearchPossible[]): SearchPossible[] {
   const trimmed = normalizeEngagementActionText(query).toLowerCase();
   if (!trimmed) return [...items];
@@ -10564,13 +8466,13 @@ export function filterSearchPossibles(query: string, items: readonly SearchPossi
     .map((row) => row.item);
 }
 
-/** ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
+/** @emoji ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
 export interface SearchInlineCompletion {
   readonly prefix: string;
   readonly suffix: string;
 }
 
-/** ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
+/** @emoji ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
 export function searchInlineCompletion(query: string, item: SearchPossible | undefined): SearchInlineCompletion | null {
   if (!query.trim() || !item) return null;
   const q = query;
@@ -10590,12 +8492,12 @@ export function searchInlineCompletion(query: string, item: SearchPossible | und
   return best;
 }
 
-/** ⌨️ Inline completion suffix for one {@link SearchPossible} (longest prefix match on label, detail, or id). */
+/** @emoji ⌨️ Inline completion suffix for one {@link SearchPossible} (longest prefix match on label, detail, or id). */
 export function searchCompletionSuffix(query: string, item: SearchPossible | undefined): string {
   return searchInlineCompletion(query, item)?.suffix ?? "";
 }
 
-/** ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
+/** @emoji ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
 export function searchActiveInlineCompletion(query: string, matches: readonly SearchPossible[], index: number): SearchInlineCompletion | null {
   if (!query.trim() || !matches.length) return null;
   const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
@@ -10609,12 +8511,12 @@ export function searchActiveInlineCompletion(query: string, matches: readonly Se
   return null;
 }
 
-/** ⌨️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
+/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
 export function searchActiveCompletionSuffix(query: string, matches: readonly SearchPossible[], index: number): string {
   return searchActiveInlineCompletion(query, matches, index)?.suffix ?? "";
 }
 
-/** 🔎️ Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
+/** @emoji 🔎️ Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
 export function searchHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
   const displayLabel = normalizeEngagementActionText(label);
   const trimmed = normalizeEngagementActionText(query);
@@ -10634,9 +8536,9 @@ export function searchHighlightedLabel(label: string, query: string, detail?: st
   );
 }
 
-/** 🚫️ React props that disable native browser affordances on editable UI controls. */
+/** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
 
-/** 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
+/** @emoji 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
 export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
   if (element.dataset.uiBrowserDefaults === "true") return;
   const kind = element instanceof HTMLInputElement ? (element.type || "text").toLowerCase() : "textarea";
@@ -10650,7 +8552,7 @@ export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HT
   element.dataset.uiBrowserDefaults = "true";
 }
 
-/** ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
+/** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
 export function isUiTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
@@ -10666,7 +8568,7 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   return Boolean(t.closest('[data-slot="search"] input, [data-slot="search"] textarea'));
 }
 
-/** 🚫️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
+/** @emoji 🚫️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
  *
  * ⌨️ Tab focus traversal stays the browser's. It used to be suppressed everywhere outside a typing target, which left
  * every chrome control of the shell — navbar, Home, footer, panels, window chips — unreachable without a mouse
@@ -10688,13 +8590,13 @@ export function installElementsSurfaceBrowserDefaultSuppression(bindings: Return
   bindings.listen(document, "focusin", onFocusIn as EventListener, true);
 }
 
-/** ⌨️ True when the event target is already the active window search action field. */
+/** @emoji ⌨️ True when the event target is already the active window search action field. */
 export function isWindowSearchTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] textarea'));
 }
 
-/** ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
+/** @emoji ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
 export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
   if (isWindowSearchTypingTarget(t)) return false;
   const searchField = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
@@ -10705,13 +8607,13 @@ export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
   return true;
 }
 
-/** ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
+/** @emoji ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
 export function queryWindowSearchInput(activeOnly = false): HTMLInputElement | null {
   const searchActive = activeOnly ? '[data-active="true"]' : "";
   return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="search"]${searchActive} [data-slot="input"]`);
 }
 
-/** ⌨️ Focuses the action input in the active window search overlay, if present. */
+/** @emoji ⌨️ Focuses the action input in the active window search overlay, if present. */
 export function focusActiveSearchInput(): boolean {
   const active = document.activeElement;
   if (active instanceof HTMLElement && active.closest('[data-slot="engagement-control"]')) return false;
@@ -10721,7 +8623,7 @@ export function focusActiveSearchInput(): boolean {
   return true;
 }
 
-/** ✍️ One local edit of a controlled search line: the text the user typed, the published value
+/** @emoji ✍️ One local edit of a controlled search line: the text the user typed, the published value
  * that stood when the edit began, and every line this edit already dispatched through `onChange` (a
  * program that echoes the line back republishes exactly those). */
 export interface SearchLineEdit {
@@ -10730,12 +8632,12 @@ export interface SearchLineEdit {
   readonly sent?: readonly string[];
 }
 
-/** 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
+/** @emoji 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
  * echoing the first keystrokes of a long verb when the last ones are typed. */
 export const SEARCH_LINE_EDIT_SENT_LIMIT = 64;
 
 /**
- * ✍️ Which line a controlled window search field shows. The published value is a program's
+ * @emoji ✍️ Which line a controlled window search field shows. The published value is a program's
  * property, and a program that stores the line without republishing it (or that answers a full round trip
  * later) used to make the field unwritable: every keystroke dispatched `onChange` and the field snapped
  * straight back to the stale `value`, so every submit carried an empty line. The local edit therefore
@@ -10752,14 +8654,14 @@ export function searchControlledLineV1(published: string, edit: SearchLineEdit |
   return edit.sent?.includes(published) ? edit.text : published;
 }
 
-/** ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
+/** @emoji ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
 export function shouldActivateSearchPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
   if (!filteredCount) return false;
   return showPossiblesList || Boolean(draft.trim());
 }
 
 /**
- * ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
+ * @emoji ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
  * An empty line confirms (repeat-last when idle, step submit during a session) and a live engagement
  * session keeps the step-value grammar where each Space commits the typed number. A typed line with no
  * session is prose the program tokenizes itself (`move 50 25`), so Space belongs in the text.
@@ -10768,7 +8670,7 @@ export function searchSpaceConfirmsLine(draft: string, sessionActive: boolean): 
   return !draft.trim() || sessionActive;
 }
 
-/** ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
+/** @emoji ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
 export function applySearchSpaceAction(input: SearchInput, draft: string, sessionActive: boolean): boolean {
   if (input.disabled) return false;
   if (!draft.trim()) {
@@ -10786,7 +8688,7 @@ export function applySearchSpaceAction(input: SearchInput, draft: string, sessio
   return true;
 }
 
-/** 🔁️ Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
+/** @emoji 🔁️ Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
 export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = search?.input;
   if (!input || event.defaultPrevented || event.isComposing) return false;
@@ -10797,7 +8699,7 @@ export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pi
   return applySearchSpaceAction(input, draft, Boolean(search?.sessionActive));
 }
 
-/** ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
+/** @emoji ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
 export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = search?.input;
   if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
@@ -10811,7 +8713,7 @@ export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: 
   return true;
 }
 
-/** ⎋️ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
+/** @emoji ⎋️ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
 export function routeWindowSearchEscape(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">, zone: { readonly chromeVisible: boolean; readonly actionActive: boolean }): boolean {
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
   const onAbort = search?.input?.onAbort;
@@ -10824,9 +8726,9 @@ export function routeWindowSearchEscape(search: SearchSpec | undefined, event: P
   return true;
 }
 
-/** 🔎️ Floating top-middle window search payload: typed action input and autocomplete possibles. */
+/** @emoji 🔎️ Floating top-middle window search payload: typed action input and autocomplete possibles. */
 export interface SearchSpec {
-  /** 🎯️ Ongoing engagement: chrome stays visible; action input accepts step values. */
+  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; action input accepts step values. */
   sessionActive?: boolean;
   input?: SearchInput;
   possibles?: SearchPossible[];
@@ -10834,20 +8736,20 @@ export interface SearchSpec {
 
 export interface SearchProps extends SearchSpec {
   className?: string;
-  /** 🎯️ When true, focuses the action input whenever this search pane belongs to the globally active window. */
+  /** @emoji 🎯️ When true, focuses the action input whenever this search pane belongs to the globally active window. */
   active?: boolean;
 }
 
 // #endregion 🔎️WindowSearch
 
-/** 💬️ Floating window engagement payload with options, status, and controls. */
+/** @emoji 💬️ Floating window engagement payload with options, status, and controls. */
 export interface EngagementSpec {
-  /** 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
+  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
   sessionActive?: boolean;
   options?: EngagementOption[];
-  /** 🎛️ Optional slider, stepper, or ring control for the active step. */
+  /** @emoji 🎛️ Optional slider, stepper, or ring control for the active step. */
   control?: EngagementControl;
-  /** 🎛️ Optional additional controls rendered below the primary control. */
+  /** @emoji 🎛️ Optional additional controls rendered below the primary control. */
   controls?: readonly EngagementControl[];
   status?: EngagementStatus[];
 }
@@ -10875,10 +8777,10 @@ export interface WindowLayoutAxisNode {
   children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
 }
 
-/** 🪟️ Recursive resizable window layout tree for {@link Mode}. */
+/** @emoji 🪟️ Recursive resizable window layout tree for {@link Mode}. */
 export type WindowLayoutNode = WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode;
 
-/** 🪟️ Builds an even horizontal split layout for the given window ids. */
+/** @emoji 🪟️ Builds an even horizontal split layout for the given window ids. */
 export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayoutNode {
   if (windowIds.length === 0) return { kind: "stack", children: [] };
   if (windowIds.length === 1) return { kind: "stack", children: [{ kind: "window", id: windowIds[0]! }] };
@@ -10905,7 +8807,7 @@ function engagementControlIsNumeric(control: EngagementControl): control is Enga
   return control.kind === "slider" || control.kind === "stepper";
 }
 
-/** 🎛️ Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
+/** @emoji 🎛️ Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
 function EngagementControlView({ control }: { readonly control: EngagementControl }): React.ReactElement | null {
   const label = engagementControlLabel(control);
   const selectLabel = useLabel("ui.common.select");
@@ -11013,7 +8915,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
 
 // #region 🔎️WindowSearch
 
-/** 🔎️ Floating top-middle window search pane: action input with optional right chevron for possibles. */
+/** @emoji 🔎️ Floating top-middle window search pane: action input with optional right chevron for possibles. */
 const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles, className = "", active = false }) => {
   const { inline } = useFlow();
   const actionPlaceholderLabel = useLabel(UI_WINDOW_SEARCH.action);
@@ -11245,7 +9147,7 @@ export { Search };
 
 // #endregion 🔎️WindowSearch
 
-/** 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
+/** @emoji 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
 const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, control, controls, status, className = "" }) => {
   const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
   const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
@@ -11762,7 +9664,6 @@ export {
 export { GLTFLoader };
 export { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 export { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
-export { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 // #endregion 📰️Three.js
 
 // #region 🎽️XY Flow (additions not already exported inline)

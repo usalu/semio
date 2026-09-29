@@ -1,0 +1,440 @@
+{
+  "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
+  "schema": "semio.quiz/v1",
+  "id": "physics",
+  "title": { "en": "Physical Understanding", "de": "Physikalisches Verständnis" },
+  "description": {
+    "en": "Tell power from energy and develop a feeling for orders of magnitude — from a tea light to the Sun, from one phone charge to the world's annual energy consumption.",
+    "de": "Leistung von Energie unterscheiden und ein Gefühl für Größenordnungen entwickeln – vom Teelicht bis zur Sonne, von einer Handyladung bis zum Jahresenergieverbrauch der Welt."
+  },
+  "tasks": [
+    {
+      "kind": "classification",
+      "id": "power-or-energy",
+      "title": { "en": "Power or Energy?", "de": "Leistung oder Energie?" },
+      "prompt": {
+        "en": "Decide for each quantity whether it is a power (a rate: energy per unit of time, measured in watts) or an energy or energy demand (an amount, measured in watt-hours, joules or kilocalories; demands per year such as kWh/a count as energy demand).",
+        "de": "Entscheide für jede Größe, ob sie eine Leistung ist (eine Rate: Energie pro Zeit, gemessen in Watt) oder eine Energie bzw. ein Energiebedarf (eine Menge, gemessen in Wattstunden, Joule oder Kilokalorien; Bedarfe pro Jahr wie kWh/a zählen als Energiebedarf)."
+      },
+      "categories": [
+        {
+          "id": "power",
+          "label": { "en": "Power", "de": "Leistung" },
+          "description": { "en": "A rate: how fast energy is converted (1 W = 1 J/s).", "de": "Eine Rate: wie schnell Energie umgesetzt wird (1 W = 1 J/s)." }
+        },
+        {
+          "id": "energy",
+          "label": { "en": "Energy (demand)", "de": "Energie(bedarf)" },
+          "description": { "en": "An amount: how much energy is converted in total (Wh, J, kcal).", "de": "Eine Menge: wie viel Energie insgesamt umgesetzt wird (Wh, J, kcal)." }
+        }
+      ],
+      "items": [
+        {
+          "id": "tea-light",
+          "label": { "en": "Heat output of a burning tea light", "de": "Wärmeabgabe eines brennenden Teelichts" },
+          "category": "power",
+          "explanation": {
+            "en": "About 35 W: roughly 12 g of paraffin (≈ 12 Wh/g) burn in about 4 hours, and heat per unit of time is a power. Source: calorific value of paraffin; Wikipedia “Teelicht” (30–40 W).",
+            "de": "Rund 35 W: etwa 12 g Paraffin (≈ 12 Wh/g) verbrennen in rund 4 Stunden, und Wärme pro Zeit ist eine Leistung. Quelle: Heizwert von Paraffin; Wikipedia „Teelicht“ (30–40 W)."
+          }
+        },
+        {
+          "id": "kettle",
+          "label": { "en": "Rated power of an electric kettle", "de": "Nennleistung eines Wasserkochers" },
+          "category": "power",
+          "explanation": {
+            "en": "About 2 kW according to the rating plate; a 230 V/16 A socket allows at most 3.7 kW. The power tells how fast the kettle heats, not how much energy it uses.",
+            "de": "Rund 2 kW laut Typenschild; eine 230-V/16-A-Steckdose erlaubt höchstens 3,7 kW. Die Leistung sagt, wie schnell der Kocher heizt, nicht wie viel Energie er verbraucht."
+          }
+        },
+        {
+          "id": "resting-person",
+          "label": { "en": "Heat given off by a person sitting still", "de": "Wärmeabgabe eines ruhig sitzenden Menschen" },
+          "category": "power",
+          "explanation": {
+            "en": "About 100 W: 1 met = 58 W per m² of skin × 1.8 m² (ISO 7730, ISO 8996). The matching energy is the daily food intake of about 2,300 kcal ≈ 2.7 kWh.",
+            "de": "Rund 100 W: 1 met = 58 W pro m² Haut × 1,8 m² (ISO 7730, ISO 8996). Die dazugehörige Energie ist die tägliche Nahrung von etwa 2300 kcal ≈ 2,7 kWh."
+          }
+        },
+        {
+          "id": "pv-module-peak",
+          "label": { "en": "Peak rating of a solar module in kWp", "de": "Spitzenleistung eines Solarmoduls in kWp" },
+          "category": "power",
+          "explanation": {
+            "en": "About 0.43 kWp for a 2 m² module: the electrical power under standard test conditions (1,000 W/m², 25 °C; IEC 60904-3). The “p” stands for peak, not for an amount.",
+            "de": "Rund 0,43 kWp bei einem 2-m²-Modul: die elektrische Leistung unter Standard-Testbedingungen (1000 W/m², 25 °C; IEC 60904-3). Das „p“ steht für Spitze (peak), nicht für eine Menge."
+          }
+        },
+        {
+          "id": "heating-load",
+          "label": { "en": "Design heating load of a house", "de": "Heizlast eines Hauses" },
+          "category": "power",
+          "explanation": {
+            "en": "About 18 kW for an unrenovated 1960s single-family house (110 m² × 160 W/m²): the heat flow needed on the coldest design day (DIN EN 12831).",
+            "de": "Rund 18 kW für ein unsaniertes Einfamilienhaus der 1960er (110 m² × 160 W/m²): der Wärmestrom, der am kältesten Auslegungstag nötig ist (DIN EN 12831)."
+          }
+        },
+        {
+          "id": "nuclear-unit",
+          "label": { "en": "Electrical output of a nuclear power plant unit", "de": "Elektrische Leistung eines Kernkraftwerksblocks" },
+          "category": "power",
+          "explanation": {
+            "en": "About 1.4 GW: Isar 2 delivered 1,410 MW net until April 2023. Power plants are rated by their power; their annual generation is an energy.",
+            "de": "Rund 1,4 GW: Isar 2 lieferte bis April 2023 netto 1410 MW. Kraftwerke werden nach ihrer Leistung bemessen; ihre Jahreserzeugung ist eine Energie."
+          }
+        },
+        {
+          "id": "car-engine",
+          "label": { "en": "Rated output of a car engine in horsepower (PS)", "de": "Motorleistung eines Autos in PS" },
+          "category": "power",
+          "explanation": {
+            "en": "About 100 kW = 136 PS (1 PS = 735.5 W): horsepower is an old unit of power.",
+            "de": "Rund 100 kW = 136 PS (1 PS = 735,5 W): die Pferdestärke ist eine alte Einheit der Leistung."
+          }
+        },
+        {
+          "id": "wallbox",
+          "label": { "en": "Charging power of a home wall box", "de": "Ladeleistung einer Wallbox" },
+          "category": "power",
+          "explanation": {
+            "en": "11 kW = 3 phases × 230 V × 16 A: the rate at which the car battery is filled.",
+            "de": "11 kW = 3 Phasen × 230 V × 16 A: die Rate, mit der der Autoakku gefüllt wird."
+          }
+        },
+        {
+          "id": "household-electricity",
+          "label": { "en": "Annual electricity use of a two-person household", "de": "Jahresstromverbrauch eines Zwei-Personen-Haushalts" },
+          "category": "energy",
+          "explanation": {
+            "en": "About 2,500 kWh per year (Stromspiegel für Deutschland): an amount summed over a year. Divided by 8,760 h it corresponds to an average power of only about 0.3 kW.",
+            "de": "Rund 2500 kWh pro Jahr (Stromspiegel für Deutschland): eine über ein Jahr aufsummierte Menge. Geteilt durch 8760 h entspricht sie einer mittleren Leistung von nur etwa 0,3 kW."
+          }
+        },
+        {
+          "id": "ev-battery",
+          "label": { "en": "Usable capacity of an electric car battery", "de": "Nutzbare Kapazität eines E-Auto-Akkus" },
+          "category": "energy",
+          "explanation": {
+            "en": "About 60 kWh (e.g. VW ID.3: 58 kWh net): a stored amount of energy. With an 11 kW wall box it takes 60 ÷ 11 ≈ 5.5 hours to fill.",
+            "de": "Rund 60 kWh (z. B. VW ID.3: 58 kWh netto): eine gespeicherte Energiemenge. Mit einer 11-kW-Wallbox dauert das Füllen 60 ÷ 11 ≈ 5,5 Stunden."
+          }
+        },
+        {
+          "id": "heating-oil-litre",
+          "label": { "en": "Energy content of one litre of heating oil", "de": "Energieinhalt eines Liters Heizöl" },
+          "category": "energy",
+          "explanation": {
+            "en": "About 10 kWh: net calorific value of heating oil EL ≈ 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
+            "de": "Rund 10 kWh: Heizwert von Heizöl EL ≈ 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+          }
+        },
+        {
+          "id": "heating-demand-house",
+          "label": { "en": "Annual heating demand of an unrenovated single-family house", "de": "Jahres-Heizwärmebedarf eines unsanierten Einfamilienhauses" },
+          "category": "energy",
+          "explanation": {
+            "en": "About 33,000 kWh per year for a 1960s house (110 m² × 303 kWh/(m²·a); IWU German residential building typology 2015, type EFH_E): an annual amount, i.e. an energy demand.",
+            "de": "Rund 33 000 kWh pro Jahr für ein Haus der 1960er (110 m² × 303 kWh/(m²·a); IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E): eine Jahresmenge, also ein Energiebedarf."
+          }
+        },
+        {
+          "id": "chocolate-bar",
+          "label": { "en": "Food energy of a 100 g chocolate bar", "de": "Brennwert einer 100-g-Tafel Schokolade" },
+          "category": "energy",
+          "explanation": {
+            "en": "About 540 kcal ≈ 0.63 kWh (1 kcal = 1.163 Wh) according to the nutrition label: kilocalories measure energy.",
+            "de": "Rund 540 kcal ≈ 0,63 kWh (1 kcal = 1,163 Wh) laut Nährwerttabelle: Kilokalorien messen Energie."
+          }
+        },
+        {
+          "id": "pv-annual-yield",
+          "label": { "en": "Annual yield of a 10 kWp rooftop solar system", "de": "Jahresertrag einer 10-kWp-Solaranlage auf dem Dach" },
+          "category": "energy",
+          "explanation": {
+            "en": "About 9,500 kWh per year: roughly 950 kWh per kWp in Germany (Fraunhofer ISE, Recent Facts about Photovoltaics in Germany). Peak power times full-load hours gives energy.",
+            "de": "Rund 9500 kWh pro Jahr: in Deutschland etwa 950 kWh je kWp (Fraunhofer ISE, Aktuelle Fakten zur Photovoltaik in Deutschland). Spitzenleistung mal Volllaststunden ergibt Energie."
+          }
+        },
+        {
+          "id": "phone-charge",
+          "label": { "en": "One full smartphone charge", "de": "Eine volle Smartphone-Ladung" },
+          "category": "energy",
+          "explanation": {
+            "en": "About 15 Wh: a 4,000 mAh battery at 3.85 V stores 15.4 Wh, a stored amount of energy.",
+            "de": "Rund 15 Wh: ein Akku mit 4000 mAh bei 3,85 V speichert 15,4 Wh, eine gespeicherte Energiemenge."
+          }
+        },
+        {
+          "id": "energy-certificate",
+          "label": { "en": "Primary energy demand stated in an energy performance certificate", "de": "Primärenergiebedarf im Energieausweis" },
+          "category": "energy",
+          "explanation": {
+            "en": "Given in kWh per m² and year (GEG § 85): an energy demand related to floor area and one year, not a power.",
+            "de": "Angegeben in kWh pro m² und Jahr (GEG § 85): ein auf Fläche und Jahr bezogener Energiebedarf, keine Leistung."
+          }
+        }
+      ],
+      "draw": 12
+    },
+    {
+      "kind": "sorting",
+      "id": "powers",
+      "title": { "en": "From Tea Light to Sun", "de": "Vom Teelicht bis zur Sonne" },
+      "prompt": {
+        "en": "Sort the powers in ascending order, smallest first. Quantity: power in watts (W); the values span about 25 orders of magnitude.",
+        "de": "Sortiere die Leistungen aufsteigend, die kleinste zuerst. Größe: Leistung in Watt (W); die Werte umfassen rund 25 Größenordnungen."
+      },
+      "quantity": { "label": { "en": "Power", "de": "Leistung" }, "unit": "W", "scale": "logarithmic", "prefixed": true },
+      "items": [
+        {
+          "id": "tea-light",
+          "label": { "en": "Burning tea light (heat)", "de": "Brennendes Teelicht (Wärme)" },
+          "value": 35,
+          "explanation": {
+            "en": "About 35 W (30–40 W): roughly 12 g of paraffin burn in about 4 hours (Wikipedia “Teelicht”).",
+            "de": "Rund 35 W (30–40 W): etwa 12 g Paraffin verbrennen in rund 4 Stunden (Wikipedia „Teelicht“)."
+          }
+        },
+        {
+          "id": "resting-person",
+          "label": { "en": "Person sitting still (body heat)", "de": "Ruhig sitzender Mensch (Körperwärme)" },
+          "value": 100,
+          "explanation": {
+            "en": "About 100 W: 1 met = 58 W/m² × 1.8 m² of skin (ISO 7730). A lecture hall with 100 students is a 10 kW heater.",
+            "de": "Rund 100 W: 1 met = 58 W/m² × 1,8 m² Haut (ISO 7730). Ein Hörsaal mit 100 Studierenden ist eine 10-kW-Heizung."
+          }
+        },
+        {
+          "id": "sunlight-square-metre",
+          "label": { "en": "Sunlight on 1 m² at noon on a clear summer day", "de": "Sonnenlicht auf 1 m² an einem klaren Sommermittag" },
+          "value": 1000,
+          "explanation": {
+            "en": "About 1,000 W: the standard irradiance for testing solar modules (IEC 60904-3); a module with 20 % efficiency turns 200 W of it into electricity.",
+            "de": "Rund 1000 W: die Standard-Bestrahlungsstärke für die Prüfung von Solarmodulen (IEC 60904-3); ein Modul mit 20 % Wirkungsgrad macht daraus 200 W Strom."
+          }
+        },
+        {
+          "id": "kettle",
+          "label": { "en": "Electric kettle", "de": "Wasserkocher" },
+          "value": 2000,
+          "explanation": {
+            "en": "About 2,000 W according to the rating plate; a 230 V/16 A socket allows at most 3.7 kW.",
+            "de": "Rund 2000 W laut Typenschild; eine 230-V/16-A-Steckdose erlaubt höchstens 3,7 kW."
+          }
+        },
+        {
+          "id": "wallbox",
+          "label": { "en": "Wall box charging an electric car", "de": "Wallbox beim Laden eines E-Autos" },
+          "value": 11000,
+          "explanation": {
+            "en": "11 kW = 3 × 230 V × 16 A, the most common home charging power in Germany.",
+            "de": "11 kW = 3 × 230 V × 16 A, die häufigste Ladeleistung zu Hause in Deutschland."
+          }
+        },
+        {
+          "id": "heating-load-old-house",
+          "label": { "en": "Design heating load of an unrenovated 1960s single-family house", "de": "Heizlast eines unsanierten Einfamilienhauses der 1960er" },
+          "value": 18000,
+          "explanation": {
+            "en": "About 18 kW: 110 m² × 160 W/m² (envelope of IWU type EFH_E, −12 °C design temperature, DIN EN 12831) — the power of nine kettles.",
+            "de": "Rund 18 kW: 110 m² × 160 W/m² (Hülle des IWU-Typs EFH_E, −12 °C Auslegungstemperatur, DIN EN 12831) – die Leistung von neun Wasserkochern."
+          }
+        },
+        {
+          "id": "car-engine",
+          "label": { "en": "Car engine at full throttle (136 PS)", "de": "Automotor unter Volllast (136 PS)" },
+          "value": 100000,
+          "explanation": {
+            "en": "100 kW = 136 PS (1 PS = 735.5 W), a typical mid-size car.",
+            "de": "100 kW = 136 PS (1 PS = 735,5 W), ein typisches Mittelklasseauto."
+          }
+        },
+        {
+          "id": "wind-turbine",
+          "label": { "en": "Modern onshore wind turbine at rated wind speed", "de": "Moderne Windenergieanlage an Land bei Nennwind" },
+          "value": 5000000,
+          "explanation": {
+            "en": "About 5 MW: the 635 turbines installed on land in Germany in 2024 averaged 5.1 MW (3,251 MW; Deutsche WindGuard 2025).",
+            "de": "Rund 5 MW: die 635 im Jahr 2024 in Deutschland an Land errichteten Anlagen hatten im Mittel 5,1 MW (3251 MW; Deutsche WindGuard 2025)."
+          }
+        },
+        {
+          "id": "ice-train",
+          "label": { "en": "ICE 3 high-speed train at full power", "de": "ICE-3-Hochgeschwindigkeitszug unter Volllast" },
+          "value": 8000000,
+          "explanation": {
+            "en": "8 MW traction power (DB class 403), as much as 1.6 wind turbines deliver at rated wind speed.",
+            "de": "8 MW Traktionsleistung (DB-Baureihe 403), so viel wie 1,6 Windenergieanlagen bei Nennwind liefern."
+          }
+        },
+        {
+          "id": "nuclear-unit",
+          "label": { "en": "Nuclear power plant unit (electrical, Isar 2)", "de": "Kernkraftwerksblock (elektrisch, Isar 2)" },
+          "value": 1410000000,
+          "explanation": {
+            "en": "1,410 MW net electrical output (Isar 2, shut down in April 2023); its reactor released about 3.95 GW of heat.",
+            "de": "1410 MW elektrische Nettoleistung (Isar 2, im April 2023 abgeschaltet); sein Reaktor setzte rund 3,95 GW Wärme frei."
+          }
+        },
+        {
+          "id": "germany-electricity",
+          "label": { "en": "Germany's average electricity consumption", "de": "Deutschlands mittlerer Stromverbrauch" },
+          "value": 60000000000,
+          "explanation": {
+            "en": "About 60 GW: gross electricity consumption of 527 TWh in 2024 divided by 8,784 hours (AG Energiebilanzen 2025), about 43 nuclear units.",
+            "de": "Rund 60 GW: Bruttostromverbrauch von 527 TWh im Jahr 2024 geteilt durch 8784 Stunden (AG Energiebilanzen 2025), rund 43 Kernkraftwerksblöcke."
+          }
+        },
+        {
+          "id": "world-primary-power",
+          "label": { "en": "Humanity's average primary energy use", "de": "Mittlerer Primärenergieverbrauch der Menschheit" },
+          "value": 18700000000000,
+          "explanation": {
+            "en": "About 19 TW: 592 EJ in 2024 (Energy Institute, Statistical Review of World Energy 2025) divided by one year.",
+            "de": "Rund 19 TW: 592 EJ im Jahr 2024 (Energy Institute, Statistical Review of World Energy 2025) geteilt durch ein Jahr."
+          }
+        },
+        {
+          "id": "sunlight-on-earth",
+          "label": { "en": "Sunlight intercepted by the Earth", "de": "Von der Erde aufgefangenes Sonnenlicht" },
+          "value": 174000000000000000,
+          "explanation": {
+            "en": "About 174 PW: solar constant 1,361 W/m² × Earth's cross-section π × (6,371 km)², about 9,000 times humanity's energy use.",
+            "de": "Rund 174 PW: Solarkonstante 1361 W/m² × Erdquerschnitt π × (6371 km)², rund 9000-mal der Energieverbrauch der Menschheit."
+          }
+        },
+        {
+          "id": "sun",
+          "label": { "en": "Total radiant power of the Sun", "de": "Gesamte Strahlungsleistung der Sonne" },
+          "value": 3.828e26,
+          "explanation": {
+            "en": "3.828 × 10²⁶ W (IAU 2015 nominal solar luminosity); the Earth catches less than a billionth of it.",
+            "de": "3,828 × 10²⁶ W (nominale Sonnenleuchtkraft der IAU 2015); die Erde fängt davon weniger als ein Milliardstel auf."
+          }
+        }
+      ],
+      "draw": 10
+    },
+    {
+      "kind": "sorting",
+      "id": "energies",
+      "title": { "en": "From Phone Charge to World Energy Use", "de": "Von der Handyladung zum Weltenergieverbrauch" },
+      "prompt": {
+        "en": "Sort the amounts of energy in ascending order, smallest first. Quantity: energy in watt-hours (Wh); the values span about 16 orders of magnitude.",
+        "de": "Sortiere die Energiemengen aufsteigend, die kleinste zuerst. Größe: Energie in Wattstunden (Wh); die Werte umfassen rund 16 Größenordnungen."
+      },
+      "quantity": { "label": { "en": "Energy", "de": "Energie" }, "unit": "Wh", "scale": "logarithmic", "prefixed": true },
+      "items": [
+        {
+          "id": "phone-charge",
+          "label": { "en": "One full smartphone charge", "de": "Eine volle Smartphone-Ladung" },
+          "value": 15,
+          "explanation": {
+            "en": "About 15 Wh: a 4,000 mAh battery at 3.85 V stores 15.4 Wh.",
+            "de": "Rund 15 Wh: ein Akku mit 4000 mAh bei 3,85 V speichert 15,4 Wh."
+          }
+        },
+        {
+          "id": "boil-water",
+          "label": { "en": "Heating 1 litre of water from 20 °C to boiling", "de": "1 Liter Wasser von 20 °C zum Kochen bringen" },
+          "value": 93,
+          "explanation": {
+            "en": "About 93 Wh: 4.19 kJ/(kg·K) × 1 kg × 80 K = 335 kJ; a 2 kW kettle needs about 3 minutes plus losses.",
+            "de": "Rund 93 Wh: 4,19 kJ/(kg·K) × 1 kg × 80 K = 335 kJ; ein 2-kW-Wasserkocher braucht dafür knapp 3 Minuten plus Verluste."
+          }
+        },
+        {
+          "id": "chocolate-bar",
+          "label": { "en": "Food energy of a 100 g chocolate bar", "de": "Brennwert einer 100-g-Tafel Schokolade" },
+          "value": 628,
+          "explanation": {
+            "en": "About 540 kcal ≈ 628 Wh (1 kcal = 1.163 Wh) according to the nutrition label.",
+            "de": "Rund 540 kcal ≈ 628 Wh (1 kcal = 1,163 Wh) laut Nährwerttabelle."
+          }
+        },
+        {
+          "id": "daily-food",
+          "label": { "en": "Daily food energy of an adult", "de": "Täglicher Nahrungsenergiebedarf eines Erwachsenen" },
+          "value": 2700,
+          "explanation": {
+            "en": "About 2,300 kcal ≈ 2.7 kWh (DGE reference values for moderate activity, about 1,900–2,500 kcal); it keeps 100 W of body heat going for 24 hours.",
+            "de": "Rund 2300 kcal ≈ 2,7 kWh (DGE-Referenzwerte bei mäßiger Aktivität, etwa 1900–2500 kcal); damit laufen 100 W Körperwärme 24 Stunden lang."
+          }
+        },
+        {
+          "id": "heating-oil-litre",
+          "label": { "en": "One litre of heating oil", "de": "Ein Liter Heizöl" },
+          "value": 10000,
+          "explanation": {
+            "en": "About 10 kWh: net calorific value 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
+            "de": "Rund 10 kWh: Heizwert 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+          }
+        },
+        {
+          "id": "ev-battery",
+          "label": { "en": "Usable capacity of an electric car battery", "de": "Nutzbare Kapazität eines E-Auto-Akkus" },
+          "value": 60000,
+          "explanation": {
+            "en": "About 60 kWh (e.g. VW ID.3: 58 kWh net), enough for roughly 350 km.",
+            "de": "Rund 60 kWh (z. B. VW ID.3: 58 kWh netto), genug für rund 350 km."
+          }
+        },
+        {
+          "id": "petrol-tank",
+          "label": { "en": "A full 50-litre tank of petrol", "de": "Eine volle 50-Liter-Tankfüllung Benzin" },
+          "value": 440000,
+          "explanation": {
+            "en": "About 440 kWh: 50 l × 8.8 kWh/l (42.7 MJ/kg × 0.745 kg/l), seven times the car battery, yet an engine turns only about a quarter of it into motion.",
+            "de": "Rund 440 kWh: 50 l × 8,8 kWh/l (42,7 MJ/kg × 0,745 kg/l), siebenmal der Autoakku, doch ein Motor macht nur etwa ein Viertel davon zu Bewegung."
+          }
+        },
+        {
+          "id": "household-electricity",
+          "label": { "en": "Annual electricity use of a two-person household", "de": "Jahresstromverbrauch eines Zwei-Personen-Haushalts" },
+          "value": 2500000,
+          "explanation": {
+            "en": "About 2,500 kWh = 2.5 MWh per year (Stromspiegel für Deutschland).",
+            "de": "Rund 2500 kWh = 2,5 MWh pro Jahr (Stromspiegel für Deutschland)."
+          }
+        },
+        {
+          "id": "heating-demand-house",
+          "label": { "en": "Annual heating demand of an unrenovated 1960s single-family house", "de": "Jahres-Heizwärmebedarf eines unsanierten Einfamilienhauses der 1960er" },
+          "value": 33000000,
+          "explanation": {
+            "en": "About 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU German residential building typology 2015, type EFH_E), thirteen times the household electricity.",
+            "de": "Rund 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E), dreizehnmal der Haushaltsstrom."
+          }
+        },
+        {
+          "id": "wind-turbine-year",
+          "label": { "en": "Annual yield of a modern onshore wind turbine", "de": "Jahresertrag einer modernen Windenergieanlage an Land" },
+          "value": 10000000000,
+          "explanation": {
+            "en": "About 10 GWh: 5 MW × about 2,000 full-load hours, the electricity of about 4,000 two-person households.",
+            "de": "Rund 10 GWh: 5 MW × rund 2000 Volllaststunden, der Strom von rund 4000 Zwei-Personen-Haushalten."
+          }
+        },
+        {
+          "id": "germany-primary-energy",
+          "label": { "en": "Germany's annual primary energy consumption", "de": "Jährlicher Primärenergieverbrauch Deutschlands" },
+          "value": 2925000000000000,
+          "explanation": {
+            "en": "About 2,925 TWh: 10,529 PJ in 2024 (AG Energiebilanzen 2025).",
+            "de": "Rund 2925 TWh: 10 529 PJ im Jahr 2024 (AG Energiebilanzen 2025)."
+          }
+        },
+        {
+          "id": "world-primary-energy",
+          "label": { "en": "The world's annual primary energy consumption", "de": "Jährlicher Primärenergieverbrauch der Welt" },
+          "value": 164400000000000000,
+          "explanation": {
+            "en": "About 164,000 TWh: 592 EJ in 2024 (Energy Institute, Statistical Review of World Energy 2025). The Sun delivers this much to the Earth in about one hour.",
+            "de": "Rund 164 000 TWh: 592 EJ im Jahr 2024 (Energy Institute, Statistical Review of World Energy 2025). So viel liefert die Sonne der Erde in etwa einer Stunde."
+          }
+        }
+      ],
+      "draw": 9
+    }
+  ]
+}

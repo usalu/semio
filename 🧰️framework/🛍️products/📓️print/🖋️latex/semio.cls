@@ -31,12 +31,19 @@
     \providecommand { \semio@page@margin } { 2.5cm }
     \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
   }
+  % 🎓 A dissertation is archived as a bound hardcover copy, so its gutter is
+  % wider than the 8mm every stapled or glued semio document uses.
+  { phd } {
+    \providecommand { \semio@page@margin } { 2.5cm }
+    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=15mm]{geometry}
+  }
 } {
   \providecommand { \semio@page@margin } { 2.5cm }
   \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
 }
 \str_case:VnF \semio@type {
   { report } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
+  { phd } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
   { paper } { \LoadClass[twoside=true,open=any]{scrartcl} }
   { flyer } { \LoadClass{scrartcl} }
 } {
@@ -77,6 +84,7 @@
 \RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt,backref=true]{biblatex}
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}
+\RequirePackage{semio-phd}
 \RequirePackage{semio-graph}
 \RequirePackage{semio-tree}
 \RequirePackage{semio-viz}

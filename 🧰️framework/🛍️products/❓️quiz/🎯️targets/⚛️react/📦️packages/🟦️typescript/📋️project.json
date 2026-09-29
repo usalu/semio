@@ -1,0 +1,67 @@
+{
+  "name": "@semio-tech/quiz-react",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🎨️.css",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🔨️modules/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/📐️quantity-formatting/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🕷️radar-geometry/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/📬️outbox-delivery/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/⌨️task-keyboard/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🚶️learner-journey/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🗣️translation-completeness/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/📐️quantity-formatting/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/🕷️radar-geometry/🔣️.json"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

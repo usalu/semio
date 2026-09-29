@@ -1,0 +1,642 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage[a4paper,left=25mm,right=25mm,top=25mm,bottom=25mm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\hypersetup{
+  pdftitle={The Components of the Powers of z = x + iy + jt: Coefficients, Recursion and the Laplace-Beltrami Equation},
+  pdfkeywords={Reduced quaternions, Powers, Real part, Binomial coefficients, Laplace-Beltrami, Lean}
+}
+
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\jj}{\mathrm{j}}
+\DeclareMathOperator{\Real}{Re}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\HH}{\mathbb{H}}
+\newcommand{\lean}[1]{\texttt{#1}}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+\title{The Components of the Powers of $z=x+\ii y+\jj t$:\\
+Coefficients, Recursion and the Laplace--Beltrami Equation}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+For the reduced quaternion $z=x+\ii y+\jj t$ we determine $\Real(z^n)$ explicitly,
+give the closed form and the two-term recursion of its coefficients, and settle the
+conjectures of the accompanying handwritten notes:
+the coefficient symmetry holds for every index, and $t\,\Delta u=\partial u/\partial t$
+holds for every $n$; in fact this equation is \emph{equivalent} to the recursion.
+The same is done for the coefficients of $\ii$ and $\jj$: $z^n=\Real(z^n)+(\ii y+\jj t)S_n$
+with explicit $S_n$, the coefficient of $\ii$ satisfies the same equation, and the coefficient
+of $\jj$ satisfies $t^2\Delta w-t\,\partial_tw+w=0$.
+Finally everything is extended to paravectors $x+\sum x_ie_i$ of the Clifford algebra
+$\mathrm{Cl}_{0,\mu}$: the polynomials are the same and the equations become
+$x_l\Delta f=(\mu-1)\partial_{x_l}f$ and
+$x_l^2\Delta w-(\mu-1)x_l\partial_{x_l}w+(\mu-1)w=0$.
+Every statement is machine-checked in Lean~4 with Mathlib.
+\end{abstract}
+
+\section{Setting and results}
+
+Let $\HH$ be the real quaternions with $\ii^2=\jj^2=-1$, $\ii\jj=-\jj\ii$, and
+\[
+  z=x+\ii y+\jj t,\qquad v=\ii y+\jj t,\qquad r=y^2+t^2,\qquad (x,y,t)\in\R^3 .
+\]
+
+\begin{theorem}[Closed form]\label{thm:closed}
+For every $n\in\N$,
+\[
+  \Real(z^n)=\sum_{k=0}^{\lfloor n/2\rfloor} c_k\,x^{n-2k}\,r^k,
+  \qquad c_k=c_k^{(n)}=(-1)^k\binom{n}{2k}.
+\]
+In particular, for $n=2m$ the coefficients of the notes are
+\[
+  \boxed{\;a_k=(-1)^k\binom{2m}{2k},\qquad 0\le k\le m.\;}
+\]
+\end{theorem}
+
+\begin{proof}
+We have $v^2=-y^2-t^2+(\ii\jj+\jj\ii)yt=-r\in\R$, and $x\in\R$ is central, so the
+binomial theorem applies to $z=x+v$:
+\[
+  z^n=\sum_{i=0}^{n}\binom{n}{i}x^{n-i}v^{i}.
+\]
+Now $v^{2k}=(-r)^k\in\R$ and $v^{2k+1}=(-r)^k v$ with $\Real v=0$. Taking real parts
+kills the odd terms and leaves the asserted sum.
+\end{proof}
+
+No polar representation is used; the axis $y=t=0$ requires no separate treatment.
+
+\begin{corollary}[Recursion]\label{cor:rec}
+With $c_0=1$, for all $k\ge 0$,
+\[
+  (2k+2)(2k+1)\,c_{k+1}=-(n-2k)(n-2k-1)\,c_k ,
+\]
+that is, for $n=2m$,
+\[
+  \boxed{\;a_0=1,\qquad
+  a_{k+1}=-\,\frac{(2m-2k)(2m-2k-1)}{(2k+2)(2k+1)}\,a_k .\;}
+\]
+\end{corollary}
+
+\begin{proof}
+Apply $(j+1)\binom{n}{j+1}=(n-j)\binom{n}{j}$ with $j=2k+1$ and $j=2k$. For
+$2k\ge n$ both sides vanish.
+\end{proof}
+
+\begin{corollary}[Symmetry]\label{cor:sym}
+For $n=2m$ and every $0\le k\le m$,
+\[
+  a_{m-k}=(-1)^m a_k ,\qquad\text{in particular } a_m=(-1)^m .
+\]
+\end{corollary}
+
+\begin{proof}
+$\binom{2m}{2m-2k}=\binom{2m}{2k}$ and $(-1)^{m-k}=(-1)^m(-1)^k$.
+\end{proof}
+
+\begin{remark}
+The notes conjecture $a_{m-(2k-1)}=(-1)^m a_{2k-1}$ for $m\ge 2k+1$.
+Corollary~\ref{cor:sym} shows that neither the parity of the index nor the lower
+bound on $m$ is needed.
+\end{remark}
+
+\section{The Laplace--Beltrami equation}
+
+Let $\Delta=\partial_x^2+\partial_y^2+\partial_t^2$. The equation
+$t\,\Delta u=\partial_t u$, i.e.\ $t\,\Delta u-\partial_t u=0$, is the
+Laplace--Beltrami equation of the hyperbolic metric $t^{-2}(dx^2+dy^2+dt^2)$ on
+the upper half space, up to the factor $t$.
+
+\begin{lemma}\label{lem:axial}
+Let $P\in\R[x,r]$ and $u(x,y,t)=P(x,y^2+t^2)$. Then
+\[
+  t\,\Delta u-\partial_t u=t\,\bigl(P_{xx}+4rP_{rr}+2P_r\bigr)\big|_{r=y^2+t^2}.
+\]
+\end{lemma}
+
+\begin{proof}
+$\partial_t u=2tP_r$, $\partial_t^2u=2P_r+4t^2P_{rr}$, likewise in $y$; hence
+$\Delta u=P_{xx}+4P_r+4rP_{rr}$ and $t\,\Delta u-\partial_tu=t(P_{xx}+4rP_{rr}+2P_r)$.
+\end{proof}
+
+\begin{theorem}\label{thm:lb}
+Let $n\in\N$, let $c_0,\dots,c_{\lfloor n/2\rfloor}\in\R$, put $c_k=0$ for
+$k>\lfloor n/2\rfloor$, and
+\[
+  u=\sum_{k}c_k\,x^{n-2k}(y^2+t^2)^k .
+\]
+Then
+\[
+  t\,\Delta u=\frac{\partial u}{\partial t}
+  \quad\Longleftrightarrow\quad
+  (2k+2)(2k+1)\,c_{k+1}=-(n-2k)(n-2k-1)\,c_k\ \text{ for all } k\ge 0 .
+\]
+Consequently $u_n=\Real(z^n)$ satisfies $t\,\Delta u_n=\partial_t u_n$ for every
+$n\in\N$, and $u_n$ is the unique solution of this form with $c_0=1$.
+\end{theorem}
+
+\begin{proof}
+With $P=\sum_k c_kx^{n-2k}r^k$ one computes
+\[
+  P_{xx}+4rP_{rr}+2P_r
+  =\sum_{k\ge 0}\Bigl[(n-2k)(n-2k-1)\,c_k+(2k+2)(2k+1)\,c_{k+1}\Bigr]x^{n-2k-2}r^k,
+\]
+using $4k(k-1)+2k=2k(2k-1)$ and an index shift. Since the map
+$(x,y,t)\mapsto(x,y^2+t^2)$ has image with non-empty interior, a polynomial in
+$(x,r)$ vanishing on it is zero; by Lemma~\ref{lem:axial} the equation therefore
+holds iff every bracket vanishes. The second assertion follows from
+Corollary~\ref{cor:rec}.
+\end{proof}
+
+\begin{remark}
+Conceptually: $P(x,\rho^2)=\Real(x+\ii\rho)^n$ is harmonic in the $(x,\rho)$-plane,
+and $P_{xx}+4rP_{rr}+2P_r=P_{xx}+P_{\rho\rho}$ for $r=\rho^2$. Thus
+Theorem~\ref{thm:lb} says that the axially symmetric lift of a plane harmonic
+function $f(x,\rho)$, even in $\rho$, satisfies $\Delta u=\rho^{-1}f_\rho$ and
+$\partial_tu=t\rho^{-1}f_\rho$. The same argument applies to $\Real$ of any power
+series in $z$ with real coefficients.
+\end{remark}
+
+\section{The components of $\ii$ and $\jj$}
+
+The expansion used for Theorem~\ref{thm:closed} also yields the remaining components.
+
+\begin{theorem}[Components of $\ii$ and $\jj$]\label{thm:imag}
+For every $n\in\N$,
+\[
+  \boxed{\;z^n=\Real(z^n)+(\ii y+\jj t)\,S_n,\qquad
+  S_n=\sum_{k=0}^{\lfloor (n-1)/2\rfloor}s_k\,x^{n-1-2k}\,r^k,\qquad
+  s_k=s_k^{(n)}=(-1)^k\binom{n}{2k+1}.\;}
+\]
+Thus the coefficient of $\ii$ is $v_n=y\,S_n$, the coefficient of $\jj$ is $w_n=t\,S_n$, and
+the coefficient of $\ii\jj$ vanishes: the powers of a reduced quaternion are reduced.
+\end{theorem}
+
+\begin{proof}
+In $z^n=\sum_i\binom{n}{i}x^{n-i}v^i$ the even powers $v^{2k}=(-r)^k$ are real and the odd
+powers are $v^{2k+1}=(-r)^k v$ with $v=\ii y+\jj t$.
+\end{proof}
+
+For instance $z^2=x^2-r+2x\,v$, $z^3=x^3-3xr+(3x^2-r)\,v$ and
+$z^4=x^4-6x^2r+r^2+(4x^3-4xr)\,v$.
+
+\begin{corollary}[Recursion and symmetry]\label{cor:srec}
+With $s_0=n$, for all $k\ge 0$,
+\[
+  \boxed{\;s_{k+1}=-\,\frac{(n-2k-1)(n-2k-2)}{(2k+3)(2k+2)}\,s_k ,\;}
+\]
+and for $n=2m$ and every $0\le k\le m-1$,
+\[
+  s_{m-1-k}=(-1)^{m-1}s_k .
+\]
+\end{corollary}
+
+\begin{proof}
+Apply $(j+1)\binom{n}{j+1}=(n-j)\binom{n}{j}$ with $j=2k+2$ and $j=2k+1$; for $2k+3>n$
+both sides vanish. The symmetry is $\binom{2m}{2m-2k-1}=\binom{2m}{2k+1}$.
+\end{proof}
+
+\begin{lemma}\label{lem:axialim}
+Let $P\in\R[x,r]$, $v(x,y,t)=y\,P(x,y^2+t^2)$ and $w(x,y,t)=t\,P(x,y^2+t^2)$. Then
+\begin{align*}
+  t\,\Delta v-\partial_t v&=t\,y\,\bigl(P_{xx}+4rP_{rr}+6P_r\bigr)\big|_{r=y^2+t^2},\\
+  t^2\Delta w-t\,\partial_t w+w&=t^3\bigl(P_{xx}+4rP_{rr}+6P_r\bigr)\big|_{r=y^2+t^2}.
+\end{align*}
+\end{lemma}
+
+\begin{proof}
+With $u=P(x,y^2+t^2)$ one has $\Delta(yu)=y\,\Delta u+2\,\partial_yu$ and
+$\Delta(tu)=t\,\Delta u+2\,\partial_tu$, where $\partial_yu=2yP_r$, $\partial_tu=2tP_r$ and,
+by Lemma~\ref{lem:axial}, $\Delta u=P_{xx}+4rP_{rr}+4P_r$. Hence
+$t\,\Delta v-\partial_tv=ty(P_{xx}+4rP_{rr}+4P_r)+4tyP_r-2tyP_r$ and
+$t^2\Delta w-t\,\partial_tw+w=t^3(P_{xx}+4rP_{rr}+4P_r)+4t^3P_r-tu-2t^3P_r+tu$.
+\end{proof}
+
+\begin{theorem}\label{thm:imaglb}
+Let $n\in\N$, let $e_0,\dots,e_{\lfloor (n-1)/2\rfloor}\in\R$, put $e_k=0$ for
+$k>\lfloor (n-1)/2\rfloor$, and $S=\sum_k e_k\,x^{n-1-2k}(y^2+t^2)^k$. Then the following are
+equivalent:
+\begin{enumerate}
+  \item $v=y\,S$ satisfies $t\,\Delta v=\partial_t v$;
+  \item $w=t\,S$ satisfies $t^2\Delta w-t\,\partial_t w+w=0$;
+  \item $(2k+3)(2k+2)\,e_{k+1}=-(n-2k-1)(n-2k-2)\,e_k$ for all $k\ge0$.
+\end{enumerate}
+Consequently, for every $n\in\N$, the coefficient $v_n$ of $\ii$ in $z^n$ satisfies the same
+Laplace--Beltrami equation as $\Real(z^n)$, the coefficient $w_n$ of $\jj$ satisfies
+\[
+  \boxed{\;t^2\Delta w_n-t\,\frac{\partial w_n}{\partial t}+w_n=0,\;}
+\]
+and $S_n$ is the unique polynomial of this form with $e_0=n$.
+\end{theorem}
+
+\begin{proof}
+As in Theorem~\ref{thm:lb},
+\[
+  P_{xx}+4rP_{rr}+6P_r
+  =\sum_{k\ge 0}\Bigl[(n-1-2k)(n-2-2k)\,e_k+(2k+2)(2k+3)\,e_{k+1}\Bigr]x^{n-3-2k}r^k,
+\]
+now using $4k(k-1)+6k=2k(2k+1)$. By Lemma~\ref{lem:axialim} each equation holds iff this
+polynomial vanishes on $\{r>1\}$, that is iff every bracket vanishes. The remaining assertions
+follow from Corollary~\ref{cor:srec}.
+\end{proof}
+
+\begin{remark}
+The three equations say that $f=z^n=u+\ii v+\jj w$ has components $u,v$ in the kernel of the
+hyperbolic Laplace--Beltrami operator $t^2\Delta-t\,\partial_t$ and $w$ in the kernel of
+$t^2\Delta-t\,\partial_t+1$. Conceptually $\rho\,S(x,\rho^2)=\operatorname{Im}(x+\ii\rho)^n$
+is harmonic in the $(x,\rho)$-plane, and $\rho\,(P_{xx}+4rP_{rr}+6P_r)=(\partial_x^2+\partial_\rho^2)(\rho P)$
+for $r=\rho^2$.
+\end{remark}
+
+\section{Clifford algebras}
+
+Nothing above used more than $v^2=-r$. Let $\mu\ge 1$ and let $\mathrm{Cl}_{0,\mu}$ be the real
+Clifford algebra with generators $e_1,\dots,e_\mu$, $e_ie_j+e_je_i=-2\delta_{ij}$. A
+\emph{paravector} is
+\[
+  z=x+v,\qquad v=\sum_{i=1}^{\mu}x_ie_i,\qquad r=\abs{v}^2=\sum_{i=1}^{\mu}x_i^2 ,
+\]
+and $\mu=2$, $(e_1,e_2)=(\ii,\jj)$, $(x_1,x_2)=(y,t)$ is the case treated so far. Write
+$R_n(x,r)=\sum_kc_k\,x^{n-2k}r^k$ and $S_n(x,r)=\sum_ks_k\,x^{n-1-2k}r^k$ with the
+coefficients $c_k=(-1)^k\binom{n}{2k}$, $s_k=(-1)^k\binom{n}{2k+1}$ of
+Theorems~\ref{thm:closed} and~\ref{thm:imag}.
+
+\begin{theorem}[Powers of paravectors]\label{thm:clifford}
+Let $A$ be a real associative unital algebra, $x,r\in\R$ and $w\in A$ with $w^2=-r$. Then for
+every $n\in\N$
+\[
+  \boxed{\;(x+w)^n=R_n(x,r)+S_n(x,r)\,w.\;}
+\]
+In particular, for every paravector $z=x+v$ of $\mathrm{Cl}_{0,\mu}$,
+\[
+  z^n=R_n\bigl(x,\abs{v}^2\bigr)+\sum_{i=1}^{\mu}x_i\,S_n\bigl(x,\abs{v}^2\bigr)\,e_i ,
+\]
+so powers of paravectors are paravectors, and the coefficients $c_k$, $s_k$, their recursions
+and symmetries do not depend on $\mu$.
+\end{theorem}
+
+\begin{proof}
+$x$ is central, so $(x+w)^n=\sum_i\binom{n}{i}x^{n-i}w^i$ with $w^{2k}=(-r)^k$ and
+$w^{2k+1}=(-r)^kw$. For a paravector, $v^2=-\abs{v}^2$ by the defining relations.
+\end{proof}
+
+Let $\Delta=\partial_x^2+\sum_{i=1}^{\mu}\partial_{x_i}^2$ on $\R^{\mu+1}$ and fix an index $l$;
+the coordinate $x_l$ plays the role of $t$.
+
+\begin{lemma}\label{lem:axialN}
+Let $P\in\R[x,r]$, $u=P(x,\abs{v}^2)$ and $g_i=x_i\,P(x,\abs{v}^2)$. Then, with all
+polynomials evaluated at $r=\abs{v}^2$,
+\begin{align*}
+  x_l\,\Delta u-(\mu-1)\,\partial_{x_l}u&=x_l\,\bigl(P_{xx}+4rP_{rr}+2P_r\bigr),\\
+  x_l\,\Delta g_i-(\mu-1)\,\partial_{x_l}g_i&=x_l\,x_i\,\bigl(P_{xx}+4rP_{rr}+6P_r\bigr)\qquad(i\ne l),\\
+  x_l^2\,\Delta g_l-(\mu-1)\,x_l\,\partial_{x_l}g_l+(\mu-1)\,g_l&=x_l^3\,\bigl(P_{xx}+4rP_{rr}+6P_r\bigr).
+\end{align*}
+\end{lemma}
+
+\begin{proof}
+$\partial_{x_i}u=2x_iP_r$ and $\partial_{x_i}^2u=2P_r+4x_i^2P_{rr}$, hence
+$\Delta u=P_{xx}+4rP_{rr}+2\mu P_r$; moreover $\Delta(x_iu)=x_i\,\Delta u+2\,\partial_{x_i}u$.
+In each line the terms with $\mu$ cancel.
+\end{proof}
+
+\begin{theorem}\label{thm:cliffordlb}
+Let $n\in\N$ and $\mu\ge1$.
+\begin{enumerate}
+  \item For $u=\sum_kd_k\,x^{n-2k}\abs{v}^{2k}$ the equation
+  $x_l\,\Delta u=(\mu-1)\,\partial_{x_l}u$ holds iff
+  $(2k+2)(2k+1)\,d_{k+1}=-(n-2k)(n-2k-1)\,d_k$ for all $k$.
+  \item For $S=\sum_ke_k\,x^{n-1-2k}\abs{v}^{2k}$ and $i\ne l$ the equation
+  $x_l\,\Delta(x_iS)=(\mu-1)\,\partial_{x_l}(x_iS)$ holds iff
+  $(2k+3)(2k+2)\,e_{k+1}=-(n-2k-1)(n-2k-2)\,e_k$ for all $k$.
+  \item For the same $S$ and $w=x_lS$ the equation
+  $x_l^2\,\Delta w-(\mu-1)\,x_l\,\partial_{x_l}w+(\mu-1)\,w=0$ holds iff the recursion in (2) holds.
+\end{enumerate}
+Consequently, for $z^n=u_n+\sum_iv_{n,i}\,e_i$ in $\mathrm{Cl}_{0,\mu}$ and every $n$,
+\[
+  \boxed{\;
+  \begin{aligned}
+  x_l\,\Delta f&=(\mu-1)\,\frac{\partial f}{\partial x_l}
+    &&\text{for } f\in\{u_n\}\cup\{v_{n,i}:i\ne l\},\\
+  x_l^2\,\Delta w-(\mu-1)\,x_l\,\frac{\partial w}{\partial x_l}+(\mu-1)\,w&=0
+    &&\text{for } w=v_{n,l}.
+  \end{aligned}
+  \;}
+\]
+\end{theorem}
+
+\begin{proof}
+By Lemma~\ref{lem:axialN} the three defects are the brackets of Theorems~\ref{thm:lb}
+and~\ref{thm:imaglb}, evaluated at $r=\abs{v}^2$, times a monomial in $x_l,x_i$ that is non-zero
+on an open set on which $r$ takes all values $>1$. (In (2) one needs $\mu\ge2$ for $i\ne l$ to exist.)
+\end{proof}
+
+\begin{remark}
+For $\mu=2$, $l=2$ these are the equations of Sections~2 and~3. In general they say that the
+components $u_n$, $v_{n,i}$ ($i\ne l$) lie in the kernel of the Laplace--Beltrami operator
+$x_l^2\Delta-(\mu-1)x_l\partial_{x_l}$ of the hyperbolic metric $x_l^{-2}(dx^2+\sum dx_i^2)$ on
+the upper half space of $\R^{\mu+1}$, and $v_{n,l}$ in the kernel of
+$x_l^2\Delta-(\mu-1)x_l\partial_{x_l}+(\mu-1)$. The index $l$ is arbitrary: by symmetry of $z^n$
+in the $x_i$ every coordinate may serve as the distinguished one.
+\end{remark}
+
+\section{Examples}
+
+\begin{example}[The polynomials]\label{ex:table}
+For $n\le 6$, with $r=y^2+t^2$ (or $r=\abs{v}^2$ in $\mathrm{Cl}_{0,\mu}$), $z^n=R_n+S_n\,v$ with
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}cll@{}}
+  $n$ & $R_n(x,r)=\Real(z^n)$ & $S_n(x,r)$\\\hline
+  $1$ & $x$ & $1$\\
+  $2$ & $x^2-r$ & $2x$\\
+  $3$ & $x^3-3xr$ & $3x^2-r$\\
+  $4$ & $x^4-6x^2r+r^2$ & $4x^3-4xr$\\
+  $5$ & $x^5-10x^3r+5xr^2$ & $5x^4-10x^2r+r^2$\\
+  $6$ & $x^6-15x^4r+15x^2r^2-r^3$ & $6x^5-20x^3r+6xr^2$
+\end{tabular}
+\end{center}
+The even rows reproduce the examples of the notes; for $n=8$ and $n=10$ the coefficients
+$a_k$ are $1,-28,70,-28,1$ and $1,-45,210,-210,45,-1$.
+\end{example}
+
+\begin{example}[Running the recursions, $n=6$]
+Corollary~\ref{cor:rec} gives
+\[
+  c_0=1,\quad c_1=-\tfrac{6\cdot5}{2\cdot1}\,c_0=-15,\quad
+  c_2=-\tfrac{4\cdot3}{4\cdot3}\,c_1=15,\quad
+  c_3=-\tfrac{2\cdot1}{6\cdot5}\,c_2=-1,\quad c_4=-\tfrac{0\cdot(-1)}{8\cdot7}\,c_3=0,
+\]
+and Corollary~\ref{cor:srec} gives
+\[
+  s_0=6,\quad s_1=-\tfrac{5\cdot4}{3\cdot2}\,s_0=-20,\quad
+  s_2=-\tfrac{3\cdot2}{5\cdot4}\,s_1=6,\quad s_3=-\tfrac{1\cdot0}{7\cdot6}\,s_2=0 .
+\]
+Both recursions terminate by themselves. The symmetries read $a_{3-k}=-a_k$ and
+$s_{2-k}=s_k$ ($m=3$).
+\end{example}
+
+\begin{example}[A numerical power]
+For $z=1+2\ii+3\jj$ one has $x=1$, $r=13$, hence $R_3=1-39=-38$, $S_3=3-13=-10$ and
+\[
+  z^3=-38-20\,\ii-30\,\jj .
+\]
+\end{example}
+
+\begin{example}[The equations for $n=3$, $\mu=2$]
+$u=x^3-3xr$ has $\Delta u=6x-12x=-6x$, so $t\,\Delta u=-6xt=\partial_tu$.
+$v=y(3x^2-r)$ has $\Delta v=6y-\Delta(yr)=6y-8y=-2y$, so $t\,\Delta v=-2yt=\partial_tv$.
+$w=t(3x^2-r)$ has $\Delta w=-2t$ and $\partial_tw=3x^2-r-2t^2$, so
+$t^2\Delta w-t\,\partial_tw+w=-2t^3+2t^3=0$.
+\end{example}
+
+\begin{example}[The equations in $\mathrm{Cl}_{0,3}$, $n=2,3$, $l=3$]
+Here $\mu-1=2$ and $r=x_1^2+x_2^2+x_3^2$. For $z^2=x^2-r+2x\,v$:
+$u=x^2-r$ has $\Delta u=2-6=-4$, so $x_3\Delta u=-4x_3=2\,\partial_{x_3}u$; the components
+$2xx_1$, $2xx_2$ are harmonic and independent of $x_3$; and $w=2xx_3$ is harmonic with
+$-2x_3\,\partial_{x_3}w+2w=-4xx_3+4xx_3=0$.
+For $z^3$: $u=x^3-3xr$ has $\Delta u=6x-18x=-12x$ and $2\,\partial_{x_3}u=-12xx_3=x_3\Delta u$.
+The same $u$ in $\mathrm{Cl}_{0,2}$ has $\Delta u=-6x$: the polynomial is unchanged, the
+Laplacian and the factor $\mu-1$ change together.
+\end{example}
+
+\section{Isolated roots outside the $xy$-plane}
+
+Consider polynomials $p(q)=\sum_{n=0}^{N}q^n a_n$ with quaternionic coefficients on the right,
+evaluated at reduced quaternions $z=x+\ii y+\jj t$. The $xy$-plane $\{t=0\}$ is
+$\mathbb{C}_{\ii}=\{q:\ q_{\jj}=q_{\ii\jj}=0\}$. Is there a polynomial of degree $2$ with an
+isolated root outside this plane? The answer depends on the coefficients.
+
+\begin{theorem}[Coefficients in the $xy$-plane]\label{thm:circle}
+Let all $a_n\in\mathbb{C}_{\ii}$ and let $z_0=x+\ii y+\jj t$ be a root of $p$ with $t\ne0$. Then
+every $x+\ii y'+\jj t'$ with $y'^2+t'^2=y^2+t^2$ is a root of $p$. In particular $z_0$ is not
+isolated: for every $\varepsilon>0$ there is a root $z_1\ne z_0$ with $\abs{z_1-z_0}<\varepsilon$.
+This holds for every degree $N$.
+\end{theorem}
+
+\begin{proof}
+By Theorem~\ref{thm:clifford}, $z^n=R_n+v\,S_n$ with $R_n,S_n$ real, hence
+\[
+  p(z)=A+v\,B,\qquad A=\sum_nR_n(x,r)\,a_n,\quad B=\sum_nS_n(x,r)\,a_n,
+\]
+where $A,B\in\mathbb{C}_{\ii}$ depend on $(x,r)$ only. For $B=B_0+B_1\ii$ one computes
+$v\,B=-yB_1+yB_0\,\ii+tB_0\,\jj-tB_1\,\ii\jj$. The $\jj$- and $\ii\jj$-components of
+$p(z_0)=0$ therefore give $tB_0=tB_1=0$, so $B=0$ and then $A=0$; both vanish on the whole
+circle. For the last claim rotate $(y,t)$ by a small angle $\theta$: the squared
+distance is $2r(1-\cos\theta)\le r\theta^2$ and it is positive for $0<\theta\le1$.
+\end{proof}
+
+\begin{corollary}[Real coefficients, degree $2$]\label{cor:realquad}
+For $b,c\in\R$,
+\[
+  z^2+bz+c=0\iff x^2-r+bx+c=0\ \text{ and }\ (2x+b)\,y=(2x+b)\,t=0 .
+\]
+So the roots are the real roots of $x^2+bx+c$ and, if $4c>b^2$, the whole circle
+$x=-b/2$, $y^2+t^2=c-b^2/4$; the isolated roots are real.
+\end{corollary}
+
+\begin{proof}
+$z^2+bz+c=(x^2-r+bx+c)+(2x+b)\,v$ by Example~\ref{ex:table}.
+\end{proof}
+
+\begin{theorem}[A coefficient outside the plane]\label{thm:jpoly}
+The polynomial
+\[
+  \boxed{\;p(q)=q^2-q\,(1+\jj)+\jj\;}
+\]
+has in all of $\HH$ exactly the two roots $q=1$ and $q=\jj$. Thus $\jj=(0,0,1)$ is an isolated
+root of a polynomial of degree $2$ that lies outside the $xy$-plane.
+\end{theorem}
+
+\begin{proof}
+For $q=a+b\,\ii+c\,\jj+d\,\ii\jj$ the four components of $p(q)=0$ are
+\begin{align*}
+  a^2-b^2-c^2-d^2-a+c&=0, & (2a-1)\,b+d&=0,\\
+  2ac-c-a+1&=0, & (2a-1)\,d-b&=0 .
+\end{align*}
+The right column gives $b\,((2a-1)^2+1)=0$, so $b=d=0$. Then the first equation reads
+$(a-c)(a+c-1)=0$. If $a=c$ the third becomes $2a^2-2a+1=0$, which has no real solution; if
+$c=1-a$ it becomes $a(a-1)=0$, giving $q=\jj$ and $q=1$. Conversely both are roots, since
+$\jj^2-\jj(1+\jj)+\jj=-1-\jj+1+\jj=0$.
+\end{proof}
+
+\begin{remark}
+All coefficients of this $p$ lie in the plane $\mathbb{C}_{\jj}$, where $p(w)=(w-1)(w-\jj)$.
+Theorem~\ref{thm:circle} holds for every plane $\mathbb{C}_I$ in place of $\mathbb{C}_{\ii}$: an
+isolated root outside $\mathbb{C}_I$ needs a coefficient outside $\mathbb{C}_I$.
+\end{remark}
+
+\section{Degree three and general degree}
+
+The answer of Section~6 does not depend on the degree. By Theorem~\ref{thm:circle} a polynomial
+of any degree with coefficients in the $xy$-plane has no isolated root outside it. For real
+coefficients the roots can be described completely.
+
+\begin{theorem}[Real coefficients, any degree]\label{thm:realpoly}
+Let $\alpha_0,\dots,\alpha_N\in\R$, $p(z)=\sum_nz^n\alpha_n$ and
+\[
+  A(x,r)=\sum_{n=0}^{N}R_n(x,r)\,\alpha_n,\qquad B(x,r)=\sum_{n=0}^{N}S_n(x,r)\,\alpha_n .
+\]
+Then $p(z)=A+B\,v$, and
+\[
+  p(z)=0\iff A(x,r)=0\ \text{ and }\ B(x,r)\,y=B(x,r)\,t=0 .
+\]
+So the roots are the real roots of $p$ and whole circles $\{x\}\times\{y^2+t^2=r\}$ with
+$A(x,r)=B(x,r)=0$, $r>0$; the isolated roots are real.
+\end{theorem}
+
+\begin{proof}
+Theorem~\ref{thm:clifford} and comparison of components; $v=\ii y+\jj t$.
+\end{proof}
+
+\begin{corollary}[Real coefficients, degree $3$]\label{cor:realcubic}
+For $p(z)=z^3+bz^2+cz+d$ with $b,c,d\in\R$,
+\[
+  A=x^3-3xr+b\,(x^2-r)+cx+d,\qquad B=3x^2-r+2bx+c .
+\]
+A root with $(y,t)\ne(0,0)$ satisfies
+\[
+  \boxed{\;r=3x^2+2bx+c=p'(x),\qquad 8x^3+8bx^2+2(b^2+c)\,x+bc-d=0.\;}
+\]
+\end{corollary}
+
+\begin{proof}
+$B=0$ gives $r$; substituting into $A=0$ gives $-A=8x^3+8bx^2+2(b^2+c)x+bc-d$, precisely
+$(3x+b)\,B-A$.
+\end{proof}
+
+To produce isolated roots outside the $xy$-plane one needs coefficients outside it. The general
+tool is the analogue of Theorem~\ref{thm:circle} on all of $\HH$.
+
+\begin{theorem}[Coefficients in $\mathbb{C}_{\jj}$, all of $\HH$]\label{thm:sphere}
+Every quaternion is $q=x+w$ with $w=b\,\ii+c\,\jj+d\,\ii\jj$, $w^2=-\abs{w}^2$, hence
+$q^n=R_n(x,\abs{w}^2)+S_n(x,\abs{w}^2)\,w$ and $p(q)=A+w\,B$ for every polynomial. If all
+$a_n\in\mathbb{C}_{\jj}=\{a+c\,\jj\}$ and $q$ is a root with $(b,d)\ne(0,0)$, then $A=B=0$ and
+every $x+w'$ with $\abs{w'}=\abs{w}$ is a root.
+\end{theorem}
+
+\begin{proof}
+For $B=B_0+B_2\,\jj$ the $\ii$- and $\ii\jj$-components of $w\,B$ are $bB_0-dB_2$ and
+$bB_2+dB_0$, while $A$ has none. So $(b^2+d^2)B_0=(b^2+d^2)B_2=0$.
+\end{proof}
+
+\begin{theorem}[Degree $3$]\label{thm:jcubic}
+The polynomial
+\[
+  \boxed{\;p(q)=q^3-q^2(1+3\jj)+q\,(-2+3\jj)+2\;}
+\]
+has in all of $\HH$ exactly the three roots $1$, $\jj$ and $2\jj$. All are isolated, and
+$\jj=(0,0,1)$ and $2\jj=(0,0,2)$ lie outside the $xy$-plane.
+\end{theorem}
+
+\begin{proof}
+On $\mathbb{C}_{\jj}$ everything commutes and $p(q)=(q-1)(q-\jj)(q-2\jj)$; $\HH$ has no zero
+divisors, so the roots in $\mathbb{C}_{\jj}$ are $1,\jj,2\jj$. A root outside $\mathbb{C}_{\jj}$
+would by Theorem~\ref{thm:sphere} force both $x+\jj\rho$ and $x-\jj\rho$, $\rho>0$, to be
+roots, but $-\rho\notin\{0,1,2\}$.
+\end{proof}
+
+\begin{theorem}[Degree $n$]\label{thm:jpow}
+Let $n\ge1$ and $p(q)=q^n-\jj$.
+\begin{enumerate}
+  \item $p$ has a root, for instance $q=\cos\frac{\pi}{2n}+\jj\,\sin\frac{\pi}{2n}$.
+  \item Every root lies in $\mathbb{C}_{\jj}$ and has $t\ne0$; so \emph{all} roots lie outside the
+  $xy$-plane.
+  \item $p$ has only finitely many roots in $\HH$; so every root is isolated.
+\end{enumerate}
+Hence for every degree $n\ge1$ there is a polynomial of degree $n$ all of whose roots are
+isolated and lie outside the $xy$-plane.
+\end{theorem}
+
+\begin{proof}
+(2) $q^n=R_n+S_n\,w=\jj$ gives $S_nb=S_nd=0$ and $S_nc=1$, so $S_n\ne0$, $b=d=0$ and
+$c\ne0$. (1), (3) The map $a+c\,\ii\mapsto a+c\,\jj$ is an injective ring homomorphism
+$\mathbb{C}\to\HH$ onto $\mathbb{C}_{\jj}$; by (2) it maps the finitely many solutions of
+$w^n=\ii$ in $\mathbb{C}$ onto the roots of $p$, and $w=e^{\ii\pi/(2n)}$ is one of them.
+\end{proof}
+
+\begin{remark}
+A real cubic has three real roots, or one real root and one circle: the circle over the real
+root $x$ of the resolvent in Corollary~\ref{cor:realcubic} with $p'(x)>0$ is the pair of
+complex conjugate roots $x\pm\ii\sqrt{p'(x)}$ rotated about the $x$-axis. In Theorem~\ref{thm:jpow}
+the number of roots is exactly $n$. These two counts are classical and not formalised here.
+\end{remark}
+
+\section{Formal verification}
+
+The file \texttt{RealPartsOfPowers.lean} (Lean~4, toolchain \texttt{v4.34.0}, Mathlib
+\texttt{v4.34.0}) works in Mathlib's quaternions $\HH[\R]$ with $z=\langle x,y,t,0\rangle$ and
+verifies every statement of this paper:
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.42\textwidth}>{\raggedright\arraybackslash}p{0.54\textwidth}@{}}
+  \lean{re\_pow}, \lean{re\_pow\_even} & Theorem~\ref{thm:closed}, every $n$, and its form for $n=2m$\\
+  \lean{c\_zero}, \lean{c\_succ}, \lean{a\_zero}, \lean{a\_succ} & Corollary~\ref{cor:rec} (over $\mathbb{Z}$, division-free, all $k$)\\
+  \lean{a\_self}, \lean{a\_sub} & Corollary~\ref{cor:sym}\\
+  \lean{laplaceBeltrami\_defect\_general} & Lemma~\ref{lem:axial}, every polynomial $P$\\
+  \lean{laplaceBeltrami\_defect} & the coefficient formula in the proof of Theorem~\ref{thm:lb}\\
+  \lean{laplaceBeltrami\_iff} & Theorem~\ref{thm:lb}, the equivalence\\
+  \lean{laplaceBeltrami\_re\_pow} & Theorem~\ref{thm:lb}, $t\,\Delta u_n=\partial_tu_n$ for every $n$\\
+  \lean{eq\_c\_of\_recursion} & Theorem~\ref{thm:lb}, uniqueness\\
+  \lean{imI\_pow}, \lean{imJ\_pow}, \lean{imK\_pow} & Theorem~\ref{thm:imag}\\
+  \lean{s\_zero}, \lean{s\_succ}, \lean{s\_sub} & Corollary~\ref{cor:srec}\\
+  \lean{defect\_VI}, \lean{defect\_VJ} & Lemma~\ref{lem:axialim}, every polynomial $P$\\
+  \lean{laplaceBeltrami\_imI\_iff} & Theorem~\ref{thm:imaglb}, (1)\,$\Leftrightarrow$\,(3)\\
+  \lean{hyperbolic\_imJ\_iff} & Theorem~\ref{thm:imaglb}, (2)\,$\Leftrightarrow$\,(3)\\
+  \lean{laplaceBeltrami\_imI\_pow} & Theorem~\ref{thm:imaglb}, the equation for $v_n$\\
+  \lean{hyperbolic\_imJ\_pow} & Theorem~\ref{thm:imaglb}, the equation for $w_n$\\
+  \lean{eq\_s\_of\_recursion} & Theorem~\ref{thm:imaglb}, uniqueness\\
+  \lean{pow\_eq\_of\_sq}, \lean{z\_pow\_eq} & Theorem~\ref{thm:clifford}, any algebra; the quaternions as instance\\
+  \lean{clifford\_pow}, \lean{clifford\_pow\_components} & Theorem~\ref{thm:clifford} in $\mathrm{Cl}_{0,\mu}$\\
+  \lean{defectN\_re}, \lean{defectN\_im}, \lean{defectN\_last} & Lemma~\ref{lem:axialN}, every polynomial $P$\\
+  \lean{hyperbolic\_re\_iff}, \lean{hyperbolic\_im\_iff}, \lean{hyperbolic\_last\_iff} & Theorem~\ref{thm:cliffordlb}, (1)--(3)\\
+  \lean{hyperbolic\_scalar\_pow}, \lean{hyperbolic\_vector\_pow}, \lean{hyperbolic\_last\_pow} & Theorem~\ref{thm:cliffordlb}, the equations for $z^n$\\
+  \lean{Rpoly\_examples}, \lean{Spoly\_examples}, \lean{a\_four}, \lean{a\_five}, \lean{s\_six} & Example~\ref{ex:table} and the coefficient lists\\
+  \lean{z\_cube\_example} & $(1+2\ii+3\jj)^3=-38-20\ii-30\jj$\\
+  \lean{evalPoly\_z}, \lean{polyA\_polyB\_eq\_zero} & $p(z)=A+vB$ and $A=B=0$ in Theorem~\ref{thm:circle}\\
+  \lean{circle\_of\_roots}, \lean{root\_not\_isolated} & Theorem~\ref{thm:circle}\\
+  \lean{real\_quadratic\_root\_iff} & Corollary~\ref{cor:realquad}, the equivalence\\
+  \lean{jPoly\_root\_iff}, \lean{jPoly\_root\_outside\_plane} & Theorem~\ref{thm:jpoly}\\
+  \lean{real\_poly\_root\_iff} & Theorem~\ref{thm:realpoly}, the equivalence\\
+  \lean{real\_cubic\_root\_iff}, \lean{real\_cubic\_circle} & Corollary~\ref{cor:realcubic}\\
+  \lean{quat\_pow\_eq}, \lean{evalPoly\_quat}, \lean{polyA\_polyB\_eq\_zero\_J}, \lean{sphere\_of\_roots\_J} & Theorem~\ref{thm:sphere}\\
+  \lean{jCubic\_root\_iff} & Theorem~\ref{thm:jcubic}\\
+  \lean{exists\_pow\_eq\_j}, \lean{pow\_eq\_j}, \lean{pow\_eq\_j\_finite} & Theorem~\ref{thm:jpow}, (1)--(3)
+\end{longtable}}
+
+The formal proof of Theorem~\ref{thm:closed} follows the proof above verbatim:
+\lean{Commute.add\_pow}, a parity split of $\sum_{i\le n}$, and $v^{2k}=(-r)^k$.
+For Lemma~\ref{lem:axial} a polynomial is a finite sum of monomials $d_i\,x^{p_i}r^{k_i}$,
+partial derivatives are Mathlib's \lean{deriv} in one coordinate, and
+$\Delta$ is the sum of the three second partial derivatives. The direction
+``equation $\Rightarrow$ recursion'' of Theorem~\ref{thm:lb} evaluates at $x=1$, $y=0$,
+$t=\sqrt r$ and uses that a real polynomial with infinitely many roots vanishes.
+The Clifford algebra is Mathlib's \lean{CliffordAlgebra} of the quadratic form
+$-\sum x_i^2$ on $\R^\mu$, $e_i$ is the image of the $i$-th unit vector, and
+partial derivatives in $x_i$ are \lean{deriv} along \lean{Function.update}. The component
+formula is proved as an identity in the algebra; linear independence of $1,e_1,\dots,e_\mu$,
+which makes the components unique, is not used and not formalised.
+All results depend only on the axioms \lean{propext}, \lean{Classical.choice},
+\lean{Quot.sound}; the build gate fails on any other axiom, in particular on \lean{sorryAx}.
+
+\end{document}

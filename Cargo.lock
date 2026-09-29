@@ -6255,6 +6255,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-quiz"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-raster"
 version = "0.1.0"
 dependencies = [
@@ -11254,6 +11262,25 @@ name = "target-lexicon"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adb6935a6f5c20170eeceb1a3835a49e12e19d792f6dd344ccc76a985ca5a6ca"
+
+[[package]]
+name = "teaching-proctor"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "rusqlite",
+ "semio-framework-async",
+ "semio-framework-dispatch-macros",
+ "semio-framework-hash",
+ "semio-framework-quiz",
+ "semio-framework-replication",
+ "semio-framework-server",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "ureq",
+]
 
 [[package]]
 name = "tempfile"

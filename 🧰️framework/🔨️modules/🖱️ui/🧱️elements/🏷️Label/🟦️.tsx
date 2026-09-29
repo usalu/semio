@@ -14,7 +14,7 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🌳️Tree/🟦️.tsx";
-import { type UiTranslationKey, type UiRegisteredTranslationKey, type UiTranslateFn } from "../📚️I18n/🟦️.tsx";
+import { resolveUiLabel, type UiTranslationKey, type UiRegisteredTranslationKey, type UiTranslateFn } from "../📚️I18n/🟦️.tsx";
 import { activeUiDriver, useUiDriver, isInternalChromeControlId, resolveControlLabelId, panelKindFromPanelToggleControlId, humanizeEngagementStepId, humanizeControlId } from "../🚗️UiDriver/🟦️.tsx";
 import { useControlHotkey } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { formatControlTooltipText } from "../../🔨️modules/💡️control-tooltip-presentation/🟦️.ts";
@@ -108,50 +108,7 @@ export function useIdLabel(id: string | undefined): UiLabel | undefined {
  * Handles: string, {label: string}, {label: {normal, beginner}}, {normal, beginner}.
  **/
 export function resolveTranslationLabel(value: unknown): string | undefined {
-  const labelTier = activeUiDriver().labelTier;
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value && typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-
-    if ("label" in obj) {
-      const label = obj.label;
-
-      if (typeof label === "string") {
-        return label;
-      }
-
-      if (label && typeof label === "object") {
-        const labelObj = label as Record<string, unknown>;
-        if (labelTier === "beginner" && "beginner" in labelObj && labelObj.beginner !== undefined) {
-          return String(labelObj.beginner);
-        }
-        if ("normal" in labelObj && labelObj.normal !== undefined) {
-          return String(labelObj.normal);
-        }
-        if ("beginner" in labelObj && labelObj.beginner !== undefined) {
-          return String(labelObj.beginner);
-        }
-      }
-    }
-
-    if ("normal" in obj || "beginner" in obj) {
-      if (labelTier === "beginner" && "beginner" in obj && obj.beginner !== undefined) {
-        return String(obj.beginner);
-      }
-      if ("normal" in obj && obj.normal !== undefined) {
-        return String(obj.normal);
-      }
-      if ("beginner" in obj && obj.beginner !== undefined) {
-        return String(obj.beginner);
-      }
-    }
-  }
-
-  return undefined;
+  return resolveUiLabel(value, activeUiDriver().labelTier);
 }
 /** 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
 export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {

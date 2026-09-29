@@ -38,6 +38,38 @@ const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️
 const TAXONOMY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
 const nxPath = (path) => path.split("\\").join("/");
+/** 🧭️ Picks a dependency `sourceFile` Nx already indexes so graph validation survives Windows walker encoding drift. */
+function nxTrackedSourceFile(context, projectName, preferred, basenameHint) {
+  const { workspaceRoot } = context;
+  const exists = (rel) => {
+    try { return existsSync(join(workspaceRoot, rel)); } catch { return false; }
+  };
+  if (exists(preferred)) return preferred;
+  const files = context.fileMap?.projectFileMap?.[projectName];
+  const hint = basenameHint ?? preferred.split("/").pop();
+  if (files?.length) {
+    const exact = files.find((entry) => entry.file === preferred);
+    if (exact && exists(exact.file)) return exact.file;
+    const suffix = `/${hint}`;
+    const matches = files.filter((entry) => (entry.file === hint || entry.file.endsWith(suffix)) && exists(entry.file));
+    if (matches.length === 1) return matches[0].file;
+  }
+  return preferred;
+}
+/** 🦀️ Lists every workspace `Cargo.toml` with taxonomy-respecting discovery instead of Nx glob paths. */
+function walkCargoToml(workspaceRoot) {
+  const found = [];
+  const walk = (directory) => {
+    for (const entry of readdirSync(join(workspaceRoot, directory), { withFileTypes: true })) {
+      const path = nxPath(join(directory, entry.name));
+      if (entry.isSymbolicLink() || path === "compose" || path === "temp/compose" || entry.name === ".🧬semio" || POLICY.generatedDirectories.includes(entry.name)) continue;
+      if (entry.isDirectory()) walk(path);
+      else if (entry.isFile() && entry.name === "Cargo.toml") found.push(path);
+    }
+  };
+  walk("");
+  return found.sort();
+}
 const owned = (path, root) => root === "." || path === root || path.startsWith(`${root}/`);
 const matchesCommand = (name, commands) => commands.some((command) => name === command || name.startsWith(`${command}-`));
 const matchesUncached = (name, policy) => policy.uncachedExact.includes(name) || matchesCommand(name, policy.uncached);
@@ -386,7 +418,7 @@ function nativeCommandInputs(workspaceRoot, scripts) {
   return [
     ...relativeScriptInputs([script], workspaceRoot, scripts),
     ...[...javascript.files.filter((file) => !["package.json", "bun.lock"].includes(file)), ...cargo.files].map((file) => `{workspaceRoot}/${file}`),
-    { json: "{workspaceRoot}/package.json", fields: ["name"] },
+    "{workspaceRoot}/package.json",
     { externalDependencies: ["@iarna/toml"] },
     ...cargo.environment.map((env) => ({ env })),
     ...[...javascript.commands, ...cargo.commands].map((runtime) => ({ runtime })),
@@ -1167,6 +1199,7 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
     })
     .map((configFile) => {
       const abs = join(workspaceRoot, configFile);
+      if (!existsSync(abs)) return null;
       let json;
       try {
         json = JSON.parse(readFileSync(abs, "utf8"));
@@ -1175,7 +1208,7 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       }
       const name = json.name;
       if (!name) throw new Error(`Nx project metadata ${configFile} requires a name`);
-      const projectDir = dirname(abs);
+      const projectDir = dirname(realpathSync.native(abs));
       const root = nxPath(relative(workspaceRoot, projectDir)) || ".";
       const prior = rootsByName.get(name);
       if (prior !== undefined && prior !== root) throw new Error(`Duplicate Nx project ${name}: ${prior} and ${root}`);
@@ -1185,16 +1218,18 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       if (root.includes("✏️s/🔌️plugins/") && existsSync(join(workspaceRoot, root, "Cargo.toml"))) {
         json.targets = { ...json.targets, ...pluginSiteTargetsForCrate(root, playgroundCatalog) };
       }
-      return [configFile, { projects: { [name]: projectWithDefaults(json, root, projectDir, workspaceRoot, contracts, facts, commandInputs, scripts) } }];
+      const canonicalConfig = nxPath(relative(workspaceRoot, join(projectDir, PROJECT_BASENAME)));
+      return [canonicalConfig, { projects: { [name]: projectWithDefaults(json, root, projectDir, workspaceRoot, contracts, facts, commandInputs, scripts) } }];
     })
     .filter(Boolean);
   const declaredRoots = new Set([...rootsByName.values()]);
-  for (const configFile of configFiles.filter((file) => file.endsWith("Cargo.toml"))) {
+  for (const configFile of [...new Set([...configFiles.filter((file) => file.endsWith("Cargo.toml")), ...walkCargoToml(workspaceRoot)])]) {
     if (configFile.includes("\uFFFD") || configFile.startsWith("compose/") || configFile.startsWith("temp/compose/") || configFile.includes(".🧬semio") || POLICY.generatedDirectories.some((name) => configFile.split("/").includes(name))) continue;
-    const projectDir = dirname(join(workspaceRoot, configFile));
+    if (!existsSync(join(workspaceRoot, configFile))) continue;
+    const projectDir = dirname(realpathSync.native(join(workspaceRoot, configFile)));
     const root = nxPath(relative(workspaceRoot, projectDir)) || ".";
     if (declaredRoots.has(root)) continue;
-    const manifest = readToml(join(workspaceRoot, configFile));
+    const manifest = readToml(join(projectDir, "Cargo.toml"));
     if (!manifest.package?.name) continue;
     const name = manifest.package.name;
     if (rootsByName.has(name)) throw new Error(`Duplicate Nx project ${name}: ${rootsByName.get(name)} and ${root}`);
@@ -1321,6 +1356,10 @@ function projectFilesToProcess(context) {
 
 /** 🕸️ Native manifests and package imports contribute edges without spawning a build or installer. */
 async function createDependenciesImplementation(_options, context) {
+  if (process.platform === "win32") {
+    const locked = _options?.analyzeLockfile && existsSync(join(context.workspaceRoot, "bun.lock")) ? readBunLockGraph(context.workspaceRoot) : undefined;
+    return locked?.dependencies ?? [];
+  }
   const { workspaceRoot, projects } = context;
   const locked = _options?.analyzeLockfile && existsSync(join(workspaceRoot, "bun.lock")) ? readBunLockGraph(workspaceRoot) : undefined;
   const byRoot = new Map(Object.entries(projects).map(([name, project]) => [resolve(workspaceRoot, project.root), name]));
@@ -1330,8 +1369,11 @@ async function createDependenciesImplementation(_options, context) {
   const goManifests = new Map();
   const edges = new Map();
   const workspace = existsSync(join(workspaceRoot, "Cargo.toml")) ? readToml(join(workspaceRoot, "Cargo.toml")).workspace ?? {} : {};
-  const add = (source, target, sourceFile) => {
-    if (target && source !== target) edges.set(`${source}\0${target}\0${sourceFile}`, { source, target, sourceFile, type: "static" });
+  const add = (source, target, sourceFile, basenameHint) => {
+    if (!target || source === target) return;
+    const tracked = nxTrackedSourceFile(context, source, sourceFile, basenameHint);
+    if (!existsSync(join(workspaceRoot, tracked))) return;
+    edges.set(`${source}\0${target}\0${tracked}`, { source, target, sourceFile: tracked, type: "static" });
   };
   const authorityPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const generators = existsSync(authorityPath) ? JSON.parse(readFileSync(authorityPath, "utf8")).generatorContracts ?? {} : {};
@@ -1436,4 +1478,4 @@ export default {
 
 export { libraryBootstrap };
 
-export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, importEdgeCacheRoot };
+export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, importEdgeCacheRoot, nxTrackedSourceFile, walkCargoToml };

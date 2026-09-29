@@ -218,6 +218,23 @@ async fn effects_reach_the_outbox_without_an_event() {
 
 //#region 🔖️Directory
 #[semio_framework_async_macros::async_test]
+async fn a_fresh_activation_rehydrates_from_the_durable_stream_before_deciding() {
+    let mut store = MemoryAuthorityStore::default();
+    let history: Vec<EventRecord> = (1..=2).map(|seq| EventRecord { stream: key(COUNTER), seq, hlc: tick(seq), kind: "counter.incremented".into(), payload: vec![3] }).collect();
+    store.append_events(&key(COUNTER), &history, &[]).await.unwrap();
+    let mut restarted = CommandBus::new(AuthorityDirectory::new(), store, Box::new(|_| PolicyDecision::Allow));
+    restarted.register(TestDeciders::Counter(CounterDecider)).await;
+    match restarted.submit(command(&key(COUNTER), "counter.increment", Some("k3")), tick(3)).await {
+        CommandOutcome::Accepted { receipt, events, .. } => {
+            assert_eq!(events[0].seq, 3);
+            assert_eq!(receipt.revision, Revision(3));
+        }
+        other => panic!("expected acceptance after rehydration, got {other:?}"),
+    }
+    assert_eq!(read_counter(&restarted.directory().activation(&key(COUNTER)).unwrap().state.bytes), 9);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn passivation_fences_the_next_activation_with_a_higher_epoch() {
     let mut directory = AuthorityDirectory::new();
     directory.activate(key(COUNTER), "authority").unwrap();

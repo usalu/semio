@@ -112,6 +112,17 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   assert.deepEqual(parseVizTaxonomyLeaves(taxonomy), oracle);
   assert.deepEqual(printTemplatePdfNames("🧾️template/📋️report/📋️report.tex"), { light: "📋️report.pdf", dark: "📋️report-dark.pdf" });
 
+  // 🎓 The dissertation kind is only a kind if all three parts agree: the class
+  // branches on type=phd, the appendix level resolves to chapter like the other
+  // chapter-sectioned kind, and semio-phd.sty owns the title page command.
+  const classSource = readFileSync(join(latexRoot, "semio.cls"), "utf8");
+  assert.match(classSource, /\{ phd \} \{ \\LoadClass\[twoside=true,open=right,cleardoublepage=empty\]\{scrreprt\} \}/);
+  assert.match(classSource, /\\RequirePackage\{semio-phd\}/);
+  assert.match(readFileSync(join(latexRoot, "semio-core.sty"), "utf8"), /\{ phd \} \{ \\tl_set:Nn \\l_semio_appendix_level_tl \{ chapter \} \}/);
+  const phdSource = readFileSync(join(latexRoot, "semio-phd.sty"), "utf8");
+  assert.match(phdSource, /\\NewDocumentCommand\{\\makedissertationtitle\}\{\}\{\\semio_phd_title_page:\}/);
+  for (const environment of ["Abstract", "Kurzfassung", "Acknowledgements"]) assert.match(phdSource, new RegExp(`\\\\NewDocumentEnvironment\\{${environment}\\}`), environment);
+
   const loader = readFileSync(join(latexRoot, "semio-viz-charts.sty"), "utf8");
   for (const match of loader.matchAll(/\\RequirePackage\{([^}]+)\}/g)) assert.ok(existsSync(join(latexRoot, `${match[1]}.sty`)), `missing chart package ${match[1]}`);
   const windowSource = readFileSync(join(latexRoot, "semio-window.sty"), "utf8");
@@ -326,7 +337,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
   const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🗺️gallery-identities.json"), "utf8"));
   const documents = api.printDocuments();
-  assert.equal(documents.length, 87);
+  assert.equal(documents.length, 88);
   assert.deepEqual(documents.filter((row: any) => row.collection === "visualizations").map((row: any) => row.id).sort(), Object.keys(gallery).sort());
   assert.equal(new Set(documents.map((row: any) => api.printDocumentOutputDirectory(row.id, root))).size, documents.length);
   assert.throws(() => api.printDocument("../report"), /Unknown/);
@@ -345,6 +356,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
     assert.ok(target.dependsOn.includes("deps-tectonic"));
     assert.ok(target.dependsOn.includes("deps-tex"));
   }
+  console.log(`[DEBUG] Print catalog schema, independent gallery identities and ${documents.length} exclusive Nx document owners PASS`);
 }
 
 /** 📚️ Exercises locked range acquisition with language-neutral corruption vectors. */

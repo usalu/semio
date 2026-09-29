@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json",
+  "schema": "semio.quiz/v1",
+  "id": "power",
+  "title": { "en": "Power", "de": "Leistung" },
+  "description": { "en": "How much power do everyday things and power plants have?", "de": "Wie viel Leistung haben Alltagsgeräte und Kraftwerke?" },
+  "tasks": [
+    {
+      "kind": "sorting",
+      "id": "appliances",
+      "title": { "en": "Appliances", "de": "Geräte" },
+      "prompt": { "en": "Sort by electrical power, smallest first.", "de": "Sortiere nach elektrischer Leistung, die kleinste zuerst." },
+      "quantity": { "label": { "en": "Power", "de": "Leistung" }, "unit": "W", "scale": "logarithmic", "prefixed": true },
+      "items": [
+        { "id": "phone-charger", "label": { "en": "Phone charger", "de": "Handyladegerät" }, "value": 5 },
+        { "id": "laptop", "label": { "en": "Laptop", "de": "Laptop" }, "value": 50 },
+        { "id": "kettle", "label": { "en": "Kettle", "de": "Wasserkocher" }, "value": 2000 },
+        {
+          "id": "heat-pump",
+          "label": { "en": "Heat pump", "de": "Wärmepumpe" },
+          "value": 3000,
+          "explanation": { "en": "A house-sized heat pump draws a few kilowatts.", "de": "Eine Wärmepumpe für ein Haus braucht einige Kilowatt." }
+        }
+      ]
+    },
+    {
+      "kind": "matching",
+      "id": "sources",
+      "title": { "en": "Power plants", "de": "Kraftwerke" },
+      "prompt": { "en": "Give every plant its capacity and its full-load hours.", "de": "Ordne jedem Kraftwerk seine Leistung und seine Volllaststunden zu." },
+      "dimensions": [
+        { "id": "capacity", "quantity": { "label": { "en": "Capacity", "de": "Leistung" }, "unit": "W", "scale": "logarithmic", "prefixed": true } },
+        { "id": "hours", "quantity": { "label": { "en": "Full-load hours", "de": "Volllaststunden" }, "unit": "h", "scale": "linear", "prefixed": false } }
+      ],
+      "items": [
+        { "id": "rooftop-pv", "label": { "en": "Rooftop PV", "de": "Dach-PV" }, "values": { "capacity": 10000, "hours": 950 } },
+        { "id": "wind-turbine", "label": { "en": "Wind turbine", "de": "Windrad" }, "values": { "capacity": 3000000, "hours": 2000 } },
+        { "id": "nuclear-plant", "label": { "en": "Nuclear plant", "de": "Kernkraftwerk" }, "values": { "capacity": 1400000000, "hours": 7800 } }
+      ]
+    }
+  ]
+}

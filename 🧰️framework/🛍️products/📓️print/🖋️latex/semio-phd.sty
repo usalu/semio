@@ -1,0 +1,280 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-phd}[2026/09/21 v0.1.0 semio dissertation components]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-core}
+\RequirePackage{semio-components}
+
+% 🎓 The document kind `phd` is a chapter-sectioned report with a dissertation
+% apparatus: a title page carrying the examination metadata a faculty requires,
+% the two abstracts, the acknowledgements and the statutory declaration. Every
+% piece is optional — a field that was never set emits no window and no page, so
+% the same template serves a cumulative and a monographic dissertation.
+
+\ExplSyntaxOn
+
+\tl_new:N \l_semio_phd_university_tl
+\tl_new:N \l_semio_phd_faculty_tl
+\tl_new:N \l_semio_phd_institute_tl
+\tl_new:N \l_semio_phd_degree_tl
+\tl_new:N \l_semio_phd_discipline_tl
+\tl_new:N \l_semio_phd_supervisor_tl
+\tl_new:N \l_semio_phd_reviewers_tl
+\tl_new:N \l_semio_phd_submission_tl
+\tl_new:N \l_semio_phd_defense_tl
+\tl_new:N \l_semio_phd_place_tl
+\tl_new:N \l_semio_phd_orcid_tl
+
+\keys_define:nn { semio / setup } {
+  university .tl_set:N = \l_semio_phd_university_tl,
+  faculty .tl_set:N = \l_semio_phd_faculty_tl,
+  institute .tl_set:N = \l_semio_phd_institute_tl,
+  degree .tl_set:N = \l_semio_phd_degree_tl,
+  discipline .tl_set:N = \l_semio_phd_discipline_tl,
+  supervisor .tl_set:N = \l_semio_phd_supervisor_tl,
+  reviewers .tl_set:N = \l_semio_phd_reviewers_tl,
+  submission .tl_set:N = \l_semio_phd_submission_tl,
+  defense .tl_set:N = \l_semio_phd_defense_tl,
+  place .tl_set:N = \l_semio_phd_place_tl,
+  orcid .tl_set:N = \l_semio_phd_orcid_tl,
+}
+
+% ➕ Every field takes a long argument: a faculty address and a list of referees
+% are paragraph-separated, and a short `m` would break on the first \par.
+\NewDocumentCommand{\university}{+m}{\tl_set:Nn \l_semio_phd_university_tl {#1}}
+\NewDocumentCommand{\faculty}{+m}{\tl_set:Nn \l_semio_phd_faculty_tl {#1}}
+\NewDocumentCommand{\institute}{+m}{\tl_set:Nn \l_semio_phd_institute_tl {#1}}
+\NewDocumentCommand{\degree}{+m}{\tl_set:Nn \l_semio_phd_degree_tl {#1}}
+\NewDocumentCommand{\discipline}{+m}{\tl_set:Nn \l_semio_phd_discipline_tl {#1}}
+\NewDocumentCommand{\supervisor}{+m}{\tl_set:Nn \l_semio_phd_supervisor_tl {#1}}
+\NewDocumentCommand{\reviewers}{+m}{\tl_set:Nn \l_semio_phd_reviewers_tl {#1}}
+\NewDocumentCommand{\submissiondate}{+m}{\tl_set:Nn \l_semio_phd_submission_tl {#1}}
+\NewDocumentCommand{\defensedate}{+m}{\tl_set:Nn \l_semio_phd_defense_tl {#1}}
+\NewDocumentCommand{\place}{+m}{\tl_set:Nn \l_semio_phd_place_tl {#1}}
+\NewDocumentCommand{\orcid}{+m}{\tl_set:Nn \l_semio_phd_orcid_tl {#1}}
+
+%region Labels
+% 🌍 Every user-visible string exists in English and German and is chosen by the
+% document language, exactly like the register titles in semio-core.sty.
+\cs_new:Npn \semio_phd_label_dissertation: {
+  \str_case:VnF \l_semio_language_tl { { de } { Dissertation } } { Dissertation }
+}
+\cs_new:Npn \semio_phd_label_title: {
+  \str_case:VnF \l_semio_language_tl { { de } { Titel } } { Title }
+}
+\cs_new:Npn \semio_phd_label_author: {
+  \str_case:VnF \l_semio_language_tl { { de } { Verfasser } } { Author }
+}
+\cs_new:Npn \semio_phd_label_supervisor: {
+  \str_case:VnF \l_semio_language_tl { { de } { Betreuung } } { Supervisor }
+}
+\cs_new:Npn \semio_phd_label_reviewers: {
+  \str_case:VnF \l_semio_language_tl { { de } { Gutachten } } { Reviewers }
+}
+\cs_new:Npn \semio_phd_label_submission: {
+  \str_case:VnF \l_semio_language_tl { { de } { Eingereicht } } { Submitted }
+}
+\cs_new:Npn \semio_phd_label_defense: {
+  \str_case:VnF \l_semio_language_tl { { de } { Disputation } } { Defense }
+}
+\cs_new:Npn \semio_phd_label_faculty: {
+  \str_case:VnF \l_semio_language_tl { { de } { Fakultät } } { Faculty }
+}
+\cs_new:Npn \semio_phd_label_degree: {
+  \str_case:VnF \l_semio_language_tl { { de } { Grad } } { Degree }
+}
+\cs_new:Npn \semio_phd_label_place: {
+  \str_case:VnF \l_semio_language_tl { { de } { Ort } } { Place }
+}
+\cs_new:Npn \semio_phd_title_acknowledgements: {
+  \str_case:VnF \l_semio_language_tl { { de } { Danksagung } } { Acknowledgements }
+}
+\cs_new:Npn \semio_phd_title_declaration: {
+  \str_case:VnF \l_semio_language_tl { { de } { Eidesstattliche~Erklärung } } { Declaration~of~Authorship }
+}
+\cs_new:Npn \semio_phd_title_abstract: { Abstract }
+\cs_new:Npn \semio_phd_title_kurzfassung: { Kurzfassung }
+
+\NewExpandableDocumentCommand \SemioPhdAbstractTitle { } { \semio_phd_title_abstract: }
+\NewExpandableDocumentCommand \SemioPhdKurzfassungTitle { } { \semio_phd_title_kurzfassung: }
+\NewExpandableDocumentCommand \SemioPhdAcknowledgementsTitle { } { \semio_phd_title_acknowledgements: }
+\NewExpandableDocumentCommand \SemioPhdDeclarationTitle { } { \semio_phd_title_declaration: }
+%endregion Labels
+
+\ExplSyntaxOff
+% 📜 The declaration body is prose, so it is defined where the space catcode is
+% still 10 — inside \ExplSyntaxOn every word would be glued to the next one.
+% The wording is the neutral formulation both an English-language and a German
+% faculty accept; a faculty with a prescribed text overrides the command.
+\newcommand{\semio@phd@declaration@en}{%
+  I declare that this thesis is my own work, that I have used no sources or aids other than the ones named in it, and that every passage taken from another work, in letter or in substance, is marked as such. This thesis has not been submitted, in this or a similar form, to any other examination authority.%
+}
+\newcommand{\semio@phd@declaration@de}{%
+  Hiermit erkläre ich, dass ich die vorliegende Arbeit selbstständig verfasst und keine anderen als die angegebenen Quellen und Hilfsmittel benutzt habe, und dass alle Stellen, die dem Wortlaut oder dem Sinn nach anderen Werken entnommen sind, als solche kenntlich gemacht wurden. Diese Arbeit wurde in gleicher oder ähnlicher Form noch keiner anderen Prüfungsbehörde vorgelegt.%
+}
+\ExplSyntaxOn
+
+\cs_new_protected:Npn \semio_phd_declaration_text: {
+  \str_case:VnF \l_semio_language_tl
+    { { de } { \semio@phd@declaration@de } }
+    { \semio@phd@declaration@en }
+}
+
+%region TitlePage
+% 🪟 The title page is built from the same window arrangement the zukunftbau
+% cover uses: one full-height column, one window per examination field, every
+% window omitted when its field is empty. It replaces \maketitle for type=phd
+% rather than extending it, because a dissertation cover carries metadata no
+% other semio document kind has.
+\cs_new_protected:Npn \semio_phd_address:n #1 {
+  \group_begin:
+  \ExplSyntaxOff
+  \SemioSans
+  \setlength{\parindent}{0pt}%
+  #1%
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_phd_field_window:nN #1#2 {
+  \tl_if_empty:NF #2 {
+    \WindowItem{
+      \begin{Window}[title={#1}, anchor=center, text-size=fit]
+        \SemioSans \tl_use:N #2
+      \end{Window}
+    }
+  }
+}
+
+\cs_new_protected:Npn \semio_phd_title_page: {
+  \semio_frontmatter_begin:
+  \clearpage
+  \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
+  \thispagestyle{empty}
+  \bool_gset_true:N \g_semio_cover_geometry_bool
+  \semio_theme_apply:
+  \setlength{\parskip}{0pt}
+  \begin{WindowArrangement}[height=\dimexpr\textheight-1.2cm\relax]
+    \begin{WindowColumn}
+      \tl_if_empty:NF \l_semio_phd_university_tl {
+        \WindowItem[1.6]{
+          \begin{Window}[title={\semio_phd_label_faculty:}, anchor=nw, text-size=fit]
+            \semio_phd_address:n {
+              \tl_use:N \l_semio_phd_university_tl
+              \tl_if_empty:NF \l_semio_phd_faculty_tl { \par \tl_use:N \l_semio_phd_faculty_tl }
+              \tl_if_empty:NF \l_semio_phd_institute_tl { \par \tl_use:N \l_semio_phd_institute_tl }
+            }
+          \end{Window}
+        }
+      }
+      \WindowItem[3]{
+        \begin{Window}[title={\semio_phd_label_title:}, anchor=center, text-size=fit]
+          \SemioSans \@title
+          \tl_if_empty:NF \l_semio_subtitle_tl { \par \SemioSans \tl_use:N \l_semio_subtitle_tl }
+        \end{Window}
+      }
+      \tl_if_empty:NF \l_semio_phd_degree_tl {
+        \WindowItem[1.6]{
+          \begin{Window}[title={\semio_phd_label_dissertation:}, anchor=center, text-size=fit]
+            \SemioSans \tl_use:N \l_semio_phd_degree_tl
+            \tl_if_empty:NF \l_semio_phd_discipline_tl { \par \SemioSans \tl_use:N \l_semio_phd_discipline_tl }
+          \end{Window}
+        }
+      }
+      \WindowItem[1.4]{
+        \begin{Window}[title={\semio_phd_label_author:}, anchor=center, text-size=fit]
+          \SemioSans \@author
+          \tl_if_empty:NF \l_semio_phd_orcid_tl { \par \SemioMono ORCID~ \tl_use:N \l_semio_phd_orcid_tl }
+        \end{Window}
+      }
+      \bool_lazy_or:nnT
+        { ! \tl_if_empty_p:N \l_semio_phd_supervisor_tl }
+        { ! \tl_if_empty_p:N \l_semio_phd_reviewers_tl }
+      {
+        \WindowItem[1.8]{
+          \begin{WindowRow}
+            \semio_phd_field_window:nN { \semio_phd_label_supervisor: } \l_semio_phd_supervisor_tl
+            \semio_phd_field_window:nN { \semio_phd_label_reviewers: } \l_semio_phd_reviewers_tl
+          \end{WindowRow}
+        }
+      }
+      \bool_lazy_any:nT
+        {
+          { ! \tl_if_empty_p:N \l_semio_phd_place_tl }
+          { ! \tl_if_empty_p:N \l_semio_phd_submission_tl }
+          { ! \tl_if_empty_p:N \l_semio_phd_defense_tl }
+        }
+      {
+        \WindowItem[1.2]{
+          \begin{WindowRow}
+            \semio_phd_field_window:nN { \semio_phd_label_place: } \l_semio_phd_place_tl
+            \semio_phd_field_window:nN { \semio_phd_label_submission: } \l_semio_phd_submission_tl
+            \semio_phd_field_window:nN { \semio_phd_label_defense: } \l_semio_phd_defense_tl
+          \end{WindowRow}
+        }
+      }
+    \end{WindowColumn}
+  \end{WindowArrangement}
+  % The title page owns page 1 alone; the frontmatter continues on the next page
+  % with the body geometry restored, never with the cover's tight 1.5cm margins.
+  \semio_cover_geometry_restore:
+}
+
+\NewDocumentCommand{\makedissertationtitle}{}{\semio_phd_title_page:}
+%endregion TitlePage
+
+%region Frontmatter
+% 📄 Every frontmatter part is an unnumbered chapter, like the zukunftbau
+% Förderhinweis: the register machinery numbers chapters, and an abstract that
+% claimed a chapter number would shift every numbered chapter of the thesis.
+\cs_new_protected:Npn \semio_phd_unnumbered_heading:n #1 {
+  \semio_clear_to_recto:
+  \@ifundefined { chapter } { \section* {#1} } { \chapter* {#1} }
+}
+% 🔤 The heading is written verbatim into the register aux file, so the title
+% has to arrive as text: passing the label function itself put the literal
+% "\semio_phd_title_abstract:" into the Table of Contents.
+\cs_generate_variant:Nn \semio_phd_unnumbered_heading:n { e }
+
+\NewDocumentEnvironment{Abstract}{}{
+  \semio_phd_unnumbered_heading:e { \semio_phd_title_abstract: }
+}{ \par }
+
+\NewDocumentEnvironment{Kurzfassung}{}{
+  \semio_phd_unnumbered_heading:e { \semio_phd_title_kurzfassung: }
+}{ \par }
+
+\NewDocumentEnvironment{Acknowledgements}{}{
+  \semio_phd_unnumbered_heading:e { \semio_phd_title_acknowledgements: }
+}{ \par }
+
+% ✍️ The declaration closes the thesis with the signature line the faculty
+% archives: place and submission date on the left, the author's name below the
+% rule, both taken from the metadata already on the title page.
+\NewDocumentCommand{\makedeclaration}{}{
+  \semio_phd_unnumbered_heading:e { \semio_phd_title_declaration: }
+  \begin{Blockquote}
+    \semio_phd_declaration_text:
+  \end{Blockquote}
+  \par
+  \semio_phd_signature_line:
+}
+
+\cs_new_protected:Npn \semio_phd_signature_line: {
+  \par
+  \SemioSans
+  \tl_if_empty:NF \l_semio_phd_place_tl {
+    \tl_use:N \l_semio_phd_place_tl
+    \tl_if_empty:NF \l_semio_phd_submission_tl { ,~ }
+  }
+  \tl_if_empty:NF \l_semio_phd_submission_tl { \tl_use:N \l_semio_phd_submission_tl }
+  \par
+  \vspace { \SemioSpacingDouble }
+  \rule { 6cm } { \semio@stroke@hairline }
+  \par
+  \@author
+  \par
+}
+%endregion Frontmatter
+
+\ExplSyntaxOff

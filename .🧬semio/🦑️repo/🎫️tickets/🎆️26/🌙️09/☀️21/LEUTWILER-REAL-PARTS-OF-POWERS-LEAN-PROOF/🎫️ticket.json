@@ -1,0 +1,19 @@
+{
+  "title": "Leutwiler Real Parts of Powers Lean Proof",
+  "emoji": "👴",
+  "status": "closed",
+  "description": "Create 👴leutwiler/💤realparts-of-powers-z-n, add real_parts_of_powers_en.tex, derive explicit recursion and closed form for coefficients a_k of Re(z^{2m}), z = x + iy + jt, and prove them with Lean.",
+  "summary": "Degree three and general degree: real_poly_root_iff (real coefficients, any degree), real_cubic_root_iff and real_cubic_circle, quaternion-wide power formula and sphere theorem for coefficients in C_j (quat_pow_eq, sphere_of_roots_J), cubic with exactly the roots 1, j, 2j (jCubic_root_iff), and q^n = j: existence, all roots in C_j outside the xy-plane, finitely many (exists_pow_eq_j, pow_eq_j, pow_eq_j_finite). 63 gated theorems, build green, paper section 7 added, verification table made breakable, rebuilt without warnings. Ticket handled manually because the ticket MCP tools return malformed results. Before that: Formalised the root question: coefficients in the xy-plane force circles of roots and no isolated root outside the plane (circle_of_roots, root_not_isolated), real quadratic root equivalence (real_quadratic_root_iff), and q² - q(1+j) + j with exactly the roots 1 and j (jPoly_root_iff). 52 gated theorems, build green, paper section 6 added and rebuilt without warnings. Ticket handled manually because the ticket MCP tools return malformed results. Before that: Added examples: paper section 5 (Examples 17-21) and six machine-checked Lean examples (45 gated theorems, build green, paper rebuilt without warnings). Reopened and closed manually because the ticket MCP tools returned malformed results. Before that: Extended to Clifford algebras: abstract theorem (x + w)^n = R_n + S_n w for w² = -r (pow_eq_of_sq), quaternion and CliffordAlgebra instances with component formula (coefficient of e_i is x_i S_n), defects and equation-recursion equivalences in dimension μ+1, equations x_l Δf = (μ-1) ∂_l f and x_l² Δw - (μ-1) x_l ∂_l w + (μ-1) w = 0 for the components of z^n. 13 new gated theorems, 39 total, lake build green, standard axioms only. Paper section 4 added and rebuilt without warnings. Not formalised: linear independence of 1, e_i. Closed manually because ticket_close returned a malformed MCP result. Before that: Extended from the real part to the coefficients of i and j: z^n = Re(z^n) + (i y + j t) S_n with s_k = (-1)^k C(n,2k+1), s_0 = n, recursion (2k+3)(2k+2) s_{k+1} = -(n-2k-1)(n-2k-2) s_k, symmetry for n = 2m, vanishing ij component; v_n = y S_n solves t Δv = ∂ₜv and w_n = t S_n solves t² Δw - t ∂ₜw + w = 0, each equivalent to the recursion, with uniqueness. All formalised in Lean (13 new gated theorems, 26 total, lake build green, only propext/Classical.choice/Quot.sound). Paper gained section 3 (Theorem 8, Corollary 9, Lemma 10, Theorem 11, Remark 12), new title and verification table; rebuilt with tectonic without warnings.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2613"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "65181d40-d37e-4a5d-89dd-18b34edf17c9",
+    "bfa0a3ee-c628-432d-a8ba-0dcdc1b0cd8a",
+    "29758489-3dfd-40e4-ad80-c3d759acf040",
+    "c30d4cd2-0e35-4c0f-b793-fc5562e9001e",
+    "64739c1c-e633-4c0b-b07f-29a371954656",
+    "3f6e046c-47b7-44b1-834a-aceaa31e127a"
+  ]
+}

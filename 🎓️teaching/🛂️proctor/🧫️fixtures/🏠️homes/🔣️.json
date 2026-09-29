@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json",
+  "schema": "semio.quiz/v1",
+  "id": "homes",
+  "title": { "en": "Heating systems", "de": "Heizsysteme" },
+  "description": { "en": "Which system heats which home?", "de": "Welches System heizt welches Haus?" },
+  "tasks": [
+    {
+      "kind": "classification",
+      "id": "systems",
+      "title": { "en": "Heat generators", "de": "Wärmeerzeuger" },
+      "prompt": { "en": "Assign every device to its heating system.", "de": "Ordne jedes Gerät seinem Heizsystem zu." },
+      "axes": [
+        { "id": "efficiency", "label": { "en": "Efficiency", "de": "Wirkungsgrad" }, "unit": "%", "min": 0, "max": 400 },
+        { "id": "cost", "label": { "en": "Energy cost", "de": "Energiekosten" }, "unit": "€/kWh", "min": 0, "max": 0.5 },
+        { "id": "emissions", "label": { "en": "Emissions", "de": "Emissionen" }, "unit": "g/kWh", "min": 0, "max": 400 }
+      ],
+      "categories": [
+        { "id": "heat-pump", "label": { "en": "Heat pump", "de": "Wärmepumpe" }, "profile": { "efficiency": 350, "cost": 0.3, "emissions": 100 } },
+        { "id": "gas-boiler", "label": { "en": "Gas boiler", "de": "Gaskessel" }, "profile": { "efficiency": 95, "cost": 0.12, "emissions": 240 } },
+        { "id": "wood-stove", "label": { "en": "Wood stove", "de": "Holzofen" }, "profile": { "efficiency": 75, "cost": 0.08, "emissions": 30 } }
+      ],
+      "items": [
+        { "id": "air-to-water", "label": { "en": "Air-to-water unit", "de": "Luft-Wasser-Gerät" }, "category": "heat-pump" },
+        { "id": "condensing", "label": { "en": "Condensing boiler", "de": "Brennwertkessel" }, "category": "gas-boiler" },
+        { "id": "pellets", "label": { "en": "Pellet burner", "de": "Pelletbrenner" }, "category": "wood-stove" },
+        { "id": "ground-source", "label": { "en": "Ground probe", "de": "Erdsonde" }, "category": "heat-pump" }
+      ]
+    }
+  ]
+}

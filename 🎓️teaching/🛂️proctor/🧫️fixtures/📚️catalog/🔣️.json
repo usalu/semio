@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json",
+  "schema": "semio.quiz.catalog/v1",
+  "id": "proctor-fixture",
+  "title": { "en": "Proctor fixture", "de": "Proctor-Testkatalog" },
+  "introduction": {
+    "title": { "en": "Welcome to the fixture", "de": "Willkommen im Testkatalog" },
+    "paragraphs": [
+      { "en": "Two small quizzes the proctor's own tests play end to end.", "de": "Zwei kleine Quizze, die die Tests des Proctors vollständig durchspielen." }
+    ]
+  },
+  "quizzes": ["../⚡️power/🔣️.json", "../🏠️homes/🔣️.json"],
+  "badges": [
+    {
+      "id": "perfect-power",
+      "emoji": "⚡",
+      "label": { "en": "Power expert", "de": "Leistungsprofi" },
+      "description": { "en": "A perfect run of the power quiz.", "de": "Ein fehlerfreier Durchgang des Leistungsquiz." },
+      "rule": { "kind": "perfect-quiz", "quiz": "power" }
+    },
+    {
+      "id": "sorter",
+      "emoji": "📶",
+      "label": { "en": "Sorter", "de": "Sortierer" },
+      "description": { "en": "Every sorting task solved perfectly.", "de": "Jede Sortieraufgabe fehlerfrei gelöst." },
+      "rule": { "kind": "perfect-tasks", "taskKind": "sorting" }
+    },
+    {
+      "id": "complete",
+      "emoji": "🎓",
+      "label": { "en": "Completed", "de": "Abgeschlossen" },
+      "description": { "en": "Every quiz of the catalog submitted.", "de": "Jedes Quiz des Katalogs abgegeben." },
+      "rule": { "kind": "completed-quizzes" }
+    }
+  ]
+}

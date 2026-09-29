@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@teaching/architecture-quiz",
+  "version": "0.1.0",
+  "description": "Quizze · Architektur und Technologie — the quiz website of quizze.architektur-und-technologie.de",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun nx run @teaching/architecture-quiz:dev",
+    "build": "bun nx run @teaching/architecture-quiz:build",
+    "test": "bun nx run @teaching/architecture-quiz:test"
+  },
+  "dependencies": {
+    "@semio-tech/quiz": "workspace:*",
+    "@semio-tech/quiz-react": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@vitejs/plugin-react": "^5.1.2",
+    "ajv": "8.20.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17"
+  },
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript"
+  },
+  "bundleKind": "application",
+  "semio": {
+    "app": {
+      "kind": "architecture-quiz",
+      "aliases": [
+        "architecture-quiz"
+      ],
+      "packageRoot": "🎓️teaching/🏛️architecture/❓️quiz",
+      "corePackage": "@teaching/architecture-quiz",
+      "hostKind": "architecture-quiz",
+      "port": {
+        "dev": 6061,
+        "env": "TEACHING_ARCHITECTURE_QUIZ_PORT"
+      }
+    }
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}
