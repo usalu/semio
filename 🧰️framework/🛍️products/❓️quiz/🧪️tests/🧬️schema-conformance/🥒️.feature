@@ -73,6 +73,10 @@ Feature: Every quiz document the product meets conforms to the normative schema
       | leaderboard-events          | shared://🏆️leaderboard/🔣️.json           | /vectors/*/learners/*/events/*              | Event       | -        |
       | leaderboard-learner-views   | shared://🏆️leaderboard/🔣️.json           | /vectors/*/expected/learnerViews/*          | LearnerView | -        |
       | leaderboard-rankings        | shared://🏆️leaderboard/🔣️.json           | /vectors/*/expected/leaderboard             | Leaderboard | -        |
+      | presence-places             | shared://👥️shared-presence/🔣️.json       | /scopes/*/place                             | Place       | -        |
+      | crowd-quizzes               | shared://📊️crowd-view/🔣️.json            | /quizzes/*                                  | Quiz        | -        |
+      | crowd-results               | shared://📊️crowd-view/🔣️.json            | /vectors/*/results/*                        | RunResult   | -        |
+      | crowd-views                 | shared://📊️crowd-view/🔣️.json            | /vectors/*/expected                         | CrowdView   | -        |
     When every document a row's pointer reaches is validated against the row's definition
     Then jsonschema accepts every one of them
     And every implementation accepts the same quizzes and catalogs

@@ -52,6 +52,93 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "d3-color",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-color",
+      "version": "3.1.0",
+      "source": {
+        "repository": "https://github.com/d3/d3-color",
+        "license": "ISC"
+      },
+      "engine": {
+        "family": "d3-color",
+        "implementation": "d3-color hsl().formatHex()",
+        "version": "3.1.0"
+      },
+      "capabilities": [
+        "presence-paint"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://d3js.org/d3-color",
+      "hostPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "rationale": "Judges `presencePaint` of 👥️presence-presentation in `🧪️tests/🔬️unit`: the generated `--presence-N` palette variables (light and dark) and the inline literals past the first cycle must convert to the same sRGB hex as `presenceColor`'s HSL, both converted by d3-color — so every palette slot paints one colour whichever path renders it."
+    },
+    {
+      "id": "polygon-clipping",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "polygon-clipping",
+      "version": "0.15.7",
+      "source": {
+        "repository": "https://github.com/mfogel/polygon-clipping",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "polygon-clipping",
+        "implementation": "polygon-clipping difference()",
+        "version": "0.15.7"
+      },
+      "capabilities": [
+        "layered-veil-area"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/mfogel/polygon-clipping",
+      "hostPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "rationale": "Judges the glass of 🥞️layered-overview-geometry in `🧪️tests/🔬️unit`: for every veil vector of `🧫️fixtures/🥞️layered-overview`, the boolean difference view − hole computed by polygon-clipping must have the area the fixture declares, and so must our single `clip-path: polygon(evenodd, …)` vertex list under the evenodd rule — so one clipped glass layer covers exactly what the landings' four rectangles covered."
+    },
+    {
+      "id": "d3-ease",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-ease",
+      "version": "3.0.1",
+      "source": {
+        "repository": "https://github.com/d3/d3-ease",
+        "license": "ISC"
+      },
+      "engine": {
+        "family": "d3-ease",
+        "implementation": "d3-ease easeCubicInOut",
+        "version": "3.0.1"
+      },
+      "capabilities": [
+        "layered-glide-easing"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://d3js.org/d3-ease",
+      "hostPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "rationale": "Judges `easeInOutCubic` of 🥞️layered-overview-geometry in `🧪️tests/🔬️unit`: the 500 ms reveal/open glide must ease exactly like d3-ease's `easeCubicInOut` at 257 samples of [0, 1], next to the fixture's exact samples."
     }
   ],
   "noOracleDecisions": [

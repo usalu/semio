@@ -1,0 +1,87 @@
+# 🚚️ Architecture quiz releases, started by hand only (Actions → "architecture quiz" → Run workflow):
+#   site    — `bun nx run @teaching/architecture-quiz:publish` builds and verifies the CDN artifact against the production
+#             proctor, then GitHub Pages serves it at quizzes.architektur-und-technologie.de (the artifact's CNAME).
+#   proctor — `bun nx run @teaching/architecture-quiz:docker-image-publish` builds the proctor image and pushes it to
+#             ghcr.io/usalu/architecture-quiz-proctor as `<workspace version>` and `latest`.
+# One-time repository settings: Settings → Pages → Source "GitHub Actions" and custom domain
+# quizzes.architektur-und-technologie.de; after the first push, make the GHCR package public so hosts pull without login.
+# No stored secrets: Pages deploys with the OIDC token, the registry push with GITHUB_TOKEN.
+# @see ../../🎓️teaching/🏛️architecture/❓️quiz/README.md — the operator guide
+
+name: architecture quiz
+
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Publish the site to GitHub Pages
+        type: boolean
+        default: true
+      proctor:
+        description: Build and push the proctor image to GHCR
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: architecture-quiz
+  cancel-in-progress: false
+
+jobs:
+  site:
+    if: ${{ inputs.site }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.15.0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Build and verify the CDN artifact
+        run: bun nx run @teaching/architecture-quiz:publish
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: 🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/pages/quizzes
+
+  pages:
+    needs: site
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  proctor:
+    if: ${{ inputs.proctor }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.15.0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Install
+        run: bun install --frozen-lockfile
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push the proctor image
+        run: bun nx run @teaching/architecture-quiz:docker-image-publish

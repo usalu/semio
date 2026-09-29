@@ -10,7 +10,6 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
-import { NavbarTrailingChromeSlot } from "../../🎯️targets/⚛️react/🟦️";
 // #endregion 🔌️Adapters
 
 // #region 🩺️Navbar
@@ -78,11 +77,27 @@ export function navbarCenteredLeftV1(width: number, band: NavbarSpanV1, contentW
   return Math.round(Math.min(Math.max((width - contentWidth) / 2, band.left), latest));
 }
 
+/** 🔌️ The trailing chrome a host parks at the navbar's end — the fullscreen toggle and whatever sits just before it. */
+export type NavbarTrailingChrome = React.ComponentType<{ readonly beforeFullscreen?: React.ReactNode; readonly showFullscreenToggle?: boolean; readonly onFullscreenToggle?: () => void }>;
+
+let navbarTrailingChrome: NavbarTrailingChrome | undefined;
+
+/** 🪝️ Installs (or with `undefined` removes) the {@link NavbarTrailingChrome}; returns the one installed before. The React
+ * target barrel installs its fullscreen-aware slot when it loads, so a page that imports only this element and never
+ * shows the fullscreen toggle does not ship the shell around it; without one, `trailingBeforeFullscreen` renders as is. */
+export function setNavbarTrailingChrome(component: NavbarTrailingChrome | undefined): NavbarTrailingChrome | undefined {
+  const previous = navbarTrailingChrome;
+  navbarTrailingChrome = component;
+  return previous;
+}
+
 /**
  * Props interface for the Navbar component.
  **/
 export interface NavbarProps {
   items: NavbarItem[];
+  /** 🗣️ Accessible name of the navigation landmark (e.g. the site's name), so assistive technology can tell it apart. */
+  label?: string;
   className?: string;
   showFullscreenToggle?: boolean;
   onFullscreenToggle?: () => void;
@@ -184,7 +199,13 @@ function NavbarBandBody({ normalItems, centeredItems, trailing }: { normalItems:
   );
 }
 
-function Navbar({ items, className, showFullscreenToggle = true, onFullscreenToggle, trailingBeforeFullscreen }: NavbarProps) {
+function NavbarTrailing({ beforeFullscreen, showFullscreenToggle, onFullscreenToggle }: { readonly beforeFullscreen?: React.ReactNode; readonly showFullscreenToggle: boolean; readonly onFullscreenToggle?: () => void }) {
+  if (!showFullscreenToggle && !beforeFullscreen) return null;
+  const Trailing = navbarTrailingChrome;
+  return Trailing ? <Trailing beforeFullscreen={beforeFullscreen} showFullscreenToggle={showFullscreenToggle} onFullscreenToggle={onFullscreenToggle} /> : <>{beforeFullscreen}</>;
+}
+
+function Navbar({ items, label, className, showFullscreenToggle = true, onFullscreenToggle, trailingBeforeFullscreen }: NavbarProps) {
   const parent = useSurface();
   const paints = shellFloorPaints(parent);
   const bgClass = shellFloorFillClass(parent);
@@ -194,15 +215,11 @@ function Navbar({ items, className, showFullscreenToggle = true, onFullscreenTog
     <NavbarBandBody
       normalItems={normalItems}
       centeredItems={centeredItems}
-      trailing={
-        showFullscreenToggle || trailingBeforeFullscreen ? (
-          <NavbarTrailingChromeSlot beforeFullscreen={trailingBeforeFullscreen} showFullscreenToggle={showFullscreenToggle} onFullscreenToggle={onFullscreenToggle} />
-        ) : null
-      }
+      trailing={<NavbarTrailing beforeFullscreen={trailingBeforeFullscreen} showFullscreenToggle={showFullscreenToggle} onFullscreenToggle={onFullscreenToggle} />}
     />
   );
   return (
-    <nav id="ui.navbar" data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large", getLevelZClass("base"), bgClass, className)}>
+    <nav id="ui.navbar" aria-label={label} data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );

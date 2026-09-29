@@ -378,6 +378,9 @@ const RULER_EM = 10;
 const FALLBACK_WIDTH_EM = 18;
 const FALLBACK_SPACE: RadarSpace = { width: FALLBACK_WIDTH_EM * 16, em: 16, family: "sans-serif", fonts: 0 };
 const RINGS = [0.25, 0.5, 0.75, 1];
+const VALUE_CELL = "quiz-nowrap border-b border-normal px-single py-single text-left align-top tabular-nums";
+const VALUE_HEAD = "quiz-nowrap border-b-2 border-normal px-single py-single text-left align-top font-semibold";
+const VALUE_ROW_HEAD = "border-b border-normal px-single py-single text-left align-top font-semibold";
 
 function sameSpace(a: RadarSpace, b: RadarSpace): boolean {
   return a.width === b.width && a.em === b.em && a.family === b.family && a.fonts === b.fonts;
@@ -451,7 +454,7 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
   const { frame } = layout;
   const count = axes.length;
   return (
-    <figure ref={figure} className="quiz-radar">
+    <figure ref={figure} className="quiz-radar m-0 flex flex-col gap-single">
       <span ref={ruler} className="quiz-radar-ruler" style={{ width: `${RULER_EM}em` }} aria-hidden="true" />
       <svg className="quiz-radar-chart" viewBox={`0 0 ${fixed(layout.width)} ${fixed(layout.height)}`} width={fixed(layout.width)} height={fixed(layout.height)} role="img" aria-labelledby={titleId}>
         <title id={titleId}>{text("quiz.radar.label", { name })}</title>
@@ -475,29 +478,41 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
           ))}
         </g>
       </svg>
-      <details className="quiz-radar-values">
-        <summary>{text("quiz.radar.table")}</summary>
-        <table>
-          <caption className="quiz-visually-hidden">{text("quiz.radar.label", { name })}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{text("quiz.radar.axis")}</th>
-              <th scope="col">{text("quiz.radar.value")}</th>
-              <th scope="col">{text("quiz.radar.minimum")}</th>
-              <th scope="col">{text("quiz.radar.maximum")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {axes.map((axis) => (
-              <tr key={axis.id}>
-                <th scope="row">{axis.label}</th>
-                <td>{axis.id in values ? withUnit(formatNumber(values[axis.id] ?? 0, locale), axis.unit) : "–"}</td>
-                <td>{withUnit(formatNumber(axis.min, locale), axis.unit)}</td>
-                <td>{withUnit(formatNumber(axis.max, locale), axis.unit)}</td>
+      <details className="text-sm">
+        <summary className="quiz-target flex cursor-pointer items-center">{text("quiz.radar.table")}</summary>
+        <div className="max-w-full overflow-x-auto">
+          <table className="w-full border-collapse">
+            <caption className="sr-only">{text("quiz.radar.label", { name })}</caption>
+            <thead>
+              <tr>
+                <th scope="col" className={VALUE_HEAD}>
+                  {text("quiz.radar.axis")}
+                </th>
+                <th scope="col" className={VALUE_HEAD}>
+                  {text("quiz.radar.value")}
+                </th>
+                <th scope="col" className={VALUE_HEAD}>
+                  {text("quiz.radar.minimum")}
+                </th>
+                <th scope="col" className={VALUE_HEAD}>
+                  {text("quiz.radar.maximum")}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {axes.map((axis) => (
+                <tr key={axis.id}>
+                  <th scope="row" className={VALUE_ROW_HEAD}>
+                    {axis.label}
+                  </th>
+                  <td className={VALUE_CELL}>{axis.id in values ? withUnit(formatNumber(values[axis.id] ?? 0, locale), axis.unit) : "–"}</td>
+                  <td className={VALUE_CELL}>{withUnit(formatNumber(axis.min, locale), axis.unit)}</td>
+                  <td className={VALUE_CELL}>{withUnit(formatNumber(axis.max, locale), axis.unit)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </details>
     </figure>
   );

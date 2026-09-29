@@ -424,7 +424,7 @@ fn envelope() -> CommandEnvelope {
 
 #[test]
 fn document_socket_identity_binds_from_resolved_actor_never_query() {
-    let resolved = crate::policy::Resolved {
+    let resolved = Resolved {
         principal: Principal::User { id: "alice".into() },
         session: Some(crate::contract::SessionId("session-1".into())),
         device: None,
@@ -438,7 +438,323 @@ fn document_socket_identity_binds_from_resolved_actor_never_query() {
 
 #[test]
 fn document_socket_identity_rejects_anonymous_without_grant() {
-    let resolved = crate::policy::Resolved { principal: Principal::Anonymous, session: None, device: None, via: "anonymous".into(), actor: None };
+    let resolved = Resolved { principal: Principal::Anonymous, session: None, device: None, via: "anonymous".into(), actor: None };
     assert!(document_socket_identity(&resolved).is_err());
 }
+
+//#region 🔖️PresenceStream
+type ClientFrames = futures::channel::mpsc::UnboundedSender<Result<Message, std::convert::Infallible>>;
+type ServerFrames = futures::channel::mpsc::UnboundedReceiver<Message>;
+
+fn quick_presence(idle: Duration) -> PresenceSettings {
+    PresenceSettings { tick: Duration::from_millis(20), idle, keepalive: Duration::from_secs(30), ..PresenceSettings::default() }
+}
+
+async fn presence_server(settings: PresenceSettings) -> ServerState<TestInstance> {
+    let server = Server::<TestInstance>::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() }).module(CountingModule).presence(settings).build().await.expect("built");
+    let state = server.state().clone();
+    grant(&state, PolicyPoint::Subscription, PRESENCE_JOIN);
+    grant(&state, PolicyPoint::Subscription, PRESENCE_PUBLISH);
+    state
+}
+
+fn connect(state: &ServerState<TestInstance>, scope: &str, surface: &str) -> (ClientFrames, ServerFrames, tokio::task::JoinHandle<()>) {
+    let (client, mut inbound) = unbounded::<Result<Message, std::convert::Infallible>>();
+    let (mut outbound, frames) = unbounded::<Message>();
+    let (state, scope, surface) = (state.clone(), Scope(scope.to_string()), surface.to_string());
+    let task = tokio::spawn(async move { run_presence(&state, &scope, &surface, &PresenceGrant { principal: Principal::Anonymous, may_publish: true }, &mut outbound, &mut inbound).await });
+    (client, frames, task)
+}
+
+async fn next_frame(frames: &mut ServerFrames) -> PresenceFrame {
+    loop {
+        match tokio::time::timeout(Duration::from_secs(5), frames.next()).await.expect("a frame arrives").expect("the socket is open") {
+            Message::Text(text) => return serde_json::from_str(text.as_str()).expect("a presence frame"),
+            Message::Ping(_) => continue,
+            other => panic!("unexpected message {other:?}"),
+        }
+    }
+}
+
+fn say(client: &ClientFrames, text: &str) {
+    client.unbounded_send(Ok(Message::Text(text.to_string().into()))).expect("the session is open");
+}
+
+#[test]
+fn presence_rooms_coalesce_every_update_into_one_batch_per_tick() {
+    let rooms = PresenceRooms::new();
+    let (roster, start) = rooms.join("presence:s", "a", 0, "home");
+    assert!(start);
+    assert_eq!(roster.iter().map(|entry| entry.session.as_str()).collect::<Vec<_>>(), ["a"]);
+    let (roster, start) = rooms.join("presence:s", "b", 1, "home");
+    assert!(!start);
+    assert_eq!(roster.len(), 2);
+    for n in 0..5 {
+        rooms.update("presence:s", "a", serde_json::json!({ "n": n }));
+    }
+    let Drained::Batch(PresenceFrame::Batch { entries, left }) = rooms.drain("presence:s") else { panic!("a batch") };
+    assert_eq!(entries.iter().map(|entry| (entry.session.as_str(), entry.state.clone())).collect::<Vec<_>>(), [("a", serde_json::json!({ "n": 4 })), ("b", OpaqueJson::Null)]);
+    assert!(left.is_empty());
+    assert_eq!(rooms.drain("presence:s"), Drained::Quiet);
+    rooms.update("presence:s", "b", serde_json::json!({ "x": 1 }));
+    rooms.leave("presence:s", "b");
+    assert_eq!(rooms.drain("presence:s"), Drained::Batch(PresenceFrame::Batch { entries: Vec::new(), left: vec!["b".to_string()] }));
+    rooms.leave("presence:s", "a");
+    assert!(matches!(rooms.drain("presence:s"), Drained::Batch(PresenceFrame::Batch { ref left, .. }) if left == &["a".to_string()]));
+    assert_eq!(rooms.drain("presence:s"), Drained::Finished);
+    assert!(rooms.roster("presence:s").is_empty());
+    assert!(rooms.join("presence:s", "c", 0, "home").1, "a room whose ticker finished starts a new one");
+}
+
+#[test]
+fn a_state_frame_is_bounded_by_size_rate_and_shape() {
+    let settings = PresenceSettings::default();
+    let now = Instant::now();
+    let mut budget = StateBudget::new(settings.max_states_per_second);
+    assert_eq!(admit_frame(r#"{"type":"state","state":{"x":1}}"#, &settings, &mut budget, now), Ok(Some(PresenceFrame::State { state: serde_json::json!({ "x": 1 }) })));
+    let large = format!(r#"{{"type":"state","state":"{}"}}"#, "x".repeat(settings.max_state_bytes));
+    assert_eq!(admit_frame(&large, &settings, &mut budget, now), Err(REFUSED_TOO_LARGE.to_string()));
+    assert_eq!(admit_frame(r#"{"type":"batch","entries":[],"left":[]}"#, &settings, &mut budget, now), Err(REFUSED_INVALID.to_string()));
+    assert_eq!(admit_frame("not json", &settings, &mut budget, now), Err(REFUSED_INVALID.to_string()));
+    let mut spent = StateBudget::new(settings.max_states_per_second);
+    let start = Instant::now();
+    let admitted = (0..40).filter(|_| admit_frame(r#"{"type":"state","state":1}"#, &settings, &mut spent, start) == Ok(Some(PresenceFrame::State { state: serde_json::json!(1) }))).count();
+    assert_eq!(admitted, settings.max_states_per_second as usize);
+    assert_eq!(admit_frame(r#"{"type":"state","state":1}"#, &settings, &mut spent, start + Duration::from_secs(1)), Ok(Some(PresenceFrame::State { state: serde_json::json!(1) })));
+}
+
+#[test]
+fn presence_session_ids_are_unique_hex() {
+    let first = presence_session_id();
+    let second = presence_session_id();
+    assert_ne!(first, second);
+    assert!(first.len() == 32 && first.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()));
+}
+
+#[tokio::test]
+async fn presence_admission_needs_the_join_grant_a_short_surface_and_an_admitted_origin() {
+    let state = state().await;
+    let scope = Scope("space-1".into());
+    let refused = admit_presence(&state, &HeaderMap::new(), Some(loopback()), &scope, "home").await.expect_err("closed by default");
+    assert_eq!(refused.status(), StatusCode::FORBIDDEN);
+    grant(&state, PolicyPoint::Subscription, PRESENCE_JOIN);
+    assert!(!admit_presence(&state, &HeaderMap::new(), Some(loopback()), &scope, "home").await.expect("joins").may_publish, "join alone does not publish");
+    grant(&state, PolicyPoint::Subscription, PRESENCE_PUBLISH);
+    assert_eq!(admit_presence(&state, &HeaderMap::new(), Some(loopback()), &scope, "home").await.expect("joins and publishes"), PresenceGrant { principal: Principal::Anonymous, may_publish: true });
+    let long = "x".repeat(65);
+    assert_eq!(admit_presence(&state, &HeaderMap::new(), Some(loopback()), &scope, &long).await.expect_err("too long").status(), StatusCode::BAD_REQUEST);
+
+    let mut gated = state.clone();
+    gated.origin_admission = Some(Arc::new(|origin: &str| origin == "https://quizzes.example"));
+    let mut foreign = HeaderMap::new();
+    foreign.insert(header::ORIGIN, HeaderValue::from_static("https://evil.example"));
+    assert_eq!(admit_presence(&gated, &foreign, Some(loopback()), &scope, "home").await.expect_err("foreign origin").status(), StatusCode::FORBIDDEN);
+    let mut site = HeaderMap::new();
+    site.insert(header::ORIGIN, HeaderValue::from_static("https://quizzes.example"));
+    assert!(admit_presence(&gated, &site, Some(loopback()), &scope, "home").await.is_ok());
+    assert!(admit_presence(&gated, &HeaderMap::new(), Some(loopback()), &scope, "home").await.is_ok(), "a non-browser client presents no origin");
+}
+
+#[tokio::test]
+async fn two_sessions_share_coalesced_state_and_see_each_other_leave() {
+    let state = presence_server(quick_presence(Duration::from_secs(30))).await;
+    let (alice, mut alice_frames, _alice_task) = connect(&state, "room-1", "home");
+    let PresenceFrame::Welcome { session: alice_session, colour: alice_colour, roster } = next_frame(&mut alice_frames).await else { panic!("welcome first") };
+    assert_eq!(roster.iter().map(|entry| entry.session.as_str()).collect::<Vec<_>>(), [alice_session.as_str()]);
+
+    let (bob, mut bob_frames, bob_task) = connect(&state, "room-1", "leaderboard");
+    let PresenceFrame::Welcome { session: bob_session, colour: bob_colour, roster } = next_frame(&mut bob_frames).await else { panic!("welcome first") };
+    assert_ne!(alice_colour, bob_colour);
+    assert_eq!(roster.len(), 2);
+    assert!(roster.iter().any(|entry| entry.session == alice_session && entry.surface == "home"));
+
+    for n in 0..5 {
+        say(&alice, &format!(r#"{{"type":"state","state":{{"n":{n}}}}}"#));
+    }
+    let mut seen = Vec::new();
+    while seen.last() != Some(&serde_json::json!({ "n": 4 })) {
+        if let PresenceFrame::Batch { entries, .. } = next_frame(&mut bob_frames).await {
+            seen.extend(entries.into_iter().filter(|entry| entry.session == alice_session).map(|entry| entry.state).filter(|state| !state.is_null()));
+        }
+    }
+    assert!(seen.len() <= 2, "five states sent within one tick arrive coalesced: {seen:?}");
+
+    say(&alice, r#"{"type":"state","state":{"refuse":"not-here"}}"#);
+    let mut refusal = next_frame(&mut alice_frames).await;
+    while let PresenceFrame::Batch { .. } = refusal {
+        refusal = next_frame(&mut alice_frames).await;
+    }
+    assert_eq!(refusal, PresenceFrame::Refused { reason: "not-here".into() });
+    alice.unbounded_send(Ok(Message::Binary(vec![1, 2].into()))).expect("open");
+    assert_eq!(next_frame(&mut alice_frames).await, PresenceFrame::Refused { reason: REFUSED_INVALID.into() });
+
+    drop(bob);
+    tokio::time::timeout(Duration::from_secs(5), bob_task).await.expect("bob's session ends").expect("no panic");
+    loop {
+        if let PresenceFrame::Batch { left, .. } = next_frame(&mut alice_frames).await {
+            if left.contains(&bob_session) {
+                break;
+            }
+        }
+    }
+    assert_eq!(state.presence_rooms.roster(&presence_lane(&Scope("room-1".into()))).len(), 1);
+    assert_eq!(state.presence.colour_of(&presence_lane(&Scope("room-1".into())), &bob_session), None);
+}
+
+#[tokio::test]
+async fn an_idle_session_is_closed_and_leaves_the_room() {
+    let state = presence_server(quick_presence(Duration::from_millis(150))).await;
+    let (_silent, mut frames, task) = connect(&state, "room-idle", "home");
+    assert!(matches!(next_frame(&mut frames).await, PresenceFrame::Welcome { .. }));
+    tokio::time::timeout(Duration::from_secs(5), task).await.expect("the idle session is closed").expect("no panic");
+    let rest: Vec<Message> = frames.collect().await;
+    assert!(matches!(rest.last(), Some(Message::Close(_))), "{rest:?}");
+    assert!(state.presence_rooms.roster(&presence_lane(&Scope("room-idle".into()))).is_empty());
+}
+
+fn entry(session: &str, state: OpaqueJson) -> PresenceEntry {
+    PresenceEntry { session: session.into(), colour: 0, surface: "home".into(), state }
+}
+
+fn scopes(names: &[&str]) -> BTreeSet<String> {
+    names.iter().map(|name| (*name).to_string()).collect()
+}
+
+fn watched(scope: &str, entries: Vec<PresenceEntry>, left: &[&str], snapshot: bool) -> PresenceFrame {
+    PresenceFrame::Watched { scope: Scope(scope.into()), entries, left: left.iter().map(|session| (*session).to_string()).collect(), snapshot }
+}
+
+#[test]
+fn watching_coalesces_per_interval_and_resynchronizes_with_a_snapshot() {
+    let mut watching = Watching::default();
+    assert!(watching.is_empty() && watching.flush().is_empty());
+    assert_eq!(watching.watch(&scopes(&["room-b", "room-a"])), ["room-a", "room-b"]);
+    assert_eq!(watching.snapshot("room-a", vec![entry("s1", OpaqueJson::Null)]), Some(watched("room-a", vec![entry("s1", OpaqueJson::Null)], &[], true)));
+    for n in 0..5 {
+        watching.absorb("room-a", vec![entry("s1", serde_json::json!({ "n": n })), entry("s2", OpaqueJson::Null)], Vec::new());
+    }
+    watching.absorb("room-b", vec![entry("s3", OpaqueJson::Null)], Vec::new());
+    watching.absorb("room-b", Vec::new(), vec!["s3".into(), "s4".into()]);
+    assert_eq!(watching.flush(), [watched("room-a", vec![entry("s1", serde_json::json!({ "n": 4 })), entry("s2", OpaqueJson::Null)], &[], false), watched("room-b", Vec::new(), &["s3", "s4"], false)]);
+    assert!(watching.flush().is_empty(), "an interval without changes sends nothing");
+
+    watching.absorb("room-a", Vec::new(), vec!["s2".into()]);
+    watching.absorb("room-a", vec![entry("s2", serde_json::json!(1))], Vec::new());
+    assert_eq!(watching.flush(), [watched("room-a", vec![entry("s2", serde_json::json!(1))], &[], false)], "a later entry supersedes a departure");
+    watching.absorb("room-a", vec![entry("s1", serde_json::json!(2))], Vec::new());
+    assert_eq!(watching.snapshot("room-a", vec![entry("s1", serde_json::json!(2))]), Some(watched("room-a", vec![entry("s1", serde_json::json!(2))], &[], true)));
+    assert!(watching.flush().is_empty(), "a snapshot carries what was pending");
+
+    watching.absorb("room-b", vec![entry("s5", OpaqueJson::Null)], Vec::new());
+    assert_eq!(watching.watch(&scopes(&["room-b", "room-c"])), ["room-c"]);
+    assert!(!watching.watches("room-a") && watching.watches("room-c"));
+    watching.absorb("room-a", vec![entry("s1", OpaqueJson::Null)], Vec::new());
+    assert_eq!(watching.snapshot("room-a", Vec::new()), None, "an unwatched scope is ignored");
+    assert_eq!(watching.flush(), [watched("room-b", vec![entry("s5", OpaqueJson::Null)], &[], false)], "a scope that stays watched keeps its pending changes");
+    assert!(watching.watch(&BTreeSet::new()).is_empty());
+    assert!(watching.is_empty());
+}
+
+#[test]
+fn the_watch_interval_is_clamped_between_the_tick_and_the_slowest_interval() {
+    let settings = PresenceSettings::default();
+    assert_eq!(watch_interval(0, &settings), settings.tick);
+    assert_eq!(watch_interval(40, &settings), settings.tick);
+    assert_eq!(watch_interval(250, &settings), Duration::from_millis(250));
+    assert_eq!(watch_interval(u64::MAX, &settings), settings.max_watch_interval);
+    let mut budget = StateBudget::new(settings.max_states_per_second);
+    assert_eq!(admit_frame(r#"{"type":"watch","scopes":["a"],"intervalMs":250}"#, &settings, &mut budget, Instant::now()), Ok(Some(PresenceFrame::Watch { scopes: vec![Scope("a".into())], interval_ms: 250 })));
+    assert_eq!(admit_frame(r#"{"type":"watched","scope":"a","entries":[],"left":[]}"#, &settings, &mut budget, Instant::now()), Err(REFUSED_INVALID.to_string()), "watched travels server → client only");
+}
+
+fn grant_scoped(state: &ServerState<TestInstance>, action: &str, scopes: &[&str]) {
+    let mut engine = state.policy.write().unwrap();
+    let name = format!("presence-{action}");
+    engine.register_template(PolicyTemplate { name: name.clone(), auto_apply: false, grants: vec![PolicyGrant { point: PolicyPoint::Subscription, resource: PRESENCE_RESOURCE.into(), action: action.to_string() }] });
+    for scope in scopes {
+        engine.assign_scoped("anonymous".to_string(), Scope((*scope).to_string()), name.clone());
+    }
+}
+
+#[tokio::test]
+async fn a_watch_is_admitted_per_scope_and_bounded() {
+    let state = state().await;
+    let wanted = [Scope("room-a".into()), Scope("room-b".into()), Scope("room-a".into())];
+    assert_eq!(admit_watch(&state, &Principal::Anonymous, &wanted), Err("forbidden room-a".to_string()), "closed by default");
+    grant_scoped(&state, PRESENCE_WATCH, &["room-a"]);
+    assert_eq!(admit_watch(&state, &Principal::Anonymous, &wanted), Err("forbidden room-b".to_string()));
+    grant_scoped(&state, PRESENCE_WATCH, &["room-b"]);
+    assert_eq!(admit_watch(&state, &Principal::Anonymous, &wanted), Ok(scopes(&["room-a", "room-b"])));
+    assert_eq!(admit_watch(&state, &Principal::Anonymous, &[]), Ok(BTreeSet::new()), "an empty watch stops watching");
+    let many: Vec<Scope> = (0..=state.presence_settings.max_watch_scopes).map(|_| Scope("room-a".into())).collect();
+    assert_eq!(admit_watch(&state, &Principal::Anonymous, &many), Err(REFUSED_WATCH_TOO_MANY.to_string()));
+    grant_scoped(&state, PRESENCE_JOIN, &["room-c"]);
+    assert_eq!(admit_watch(&state, &Principal::Anonymous, &[Scope("room-c".into())]), Err("forbidden room-c".to_string()), "joining is not watching");
+}
+
+async fn watched_frame(frames: &mut ServerFrames) -> PresenceFrame {
+    loop {
+        let frame = next_frame(frames).await;
+        if matches!(frame, PresenceFrame::Watched { .. } | PresenceFrame::Refused { .. }) {
+            return frame;
+        }
+    }
+}
+
+#[tokio::test]
+async fn a_socket_watches_other_rooms_read_only_at_its_own_interval() {
+    let state = presence_server(quick_presence(Duration::from_secs(30))).await;
+    grant_scoped(&state, PRESENCE_WATCH, &["room-a", "room-b"]);
+    let (alice, mut alice_frames, _alice_task) = connect(&state, "room-a", "home");
+    let PresenceFrame::Welcome { session: alice_session, .. } = next_frame(&mut alice_frames).await else { panic!("welcome") };
+    let (bob, mut bob_frames, bob_task) = connect(&state, "room-b", "home");
+    let PresenceFrame::Welcome { session: bob_session, .. } = next_frame(&mut bob_frames).await else { panic!("welcome") };
+    let (carol, mut carol_frames, carol_task) = connect(&state, "room-c", "home");
+    let PresenceFrame::Welcome { session: carol_session, .. } = next_frame(&mut carol_frames).await else { panic!("welcome") };
+
+    say(&carol, r#"{"type":"watch","scopes":["room-b","room-a"],"intervalMs":80}"#);
+    let PresenceFrame::Watched { scope, entries, left, snapshot: true } = watched_frame(&mut carol_frames).await else { panic!("a snapshot") };
+    assert_eq!((scope.0.as_str(), entries.iter().map(|entry| entry.session.as_str()).collect::<Vec<_>>(), left.len()), ("room-a", vec![alice_session.as_str()], 0));
+    let PresenceFrame::Watched { scope, entries, snapshot: true, .. } = watched_frame(&mut carol_frames).await else { panic!("a snapshot") };
+    assert_eq!((scope.0.as_str(), entries.iter().map(|entry| entry.session.as_str()).collect::<Vec<_>>()), ("room-b", vec![bob_session.as_str()]));
+
+    let started = Instant::now();
+    for n in 0..8 {
+        say(&alice, &format!(r#"{{"type":"state","state":{{"n":{n}}}}}"#));
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    let intervals = started.elapsed().as_millis() / 80 + 2;
+    let mut seen = Vec::new();
+    while seen.last() != Some(&serde_json::json!({ "n": 7 })) {
+        let PresenceFrame::Watched { scope, entries, snapshot: false, .. } = watched_frame(&mut carol_frames).await else { panic!("a coalesced change") };
+        if scope.0 == "room-a" {
+            seen.extend(entries.into_iter().filter(|entry| entry.session == alice_session && !entry.state.is_null()).map(|entry| entry.state));
+        }
+    }
+    assert!(seen.len() < 8 && seen.len() as u128 <= intervals, "eight states reach an 80 ms watcher at most once per interval ({intervals}): {seen:?}");
+
+    say(&carol, r#"{"type":"state","state":{"here":"room-c"}}"#);
+    say(&carol, r#"{"type":"watch","scopes":["room-a","room-z"],"intervalMs":80}"#);
+    assert_eq!(watched_frame(&mut carol_frames).await, PresenceFrame::Refused { reason: "forbidden room-z".into() });
+    assert!(state.presence_rooms.roster(&presence_lane(&Scope("room-a".into()))).iter().all(|entry| entry.session != carol_session), "watching never joins");
+
+    drop(bob);
+    tokio::time::timeout(Duration::from_secs(5), bob_task).await.expect("bob's session ends").expect("no panic");
+    assert_eq!(watched_frame(&mut carol_frames).await, watched("room-b", Vec::new(), &[bob_session.as_str()], false), "a refused watch kept the previous set");
+
+    say(&carol, r#"{"type":"watch","scopes":[],"intervalMs":80}"#);
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    say(&alice, r#"{"type":"state","state":{"n":8}}"#);
+    let quiet = tokio::time::timeout(Duration::from_millis(400), watched_frame(&mut carol_frames)).await;
+    assert!(quiet.is_err(), "an empty watch stops watching: {quiet:?}");
+
+    drop((alice, carol));
+    tokio::time::timeout(Duration::from_secs(5), carol_task).await.expect("carol's session ends").expect("no panic");
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while state.fanout.lanes() > 0 && Instant::now() < deadline {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    assert_eq!(state.fanout.lanes(), 0, "closing releases every lane the socket joined or watched");
+}
+//#endregion 🔖️PresenceStream
 

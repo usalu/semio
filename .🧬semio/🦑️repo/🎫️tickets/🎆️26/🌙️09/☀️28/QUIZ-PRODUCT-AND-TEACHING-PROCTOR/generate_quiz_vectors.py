@@ -12,6 +12,7 @@ import importlib.util
 import json
 import os
 import sys
+import time
 
 sys.dont_write_bytecode = True
 ROOT =os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "..", "..", ".."))
@@ -38,6 +39,8 @@ CASES = {name: load(os.path.join(QUIZ, "🧪️tests", directory, "🐍️.py"),
     "badges": "🏅️badge-rules",
     "leaderboard": "🏆️leaderboard",
     "lifecycle": "🧾️learner-lifecycle",
+    "presence": "👥️shared-presence",
+    "crowd": "📊️crowd-view",
 }.items()}
 R, S, SO, MA, CL, VA, BA, LB, LC = (CASES[name] for name in ["randomness", "sheet", "sorting", "matching", "classification", "validation", "badges", "leaderboard", "lifecycle"])
 
@@ -46,8 +49,20 @@ def write(directory, document):
     """💾️ Writes one fixture as indented UTF-8 JSON with a trailing newline."""
     path = os.path.join(QUIZ, "🧫️fixtures", directory, "🔣️.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8", newline="\n") as handle:
-        handle.write(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
+    payload = (json.dumps(document, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    if os.path.exists(path) and open(path, "rb").read() == payload:
+        print("[DEBUG] unchanged %s" % os.path.relpath(path, ROOT))
+        return
+    for attempt in range(20):
+        try:
+            with open(path, "wb") as handle:
+                handle.write(payload)
+            break
+        except OSError as error:
+            print("[DEBUG] retrying %s after %s" % (os.path.relpath(path, ROOT), error))
+            time.sleep(0.5)
+    else:
+        raise OSError("cannot write %s" % path)
     print("[DEBUG] wrote %s" % os.path.relpath(path, ROOT))
 
 
@@ -159,6 +174,7 @@ CARRIERS = {
 ENERGY = {
     "schema": "semio.quiz/v1",
     "id": "energy-basics",
+    "emoji": "⚡",
     "title": T("Energy basics", "Energie-Grundlagen"),
     "description": T("Heating systems, power ratings, room temperatures and energy carriers.", "Heizsysteme, Leistungen, Raumtemperaturen und Energieträger."),
     "tasks": [HEATING, POWER, ROOMS, CARRIERS],
@@ -195,6 +211,7 @@ STRATEGIES = {
 COOLING = {
     "schema": "semio.quiz/v1",
     "id": "cooling-basics",
+    "emoji": "❄️",
     "title": T("Cooling basics", "Kühlen-Grundlagen"),
     "description": T("Cooling loads and cooling strategies.", "Kühllasten und Kühlstrategien."),
     "tasks": [LOADS, STRATEGIES],
@@ -203,6 +220,7 @@ COOLING = {
 ROTATION = {
     "schema": "semio.quiz/v1",
     "id": "rotation-demo",
+    "emoji": "🔄",
     "title": T("Rotation demo", "Rotationsbeispiel"),
     "description": T("Two sorting tasks small enough to be shuffled into their solution.", "Zwei Sortieraufgaben, klein genug, um in ihre Lösung gemischt zu werden."),
     "tasks": [
@@ -790,11 +808,11 @@ def lifecycle():
 
 
 # region 🔖️Leaderboard
-WARM_UP = {"schema": "semio.quiz/v1", "id": "warm-up", "title": T("Warm-up", "Aufwärmen"), "description": T("Two pairs to order.", "Zwei Paare zum Ordnen."), "tasks": [
+WARM_UP = {"schema": "semio.quiz/v1", "id": "warm-up", "emoji": "🔥", "title": T("Warm-up", "Aufwärmen"), "description": T("Two pairs to order.", "Zwei Paare zum Ordnen."), "tasks": [
     {"kind": "sorting", "id": "first-pair", "title": T("First pair", "Erstes Paar"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Energy", "Energie", "Wh", "logarithmic", True), "items": [{"id": "phone-charge", "label": T("Phone charge", "Handyladung"), "value": 15}, {"id": "car-charge", "label": T("Car charge", "Autoladung"), "value": 60000}]},
     {"kind": "sorting", "id": "second-pair", "title": T("Second pair", "Zweites Paar"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Temperature", "Temperatur", "°C", "linear", False), "items": [{"id": "fridge", "label": T("Fridge", "Kühlschrank"), "value": 5}, {"id": "oven", "label": T("Oven", "Backofen"), "value": 220}]},
 ]}
-COOL_DOWN = {"schema": "semio.quiz/v1", "id": "cool-down", "title": T("Cool-down", "Abkühlen"), "description": T("One classification, one pair.", "Eine Zuordnung, ein Paar."), "tasks": [
+COOL_DOWN = {"schema": "semio.quiz/v1", "id": "cool-down", "emoji": "🧊", "title": T("Cool-down", "Abkühlen"), "description": T("One classification, one pair.", "Eine Zuordnung, ein Paar."), "tasks": [
     {"kind": "classification", "id": "renewable", "title": T("Renewable?", "Erneuerbar?"), "prompt": T("Assign every source.", "Ordne jede Quelle zu."), "categories": [{"id": "renewable", "label": T("Renewable", "Erneuerbar")}, {"id": "fossil", "label": T("Fossil", "Fossil")}], "items": [{"id": "sunlight", "label": T("Sunlight", "Sonnenlicht"), "category": "renewable"}, {"id": "lignite", "label": T("Lignite", "Braunkohle"), "category": "fossil"}]},
     {"kind": "sorting", "id": "last-pair", "title": T("Last pair", "Letztes Paar"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Mass", "Masse", "kg", "linear", True), "items": [{"id": "bicycle", "label": T("Bicycle", "Velo"), "value": 12}, {"id": "car", "label": T("Car", "Auto"), "value": 1500}]},
 ]}
@@ -883,13 +901,16 @@ def rejected():
         change(document)
         return {"id": identifier, "definition": definition, "violates": violates, "document": document}
 
-    quiz = {"schema": "semio.quiz/v1", "id": "tiny", "title": T("Tiny", "Winzig"), "description": T("A tiny quiz.", "Ein winziges Quiz."), "tasks": [copy.deepcopy(ROOMS)]}
+    quiz = {"schema": "semio.quiz/v1", "id": "tiny", "emoji": "🐜", "title": T("Tiny", "Winzig"), "description": T("A tiny quiz.", "Ein winziges Quiz."), "tasks": [copy.deepcopy(ROOMS)]}
     catalog = {"schema": "semio.quiz.catalog/v1", "id": "tiny-catalog", "title": T("Tiny", "Winzig"), "introduction": {"title": T("Hi", "Hallo"), "paragraphs": [T("Hi.", "Hallo.")]}, "quizzes": ["tiny/❓️quiz/🔣️.json"], "badges": []}
     cases = [
         broken("missing-german-title", "Quiz", "required", lambda document: document["title"].pop("de"), quiz),
         broken("empty-english-description", "Quiz", "minLength", lambda document: document["description"].update(en=""), quiz),
         broken("empty-english-prompt", "Quiz", "oneOf", lambda document: document["tasks"][0]["prompt"].update(en=""), quiz),
         broken("id-not-a-slug", "Quiz", "pattern", lambda document: document.update(id="Tiny Quiz"), quiz),
+        broken("missing-emoji", "Quiz", "required", lambda document: document.pop("emoji"), quiz),
+        broken("empty-emoji", "Quiz", "minLength", lambda document: document.update(emoji=""), quiz),
+        broken("overlong-emoji", "Quiz", "maxLength", lambda document: document.update(emoji="🐜" * 17), quiz),
         broken("wrong-schema-version", "Quiz", "const", lambda document: document.update(schema="semio.quiz/v2"), quiz),
         broken("no-tasks", "Quiz", "minItems", lambda document: document.update(tasks=[]), quiz),
         broken("undeclared-member", "Quiz", "additionalProperties", lambda document: document.update(difficulty="hard"), quiz),
@@ -913,6 +934,193 @@ def rejected():
 # endregion 🔖️Rejected
 
 
+# region 🔖️Presence
+def presence():
+    """👥️ Room scopes per place, and valid and refused presence and cursor states at every boundary."""
+    PR = CASES["presence"]
+    tag = "%08x" % R.fnv1a32(hexid("learner-ada"))
+    anonymous, pseudonym = {"kind": "anonymous"}, {"kind": "pseudonym", "handle": "Ada"}
+    places = [
+        ("introduction", "architecture", {"screen": "introduction"}),
+        ("identity", "architecture", {"screen": "identity"}),
+        ("home", "architecture", {"screen": "home"}),
+        ("leaderboard", "architecture", {"screen": "leaderboard"}),
+        ("run", "architecture", {"screen": "run", "quiz": "physics"}),
+        ("run-on-task", "architecture", {"screen": "run", "quiz": "physics", "task": "units"}),
+        ("results", "architecture", {"screen": "results", "quiz": "heating"}),
+        ("other-catalog-home", "demo", {"screen": "home"}),
+        ("other-catalog-run", "demo", {"screen": "run", "quiz": "energy-basics", "task": "power-ratings"}),
+        ("run-without-quiz", "architecture", {"screen": "run"}),
+        ("quiz-page", "architecture", {"screen": "quiz", "quiz": "physics"}),
+        ("quiz-page-without-quiz", "architecture", {"screen": "quiz"}),
+        ("badges", "architecture", {"screen": "badges"}),
+        ("learner", "architecture", {"screen": "learner"}),
+        ("preferences", "architecture", {"screen": "preferences"}),
+    ]
+    state = lambda place, **changes: {"tag": tag, "identity": pseudonym, "place": place, "active": True, **changes}
+    presence_vectors = [
+        ("anonymous-home", state({"screen": "home"}, identity=anonymous), None),
+        ("pseudonym-introduction-inactive", state({"screen": "introduction"}, active=False), None),
+        ("name-leaderboard", state({"screen": "leaderboard"}, identity={"kind": "name", "handle": "Ada Lovelace"}), None),
+        ("identity-screen", state({"screen": "identity"}, identity=anonymous), None),
+        ("run-with-task", state({"screen": "run", "quiz": "physics", "task": "units"}), None),
+        ("run-without-task", state({"screen": "run", "quiz": "physics"}), None),
+        ("results", state({"screen": "results", "quiz": "heating"}), None),
+        ("longest-handle", state({"screen": "home"}, identity={"kind": "pseudonym", "handle": "h" * 64}), None),
+        ("tag-uppercase", state({"screen": "home"}, tag="ABCDEF12"), "pattern"),
+        ("tag-too-short", state({"screen": "home"}, tag=tag[:7]), "pattern"),
+        ("tag-is-a-learner-id", state({"screen": "home"}, tag=hexid("learner-ada")), "pattern"),
+        ("learner-id-smuggled", state({"screen": "home"}, learner=hexid("learner-ada")), "additionalProperties"),
+        ("active-missing", {"tag": tag, "identity": pseudonym, "place": {"screen": "home"}}, "required"),
+        ("active-not-boolean", state({"screen": "home"}, active="yes"), "type"),
+        ("unknown-screen", state({"screen": "settings"}), "enum"),
+        ("screen-missing", state({"quiz": "physics"}), "required"),
+        ("quiz-not-a-slug", state({"screen": "run", "quiz": "Physics Basics"}), "pattern"),
+        ("place-answer-smuggled", state({"screen": "run", "quiz": "physics", "answer": "joule"}), "additionalProperties"),
+        ("handle-missing", state({"screen": "home"}, identity={"kind": "pseudonym"}), "oneOf"),
+        ("handle-empty", state({"screen": "home"}, identity={"kind": "name", "handle": ""}), "oneOf"),
+        ("handle-too-long", state({"screen": "home"}, identity={"kind": "name", "handle": "h" * 65}), "oneOf"),
+        ("quiz-page", state({"screen": "quiz", "quiz": "physics"}), None),
+        ("badges", state({"screen": "badges"}), None),
+        ("learner", state({"screen": "learner"}, active=False), None),
+        ("preferences", state({"screen": "preferences"}, identity=anonymous), None),
+        ("run-without-quiz", state({"screen": "run"}), "quiz-required"),
+        ("results-without-quiz", state({"screen": "results"}), "quiz-required"),
+        ("quiz-page-without-quiz", state({"screen": "quiz"}), "quiz-required"),
+        ("task-on-results", state({"screen": "results", "quiz": "heating", "task": "units"}), "task-without-run"),
+        ("task-on-quiz-page", state({"screen": "quiz", "quiz": "physics", "task": "units"}), "task-without-run"),
+        ("task-on-home", state({"screen": "home", "task": "units"}), "task-without-run"),
+        ("task-on-preferences", state({"screen": "preferences", "task": "units"}), "task-without-run"),
+        ("quiz-on-home", state({"screen": "home", "quiz": "physics"}), "quiz-not-allowed"),
+        ("quiz-on-leaderboard", state({"screen": "leaderboard", "quiz": "physics"}), "quiz-not-allowed"),
+        ("quiz-on-badges", state({"screen": "badges", "quiz": "physics"}), "quiz-not-allowed"),
+        ("quiz-on-learner", state({"screen": "learner", "quiz": "physics"}), "quiz-not-allowed"),
+        ("quiz-on-identity", state({"screen": "identity", "quiz": "physics"}, identity=anonymous), "quiz-not-allowed"),
+    ]
+    cursor = lambda **fields: {"tag": tag, **fields}
+    at = lambda anchor, x, y: {"anchor": anchor, "x": x, "y": y}
+    cursor_vectors = [
+        ("tag-only", cursor(), None),
+        ("origin", cursor(cursor=at("home", 0, 0)), None),
+        ("far-corner", cursor(cursor=at("leaderboard", 1, 1)), None),
+        ("float-corners", cursor(cursor=at("leaderboard", 0.0, 1.0)), None),
+        ("negative-zero", cursor(cursor=at("home", -0.0, 0.5)), None),
+        ("task-anchor", cursor(cursor=at("task:heating-systems", 0.25, 0.75)), None),
+        ("nested-anchor", cursor(cursor=at("card:quiz:energy-basics", 0.5, 0.5)), None),
+        ("focus-only", cursor(focus="card:leaderboard"), None),
+        ("cursor-and-focus", cursor(cursor=at("task:units", 0.1, 0.9), focus="task:units"), None),
+        ("longest-anchor", cursor(cursor=at("a" * 64, 0.5, 0.5)), None),
+        ("x-above-one", cursor(cursor=at("home", 1.0000001, 0.5)), "maximum"),
+        ("y-below-zero", cursor(cursor=at("home", 0.5, -0.001)), "minimum"),
+        ("x-far-outside", cursor(cursor=at("home", 1920, 0.5)), "maximum"),
+        ("x-as-text", cursor(cursor=at("home", "0.5", 0.5)), "type"),
+        ("y-null", cursor(cursor=at("home", 0.5, None)), "type"),
+        ("y-missing", cursor(cursor={"anchor": "home", "x": 0.5}), "required"),
+        ("anchor-empty", cursor(cursor=at("", 0.5, 0.5)), "minLength"),
+        ("anchor-uppercase", cursor(cursor=at("Task:units", 0.5, 0.5)), "pattern"),
+        ("anchor-trailing-separator", cursor(cursor=at("task:", 0.5, 0.5)), "pattern"),
+        ("anchor-double-separator", cursor(cursor=at("task::units", 0.5, 0.5)), "pattern"),
+        ("anchor-too-long", cursor(cursor=at("a" * 65, 0.5, 0.5)), "maxLength"),
+        ("focus-with-space", cursor(focus="task units"), "pattern"),
+        ("tag-not-hex", cursor(tag="ghijklmn"), "pattern"),
+        ("tag-missing", {"cursor": at("home", 0.5, 0.5)}, "required"),
+        ("drag-target-smuggled", cursor(cursor=at("task:units", 0.5, 0.5), target="joule"), "additionalProperties"),
+        ("cursor-item-smuggled", cursor(cursor={**at("task:units", 0.5, 0.5), "item": "joule"}), "additionalProperties"),
+        ("item-anchor", cursor(cursor=at("item:ground-source", 0.3, 0.6)), None),
+        ("category-anchor", cursor(cursor=at("category:heat-pump", 0.5, 0.5)), None),
+        ("dragging-onto-category", cursor(cursor=at("category:heat-pump", 0.4, 0.2), drag={"item": "ground-source"}), None),
+        ("drag-only", cursor(drag={"item": "night-ventilation"}), None),
+        ("item-anchor-uppercase", cursor(cursor=at("item:Ground-Source", 0.5, 0.5)), "pattern"),
+        ("drag-item-not-a-slug", cursor(drag={"item": "Ground Source"}), "pattern"),
+        ("drag-without-item", cursor(drag={}), "required"),
+        ("drag-with-category", cursor(drag={"item": "ground-source", "category": "heat-pump"}), "additionalProperties"),
+        ("drag-as-text", cursor(drag="ground-source"), "type"),
+    ]
+    draft = lambda **answers: {"tag": tag, "answers": {key.replace("_", "-"): value for key, value in answers.items()}}
+    sort_draft = {"kind": "sorting", "order": ["led-bulb", "tea-light", "kettle", "wallbox", "wind-turbine", "nuclear-plant"]}
+    matching = lambda values: {"kind": "matching", "values": values}
+    ids = lambda count: ["item-%02d" % index for index in range(count)]
+    thinking_vectors = [
+        ("no-answers", draft(), None),
+        ("classification-draft", draft(heating_systems={"kind": "classification", "assignments": {"ground-source": "heat-pump", "pellet-stove": "gas-boiler"}}), None),
+        ("sorting-draft", draft(power_ratings=sort_draft), None),
+        ("matching-draft", draft(energy_carriers=matching({"energy-density": {"hydrogen": 120, "coal": 29, "heating-oil": 42.6}, "co2-factor": {"hydrogen": 0, "firewood": 0.027}})), None),
+        ("matching-negative-value", draft(outdoor_temperatures=matching({"temperature": {"winter-night": -12.5}})), None),
+        ("matching-empty-dimension", draft(energy_carriers=matching({"energy-density": {}})), None),
+        ("every-task", draft(heating_systems={"kind": "classification", "assignments": {"ground-source": "heat-pump"}}, power_ratings=sort_draft, room_temperatures={"kind": "sorting", "order": ["bedroom", "living-room", "bathroom"]}, energy_carriers=matching({})), None),
+        ("sixty-four-tasks", {"tag": tag, "answers": {"task-%02d" % index: {"kind": "sorting", "order": []} for index in range(64)}}, None),
+        ("order-of-sixty-four", draft(power_ratings={"kind": "sorting", "order": ids(64)}), None),
+        ("assignments-of-sixty-four", draft(heating_systems={"kind": "classification", "assignments": {item: "heat-pump" for item in ids(64)}}), None),
+        ("dimension-of-sixty-four", draft(energy_carriers=matching({"energy-density": {item: index for index, item in enumerate(ids(64))}})), None),
+        ("tag-uppercase", {**draft(), "tag": "ABCDEF12"}, "pattern"),
+        ("answers-missing", {"tag": tag}, "required"),
+        ("answers-not-an-object", {"tag": tag, "answers": []}, "type"),
+        ("task-not-a-slug", {"tag": tag, "answers": {"Heating Systems": {"kind": "sorting", "order": []}}}, "pattern"),
+        ("unknown-answer-kind", draft(power_ratings={"kind": "ranking", "order": ["kettle"]}), "oneOf"),
+        ("category-not-a-slug", draft(heating_systems={"kind": "classification", "assignments": {"ground-source": "Heat Pump"}}), "oneOf"),
+        ("matching-card-indices", draft(energy_carriers={"kind": "matching", "assignments": {"energy-density": {"hydrogen": 2}}}), "oneOf"),
+        ("matching-value-as-text", draft(energy_carriers=matching({"energy-density": {"hydrogen": "120"}})), "oneOf"),
+        ("matching-value-null", draft(energy_carriers=matching({"energy-density": {"hydrogen": None}})), "oneOf"),
+        ("matching-value-infinity-as-text", draft(energy_carriers=matching({"energy-density": {"hydrogen": "Infinity"}})), "oneOf"),
+        ("matching-dimension-not-a-slug", draft(energy_carriers=matching({"Energy Density": {"hydrogen": 120}})), "oneOf"),
+        ("matching-dimension-not-an-object", draft(energy_carriers=matching({"energy-density": [120]})), "oneOf"),
+        ("learner-id-smuggled", {**draft(), "learner": hexid("learner-ada")}, "additionalProperties"),
+        ("repeated-sorting-item", draft(power_ratings={"kind": "sorting", "order": ["kettle", "laptop", "kettle"]}), "duplicate-id"),
+        ("sixty-five-tasks", {"tag": tag, "answers": {"task-%02d" % index: {"kind": "sorting", "order": []} for index in range(65)}}, "too-many"),
+        ("order-of-sixty-five", draft(power_ratings={"kind": "sorting", "order": ids(65)}), "too-many"),
+        ("assignments-of-sixty-five", draft(heating_systems={"kind": "classification", "assignments": {item: "heat-pump" for item in ids(65)}}), "too-many"),
+        ("dimension-of-sixty-five", draft(energy_carriers=matching({"energy-density": {item: index for index, item in enumerate(ids(65))}})), "too-many"),
+        ("sixty-five-dimensions", draft(energy_carriers=matching({"dimension-%02d" % index: {} for index in range(65)})), "too-many"),
+        ("oversized", {"tag": tag, "answers": {"task-%03d" % index: sort_draft for index in range(120)}}, "too-many"),
+    ]
+    document = {
+        "$comment": GENERATED % "👥️shared-presence",
+        "scopes": [{"id": identifier, "catalog": catalog, "place": place, "expected": {"roster": PR.roster_scope(catalog), "room": PR.room_scope(catalog, place)}} for identifier, catalog, place in places],
+        "presence": [],
+        "cursors": [],
+        "thinkingScopes": [{"id": identifier, "catalog": catalog, "quiz": quiz, "expected": PR.thinking_scope(catalog, quiz)} for identifier, catalog, quiz in [("physics", "architecture", "physics"), ("heating", "architecture", "heating"), ("other-catalog", "demo", "energy-basics")]],
+        "thinking": [],
+    }
+    for group, vectors, problem, definition in [("presence", presence_vectors, PR.presence_problem, "PresenceState"), ("cursors", cursor_vectors, PR.cursor_problem, "CursorState"), ("thinking", thinking_vectors, PR.thinking_problem, "ThinkingState")]:
+        for identifier, candidate, rule in vectors:
+            found = problem(candidate)
+            assert (found is None) == (rule is None), (identifier, found, rule)
+            assert rule is None or rule in PR.violations(definition, candidate) + [found], (identifier, rule, found)
+            document[group].append({"id": identifier, "state": candidate, "rule": rule, "expected": found is None})
+    write("👥️shared-presence", document)
+# endregion 🔖️Presence
+
+
+# region 🔖️Crowd
+def crowd():
+    """📊️ Crowd views of real runs: all three kinds, two matching dimensions with equal values, unanswered items, a foreign result, no runs and a one-item order."""
+    CV = CASES["crowd"]
+    every_energy = [task["id"] for task in ENERGY["tasks"]]
+    perfect = run_result(ENERGY, 101, every_energy)
+    worst = run_result(ENERGY, 202, [])
+    mixed = run_result(ENERGY, 303, ["heating-systems", "energy-carriers"])
+    cooling = run_result(COOLING, 404, ["cooling-strategies"])
+    lonely = {"quiz": "cooling-basics", "score": 1, "tasks": [
+        {"kind": "sorting", "task": "cooling-loads", "score": 1, "items": [{"item": "office", "value": 40, "position": 0, "rank": 0}]},
+        {"kind": "classification", "task": "cooling-strategies", "score": 1, "items": [{"item": "night-ventilation", "assigned": "passive", "correct": "passive", "credit": 1}]},
+    ]}
+    vectors = [
+        ("energy-three-runs", "energy-basics", [perfect, worst, mixed]),
+        ("energy-one-run", "energy-basics", [worst]),
+        ("foreign-result-ignored", "energy-basics", [perfect, cooling]),
+        ("no-runs", "cooling-basics", []),
+        ("single-item-order", "cooling-basics", [lonely, cooling]),
+    ]
+    quizzes = {quiz["id"]: quiz for quiz in [ENERGY, COOLING]}
+    document = {"$comment": GENERATED % "📊️crowd-view", "quizzes": [ENERGY, COOLING], "vectors": []}
+    for identifier, quiz, results in vectors:
+        view = CV.crowd_view(quizzes[quiz], results)
+        CV.corroborate(identifier, quizzes[quiz], results, view)
+        document["vectors"].append({"id": identifier, "quiz": quiz, "results": results, "expected": view})
+    write("📊️crowd-view", document)
+# endregion 🔖️Crowd
+
+
 CASES_SCHEMA = load(os.path.join(QUIZ, "🧪️tests", "🧬️schema-conformance", "🐍️.py"), "schema_conformance")
 
 if __name__ == "__main__":
@@ -926,3 +1134,5 @@ if __name__ == "__main__":
     lifecycle()
     leaderboard()
     rejected()
+    presence()
+    crowd()

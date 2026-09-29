@@ -1,0 +1,439 @@
+{
+  "schema": "semio.quiz.home-grid/v1",
+  "description": "The overview of a quiz site: cards over a glass layer, the real page of each card on the strip behind it. Pages in reading order (DOM, focus and visual order at every width): learner, quiz 1, introduction, quiz 2, leaderboard, quiz 3, badges, quiz 4, preferences; quizzes a catalog lacks leave no gap, quizzes beyond the fourth follow the preferences. Each page's strip cell is where its card sits: row by row in three columns on desktop, in two columns on tablets with the leaderboard on a row of its own. At rest the overview is a live grid of every page and the card layer shares its tracks, each card in its page's cell; by viewport width at the design system's breakpoints: a list of sections in one column up to the mobile maximum, two equal columns over five equal rows up to the tablet maximum (the leaderboard alone on its row), three columns weighted 1 : 1.5 : 1 over three rows weighted 1 : 1.4 : 1 from there (the leaderboard in the larger centre cell). The leaderboard card shows the first five rows by rank and the own row apart when it ranks lower.",
+  "breakpoints": {
+    "mobileMaxPx": 767,
+    "tabletMaxPx": 1023
+  },
+  "layouts": [
+    {
+      "width": 320,
+      "layout": "list",
+      "columns": [1],
+      "rows": null
+    },
+    {
+      "width": 375,
+      "layout": "list",
+      "columns": [1],
+      "rows": null
+    },
+    {
+      "width": 767,
+      "layout": "list",
+      "columns": [1],
+      "rows": null
+    },
+    {
+      "width": 768,
+      "layout": "tablet",
+      "columns": [1, 1],
+      "rows": [1, 1, 1, 1, 1]
+    },
+    {
+      "width": 1023,
+      "layout": "tablet",
+      "columns": [1, 1],
+      "rows": [1, 1, 1, 1, 1]
+    },
+    {
+      "width": 1024,
+      "layout": "desktop",
+      "columns": [1, 1.5, 1],
+      "rows": [1, 1.4, 1]
+    },
+    {
+      "width": 1440,
+      "layout": "desktop",
+      "columns": [1, 1.5, 1],
+      "rows": [1, 1.4, 1]
+    }
+  ],
+  "orders": [
+    {
+      "quizzes": ["q0", "q1", "q2", "q3"],
+      "pages": ["learner", "q0", "intro", "q1", "board", "q2", "badges", "q3", "prefs"]
+    },
+    {
+      "quizzes": [],
+      "pages": ["learner", "intro", "board", "badges", "prefs"]
+    },
+    {
+      "quizzes": ["q0"],
+      "pages": ["learner", "q0", "intro", "board", "badges", "prefs"]
+    },
+    {
+      "quizzes": ["q0", "q1", "q2"],
+      "pages": ["learner", "q0", "intro", "q1", "board", "q2", "badges", "prefs"]
+    },
+    {
+      "quizzes": ["q0", "q1", "q2", "q3", "q4", "q5"],
+      "pages": ["learner", "q0", "intro", "q1", "board", "q2", "badges", "q3", "prefs", "q4", "q5"]
+    }
+  ],
+  "excerpts": [
+    {
+      "id": "own-below-top",
+      "ranks": 8,
+      "mine": 7,
+      "top": [1, 2, 3, 4, 5],
+      "own": 7
+    },
+    {
+      "id": "own-in-top",
+      "ranks": 8,
+      "mine": 3,
+      "top": [1, 2, 3, 4, 5],
+      "own": null
+    },
+    {
+      "id": "own-fifth",
+      "ranks": 6,
+      "mine": 5,
+      "top": [1, 2, 3, 4, 5],
+      "own": null
+    },
+    {
+      "id": "own-sixth",
+      "ranks": 6,
+      "mine": 6,
+      "top": [1, 2, 3, 4, 5],
+      "own": 6
+    },
+    {
+      "id": "not-ranked",
+      "ranks": 8,
+      "mine": null,
+      "top": [1, 2, 3, 4, 5],
+      "own": null
+    },
+    {
+      "id": "few",
+      "ranks": 3,
+      "mine": 2,
+      "top": [1, 2, 3],
+      "own": null
+    },
+    {
+      "id": "empty",
+      "ranks": 0,
+      "mine": null,
+      "top": [],
+      "own": null
+    }
+  ],
+  "cells": [
+    {
+      "quizzes": 4,
+      "layout": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "q0": {
+          "column": 1,
+          "row": 0
+        },
+        "intro": {
+          "column": 2,
+          "row": 0
+        },
+        "q1": {
+          "column": 0,
+          "row": 1
+        },
+        "board": {
+          "column": 1,
+          "row": 1
+        },
+        "q2": {
+          "column": 2,
+          "row": 1
+        },
+        "badges": {
+          "column": 0,
+          "row": 2
+        },
+        "q3": {
+          "column": 1,
+          "row": 2
+        },
+        "prefs": {
+          "column": 2,
+          "row": 2
+        }
+      }
+    },
+    {
+      "quizzes": 4,
+      "layout": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "q0": {
+          "column": 1,
+          "row": 0
+        },
+        "intro": {
+          "column": 0,
+          "row": 1
+        },
+        "q1": {
+          "column": 1,
+          "row": 1
+        },
+        "board": {
+          "column": 0,
+          "row": 2
+        },
+        "q2": {
+          "column": 0,
+          "row": 3
+        },
+        "badges": {
+          "column": 1,
+          "row": 3
+        },
+        "q3": {
+          "column": 0,
+          "row": 4
+        },
+        "prefs": {
+          "column": 1,
+          "row": 4
+        }
+      }
+    },
+    {
+      "quizzes": 3,
+      "layout": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "q0": {
+          "column": 1,
+          "row": 0
+        },
+        "intro": {
+          "column": 2,
+          "row": 0
+        },
+        "q1": {
+          "column": 0,
+          "row": 1
+        },
+        "board": {
+          "column": 1,
+          "row": 1
+        },
+        "q2": {
+          "column": 2,
+          "row": 1
+        },
+        "badges": {
+          "column": 0,
+          "row": 2
+        },
+        "prefs": {
+          "column": 1,
+          "row": 2
+        }
+      }
+    },
+    {
+      "quizzes": 3,
+      "layout": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "q0": {
+          "column": 1,
+          "row": 0
+        },
+        "intro": {
+          "column": 0,
+          "row": 1
+        },
+        "q1": {
+          "column": 1,
+          "row": 1
+        },
+        "board": {
+          "column": 0,
+          "row": 2
+        },
+        "q2": {
+          "column": 0,
+          "row": 3
+        },
+        "badges": {
+          "column": 1,
+          "row": 3
+        },
+        "prefs": {
+          "column": 0,
+          "row": 4
+        }
+      }
+    },
+    {
+      "quizzes": 0,
+      "layout": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "intro": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 2,
+          "row": 0
+        },
+        "badges": {
+          "column": 0,
+          "row": 1
+        },
+        "prefs": {
+          "column": 1,
+          "row": 1
+        }
+      }
+    },
+    {
+      "quizzes": 0,
+      "layout": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "intro": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 0,
+          "row": 1
+        },
+        "badges": {
+          "column": 0,
+          "row": 2
+        },
+        "prefs": {
+          "column": 1,
+          "row": 2
+        }
+      }
+    },
+    {
+      "quizzes": 6,
+      "layout": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "q0": {
+          "column": 1,
+          "row": 0
+        },
+        "intro": {
+          "column": 2,
+          "row": 0
+        },
+        "q1": {
+          "column": 0,
+          "row": 1
+        },
+        "board": {
+          "column": 1,
+          "row": 1
+        },
+        "q2": {
+          "column": 2,
+          "row": 1
+        },
+        "badges": {
+          "column": 0,
+          "row": 2
+        },
+        "q3": {
+          "column": 1,
+          "row": 2
+        },
+        "prefs": {
+          "column": 2,
+          "row": 2
+        },
+        "q4": {
+          "column": 0,
+          "row": 3
+        },
+        "q5": {
+          "column": 1,
+          "row": 3
+        }
+      }
+    },
+    {
+      "quizzes": 6,
+      "layout": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "q0": {
+          "column": 1,
+          "row": 0
+        },
+        "intro": {
+          "column": 0,
+          "row": 1
+        },
+        "q1": {
+          "column": 1,
+          "row": 1
+        },
+        "board": {
+          "column": 0,
+          "row": 2
+        },
+        "q2": {
+          "column": 0,
+          "row": 3
+        },
+        "badges": {
+          "column": 1,
+          "row": 3
+        },
+        "q3": {
+          "column": 0,
+          "row": 4
+        },
+        "prefs": {
+          "column": 1,
+          "row": 4
+        },
+        "q4": {
+          "column": 0,
+          "row": 5
+        },
+        "q5": {
+          "column": 1,
+          "row": 5
+        }
+      }
+    }
+  ]
+}

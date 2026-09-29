@@ -3,8 +3,8 @@
 @comparison-quiz-score-v1
 Feature: Catalogs and learner streams fold into the same read views and the same leaderboard
   The read side answers with schema views (`CatalogView`, `LearnerView`, `Leaderboard`). The catalog view
-  is the catalog without quiz paths and badge rules, its quizzes reduced to their task ids, kinds and
-  titles, in catalog order — no solution leaves the proctor. A learner's events fold into a learner
+  is the catalog without quiz paths and badge rules, its quizzes reduced to their emoji, title,
+  description and task ids, kinds and titles, in catalog order — no solution leaves the proctor. A learner's events fold into a learner
   view — runs newest first, badges in award order, the best submitted score per quiz and the total in
   points (the sum of the best scores × 100) — and the learners with at least one submitted run form the
   leaderboard: total descending, then badge count descending, then `reachedAt` ascending, then learner

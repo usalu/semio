@@ -2,6 +2,7 @@
   "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "heating",
+  "emoji": "🔥",
   "title": { "en": "Heating", "de": "Heizen" },
   "description": {
     "en": "U-values of building components from single glazing to the passive-house roof, and heating loads and heating demands of buildings from the 1960s to the passive house.",

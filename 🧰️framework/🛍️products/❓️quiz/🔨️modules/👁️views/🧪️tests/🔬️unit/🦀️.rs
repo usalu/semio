@@ -31,6 +31,7 @@ fn view(quiz_ids: &[&str]) -> CatalogView {
 #[test]
 fn catalog_view_is_solution_free() {
     let view = catalog_view(&catalog(), &[quiz()]);
+    assert_eq!(view.quizzes[0].emoji, "⚡");
     assert_eq!(view.quizzes[0].tasks.iter().map(|task| (task.id.as_str(), task.kind)).collect::<Vec<_>>(), [("standards", TaskKind::Classification), ("power", TaskKind::Sorting), ("buildings", TaskKind::Matching)]);
     assert_eq!(view.badges.iter().map(|badge| badge.id.as_str()).collect::<Vec<_>>(), ["perfect-energy", "sorter", "done"]);
     assert_eq!(view.quizzes[0].title, text("Energy"));
@@ -187,4 +188,109 @@ fn leaderboard_follows_decided_runs() {
     play_perfect(&mut bob, &id(5), &quizzes, &catalog, 400);
     let board = leaderboard([&alice, &bob], &catalog_view(&catalog, &[quiz()]));
     assert_eq!(board.rows.iter().map(|row| (row.rank, row.tag.clone(), row.total, row.reached_at)).collect::<Vec<_>>(), [(1, learner_tag(BOB), 100.0, 400), (2, learner_tag(ALICE), 100.0, 500)]);
+}
+
+#[test]
+fn json_number_texts_render_like_ecmascript_number_to_string() {
+    let expected = [
+        (42.6, "42.6"),
+        (50.0, "50"),
+        (0.027, "0.027"),
+        (0.2, "0.2"),
+        (0.1 + 0.2, "0.30000000000000004"),
+        (1e21, "1e+21"),
+        (1e20, "100000000000000000000"),
+        (123_456_789_012_345_680_000.0, "123456789012345680000"),
+        (1.5e-7, "1.5e-7"),
+        (1e-6, "0.000001"),
+        (1e-7, "1e-7"),
+        (0.000_001_234, "0.000001234"),
+        (-3.5, "-3.5"),
+        (-0.0, "0"),
+        (0.0, "0"),
+        (5e-324, "5e-324"),
+        (f64::MAX, "1.7976931348623157e+308"),
+        (18.0, "18"),
+        (120.0, "120"),
+        (0.34, "0.34"),
+        (1.0 / 3.0, "0.3333333333333333"),
+        (9_007_199_254_740_992.0, "9007199254740992"),
+        (123.456e10, "1234560000000"),
+        (9.999_999_999_999_999e20, "999999999999999900000"),
+        (1e-5, "0.00001"),
+    ];
+    for (value, key) in expected {
+        assert_eq!(json_number_text(value), key, "{value:e}");
+    }
+}
+
+fn classified(items: &[(&str, &str)]) -> TaskResult {
+    TaskResult::Classification {
+        task: "standards".to_string(),
+        score: 0.0,
+        items: items.iter().map(|(item, assigned)| crate::schema::ClassificationItemResult { item: (*item).to_string(), assigned: (*assigned).to_string(), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
+    }
+}
+
+fn sorted(task: &str, order: &[&str]) -> TaskResult {
+    TaskResult::Sorting { task: task.to_string(), score: 0.0, items: order.iter().enumerate().map(|(position, item)| crate::schema::SortingItemResult { item: (*item).to_string(), value: 0.0, position, rank: 0, explanation: None }).collect() }
+}
+
+fn matched(load: [f64; 3], demand: [f64; 3]) -> TaskResult {
+    let dimension = |id: &str, values: [f64; 3]| crate::schema::DimensionResult {
+        dimension: id.to_string(),
+        score: 0.0,
+        items: values.iter().enumerate().map(|(index, &assigned)| crate::schema::MatchingItemResult { item: format!("m{index}"), assigned, correct: assigned, explanation: None }).collect(),
+    };
+    TaskResult::Matching { task: "buildings".to_string(), score: 0.0, dimensions: vec![dimension("load", load), dimension("demand", demand)] }
+}
+
+type Tally = Vec<(String, usize, Vec<(String, usize)>)>;
+type Rows<'a> = [(&'a str, usize, &'a [(&'a str, usize)])];
+
+fn outcome(quiz: &str, tasks: Vec<TaskResult>) -> RunResult {
+    RunResult { quiz: quiz.to_string(), score: 0.0, tasks }
+}
+
+#[test]
+fn the_crowd_counts_categories_and_values_and_averages_positions_in_definition_order() {
+    let results = [
+        outcome("energy", vec![classified(&[("a", "low"), ("b", "low"), ("c", "old")]), sorted("power", &["s1", "s0", "s2", "s3"]), matched([10.0, 40.0, 120.0], [15.0, 250.0, 90.0])]),
+        outcome("energy", vec![classified(&[("a", "passive"), ("b", "low"), ("d", "low")]), sorted("power", &["s0", "s2", "s4", "s1"]), matched([40.0, 10.0, 120.0], [15.0, 90.0, 250.0])]),
+        outcome("heating", vec![classified(&[("a", "old")])]),
+        outcome("energy", vec![sorted("standards", &["a", "b"])]),
+    ];
+    let crowd = crowd_view(&quiz(), &results);
+    let counts = |task: &CrowdTask| -> Tally { task.items.iter().map(|item| (item.item.clone(), item.answers, item.counts.iter().flatten().map(|count| (count.key.clone(), count.count)).collect())).collect() };
+    let owned = |rows: &Rows<'_>| -> Tally { rows.iter().map(|(item, answers, counts)| ((*item).to_string(), *answers, counts.iter().map(|(key, count)| ((*key).to_string(), *count)).collect())).collect() };
+    assert_eq!((crowd.quiz.as_str(), crowd.runs), ("energy", 3));
+    assert_eq!(crowd.tasks.iter().map(|task| (task.task.as_str(), task.kind, task.dimension.as_deref())).collect::<Vec<_>>(), [("standards", TaskKind::Classification, None), ("power", TaskKind::Sorting, None), ("buildings", TaskKind::Matching, Some("load")), ("buildings", TaskKind::Matching, Some("demand"))]);
+    assert_eq!(counts(&crowd.tasks[0]), owned(&[("a", 2, &[("low", 1), ("passive", 1)]), ("b", 2, &[("low", 2)]), ("c", 1, &[("old", 1)]), ("d", 1, &[("low", 1)])]));
+    let positions: Vec<(&str, usize, Option<f64>)> = crowd.tasks[1].items.iter().map(|item| (item.item.as_str(), item.answers, item.mean_position)).collect();
+    assert_eq!(positions, [("s0", 2, Some((1.0 / 3.0 + 0.0) / 2.0)), ("s1", 2, Some(0.5)), ("s2", 2, Some((2.0 / 3.0 + 1.0 / 3.0) / 2.0)), ("s3", 1, Some(1.0)), ("s4", 1, Some(2.0 / 3.0))]);
+    assert!(crowd.tasks[1].items.iter().all(|item| item.counts.is_none()));
+    assert_eq!(counts(&crowd.tasks[2]), owned(&[("m0", 2, &[("10", 1), ("40", 1)]), ("m1", 2, &[("10", 1), ("40", 1)]), ("m2", 2, &[("120", 2)])]));
+    assert_eq!(counts(&crowd.tasks[3]), owned(&[("m0", 2, &[("15", 2)]), ("m1", 2, &[("250", 1), ("90", 1)]), ("m2", 2, &[("250", 1), ("90", 1)])]));
+    let json = serde_json::to_value(&crowd.tasks[1].items[3]).unwrap_or_default();
+    assert_eq!(json, serde_json::json!({"item": "s3", "answers": 1, "meanPosition": 1.0}));
+}
+
+#[test]
+fn shared_crowd_views_of_the_python_reference_hold() {
+    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    let vectors = fixture("crowd-view");
+    let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
+    for vector in entries(&vectors["vectors"]) {
+        let quiz = quizzes.iter().find(|quiz| Some(quiz.id.as_str()) == vector["quiz"].as_str()).unwrap_or_else(|| panic!("{}", vector["quiz"]));
+        let results: Vec<RunResult> = entries(&vector["results"]).iter().map(typed).collect();
+        assert_close(&format!("crowd-view/{}", vector["id"]), &json(&crowd_view(quiz, &results)), &vector["expected"]);
+    }
+}
+
+#[test]
+fn an_unanswered_quiz_has_every_task_and_no_items() {
+    let crowd = crowd_view::<RunResult>(&quiz(), &[]);
+    assert_eq!((crowd.runs, crowd.tasks.len()), (0, 4));
+    assert!(crowd.tasks.iter().all(|task| task.items.is_empty()));
+    assert_eq!(serde_json::to_value(&crowd.tasks[0]).unwrap_or_default(), serde_json::json!({"task": "standards", "kind": "classification", "items": []}));
 }

@@ -17,6 +17,7 @@ import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { formatKeybindingShortcut } from "../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
 import { floatingMenuItemClass, ContextMenuChrome } from "../../🎯️targets/⚛️react/🟦️";
+import { createDOMEventBinding } from "../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🖱️ContextMenu
@@ -86,22 +87,7 @@ function renderContextMenuLeading(item: ContextMenuItem): React.ReactNode {
   );
 }
 
-type DOMListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
-
-export function createDOMEventBinding() {
-  const cleanups: Array<() => void> = [];
-  return {
-    listen<E extends Event>(target: DOMListenerTarget | null | undefined, type: string, listener: (event: E) => void, options?: boolean | AddEventListenerOptions) {
-      if (!target) return;
-      const wrapped = listener as EventListener;
-      target.addEventListener(type, wrapped, options);
-      cleanups.push(() => target.removeEventListener(type, wrapped, options));
-    },
-    dispose() {
-      while (cleanups.length > 0) cleanups.pop()?.();
-    },
-  };
-}
+export { createDOMEventBinding, type DOMListenerTarget } from "../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 
 export function getElementById<T extends HTMLElement = HTMLElement>(id: string): T | null {
   return typeof document === "undefined" ? null : (document.getElementById(id) as T | null);

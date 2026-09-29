@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { ephemeralMap } from "@semio-tech/framework";
 import * as React from "react";
-import { domSizePx, activeUiTheme, subscribeActiveUiTheme, STYLING_COMPACT_ROOT_PX, type UiTheme } from "@semio-tech/ui-styling";
+import { domSizePx, activeUiTheme, subscribeActiveUiTheme, STYLING_COMPACT_ROOT_PX, uiSpacingLen, type UiTheme } from "@semio-tech/ui-styling";
 import {
   ICONS,
   isIconName,
@@ -17,17 +17,38 @@ import {
   shortcodeEmoji,
   type IconName,
 } from "@semio-tech/assets";
-import {
-  isMetabolismIconName,
-  METABOLISM_ICONS,
-  resolveMetabolismIconSvgFromTheme,
-  type MetabolismIconName,
-} from "@semio-tech/assets";
-import { uiSpacingLen } from "../🌳️Tree/🟦️.tsx";
+import { type MetabolismIconName } from "@semio-tech/assets";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 export type { IconName };
 // #endregion 🔌️Adapters
+
+// #region 🌱️ThemedIconCatalog
+/** 🌱️ The second, themed icon catalog (the metabolism icons) that {@link Icon} resolves next to the built-in one. It is
+ * installed by the host rather than imported here, so a page that renders only built-in icons does not ship it; the
+ * React target barrel installs `@semio-tech/assets`' metabolism catalog when it loads. */
+export interface ThemedIconCatalog {
+  readonly has: (key: string) => key is MetabolismIconName;
+  readonly svg: (name: MetabolismIconName, icons: UiTheme["icons"] | undefined) => string;
+}
+
+let themedIconCatalog: ThemedIconCatalog | undefined;
+
+/** 🔌️ Installs (or with `undefined` removes) the {@link ThemedIconCatalog}; returns the one installed before. */
+export function setThemedIconCatalog(catalog: ThemedIconCatalog | undefined): ThemedIconCatalog | undefined {
+  const previous = themedIconCatalog;
+  themedIconCatalog = catalog;
+  return previous;
+}
+
+function isThemedIconName(key: string): key is MetabolismIconName {
+  return themedIconCatalog?.has(key) ?? false;
+}
+
+function themedIconSvg(name: MetabolismIconName, icons: UiTheme["icons"] | undefined): string | undefined {
+  return themedIconCatalog?.svg(name, icons);
+}
+// #endregion 🌱️ThemedIconCatalog
 
 // #region 🔖️Icon
 /** 📐️ Named size tokens for {@link Icon}. */
@@ -133,7 +154,7 @@ export function decodeIcon(encoded: string): Icon | undefined {
   if (lower.startsWith("<?xml") || lower.includes("<svg")) {
     return { kind: "svg", svg: t };
   }
-  if (isMetabolismIconName(t)) {
+  if (isThemedIconName(t)) {
     return { kind: "themed", key: t };
   }
   if (isIconName(t)) {
@@ -331,9 +352,9 @@ export function resolveCatalogIconSvg(name: IconName, icons: UiTheme["icons"] = 
   return resolveCatalogIconSvgFromTheme(name, icons);
 }
 
-/** 🖼️ Resolves metabolism icon SVG for the active theme. */
+/** 🖼️ Resolves metabolism icon SVG for the active theme through the installed {@link ThemedIconCatalog} (empty without one). */
 export function resolveMetabolismIconSvg(name: MetabolismIconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
-  return resolveMetabolismIconSvgFromTheme(name, icons);
+  return themedIconSvg(name, icons) ?? "";
 }
 
 const CATALOG_ICON_ALIASES: Partial<Record<string, IconName>> = {
@@ -508,7 +529,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
     );
   }
   const svgMarkup =
-    normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? resolveCatalogIconSvgFromTheme(normalized.key, themeIcons) : normalized.kind === "themed" ? resolveMetabolismIconSvgFromTheme(normalized.key, themeIcons) : undefined;
+    normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? resolveCatalogIconSvgFromTheme(normalized.key, themeIcons) : normalized.kind === "themed" ? themedIconSvg(normalized.key, themeIcons) : undefined;
   if (!svgMarkup) {
     return (
       <span data-icon-kind={normalized.kind === "shortcode" ? "shortcode" : "missing"} className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)} style={boxStyle} title={title}>

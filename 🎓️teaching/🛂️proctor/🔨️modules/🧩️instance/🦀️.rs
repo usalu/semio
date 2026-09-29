@@ -2,21 +2,30 @@
 //! serves it.
 //!
 //! **Composition.** One module (`teaching.proctor`) contributes the roster and learner deciders,
-//! the enrollment saga and two policy templates; four [`QuizQuery`] handlers answer the reads; the
-//! four storage roles live in one SQLite file. No principal resolver exists: identity without
-//! passwords is carried by the learner id inside every command, so every caller is `anonymous`
-//! and the `quiz-learner` template admits exactly the four command kinds, the four query kinds and
-//! the learner event streams for it. The `quiz-proctor` template admits the enrollment relay for
-//! the `proctor` service account only.
+//! the enrollment saga, three policy templates and the admission of presence states; five
+//! [`QuizQuery`] handlers answer the reads; the four storage roles live in one SQLite file. No
+//! principal resolver exists: identity without passwords is carried by the learner id inside every
+//! command, so every caller is `anonymous` and the `quiz-learner` template admits exactly the four
+//! command kinds, the five query kinds and the learner event streams for it. The `quiz-proctor`
+//! template admits the enrollment relay for the `proctor` service account only.
+//!
+//! **Presence.** The `quiz-presence` template lets every caller join, publish in and watch a
+//! presence room, and it is assigned inside the catalog's room scopes only ([`Rooms`]), so a socket
+//! to — or a watch of — any other scope is closed by policy. The module admits a state only when it
+//! is the room's type, passes the quiz core's rules and names only ids the catalog renders; a socket
+//! whose `Origin` the cross-origin policy does not admit is refused before it opens.
 //!
 //! **Read-your-writes.** A `POST /commands` answers only after the enrollment saga has run and the
 //! projections have caught up, and a `POST /queries` catches the projections up before it reads,
 //! so a client that just submitted sees its own facts in every view. A supervisor repeats the same
 //! settling on a cadence for work left over by a crash.
 //!
-//! **Routing.** The gateway's routes are served at the origin root; every other GET or HEAD is the
-//! built site (single-page fallback) and every other method there is `405 Allow: GET, HEAD`. Outermost, the request gate refuses cleartext behind a trusted
-//! proxy (`403 x-semio-refusal: insecure-transport`) and grants CORS only to admitted origins.
+//! **API only.** The proctor serves the gateway's routes at its origin root and nothing else: the
+//! site is a static build on a CDN of its own origin, so every other path answers the gateway's
+//! JSON `404`. Outermost, the request gate refuses cleartext behind a trusted proxy
+//! (`403 x-semio-refusal: insecure-transport`), grants CORS only to admitted origins (the site
+//! origin in production) and answers every preflight itself, cacheable for [`PREFLIGHT_MAX_AGE`]
+//! seconds so a quiz session does not double its `POST /commands` and `POST /queries` traffic.
 //!
 //! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️.rs — `ServerInstance`, `ServerBuilder`
 //! @see ../../../../🧰️framework/🛍️products/🖥️server/🧪️tests/🧩️instance/🦀️.rs — the worked example this follows
@@ -32,17 +41,17 @@ use axum::http::{header, HeaderMap, HeaderValue, Method, StatusCode, Uri};
 use axum::middleware::{from_fn_with_state, Next};
 use axum::response::{IntoResponse, Response};
 use semio_framework_async::CancelToken;
-use server::contract::{CommandDescriptor, CommandOutcome, ModuleManifest, OfflinePolicy, PolicyGrant, PolicyPoint, PolicyTemplate, QueryDescriptor, ServerInstanceDefinition};
-use server::gateway::{GatewayRouter, InstanceStores, NoDocumentAuthority, Server, ServerError, ServerInstance, ServerModule, ServerState};
+use server::contract::{CommandDescriptor, CommandOutcome, ModuleManifest, OfflinePolicy, OpaqueJson, PolicyGrant, PolicyPoint, PolicyTemplate, QueryDescriptor, Scope, ServerInstanceDefinition};
+use server::gateway::{GatewayRouter, InstanceStores, NoDocumentAuthority, PresenceSettings, Server, ServerError, ServerInstance, ServerModule, ServerState, PRESENCE_JOIN, PRESENCE_PUBLISH, PRESENCE_RESOURCE, PRESENCE_WATCH};
 use server::policy::{Credential, PrincipalResolver, Resolved};
 use server::storage::{AuthorityStore, StorageError, StorageProfile};
 
 use crate::actors::{enrollment, roster_key, EnrollmentSaga, LearnerDecider, ProctorDeciders, RosterDecider, ENROLL, LEARNER, PROCTOR_SERVICE, ROSTER, ROSTER_ID, WIRE_VERSION};
 use crate::catalog::LoadedCatalog;
 use crate::config::{CrossOriginPolicy, Gate};
-use crate::projections::{CatchUp, Progress, Projector, LEADERBOARD, LEARNERS, META, RUNS, STATES};
+use crate::presence::Rooms;
+use crate::projections::{CatchUp, Progress, Projector, CROWDS, LEADERBOARD, LEARNERS, META, RUNS, STATES, TALLIES};
 use crate::queries::{QueryKind, QuizQuery};
-use crate::site::{method_not_allowed, SiteHost};
 use crate::storage::{Database, SqliteAuthorityStore, SqliteBlobStore, SqliteProjectionStore, SqliteSessionStore};
 
 /// 🏷️ The instance id `GET /instance` reports.
@@ -53,12 +62,18 @@ pub const MODULE_ID: &str = "teaching.proctor";
 pub const LEARNER_TEMPLATE: &str = "quiz-learner";
 /// 🤖️ The template of the proctor's own service account.
 pub const PROCTOR_TEMPLATE: &str = "quiz-proctor";
+/// 👥️ The template every caller holds inside each presence room of the catalog.
+pub const PRESENCE_TEMPLATE: &str = "quiz-presence";
+/// 🙈️ The principal key of every caller, the proctor resolving no identity.
+pub const ANONYMOUS: &str = "anonymous";
 /// ⏱️ How often the supervisor settles sagas and projections.
 pub const SETTLE_INTERVAL: Duration = Duration::from_millis(500);
 /// 📦️ Outbox rows handed to the sagas per drain.
 pub const DRAIN_BATCH: usize = 64;
 /// 🔁️ Drains per settle before the rest is left to the next one.
 pub const DRAIN_ROUNDS: usize = 64;
+/// ⏳️ How long a browser may cache a granted preflight, in seconds (Chromium's ceiling).
+pub const PREFLIGHT_MAX_AGE: &str = "7200";
 /// 🚧️ The response header naming why the gate refused a request.
 pub const REFUSAL_HEADER: &str = "x-semio-refusal";
 
@@ -101,9 +116,22 @@ impl PrincipalResolver for ProctorResolvers {
     }
 }
 
-/// 🧩️ The quiz lifecycle module over one loaded catalog.
+/// 🧩️ The quiz lifecycle module over one loaded catalog, and its presence rooms.
 pub struct ProctorModule {
-    pub catalog: Arc<LoadedCatalog>,
+    catalog: Arc<LoadedCatalog>,
+    rooms: Rooms,
+}
+
+impl ProctorModule {
+    /// 🌱️ The module serving `catalog`.
+    pub fn new(catalog: Arc<LoadedCatalog>) -> Self {
+        Self { rooms: Rooms::of(&catalog), catalog }
+    }
+
+    /// 🗺️ The presence rooms of the served catalog.
+    pub fn rooms(&self) -> &Rooms {
+        &self.rooms
+    }
 }
 
 impl ServerModule for ProctorModule {
@@ -120,6 +148,10 @@ impl ServerModule for ProctorModule {
     async fn sagas(&self) -> Vec<EnrollmentSaga> {
         vec![EnrollmentSaga]
     }
+
+    fn presence_admission(&self, scope: &Scope, state: &OpaqueJson) -> Result<(), String> {
+        self.rooms.admit(&scope.0, state)
+    }
 }
 
 /// 📇️ What the proctor declares: commands, queries, projections, templates and actor kinds.
@@ -135,8 +167,8 @@ pub fn manifest(tenant: &str) -> ModuleManifest {
             command(ENROLL, LEARNER, OfflinePolicy::AuthorityRequired),
         ],
         queries: QueryKind::ALL.iter().map(|kind| QueryDescriptor { kind: kind.wire().to_string(), version: WIRE_VERSION, projection: projection_of(*kind).to_string() }).collect(),
-        projections: [STATES, LEARNERS, RUNS, LEADERBOARD, META].map(str::to_string).to_vec(),
-        policies: vec![learner_template(tenant), proctor_template()],
+        projections: [STATES, LEARNERS, RUNS, LEADERBOARD, TALLIES, CROWDS, META].map(str::to_string).to_vec(),
+        policies: vec![learner_template(tenant), proctor_template(), presence_template()],
         actor_kinds: vec![ROSTER.to_string(), LEARNER.to_string()],
     }
 }
@@ -147,10 +179,11 @@ fn projection_of(kind: QueryKind) -> &'static str {
         QueryKind::Learner => LEARNERS,
         QueryKind::Run => RUNS,
         QueryKind::Leaderboard => LEADERBOARD,
+        QueryKind::Crowd => CROWDS,
     }
 }
 
-/// 🎓️ The four command kinds, the four query kinds and the learner event streams.
+/// 🎓️ The four command kinds, the five query kinds and the learner event streams.
 pub fn learner_template(tenant: &str) -> PolicyTemplate {
     let grant = |point: PolicyPoint, resource: String, action: &str| PolicyGrant { point, resource, action: action.to_string() };
     let mut grants = vec![grant(PolicyPoint::CommandAdmission, format!("{ROSTER}/{ROSTER_ID}"), "quiz.identify-learner")];
@@ -164,6 +197,12 @@ pub fn learner_template(tenant: &str) -> PolicyTemplate {
 /// 🤖️ The enrollment relay, for the proctor's own service account.
 pub fn proctor_template() -> PolicyTemplate {
     PolicyTemplate { name: PROCTOR_TEMPLATE.to_string(), auto_apply: false, grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: format!("{LEARNER}/*"), action: ENROLL.to_string() }] }
+}
+
+/// 👥️ Joining a presence room, sharing a state in it and watching it; assigned per room scope.
+pub fn presence_template() -> PolicyTemplate {
+    let grant = |action: &str| PolicyGrant { point: PolicyPoint::Subscription, resource: PRESENCE_RESOURCE.to_string(), action: action.to_string() };
+    PolicyTemplate { name: PRESENCE_TEMPLATE.to_string(), auto_apply: false, grants: vec![grant(PRESENCE_JOIN), grant(PRESENCE_PUBLISH), grant(PRESENCE_WATCH)] }
 }
 //#endregion 🔖️Instance
 
@@ -262,33 +301,34 @@ pub struct Proctor {
 }
 
 impl Proctor {
-    /// 🔨️ Compose the server over `profile` for `catalog`, hosting `site` for every other GET.
-    pub async fn assemble(profile: StorageProfile, catalog: Arc<LoadedCatalog>, gate: Gate, site: Option<SiteHost>) -> Result<Self, ProctorError> {
+    /// 🔨️ Compose the API server over `profile` for `catalog` behind `gate`, its presence rooms
+    /// ticking as `presence` says.
+    pub async fn assemble(profile: StorageProfile, catalog: Arc<LoadedCatalog>, gate: Gate, presence: PresenceSettings) -> Result<Self, ProctorError> {
         let view = Arc::new(serde_json::to_vec(&catalog.view()).map_err(|error| ProctorError::Io(error.to_string()))?);
-        let mut builder = Server::<ProctorInstance>::builder(profile).identity(INSTANCE_ID, env!("CARGO_PKG_VERSION")).module(ProctorModule { catalog: Arc::clone(&catalog) });
+        let module = ProctorModule::new(Arc::clone(&catalog));
+        let rooms = module.rooms().scopes();
+        let origins = gate.origins.clone();
+        let mut builder = Server::<ProctorInstance>::builder(profile)
+            .identity(INSTANCE_ID, env!("CARGO_PKG_VERSION"))
+            .module(module)
+            .presence(presence)
+            .origin_admission(Arc::new(move |origin: &str| origins.admits(origin)));
         for kind in QueryKind::ALL {
             builder = builder.query(QuizQuery { kind, tenant: catalog.id().to_string(), catalog: Arc::clone(&view) });
         }
         let server = builder.build().await?;
         {
             let mut policy = server.state().policy.write().map_err(|_| ProctorError::Io("policy engine poisoned".to_string()))?;
-            policy.assign("anonymous".to_string(), LEARNER_TEMPLATE.to_string());
+            policy.assign(ANONYMOUS.to_string(), LEARNER_TEMPLATE.to_string());
             policy.assign(format!("service:{PROCTOR_SERVICE}"), PROCTOR_TEMPLATE.to_string());
+            for room in rooms {
+                policy.assign_scoped(ANONYMOUS.to_string(), Scope(room), PRESENCE_TEMPLATE.to_string());
+            }
         }
         let settler = Settler { state: server.state().clone(), projector: Arc::new(Projector::new(Arc::clone(&catalog))), tenant: catalog.id().to_string() };
-        let site = site.map(Arc::new);
         let router = server
             .router()
-            .fallback(move |method: Method, uri: Uri| {
-                let site = site.clone();
-                async move {
-                    match site {
-                        Some(site) => site.serve(&method, uri.path()).await,
-                        None if method != Method::GET && method != Method::HEAD => method_not_allowed(&method, uri.path()),
-                        None => ServerError::NotFound(format!("{method} {}", uri.path())).into_response(),
-                    }
-                }
-            })
+            .fallback(|method: Method, uri: Uri| async move { ServerError::NotFound(format!("{method} {}", uri.path())).into_response() })
             .layer(from_fn_with_state(settler.clone(), consistency))
             .layer(from_fn_with_state(Arc::new(gate), gatekeeping));
         Ok(Self { server, settler, router, catalog })
@@ -309,7 +349,8 @@ impl Proctor {
         &self.catalog
     }
 
-    /// 🧾️ Reset the projections when they were built against another catalog; `true` when reset.
+    /// 🧾️ Set up fresh projections and reset those built for another catalog or projector revision;
+    /// `true` when such projections were dropped.
     pub async fn prepare(&self) -> Result<bool, StorageError> {
         let mut projections = self.settler.state.projections.lock().await;
         self.settler.projector.prepare(&mut projections).await
@@ -401,29 +442,39 @@ async fn gatekeeping(State(gate): State<Arc<Gate>>, request: Request, next: Next
     }
     let origin = request.headers().get(header::ORIGIN).cloned();
     if request.method() == Method::OPTIONS {
-        let mut response = StatusCode::NO_CONTENT.into_response();
-        grant(response.headers_mut(), origin.as_ref(), &gate.origins);
-        return response;
+        return preflight(origin.as_ref(), &gate.origins);
     }
     let mut response = next.run(request).await;
     grant(response.headers_mut(), origin.as_ref(), &gate.origins);
     response
 }
 
+/// ✈️ The answer to a CORS preflight: `204` with the grant, and — when the origin is admitted —
+/// `Access-Control-Max-Age` so the browser reuses it instead of asking before every request.
+fn preflight(origin: Option<&HeaderValue>, policy: &CrossOriginPolicy) -> Response {
+    let mut response = StatusCode::NO_CONTENT.into_response();
+    if grant(response.headers_mut(), origin, policy) {
+        response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, HeaderValue::from_static(PREFLIGHT_MAX_AGE));
+    }
+    response
+}
+
 /// 🌍️ Write the cross-origin grant of one response: the caller's own origin and credentials only
-/// when the policy admits it, `Vary: Origin` whenever an origin was presented.
-fn grant(headers: &mut HeaderMap, origin: Option<&HeaderValue>, policy: &CrossOriginPolicy) {
+/// when the policy admits it, `Vary: Origin` whenever an origin was presented; `true` when granted.
+fn grant(headers: &mut HeaderMap, origin: Option<&HeaderValue>, policy: &CrossOriginPolicy) -> bool {
     headers.remove(header::ACCESS_CONTROL_ALLOW_ORIGIN);
     headers.remove(header::ACCESS_CONTROL_ALLOW_CREDENTIALS);
-    if let Some(origin) = origin {
+    let admitted = origin.filter(|origin| origin.to_str().is_ok_and(|value| policy.admits(value)));
+    if origin.is_some() {
         headers.insert(header::VARY, HeaderValue::from_static("Origin"));
-        if origin.to_str().is_ok_and(|value| policy.admits(value)) {
-            headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin.clone());
-            headers.insert(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, HeaderValue::from_static("true"));
-        }
+    }
+    if let Some(origin) = admitted {
+        headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin.clone());
+        headers.insert(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, HeaderValue::from_static("true"));
     }
     headers.insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET, POST, HEAD, OPTIONS"));
     headers.insert(header::ACCESS_CONTROL_ALLOW_HEADERS, HeaderValue::from_static("content-type"));
+    admitted.is_some()
 }
 //#endregion 🔖️Middleware
 

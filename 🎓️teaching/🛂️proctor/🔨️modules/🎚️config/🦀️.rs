@@ -6,20 +6,24 @@
 //! | `PROCTOR_BIND` | IP address to bind | `127.0.0.1` |
 //! | `PROCTOR_DATA` | directory of `proctor.sqlite` | required |
 //! | `PROCTOR_CATALOG` | catalog `🔣️.json` | required |
-//! | `PROCTOR_SITE` | built site directory served for every other GET | none |
 //! | `PROCTOR_MODE` | `development` or `production` | loopback bind → development, else production |
 //! | `PROCTOR_ALLOWED_ORIGINS` | comma-separated `scheme://host[:port]` origins granted CORS | loopback bind → any loopback origin, else none |
 //! | `PROCTOR_TRUSTED_FORWARDING` | `none` or `proxy` (a TLS-terminating proxy is the only client) | `none` |
+//! | `PROCTOR_PRESENCE_TICK_MS` | how often a presence room publishes its coalesced batch, 10…1000 ms | `100` |
 //!
 //! A production proctor on a network interface requires all three statements together: the mode,
-//! an explicit origin allowlist and `PROCTOR_TRUSTED_FORWARDING=proxy`, exactly like the hub. A
-//! development proctor binds loopback only.
+//! an explicit origin allowlist (the origin the site is served from, e.g.
+//! `https://quizzes.architektur-und-technologie.de`) and `PROCTOR_TRUSTED_FORWARDING=proxy`, exactly
+//! like the hub. A development proctor binds loopback only.
 //!
 //! @see ../../../../🌎️hub/README.md — the production gating this mirrors
 
 use std::fmt;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::PathBuf;
+use std::time::Duration;
+
+use server::gateway::PresenceSettings;
 
 /// 🔌️ `PROCTOR_PORT`.
 pub const PORT: &str = "PROCTOR_PORT";
@@ -29,19 +33,23 @@ pub const BIND: &str = "PROCTOR_BIND";
 pub const DATA: &str = "PROCTOR_DATA";
 /// 📚️ `PROCTOR_CATALOG`.
 pub const CATALOG: &str = "PROCTOR_CATALOG";
-/// 🌐️ `PROCTOR_SITE`.
-pub const SITE: &str = "PROCTOR_SITE";
 /// 🏭️ `PROCTOR_MODE`.
 pub const MODE: &str = "PROCTOR_MODE";
 /// 🌍️ `PROCTOR_ALLOWED_ORIGINS`.
 pub const ALLOWED_ORIGINS: &str = "PROCTOR_ALLOWED_ORIGINS";
 /// 🛡️ `PROCTOR_TRUSTED_FORWARDING`.
 pub const TRUSTED_FORWARDING: &str = "PROCTOR_TRUSTED_FORWARDING";
+/// 👥️ `PROCTOR_PRESENCE_TICK_MS`.
+pub const PRESENCE_TICK_MS: &str = "PROCTOR_PRESENCE_TICK_MS";
 
 /// 🔢️ The port a proctor listens on when `PROCTOR_PORT` is unset.
 pub const DEFAULT_PORT: u16 = 8791;
 
 const ALLOWED_ORIGINS_MAX: usize = 32;
+
+/// ⏱️ The bounds of `PROCTOR_PRESENCE_TICK_MS`: below, the batches cost more than they save; above, the
+/// cursors of others visibly lag.
+pub const PRESENCE_TICK_MS_RANGE: std::ops::RangeInclusive<u64> = 10..=1000;
 
 /// 🏭️ Which posture the proctor runs in.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -72,10 +80,10 @@ pub struct ProctorConfig {
     pub port: u16,
     pub data: PathBuf,
     pub catalog: PathBuf,
-    pub site: Option<PathBuf>,
     pub mode: ProctorMode,
     pub origins: CrossOriginPolicy,
     pub forwarding: Forwarding,
+    pub presence_tick: Duration,
 }
 
 /// 🧯️ A configuration the proctor refuses to boot with, naming the variable at fault.
@@ -112,7 +120,6 @@ impl ProctorConfig {
         };
         let data = value(DATA).map(PathBuf::from).ok_or_else(|| ConfigError(format!("{DATA} must name the directory of proctor.sqlite")))?;
         let catalog = value(CATALOG).map(PathBuf::from).ok_or_else(|| ConfigError(format!("{CATALOG} must name the catalog 🔣️.json")))?;
-        let site = value(SITE).map(PathBuf::from);
         let mode = match value(MODE).as_deref() {
             Some("production") => ProctorMode::Production,
             Some("development") => ProctorMode::Development,
@@ -126,7 +133,11 @@ impl ProctorConfig {
             Some("proxy") => Forwarding::TerminatingProxy,
             Some(other) => return Err(ConfigError(format!("{TRUSTED_FORWARDING} must be none or proxy, got {other:?}"))),
         };
-        let config = Self { bind, port, data, catalog, site, mode, origins, forwarding };
+        let presence_tick = match value(PRESENCE_TICK_MS) {
+            Some(text) => text.parse().ok().filter(|millis| PRESENCE_TICK_MS_RANGE.contains(millis)).map(Duration::from_millis).ok_or_else(|| ConfigError(format!("{PRESENCE_TICK_MS} must be a whole number of milliseconds in {}..={}, got {text:?}", PRESENCE_TICK_MS_RANGE.start(), PRESENCE_TICK_MS_RANGE.end())))?,
+            None => PresenceSettings::default().tick,
+        };
+        let config = Self { bind, port, data, catalog, mode, origins, forwarding, presence_tick };
         config.validate()?;
         Ok(config)
     }
@@ -144,6 +155,11 @@ impl ProctorConfig {
     /// 🧭️ The request gate this configuration implies.
     pub fn gate(&self) -> Gate {
         Gate { origins: self.origins.clone(), forwarding: self.forwarding }
+    }
+
+    /// 👥️ The presence socket's settings: the protocol's defaults at this configuration's tick.
+    pub fn presence(&self) -> PresenceSettings {
+        PresenceSettings { tick: self.presence_tick, ..PresenceSettings::default() }
     }
 }
 
@@ -173,6 +189,14 @@ impl CrossOriginPolicy {
             Self::LoopbackDevelopment => "loopback-development",
             Self::Allowlist(_) => "allowlist",
             Self::Closed => "closed",
+        }
+    }
+
+    /// 📜️ The startup line's account of the policy: its label, and the admitted origins of an allowlist.
+    pub fn describe(&self) -> String {
+        match self {
+            Self::Allowlist(origins) => format!("{} {}", self.label(), origins.join(", ")),
+            _ => self.label().to_string(),
         }
     }
 }

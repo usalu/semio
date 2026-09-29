@@ -9,13 +9,16 @@
       "{workspaceRoot}/🎓️teaching/🏛️architecture/❓️quiz/🎨️.css",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/❓️quiz/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/**/❓️quiz/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧬️schema/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🔨️modules/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*"
     ]
   },
   "targets": {
@@ -45,7 +48,17 @@
         "forwardAllArgs": true
       },
       "cache": true,
+      "inputs": ["default", { "env": "PROCTOR_URL" }],
       "outputs": ["{projectRoot}/dist"]
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts publish"
+      },
+      "cache": false,
+      "outputs": ["{projectRoot}/dist/pages"]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -79,6 +92,25 @@
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-image-check",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "docker-image-publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["docker-image-build"],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts docker-image-publish",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "docker-stack-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts docker-stack-check",
         "forwardAllArgs": true
       },
       "cache": false

@@ -57,6 +57,7 @@ pub(crate) fn quiz() -> Quiz {
         json_schema: None,
         schema: "semio.quiz/v1".to_string(),
         id: "energy".to_string(),
+        emoji: "⚡".to_string(),
         title: text("Energy"),
         description: text("About energy"),
         tasks: vec![

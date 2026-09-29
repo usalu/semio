@@ -16,7 +16,8 @@ import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
-import { STYLING_DOM, STYLING_METRICS, STYLING_COMPACT_ROOT_PX, domSizePx, sizeVar, uiSpacingPx } from "@semio-tech/ui-styling";
+import { STYLING_DOM, STYLING_METRICS, STYLING_COMPACT_ROOT_PX, domSizePx, sizeVar, uiSpacingLen, uiSpacingPx } from "@semio-tech/ui-styling";
+export { uiSpacingLen };
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.useState at module top level, which requires a non-circular import (see
@@ -210,7 +211,6 @@ export function treeFoldChevronIcon(direction: TreeDirection, inline: FlowInline
 export const TreeRowAlignmentContext = reactHostPort.createContext(false);
 // True when children are rendered inside the value column of a Label property row.
 export const PropertyValueColumnContext = reactHostPort.createContext(false);
-export const uiSpacingLen = (multiplier: number): string => `calc(${multiplier} * var(--ui-spacing))`;
 export const detailPanelIndentLen = (level: number, multiplier = 1): string => uiSpacingLen(level * STYLING_DOM.treeIndentPerLevelUiSpacing * multiplier);
 export const detailPanelIndentPx = (level: number, multiplier = 1): number => domSizePx("treeIndentPerLevelUiSpacing") * level * multiplier;
 /** 📏️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — every row shell is exactly this tall and every sibling gap is zero, so a virtual window's spacers are `rows × treeRowHeightPx` and nothing else. */

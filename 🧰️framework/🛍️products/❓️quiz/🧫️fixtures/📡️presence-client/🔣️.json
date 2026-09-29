@@ -1,0 +1,162 @@
+{
+  "catalog": "arch",
+  "quizzes": ["physics", "heating", "cooling", "demand"],
+  "places": [
+    { "id": "introduction", "step": { "screen": "introduction" }, "runs": {}, "task": null, "expected": { "place": { "screen": "introduction" }, "room": true }, "roomScope": "arch/introduction" },
+    { "id": "identity", "step": { "screen": "identity" }, "runs": {}, "task": null, "expected": { "place": { "screen": "identity" }, "room": false }, "roomScope": null },
+    { "id": "home", "step": { "screen": "home" }, "runs": {}, "task": null, "expected": { "place": { "screen": "home" }, "room": true }, "roomScope": "arch/home" },
+    { "id": "introduction-page", "step": { "screen": "home", "page": "intro" }, "runs": {}, "task": null, "expected": { "place": { "screen": "introduction" }, "room": true }, "roomScope": "arch/introduction" },
+    { "id": "leaderboard-page", "step": { "screen": "home", "page": "board" }, "runs": {}, "task": null, "expected": { "place": { "screen": "leaderboard" }, "room": true }, "roomScope": "arch/leaderboard" },
+    { "id": "badges-page", "step": { "screen": "home", "page": "badges" }, "runs": {}, "task": null, "expected": { "place": { "screen": "badges" }, "room": true }, "roomScope": "arch/badges" },
+    { "id": "quiz-page", "step": { "screen": "home", "page": "heating" }, "runs": {}, "task": null, "expected": { "place": { "screen": "quiz", "quiz": "heating" }, "room": true }, "roomScope": "arch/quiz/heating" },
+    { "id": "learner-profile-is-personal", "step": { "screen": "home", "page": "learner" }, "runs": {}, "task": null, "expected": { "place": { "screen": "learner" }, "room": false }, "roomScope": null },
+    { "id": "preferences-are-personal", "step": { "screen": "home", "page": "prefs" }, "runs": {}, "task": null, "expected": { "place": { "screen": "preferences" }, "room": false }, "roomScope": null },
+    { "id": "unknown-page-is-home", "step": { "screen": "home", "page": "nowhere" }, "runs": {}, "task": null, "expected": { "place": { "screen": "home" }, "room": true }, "roomScope": "arch/home" },
+    {
+      "id": "run-with-its-task",
+      "step": { "screen": "run", "run": "11111111111111111111111111111111" },
+      "runs": { "11111111111111111111111111111111": { "quiz": "heating" } },
+      "task": "u-values",
+      "expected": { "place": { "screen": "run", "quiz": "heating", "task": "u-values" }, "room": true },
+      "roomScope": "arch/quiz/heating"
+    },
+    {
+      "id": "run-before-its-task-is-reported",
+      "step": { "screen": "run", "run": "11111111111111111111111111111111" },
+      "runs": { "11111111111111111111111111111111": { "quiz": "heating" } },
+      "task": null,
+      "expected": { "place": { "screen": "run", "quiz": "heating" }, "room": true },
+      "roomScope": "arch/quiz/heating"
+    },
+    {
+      "id": "results-never-name-a-task",
+      "step": { "screen": "results", "run": "11111111111111111111111111111111" },
+      "runs": { "11111111111111111111111111111111": { "quiz": "heating" } },
+      "task": "u-values",
+      "expected": { "place": { "screen": "results", "quiz": "heating" }, "room": true },
+      "roomScope": "arch/quiz/heating"
+    },
+    { "id": "run-not-loaded-yet", "step": { "screen": "run", "run": "99999999999999999999999999999999" }, "runs": {}, "task": null, "expected": null, "roomScope": null }
+  ],
+  "throttle": [
+    { "id": "single", "calls": [[0, 1]], "sent": [[0, 1]] },
+    {
+      "id": "burst-keeps-first-and-last",
+      "calls": [
+        [0, 1],
+        [5, 2],
+        [10, 3]
+      ],
+      "sent": [
+        [0, 1],
+        [67, 3]
+      ]
+    },
+    {
+      "id": "two-bursts",
+      "calls": [
+        [0, 1],
+        [5, 2],
+        [10, 3],
+        [200, 4],
+        [210, 5]
+      ],
+      "sent": [
+        [0, 1],
+        [67, 3],
+        [200, 4],
+        [267, 5]
+      ]
+    },
+    {
+      "id": "spaced-calls-go-at-once",
+      "calls": [
+        [0, 1],
+        [100, 2],
+        [200, 3]
+      ],
+      "sent": [
+        [0, 1],
+        [100, 2],
+        [200, 3]
+      ]
+    },
+    {
+      "id": "repeated-state-is-sent-once",
+      "calls": [
+        [0, 1],
+        [100, 1],
+        [101, 2],
+        [102, 1]
+      ],
+      "sent": [
+        [0, 1],
+        [101, 2],
+        [168, 1]
+      ]
+    },
+    {
+      "id": "a-state-changed-back-before-its-frame-is-not-sent-again",
+      "calls": [
+        [0, 1],
+        [10, 2],
+        [20, 1]
+      ],
+      "sent": [[0, 1]]
+    }
+  ],
+  "cursors": [
+    { "id": "centre", "box": { "left": 100, "top": 50, "width": 200, "height": 100 }, "point": [200, 100], "expected": { "x": 0.5, "y": 0.5 } },
+    { "id": "top-left-corner", "box": { "left": 100, "top": 50, "width": 200, "height": 100 }, "point": [100, 50], "expected": { "x": 0, "y": 0 } },
+    { "id": "clamped-outside", "box": { "left": 100, "top": 50, "width": 200, "height": 100 }, "point": [400, 10], "expected": { "x": 1, "y": 0 } },
+    { "id": "rounded-to-four-places", "box": { "left": 0, "top": 0, "width": 3, "height": 7 }, "point": [1, 1], "expected": { "x": 0.3333, "y": 0.1429 } },
+    { "id": "no-box", "box": { "left": 10, "top": 10, "width": 0, "height": 20 }, "point": [10, 15], "expected": null }
+  ],
+  "watchScopes": [
+    {
+      "id": "four-quizzes-from-home",
+      "catalog": "arch",
+      "quizzes": ["physics", "heating", "cooling", "demand"],
+      "joined": "arch/home",
+      "expected": [
+        "arch/introduction",
+        "arch/leaderboard",
+        "arch/badges",
+        "arch/quiz/physics",
+        "arch/quiz/heating",
+        "arch/quiz/cooling",
+        "arch/quiz/demand",
+        "arch/quiz/physics/thinking",
+        "arch/quiz/heating/thinking",
+        "arch/quiz/cooling/thinking",
+        "arch/quiz/demand/thinking"
+      ]
+    },
+    { "id": "no-quizzes", "catalog": "arch", "quizzes": [], "joined": "arch/home", "expected": ["arch/introduction", "arch/leaderboard", "arch/badges"] },
+    { "id": "joined-room-left-out", "catalog": "arch", "quizzes": ["physics"], "joined": "arch/leaderboard", "expected": ["arch/introduction", "arch/badges", "arch/quiz/physics", "arch/quiz/physics/thinking"] },
+    {
+      "id": "at-most-sixteen",
+      "catalog": "arch",
+      "quizzes": ["q1", "q2", "q3", "q4", "q5", "q6", "q7"],
+      "joined": "arch/home",
+      "expected": [
+        "arch/introduction",
+        "arch/leaderboard",
+        "arch/badges",
+        "arch/quiz/q1",
+        "arch/quiz/q2",
+        "arch/quiz/q3",
+        "arch/quiz/q4",
+        "arch/quiz/q5",
+        "arch/quiz/q6",
+        "arch/quiz/q7",
+        "arch/quiz/q1/thinking",
+        "arch/quiz/q2/thinking",
+        "arch/quiz/q3/thinking",
+        "arch/quiz/q4/thinking",
+        "arch/quiz/q5/thinking",
+        "arch/quiz/q6/thinking"
+      ]
+    }
+  ]
+}

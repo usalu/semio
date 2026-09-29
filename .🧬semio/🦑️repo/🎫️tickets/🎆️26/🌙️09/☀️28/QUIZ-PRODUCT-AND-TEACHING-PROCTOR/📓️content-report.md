@@ -387,3 +387,61 @@ bun nx run @teaching/architecture-quiz:check            → proctor check: 4 qui
 ```
 
 The generated logs of this follow-up were deleted after embedding.
+
+## 7. 2026-09-29 (design §14: `Quiz.emoji` required, CDN site, API-only proctor)
+
+### 7.1 Quiz emojis
+
+`Quiz.emoji` is now required by the contract. Each quiz carries the fully qualified emoji of its topic folder, identical
+to its `perfect-quiz` badge:
+
+| Quiz | `emoji` | Topic folder | Badge |
+|---|---|---|---|
+| `physics` | 🧲 | `🧲️physics` | 🧲 `physics-expert` |
+| `heating` | 🔥 | `🔥️heating` | 🔥 `heating-expert` |
+| `cooling` | ❄️ (U+2744 U+FE0F, the snowflake needs the selector to render as emoji) | `❄️cooling` | ❄️ `cooling-expert` |
+| `demand` | 📊 | `📊️demand` | 📊 `demand-expert` |
+
+`validate_quiz_content.py` now also checks both rules: the quiz emoji equals the topic folder's emoji (ignoring U+FE0F),
+and every `perfect-quiz` badge's emoji equals its quiz's emoji.
+
+### 7.2 Domains
+
+The site moved to `https://quizzes.architektur-und-technologie.de` (static build on a CDN) and the proctor to
+`https://proctor.quizzes.architektur-und-technologie.de` (API only, Docker + Caddy). Updated:
+
+- `🎓️teaching/README.md`: layout table (proctor = API only at its origin, no longer serving the site; site host; the
+  web package as a static CDN build), topic tree hosts, "How the pieces fit" (client bakes the proctor origin at build
+  time, CORS admits the site origin, the dev proxy keeps one origin locally), "Adding a quiz" step 2 (required `emoji`).
+- `🎓️teaching/🏛️architecture/README.md`: title and intro hosts, parts table (CDN build with baked proctor origin; the
+  deployment described by role and delegated to the site and proctor READMEs, since the deploy files are being moved by
+  the site/proctor work packages), quiz table rows prefixed with the quiz emojis.
+- Catalog introduction: names no host; unchanged. The German word "Quizze" in the catalog title stays.
+- `grep "quizze\."` over my files: no match left.
+
+### 7.3 Re-validation
+
+```
+.venv/Scripts/python.exe validate_quiz_content.py   → catalog + 4 quizzes schema-valid against the revised contract (emoji
+                                                       required); emoji 🧲/🔥/❄️/📊 match folders and badges;
+                                                       errors 0; warnings 10 (unchanged, accepted §4.1); exit 0
+bun check_quiz_core.ts                               → catalogIssues none; quizIssues none ×4; 200 seeded runs per quiz:
+                                                       perfect = 1, reversed sortings = 0, random mean 0.488 / 0.499 /
+                                                       0.515 / 0.542; failures 0; exit 0
+bun ./📜️script.ts test (site package, run directly)  → vitest: Test Files 1 passed, Tests 11 passed (TS core + ajv); exit 0
+```
+
+`bun nx run @teaching/architecture-quiz:test` hung in nx project-graph creation (other agents' nx processes on the same
+workspace), so the same verb was run directly from the package; the nx run later finished as well: "Successfully ran
+target test", Tests 11 passed (exit 0).
+`bun ./📜️script.ts check` (Rust `proctor check` on the catalog, run directly after cargo recompiled the proctor with the
+other packages' §14 changes) passed, exit 0:
+
+```
+catalog architecture: 4 quizzes, 7 badges, fingerprint d14d7218…
+  quiz physics (3 tasks) revision cb108d49…   quiz heating (2 tasks) revision dfcfbe04…
+  quiz cooling (2 tasks) revision 1cff079a…   quiz demand  (2 tasks) revision 05fe27bb…
+```
+
+So the emoji-carrying content passes all four validators again (python jsonschema, TS core, ajv, Rust core). The
+generated logs of this revision were deleted after embedding.

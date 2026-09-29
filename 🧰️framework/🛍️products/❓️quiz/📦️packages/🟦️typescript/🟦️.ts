@@ -7,3 +7,4 @@ export * from "../../🔨️modules/📏️scoring/🟦️.ts";
 export * from "../../🔨️modules/🏅️badges/🟦️.ts";
 export * from "../../🔨️modules/🧾️lifecycle/🟦️.ts";
 export * from "../../🔨️modules/👁️views/🟦️.ts";
+export * from "../../🔨️modules/👥️presence/🟦️.ts";

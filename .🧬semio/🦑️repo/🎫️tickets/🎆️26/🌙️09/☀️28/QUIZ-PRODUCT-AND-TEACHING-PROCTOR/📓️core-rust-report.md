@@ -279,3 +279,285 @@ input script. It extracts the trailing block, removes one indentation level and 
 
 **Taxonomy:** the new directories `🧪️tests/🔬️unit` under the eight owners follow the server product's existing
 precedent. If the taxonomy registry needs entries for them, that is site-infra's job.
+
+## 2026-09-29
+
+### Contract change (design §14): required quiz emoji
+
+`Quiz.emoji` and `CatalogQuizView.emoji` are now required strings of 1–16 code points.
+
+- **`🧬️schema/🦀️.rs`:** `Quiz` gains `pub emoji: String` after `id`, and `CatalogQuizView` gains
+  `pub emoji: String` after `id`. Both are required on the wire; a missing field is a serde error.
+- **`quiz_issues`:** reports `length-invalid` at `/emoji` for 0 or more than 16 code points. This is the same rule
+  and code the TS twin now uses (`string(json.emoji, "/emoji", report, 1, 16)`); the TS twin's `required` for a missing
+  field is a deserialization error in Rust.
+  - Neither twin checks "one emoji grapheme". The JSON Schema only constrains the length, and a grapheme check would
+    need Unicode segmentation, which is a library.
+- **`catalog_view`:** copies `quiz.emoji` into `CatalogQuizView`.
+- **Tests:**
+  - The shared test quiz carries `⚡`, and the structure test now also expects `/emoji` `length-invalid`.
+  - The new test `quiz_emoji_is_required_and_holds_one_to_sixteen_code_points` accepts `⚡`, `❄️`, a ZWJ family and 16
+    code points. It rejects `""` and 17 code points, and asserts that a document without `emoji` fails to deserialize.
+  - `catalog_view_is_solution_free` asserts the copied emoji.
+  - The regenerated shared fixtures (16:30) already carry quiz emojis, and every fixture test holds against them.
+- **`teaching-proctor`:** I made only the edits the field requires. `⚡` went into `🧫️fixtures/⚡️power/🔣️.json` and
+  `🏠` into `🧫️fixtures/🏠️homes/🔣️.json`. The inline test document in
+  `🔨️modules/📚️catalog/🧪️tests/🔬️unit/🦀️.rs` (`quiz_document`) got `"emoji":"🧪"`. The site content quizzes
+  already carried emojis.
+
+### Commands and results
+
+| Command | Result |
+|---|---|
+| `RUSTC_WRAPPER="" cargo test --no-fail-fast -p semio-framework-quiz -p teaching-proctor` | quiz **72 passed**; proctor unit **38**, conformance **14**, end-to-end **2** passed; 0 failed |
+| `RUSTC_WRAPPER="" cargo clippy -p semio-framework-quiz -p teaching-proctor --all-targets` | 0 findings in quiz or proctor sources |
+| `RUSTC_WRAPPER="" RUSTDOCFLAGS="-D warnings" cargo doc -p semio-framework-quiz --no-deps` | clean |
+| `cargo run -p teaching-proctor --bin proctor -- check 🎓️teaching/🏛️architecture/❓️quiz/🔣️.json` | exit 0: 4 quizzes, 7 badges |
+| `bun ./📜️script.ts contract --owner "🧰️framework/🛍️products/❓️quiz"` | 0 breaches under `❓️quiz` and under `🎓️teaching` |
+| `bun ./📜️script.ts parity exhaustive --owner "🧰️framework/🛍️products/❓️quiz"` | `parity=75/75` |
+
+### Shared presence and cursors (design §15) — module `🔨️modules/👥️presence/`
+
+The module emoji `👥️` is the taxonomy's registered emoji for `presence`. The TS twin belongs beside it as
+`🔨️modules/👥️presence/🟦️.ts`.
+
+**Schema twins in `🧬️schema/🦀️.rs`, region Presence:**
+
+```rust
+pub enum Screen { Introduction, Identity, Home, Run, Results, Leaderboard }            // kebab-case strings
+pub struct Place { pub screen: Screen, pub quiz: Option<Slug>, pub task: Option<Slug> }  // optional fields omitted when None
+pub type Anchor = String;                                                                // ^[a-z0-9]+(?:[:-][a-z0-9]+)*$, 1…64
+pub struct Cursor { pub anchor: Anchor, pub x: f64, pub y: f64 }
+pub struct PresenceState { pub tag: String, pub identity: Identity, pub place: Place, pub active: bool }
+pub struct CursorState { pub tag: String, pub cursor: Option<Cursor>, pub focus: Option<Anchor> }
+```
+
+All structs use `deny_unknown_fields`. Unknown members (for example a `learner` id or an `item`), unknown screens and
+missing required fields are serde errors.
+
+**API, re-exported as `quiz::*`:**
+
+```rust
+pub fn roster_scope(catalog: &str) -> String                                   // "<catalog>"
+pub fn room_scope(catalog: &str, place: &Place) -> Option<String>              // "<catalog>/introduction|home|leaderboard", run|results → "<catalog>/quiz/<quiz>"; None for identity (no tag yet, shared with nobody) and for run|results without quiz; the task never splits a room
+pub fn presence_issues(state: &PresenceState) -> Vec<ValidationIssue>         // all, sorted by path then code (TS presenceIssues)
+pub fn cursor_issues(state: &CursorState) -> Vec<ValidationIssue>             // all, sorted by path then code (TS cursorIssues)
+pub fn presence_problem(state: &PresenceState) -> Option<ValidationIssue>      // first of presence_issues; None = admit
+pub fn cursor_problem(state: &CursorState) -> Option<ValidationIssue>          // first of cursor_issues; None = admit
+pub fn is_tag(value: &str) -> bool                                             // ^[0-9a-f]{8}$
+pub fn is_anchor(value: &str) -> bool                                          // ^[a-z0-9]+(?:[:-][a-z0-9]+)*$ and ≤ 64
+```
+
+**Problem codes.** They extend the shared `IssueCode` vocabulary with `tag-invalid`, `anchor-invalid`,
+`out-of-range`, `quiz-outside-run` and `task-without-run`. They are identical to the TS twin's
+`presenceIssues`/`cursorIssues` in `✅️validation/🟦️.ts`, whose code I read after it landed and aligned to. The problem
+returned is the first in path-then-code order.
+
+| Path | Code | When |
+|---|---|---|
+| `/tag` | `tag-invalid` | not 8 lowercase hex digits |
+| `/identity/handle` | `length-invalid` | pseudonym or name handle outside 1…64 code points |
+| `/place/quiz`, `/place/task` | `slug-invalid` | not a slug |
+| `/place/quiz` | `required` | a `run` or `results` place without a quiz (so `room_scope` is always defined for an admitted state) |
+| `/place/quiz` | `quiz-outside-run` | a quiz on any screen other than `run` or `results` |
+| `/place/task` | `task-without-run` | a task on any screen other than `run` |
+| `/cursor/anchor`, `/focus` | `anchor-invalid` | not an anchor |
+| `/cursor/x`, `/cursor/y` | `out-of-range` | not a finite number in 0…1 |
+
+**Proctor usage (`presence_admission(scope, state)`):**
+1. If `scope == roster_scope(catalog)`, parse the state as `PresenceState` and refuse on a serde error or on
+   `presence_problem`.
+2. Otherwise, if the scope is one of the room scopes (`<catalog>/introduction`, `<catalog>/home`,
+   `<catalog>/leaderboard`, plus `"<catalog>/quiz/<id>"` for each catalog quiz), parse it as `CursorState` and
+   refuse on `cursor_problem`. The identity screen has no room.
+3. Refuse any other scope.
+
+A suitable refusal reason is `format!("{} at {}", issue.code.as_str(), issue.path)`. Optionally, the proctor can also
+require `state.tag == quiz::learner_tag(<principal learner id>)`.
+
+**Tests:** `🔨️modules/👥️presence/🧪️tests/🔬️unit/🦀️.rs`, wired by `#[cfg(test)] #[path] mod tests;`, has 6 tests:
+- every screen's room, including identity → `None` and no task splitting;
+- the presence admission table;
+- the place rules, with full sorted issue lists;
+- the cursor admission table, including NaN and ±∞;
+- the shared vectors of `🧫️fixtures/👥️shared-presence` (10 scope vectors, 27 presence, 26 cursor). Admitted means the
+  state parses with serde and `*_problem` is `None`; every vector agrees with the Python oracle.
+- the wire shapes, including refusal of unknown members and unknown screens.
+
+**Coordinator decisions applied:**
+- The identity screen has no room: `room_scope` returns `None` for it, matching the TS twin and the regenerated
+  fixture.
+- `quiz-outside-run` and `task-without-run` are enforced, matching the TS twin and the fixture.
+
+**Results:**
+
+| Command | Result |
+|---|---|
+| `RUSTC_WRAPPER="" cargo test --no-fail-fast -p semio-framework-quiz -p teaching-proctor` | quiz **78 passed**; proctor 33 + 14 + 2 passed; 0 failed |
+| `RUSTC_WRAPPER="" cargo clippy -p semio-framework-quiz -p teaching-proctor --all-targets` | 0 findings in quiz or proctor sources |
+| `RUSTC_WRAPPER="" RUSTDOCFLAGS="-D warnings" cargo doc -p semio-framework-quiz --no-deps` | clean |
+| `bun ./📜️script.ts contract --owner "🧰️framework/🛍️products/❓️quiz"` | 0 breaches under `❓️quiz` |
+| `bun ./📜️script.ts parity exhaustive --owner "🧰️framework/🛍️products/❓️quiz"` | `cases=11 executed=84 passed=84 parity=84/84` |
+
+### Design §16: new screens `quiz`, `learner`, `badges`, `preferences`
+
+**Schema (`🧬️schema/🦀️.rs`):**
+- `Screen` gains `Quiz`, `Learner`, `Badges` and `Preferences`, in schema order: introduction, identity, home, quiz,
+  run, results, leaderboard, learner, badges, preferences.
+- New constant `pub const SCREENS: [Screen; 10]` in schema order, the twin of TS `SCREENS`, so consumers can derive
+  rooms from `room_scope` alone.
+
+**`room_scope` (`👥️presence/🦀️.rs`):**
+
+| Screen | Room |
+|---|---|
+| `quiz`, `run`, `results` | `<catalog>/quiz/<quiz>`; `None` without a quiz |
+| `badges` | `<catalog>/badges` |
+| `introduction`, `home`, `leaderboard` | unchanged |
+| `identity`, `learner`, `preferences` | `None` |
+
+**`presence_issues`:** the codes are unchanged, but the screen sets change.
+- `required` at `/place/quiz` now covers the quiz, run and results screens without a quiz.
+- `quiz-outside-run` covers a quiz on any other screen, including badges, learner and preferences.
+- `task-without-run` still applies to a task on any screen except run, including the quiz screen.
+
+This is identical to the TS twin's `roomScope` switch, which I checked after it landed.
+
+**Tests (`👥️presence/🧪️tests/🔬️unit/🦀️.rs`):**
+- The room table covers all new screens.
+- The place-rule test covers: a quiz page with a quiz (admitted), without one (`required`), and with a task
+  (`task-without-run`); and badges, learner and preferences with a quiz (`quiz-outside-run`) or without one (admitted).
+
+**`teaching-proctor`:** this was a minimal change. `Rooms::of` in `🔨️modules/👥️presence/🦀️.rs` used a fixed page
+list (`Introduction, Home, Leaderboard`), so `<catalog>/badges` was not admitted.
+- It now maps every screen in `quiz::SCREENS` through `room_scope`, which admits `<catalog>/badges` and leaves the
+  personal pages without rooms. Future screens need no proctor change.
+- I also updated its module doc and three tests:
+  - `🔨️modules/👥️presence/🧪️tests/🔬️unit/🦀️.rs`: the scope list includes `proctor-fixture/badges`; `learner` and
+    `preferences` are not rooms; the cursor admission loop includes badges.
+  - `🔨️modules/🧩️instance/🧪️tests/🔬️unit/🦀️.rs`: the policy admits join and publish on `proctor-fixture/badges` and
+    denies `learner` and `preferences`.
+
+**Results:**
+
+| Command | Result |
+|---|---|
+| `RUSTC_WRAPPER="" cargo test --no-fail-fast -p semio-framework-quiz -p teaching-proctor` | quiz **78 passed**; proctor unit **39**, conformance **14**, end-to-end **4** passed; 0 failed |
+| `RUSTC_WRAPPER="" cargo clippy -p semio-framework-quiz -p teaching-proctor --all-targets` | 0 findings in quiz or proctor sources |
+| `RUSTC_WRAPPER="" RUSTDOCFLAGS="-D warnings" cargo doc -p semio-framework-quiz --no-deps` | clean |
+| `bun ./📜️script.ts contract --owner "🧰️framework/🛍️products/❓️quiz"` | 0 breaches under `❓️quiz` and under `🎓️teaching` |
+| `bun ./📜️script.ts parity exhaustive --owner "🧰️framework/🛍️products/❓️quiz"` | `cases=11 executed=84 passed=84 parity=84/84` |
+
+### Design §17: crowd view, thinking room, item and category anchors, drag (published first; normative for the TS twin)
+
+**Schema twins (`🧬️schema/🦀️.rs`):**
+
+```rust
+pub struct CrowdCount { pub key: String, pub count: usize }
+pub struct CrowdItem { pub item: Slug, pub answers: usize, pub counts: Option<Vec<CrowdCount>>, pub mean_position: Option<f64> }   // wire: meanPosition; None fields omitted
+pub struct CrowdTask { pub task: Slug, pub kind: TaskKind, pub dimension: Option<Slug>, pub items: Vec<CrowdItem> }
+pub struct CrowdView { pub quiz: Slug, pub runs: usize, pub tasks: Vec<CrowdTask> }
+pub struct CursorDrag { pub item: Slug }                                        // the inline `drag` object
+pub struct CursorState { pub tag: String, pub cursor: Option<Cursor>, pub focus: Option<Anchor>, pub drag: Option<CursorDrag> }
+pub struct ThinkingState { pub tag: String, pub answers: BTreeMap<Slug, ThinkingAnswer> }
+pub enum ThinkingAnswer { Classification(ClassificationAnswer), Sorting(SortingAnswer), Matching(ThinkingMatchingAnswer) }   // tag "kind"
+pub struct ThinkingMatchingAnswer { pub values: BTreeMap<Slug, BTreeMap<Slug, f64>> }   // dimension → item → value (card indices are publisher-local and never shared)
+pub enum Query { …, Crowd { quiz: Slug } }                                      // {"type":"crowd","quiz":…}; type_name "crowd"
+```
+
+**API, re-exported as `quiz::*`:**
+
+```rust
+pub fn crowd_view<R: Borrow<RunResult>>(quiz: &Quiz, results: &[R]) -> CrowdView   // 👁️views
+pub fn json_number_text(value: f64) -> String                                       // 👁️views (TS jsonNumberText)
+pub fn thinking_scope(catalog: &str, quiz: &str) -> String                         // 👥️presence: "<catalog>/quiz/<quiz>/thinking"
+pub const THINKING_LIMIT: usize = 64;                                               // 👥️presence
+pub fn thinking_issues(state: &ThinkingState) -> Vec<ValidationIssue>               // 👥️presence, sorted by path then code
+pub fn thinking_problem(state: &ThinkingState) -> Option<ValidationIssue>           // first of thinking_issues; None = admit
+```
+
+`cursor_issues` and `cursor_problem` keep their signatures and gain the drag rule below.
+
+**`crowd_view(quiz, results)`, exact definition:**
+- **Results:** only results with `result.quiz == quiz.id` count; `runs` is their number. A task result counts only when
+  its `task` equals the quiz task's id and its kind equals the quiz task's kind.
+- **Tasks:** every quiz task in definition order, always present even with no items. A matching task yields one
+  `CrowdTask` per dimension in definition order, with `dimension: Some(id)`. The other kinds have `dimension: None`.
+- **Items:** the quiz task's items in definition order. An item is left out when no counted result answered it.
+  `answers` is the number of counted results that contain the item (per dimension for matching).
+- **Classification:** `counts` per assigned category id, and no `meanPosition`.
+- **Matching:** `counts` per assigned value, keyed by `json_number_text(assigned)`, and no `meanPosition`.
+- **Count order:** counts are in ascending key order by code point (UTF-8 byte order; Rust `BTreeMap` order). This
+  applies to value keys too, so `"120" < "18" < "5"`.
+- **Sorting:** `meanPosition` is set and `counts` is omitted. Each result contributes the normalized position
+  `position / (n − 1)`, where `position` is the item's zero-based position in the learner's order and `n` is the
+  number of items in that result's sorting (`0` when `n < 2`). The mean sums these in result order starting at `0`,
+  then divides by `answers`.
+
+**`json_number_text(v)`** is ECMAScript `Number.prototype.toString` (= `String(v)` = `JSON.stringify(v)` for finite
+`v`), verified against bun's `String(v)` on 25 values:
+- It uses the shortest round-trip digits.
+- It uses plain notation for decimal exponents −7 < e < 21, and otherwise `d.ddd e±x` without spaces, e.g. `1e+21` and
+  `1.5e-7`.
+- `-0` renders as `"0"`. NaN and ±∞ render as `"NaN"` and `"±Infinity"`, which cannot occur for quiz values.
+- Examples: `42.6`, `50`, `0.027`, `0.30000000000000004`, `100000000000000000000`, `1e+21`, `0.000001`, `1e-7`, `-3.5`.
+
+**Cursor rules (`cursor_issues`):**
+- An anchor (`/cursor/anchor` or `/focus`) only needs to match the one Anchor pattern, which covers cards,
+  `item:<id>` and `category:<id>`, else `anchor-invalid`. I first published an extra "slug after `item:`/`category:`"
+  rule, then dropped it to match the TS twin and the conformance vectors.
+- `drag.item` must be a slug, else `slug-invalid` at `/drag/item`.
+
+**`thinking_issues(state)` (paths are JSON Pointers with RFC 6901 escaping; limit = `THINKING_LIMIT` = 64):**
+
+| Path | Code | When |
+|---|---|---|
+| `/tag` | `tag-invalid` | not 8 lowercase hex digits |
+| `/answers` | `too-many` | more than 64 tasks |
+| `/answers/<task>` | `slug-invalid` | task key not a slug |
+| `/answers/<task>/assignments` | `too-many` | classification assignments beyond 64 |
+| `/answers/<task>/assignments/<item>` | `slug-invalid` | classification item key or category value not a slug |
+| `/answers/<task>/order` | `too-many` | sorting order beyond 64 |
+| `/answers/<task>/order/<index>` | `slug-invalid` | not a slug |
+| `/answers/<task>/order/<index>` | `duplicate-id` | an item repeated at a later index |
+| `/answers/<task>/values` | `too-many` | matching dimensions beyond 64 |
+| `/answers/<task>/values/<dimension>` | `slug-invalid` | dimension key not a slug |
+| `/answers/<task>/values/<dimension>` | `too-many` | more than 64 items in the dimension |
+| `/answers/<task>/values/<dimension>/<item>` | `slug-invalid` | item key not a slug |
+| `/answers/<task>/values/<dimension>/<item>` | `type-invalid` | value not a finite number |
+
+Partial answers are fine: thinking is a draft and is never checked against a sheet. There is one new code, `too-many`.
+
+The matching rows follow the coordinator's contract change to `ThinkingAnswer`/`ThinkingMatchingAnswer { values }`.
+Semantic values replace the publisher-local card indices, so the earlier card-index `out-of-range` rule is gone. A
+matching draft still carrying `assignments` is a serde error.
+
+**Differences from the TS twin (for the TS agent):**
+- **Count key order:** TS `counted(keys, numeric)` sorts matching value keys numerically (`"50" < "120"`). The Rust
+  twin, my published definition and the Python oracle of `🧫️fixtures/📊️crowd-view` all use code point order for
+  every key (`"120" < "50"`); the fixture vectors `energy-three-runs` (`['120', '50']`, `['0', '0.2']`) hold for Rust.
+  TS must switch to code point order.
+- **Thinking values:** the TS validation still checks thinking drafts against the old matching `assignments` shape
+  (card indices). It needs the `values` rules in the table above.
+
+**Tests:**
+- 🔬️unit views: `json_number_text` against 25 JavaScript `String(v)` vectors; crowd counts, mean positions, dimensions,
+  key order and JSON shape; empty quiz; all shared `📊️crowd-view` vectors.
+- 🔬️unit presence: item and category anchors and drag; thinking drafts with values, the full sorted issue list, NaN/∞,
+  `assignments` refused; every limit; all shared `👥️shared-presence` vectors, including `thinkingScopes` and
+  `thinking`.
+
+**Results:**
+
+| Command | Result |
+|---|---|
+| `RUSTC_WRAPPER="" cargo test --no-fail-fast -p semio-framework-quiz -p teaching-proctor` | quiz **85 passed**; proctor unit **44**, conformance **14**, end-to-end **5** passed; 0 failed |
+| `RUSTC_WRAPPER="" cargo clippy -p semio-framework-quiz --all-targets` | 0 findings in quiz sources |
+| `RUSTC_WRAPPER="" RUSTDOCFLAGS="-D warnings" cargo doc -p semio-framework-quiz --no-deps` | clean |
+| `bun ./📜️script.ts contract --owner "🧰️framework/🛍️products/❓️quiz"` | 0 breaches under `❓️quiz` and under `🎓️teaching` |
+| `bun ./📜️script.ts parity exhaustive --owner "🧰️framework/🛍️products/❓️quiz"` | `cases=12 executed=93 passed=93 parity=93/93` |
+
+**Proctor usage:**
+- Admit `thinking_scope(catalog, quiz)` for every catalog quiz. Parse the state as `ThinkingState` and refuse on a
+  serde error or on `thinking_problem`.
+- Fold `run-submitted` results per quiz and answer `quiz.crowd` with `crowd_view(&quiz, &results)`.

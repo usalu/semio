@@ -27,6 +27,8 @@ export default {
       "../../🧪️tests/🔁️run-lifecycle/🟦️.ts",
       "../../🧪️tests/👁️read-views/🟦️.ts",
       "../../🧪️tests/🗃️shared-vectors/🟦️.ts",
+      "../../🧪️tests/🫂️presence-roster/🟦️.ts",
+      "../../🧪️tests/🗳️crowd-answers/🟦️.ts",
     ],
     coverage: { include: ["🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/🟦️.ts"] },
     passWithNoTests: false,

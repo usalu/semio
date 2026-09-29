@@ -11,13 +11,10 @@ import { earnedBadges } from "../🏅️badges/🟦️.ts";
 import { runSeed } from "../🎲️randomness/🟦️.ts";
 import { sheetOf } from "../🃏️sheet/🟦️.ts";
 import { scoreRun } from "../📏️scoring/🟦️.ts";
-import { answerComplete, answerRejection } from "../✅️validation/🟦️.ts";
+import { answerComplete, answerRejection, normalizeHandle } from "../✅️validation/🟦️.ts";
 
 /** ⚖️ The outcome of a decision: the events to append, or why the command is rejected. */
 export type Decision = { readonly events: readonly Event[] } | { readonly rejection: Rejection };
-
-/** 🪪️ A normalised handle: what learners see and the key the roster indexes. */
-export type NormalizedHandle = { readonly display: string; readonly key: string };
 
 /** 🗂️ The roster: which learner holds each handle key. */
 export type RosterState = { readonly handles: Readonly<Record<string, string>> };
@@ -49,16 +46,6 @@ export type LearnerState = {
   readonly badges: readonly BadgeAward[];
   readonly lastActivity?: Timestamp;
 };
-
-const WHITESPACE = /\p{White_Space}+/gu;
-const HANDLE_MAX = 64;
-
-/** ✂️ The display handle (trimmed, inner Unicode whitespace runs collapsed to one space) and its key (lowercased), or `undefined` outside 1…64 code points. */
-export function normalizeHandle(handle: string): NormalizedHandle | undefined {
-  const display = handle.replace(WHITESPACE, " ").replace(/^ | $/gu, "");
-  const length = [...display].length;
-  return length >= 1 && length <= HANDLE_MAX ? { display, key: display.toLowerCase() } : undefined;
-}
 
 /** 🌱️ The roster before any learner registered. */
 export function emptyRosterState(): RosterState {

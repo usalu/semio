@@ -1,25 +1,26 @@
-# 🏛️ Architecture — quizze.architektur-und-technologie.de
+# 🏛️ Architecture — quizzes.architektur-und-technologie.de
 
 The quiz site for architecture and technology students: it trains the feeling for the numbers behind energy-efficient
-buildings. The site offers the catalog [`❓️quiz/🔣️.json`](❓️quiz/🔣️.json) (id `architecture`, title
-"Architecture and Technology Quizzes" / "Quizze Architektur und Technologie") through the
-[proctor](../🛂️proctor), which records runs, scores, badges and the leaderboard.
+buildings. The site `https://quizzes.architektur-und-technologie.de` offers the catalog [`❓️quiz/🔣️.json`](❓️quiz/🔣️.json)
+(id `architecture`, title "Architecture and Technology Quizzes" / "Quizze Architektur und Technologie") through the
+[proctor](../🛂️proctor) at `https://proctor.quizzes.architektur-und-technologie.de`, which records runs, scores, badges
+and the leaderboard.
 
 | Part | Where |
 |---|---|
 | Catalog: introduction, quiz paths, badges | `❓️quiz/🔣️.json` |
-| Web package `@teaching/architecture-quiz` (vite, dev port 6061, proxies the gateway routes to the proctor on 8791; develop, check and test via the launch rows in [its README](❓️quiz/README.md)) | `❓️quiz/📦️packages/🟦️typescript` |
-| Deployment (two-stage image, compose on `127.0.0.1:8791`, Caddy with automatic TLS) | `❓️quiz/🚀️deploy` |
+| Web package `@teaching/architecture-quiz`: static build for the CDN with the proctor origin baked in; in development vite on port 6061 proxies the gateway routes to the proctor on 8791 (develop, check, test and publish via the launch rows in [its README](❓️quiz/README.md)) | `❓️quiz/📦️packages/🟦️typescript` |
+| Deployment: the site as a static artifact on a CDN; the proctor as an API-only Docker image with Caddy (automatic TLS) for `proctor.quizzes.architektur-und-technologie.de` | see the site and [proctor](../🛂️proctor/README.md) READMEs |
 | Quizzes | `⚡️energy/<topic>/❓️quiz/🔣️.json` |
 
 ## Quizzes
 
 | Quiz | Tasks (kind, items, drawn per run) | What it trains |
 |---|---|---|
-| `physics` — Physical Understanding / Physikalisches Verständnis | power or energy? (classification, 16, 12); powers from tea light to Sun (sorting, 14, 10, W); energies from phone charge to world energy use (sorting, 12, 9, Wh) | telling rates from amounts; orders of magnitude over 25 decades |
-| `heating` — Heating / Heizen | U-values of building components (matching, 17, 10, W/(m²·K)); heating load and heating demand of buildings (matching with two dimensions, 11, 8, W/m² and kWh/(m²·a)) | envelope quality from single glazing to the passive-house roof; building age and standard |
-| `cooling` — Cooling / Kühlen | air change rates by use (matching, 15, 10, 1/h); cooling load and cooling demand (matching with two dimensions, 9, 7, W/m² and kWh/(m²·a)) | ventilation from warehouse to cleanroom; internal and solar loads, full-load hours |
-| `demand` — Energy Demand / Energiebedarf | energy standards and their spider-diagram profiles (classification, 6 standards onto 6 profiles); final energy demand of buildings with their supply systems (matching, 9, 7, kWh/(m²·a)) | how envelope, airtightness, heat recovery and supply system add up |
+| 🧲 `physics` — Physical Understanding / Physikalisches Verständnis | power or energy? (classification, 16, 12); powers from tea light to Sun (sorting, 14, 10, W); energies from phone charge to world energy use (sorting, 12, 9, Wh) | telling rates from amounts; orders of magnitude over 25 decades |
+| 🔥 `heating` — Heating / Heizen | U-values of building components (matching, 17, 10, W/(m²·K)); heating load and heating demand of buildings (matching with two dimensions, 11, 8, W/m² and kWh/(m²·a)) | envelope quality from single glazing to the passive-house roof; building age and standard |
+| ❄️ `cooling` — Cooling / Kühlen | air change rates by use (matching, 15, 10, 1/h); cooling load and cooling demand (matching with two dimensions, 9, 7, W/m² and kWh/(m²·a)) | ventilation from warehouse to cleanroom; internal and solar loads, full-load hours |
+| 📊 `demand` — Energy Demand / Energiebedarf | energy standards and their spider-diagram profiles (classification, 6 standards onto 6 profiles); final energy demand of buildings with their supply systems (matching, 9, 7, kWh/(m²·a)) | how envelope, airtightness, heat recovery and supply system add up |
 
 All magnitudes use logarithmic scales, so confusing neighbours costs little and confusing orders of magnitude costs a
 lot (design §6 of the ticket `QUIZ-PRODUCT-AND-TEACHING-PROCTOR`).

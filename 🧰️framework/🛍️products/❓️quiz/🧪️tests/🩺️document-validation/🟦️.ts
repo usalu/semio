@@ -24,6 +24,7 @@ function physics(): Mutable {
     $schema: "../../🧬️schema/🔣️.json",
     schema: "semio.quiz/v1",
     id: "physics",
+    emoji: "🧲",
     title: T("Physics", "Physik"),
     description: T("Power and energy", "Leistung und Energie"),
     tasks: [
@@ -138,6 +139,10 @@ describe("quizIssues", () => {
     ["a foreign schema", (quiz) => (quiz.schema = "semio.quiz/v2"), [{ path: "/schema", code: "value-invalid" }]],
     ["an invalid slug", (quiz) => (quiz.id = "Physics"), [{ path: "/id", code: "slug-invalid" }]],
     ["a too long slug", (quiz) => (quiz.id = "a".repeat(65)), [{ path: "/id", code: "slug-invalid" }]],
+    ["a missing emoji", (quiz) => delete quiz.emoji, [{ path: "/emoji", code: "required" }]],
+    ["an empty emoji", (quiz) => (quiz.emoji = ""), [{ path: "/emoji", code: "length-invalid" }]],
+    ["an emoji of 17 code points", (quiz) => (quiz.emoji = "🧲".repeat(17)), [{ path: "/emoji", code: "length-invalid" }]],
+    ["a numeric emoji", (quiz) => (quiz.emoji = 1), [{ path: "/emoji", code: "type-invalid" }]],
     ["an empty text", (quiz) => (quiz.title.de = ""), [{ path: "/title/de", code: "length-invalid" }]],
     ["a text without German", (quiz) => delete quiz.description.de, [{ path: "/description/de", code: "required" }]],
     ["a text with a third language", (quiz) => (quiz.description.fr = "x"), [{ path: "/description/fr", code: "property-unknown" }]],
@@ -180,6 +185,10 @@ describe("quizIssues", () => {
     ["a value for an unknown dimension", (quiz) => (quiz.tasks[2].items[1].values.cost = 3), [{ path: "/tasks/2/items/1/values/cost", code: "dimension-unknown" }]],
   ];
   for (const [name, mutate, expected] of semantic) it(`reports ${name} beyond the schema`, () => expect(checkedQuiz(mutated(mutate))).toEqual(expected));
+
+  it("counts emoji length in code points, so joined and flagged emojis and 16 code points pass", () => {
+    for (const emoji of ["🧑‍🏫", "❄️", "🇨🇭", "🧲".repeat(16)]) expect(checkedQuiz(mutated((quiz) => (quiz.emoji = emoji))), emoji).toEqual([]);
+  });
 
   it("accepts zero and negative values on linear scales and a draw equal to the item count", () => {
     expect(

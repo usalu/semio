@@ -121,6 +121,11 @@ export function formatInstant(at: number, locale: QuizLocale): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(at);
 }
 
+/** ⏰️ An instant (ms since the epoch) as a short time of day in `locale`. */
+export function formatClock(at: number, locale: QuizLocale): string {
+  return new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(at);
+}
+
 /** 📅️ An instant (ms since the epoch) as a medium date in `locale`. */
 export function formatDate(at: number, locale: QuizLocale): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(at);

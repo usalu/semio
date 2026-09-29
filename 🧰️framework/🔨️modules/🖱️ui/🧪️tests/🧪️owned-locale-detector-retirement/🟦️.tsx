@@ -786,6 +786,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         top: { depth: 24, chips: [{ left: 0, right: 60 }] },
         bottom: { depth: 0, chips: [] },
       });
+      Object.defineProperty(stack, "offsetWidth", { configurable: true, value: 400 });
+      Object.defineProperty(stack, "offsetHeight", { configurable: true, value: 200 });
+      expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+        width: 400,
+        height: 200,
+        top: { depth: 48, chips: [{ left: 0, right: 120 }] },
+        bottom: { depth: 0, chips: [] },
+      });
+      Reflect.deleteProperty(stack, "offsetWidth");
+      Reflect.deleteProperty(stack, "offsetHeight");
       stack.setAttribute("data-silhouette-remeasure", "1");
       await waitFor(() => {
         const border = container.querySelector('[data-slot="mode-dock-silhouette-border"]');

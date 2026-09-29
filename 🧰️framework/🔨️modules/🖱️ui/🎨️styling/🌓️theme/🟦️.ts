@@ -86,6 +86,11 @@ export function uiSpacingRem(multiplier: number): string {
   return `${multiplier * COMPACT_UI_SPACING_REM}rem`;
 }
 
+/** 📏️ A ui-spacing multiplier as a CSS length that follows the live `--ui-spacing` (compact or touch). */
+export function uiSpacingLen(multiplier: number): string {
+  return `calc(${multiplier} * var(--ui-spacing))`;
+}
+
 /** 📐️ Converts a ui-spacing multiplier to px at the compact reference root. */
 export function uiSpacingPx(multiplier: number, rootPx = STYLING_COMPACT_ROOT_PX): number {
   return multiplier * COMPACT_UI_SPACING_REM * rootPx;

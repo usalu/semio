@@ -248,8 +248,8 @@ pub trait PrincipalResolver: Send + Sync {
 /// and no rung is hard-coded into this crate. First match wins, so the most specific rung is pushed
 /// first and the broadest last.
 ///
-/// `R` is the instance's rung type — [`ServerInstance::Resolvers`](crate::gateway::ServerInstance::
-/// Resolvers). An instance with one rung names that rung directly; an instance with several closes
+/// `R` is the instance's rung type — [`ServerInstance::Resolvers`](crate::gateway::ServerInstance::Resolvers).
+/// An instance with one rung names that rung directly; an instance with several closes
 /// them into one enum in its own crate. This module deliberately holds no
 /// rung of its own, so there is nothing here for an instance to inherit or work around.
 pub struct ResolverChain<R: PrincipalResolver> {

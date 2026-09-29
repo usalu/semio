@@ -1,30 +1,30 @@
-# 🐳️ quizze.architektur-und-technologie.de — the production service, matching the Dockerfile beside this file.
+# 🐳️ The architecture quiz proctor stack (`proctor.quizzes.architektur-und-technologie.de`, see `🔣️.json`): the proctor
+# and Caddy, which terminates TLS with a certificate it obtains and renews itself. The whole host contract is DNS A/AAAA for
+# the proctor host, ports 80 and 443 (tcp and udp) open, and in this directory:
 #
-#   docker compose up --build --detach     first start and every update, run in this directory
-#   docker compose stop                    before a backup: the SQLite file is copied only while the proctor is stopped
+#   docker compose up -d        first start and every update (after `git pull`)
+#   docker compose stop proctor before a backup: the SQLite file is copied only while the proctor is stopped
 #
-# The build context is the repository root, because the builder stage compiles the site and the proctor from source; the
-# runtime image carries the binary, the built site and the catalog only.
+# The proctor image is pulled from the registry when it is not on the host (`pull_policy: missing`); `build:` compiles it
+# from this clone instead (`docker compose build` or `up --build`), e.g. on an architecture the registry does not carry.
+# Every default is overridable from the environment or an `.env` file beside this file: PROCTOR_HOST, PROCTOR_TAG,
+# PROCTOR_ALLOWED_ORIGINS, QUIZ_HTTP_PORT, QUIZ_HTTPS_PORT.
 
 name: architecture-quiz
 
 services:
   proctor:
+    image: ghcr.io/usalu/architecture-quiz-proctor:${PROCTOR_TAG:-latest}
+    pull_policy: missing
     build:
       context: ../../../..
       dockerfile: 🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile
-    image: semio/architecture-quiz:latest
-    # 🌐️ Published on the host's loopback only: the proctor speaks plain HTTP, so it belongs behind the TLS-terminating
-    # Caddy on this host. Inside the container the bind is 0.0.0.0, which a loopback bind would make unreachable.
-    ports:
-      - "127.0.0.1:8791:8791"
+    # 🔒️ Reachable by Caddy on the compose network only, never published: `PROCTOR_TRUSTED_FORWARDING=proxy` (baked into
+    # the image with the rest of the production configuration) is true by construction.
+    expose:
+      - "8791"
     environment:
-      PROCTOR_MODE: production
-      PROCTOR_BIND: 0.0.0.0
-      PROCTOR_PORT: "8791"
-      # 🛂️ A network bind in production mode is refused without BOTH of these, each naming itself.
-      PROCTOR_ALLOWED_ORIGINS: https://quizze.architektur-und-technologie.de
-      PROCTOR_TRUSTED_FORWARDING: proxy
+      PROCTOR_ALLOWED_ORIGINS: ${PROCTOR_ALLOWED_ORIGINS:-https://quizzes.architektur-und-technologie.de}
     volumes:
       # 🗄️ The whole durable state: proctor.sqlite with its WAL and SHM siblings. Backup unit = this volume, proctor stopped.
       - proctor-data:/srv/quiz/data
@@ -33,5 +33,25 @@ services:
     stop_grace_period: 30s
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2
+    ports:
+      - "${QUIZ_HTTP_PORT:-80}:80"
+      - "${QUIZ_HTTPS_PORT:-443}:443"
+      - "${QUIZ_HTTPS_PORT:-443}:443/udp"
+    environment:
+      PROCTOR_HOST: ${PROCTOR_HOST:-proctor.quizzes.architektur-und-technologie.de}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # 🔐️ ACME account and certificates; losing it re-issues certificates and can hit the CA's rate limits.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      proctor:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   proctor-data:
+  caddy-data:
+  caddy-config:

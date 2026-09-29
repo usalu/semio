@@ -20,6 +20,10 @@
     },
     {
       "method": "GET",
+      "path": "/scopes/{scope}/presence/ws"
+    },
+    {
+      "method": "GET",
       "path": "/actors/{tenant}/{kind}/{id}/events"
     },
     {
@@ -716,6 +720,124 @@
             "actorKinds": []
           }
         ]
+      }
+    },
+    {
+      "name": "presence-welcome",
+      "type": "presenceFrame",
+      "json": {
+        "type": "welcome",
+        "session": "0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+        "colour": 1,
+        "roster": [
+          {
+            "session": "00112233445566778899aabbccddeeff",
+            "colour": 0,
+            "surface": "home",
+            "state": {
+              "tag": "0a1b2c3d",
+              "cursor": {
+                "anchor": "task:powers",
+                "x": 0.25,
+                "y": 0.75
+              }
+            }
+          },
+          {
+            "session": "0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "colour": 1,
+            "surface": "home",
+            "state": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "presence-state",
+      "type": "presenceFrame",
+      "json": {
+        "type": "state",
+        "state": {
+          "tag": "0a1b2c3d",
+          "focus": "leaderboard"
+        }
+      }
+    },
+    {
+      "name": "presence-batch",
+      "type": "presenceFrame",
+      "json": {
+        "type": "batch",
+        "entries": [
+          {
+            "session": "00112233445566778899aabbccddeeff",
+            "colour": 0,
+            "surface": "home",
+            "state": {
+              "tag": "0a1b2c3d",
+              "cursor": {
+                "anchor": "home",
+                "x": 0.5,
+                "y": 0.125
+              }
+            }
+          }
+        ],
+        "left": [
+          "ffeeddccbbaa99887766554433221100"
+        ]
+      }
+    },
+    {
+      "name": "presence-refused",
+      "type": "presenceFrame",
+      "json": {
+        "type": "refused",
+        "reason": "state-too-large"
+      }
+    },
+    {
+      "name": "presence-watch",
+      "type": "presenceFrame",
+      "json": {
+        "type": "watch",
+        "scopes": ["architecture/leaderboard", "architecture/quiz/physics/thinking"],
+        "intervalMs": 250
+      }
+    },
+    {
+      "name": "presence-watched-snapshot",
+      "type": "presenceFrame",
+      "json": {
+        "type": "watched",
+        "scope": "architecture/leaderboard",
+        "entries": [
+          {
+            "session": "5d0c1e2f3a4b5c6d7e8f9a0b1c2d3e4f",
+            "colour": 2,
+            "surface": "leaderboard",
+            "state": { "tag": "0a1b2c3d", "cursor": { "anchor": "leaderboard", "x": 0.5, "y": 0.125 } }
+          }
+        ],
+        "left": [],
+        "snapshot": true
+      }
+    },
+    {
+      "name": "presence-watched",
+      "type": "presenceFrame",
+      "json": {
+        "type": "watched",
+        "scope": "architecture/quiz/physics/thinking",
+        "entries": [
+          {
+            "session": "9f8e7d6c5b4a39281706f5e4d3c2b1a0",
+            "colour": 5,
+            "surface": "run",
+            "state": { "tag": "4e5f6a7b", "answers": { "powers": { "kind": "sorting", "order": ["kettle", "laptop"] } } }
+          }
+        ],
+        "left": ["5d0c1e2f3a4b5c6d7e8f9a0b1c2d3e4f"]
       }
     }
   ]

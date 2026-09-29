@@ -4,12 +4,13 @@
  */
 
 import { StrictMode } from "react";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { decodeCommandEnvelope, decodeQueryEnvelope, encodeCommandOutcome, encodeQueryResult, type CommandEnvelope, type CommandOutcome, type EventRecord, type HttpRequest, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import {
   catalogView,
+  crowdView,
   decideLearner,
   decideRoster,
   emptyLearnerState,
@@ -31,7 +32,23 @@ import {
   type RecordAnswerCommand,
   type SheetTask,
 } from "@semio-tech/quiz";
-import { ProctorClient, ProctorUnavailable, QuizApp, QuizSession, formatQuantity, lastSubmittedRunOf, learnerName, localStore, memoryStorageOrigin, newId, openRunOf, quizText, type StorageArea } from "@semio-tech/quiz-react";
+import {
+  ProctorClient,
+  ProctorUnavailable,
+  QuizApp,
+  QuizSession,
+  formatQuantity,
+  lastSubmittedRunOf,
+  learnerName,
+  localStore,
+  memoryStorageOrigin,
+  newId,
+  openRunOf,
+  quizText,
+  type PresenceConnect,
+  type PresenceSocket,
+  type StorageArea,
+} from "@semio-tech/quiz-react";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
 
 const text = (en: string, de: string) => ({ en, de });
@@ -39,6 +56,7 @@ const text = (en: string, de: string) => ({ en, de });
 const QUIZ: Quiz = {
   schema: "semio.quiz/v1",
   id: "household",
+  emoji: "🏠",
   title: text("Household physics", "Haushaltsphysik"),
   description: text("Three small tasks.", "Drei kleine Aufgaben."),
   tasks: [
@@ -250,6 +268,11 @@ class FakeProctor {
       }
       case "leaderboard":
         return leaderboard([...this.learners.values()], this.view);
+      case "crowd":
+        return crowdView(
+          QUIZ,
+          [...this.learners.values()].flatMap((state) => state.runs.flatMap((run) => (run.result === undefined ? [] : [run.result]))),
+        );
     }
   }
 }
@@ -279,10 +302,17 @@ function seedAnonymousRival(proctor: FakeProctor): string {
 
 const TIMING = { minMs: 1, maxMs: 4 };
 
+/** 🔇️ Presence sockets that never open: the journey is about the proctor's commands and queries. */
+const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
+
+function navbar(): HTMLElement {
+  return screen.getByRole("navigation", { name: /^(?:Main navigation|Hauptnavigation)$/u });
+}
+
 function app(proctor: FakeProctor, storage: StorageArea) {
   return (
     <StrictMode>
-      <QuizApp proctor="" tenant={CATALOG.id} transport={() => proctor.transport} storage={storage} languages={["de-CH", "fr"]} timing={TIMING} />
+      <QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={storage} languages={["de-CH", "fr"]} timing={TIMING} />
     </StrictMode>
   );
 }
@@ -299,7 +329,11 @@ async function answerCurrentTask(user: ReturnType<typeof userEvent.setup>): Prom
     const order = (): string[] =>
       within(screen.getByRole("list", { name: "Order by Mass" }))
         .getAllByRole("listitem")
-        .map((item) => item.textContent?.replace(/[⠿↑↓\d]/gu, "") ?? "");
+        .map((item) => {
+          const label = item.cloneNode(true) as HTMLElement;
+          label.querySelector("[data-crowd-item]")?.remove();
+          return label.textContent?.replace(/[⠿↑↓\d]/gu, "") ?? "";
+        });
     for (const [position, label] of target.entries()) {
       while (order().indexOf(label) > position) {
         screen.getByRole("button", { name: `Move ${label} up` }).focus();
@@ -332,9 +366,14 @@ describe("🚶️ learner journey", () => {
 
     await screen.findByRole("heading", { level: 1, name: "Willkommen im Testkatalog" });
     await waitFor(() => expect(document.documentElement.lang).toBe("de"));
-    await user.click(screen.getByRole("button", { name: "English" }));
+    await user.click(within(navbar()).getByRole("button", { name: "English" }));
     expect(screen.getByRole("heading", { level: 1, name: "Welcome to the test catalog" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "English" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(navbar()).getByRole("button", { name: "English" }).getAttribute("aria-pressed")).toBe("true");
+    expect(
+      within(screen.getByRole("region", { name: "Settings" }))
+        .getByRole("button", { name: "English" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await screen.findByRole("heading", { level: 1, name: "How do you want to appear?" });
@@ -343,15 +382,16 @@ describe("🚶️ learner journey", () => {
     await user.type(screen.getByRole("textbox", { name: "Your pseudonym" }), "  Ada   Lovelace ");
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    await screen.findByText("Welcome, Ada Lovelace");
-    expect(screen.getByText("Signed in as Ada Lovelace")).toBeTruthy();
+    const learnerCard = await screen.findByRole("region", { name: "Ada Lovelace" });
+    expect(within(learnerCard).getByText("0 points")).toBeTruthy();
+    expect(within(learnerCard).getByText("0 of 1 quizzes played")).toBeTruthy();
     const identify = proctor.envelopes.find((envelope) => envelope.kind === "quiz.identify-learner")!;
     expect(identify.principal).toEqual({ kind: "anonymous" });
     expect(identify.target).toEqual({ tenant: CATALOG.id, kind: "quiz-roster", id: "roster" });
     expect(JSON.parse(decoder.decode(identify.payload)).identity).toEqual({ kind: "pseudonym", handle: "Ada Lovelace" });
-    const quizCard = screen.getByRole("article", { name: "Household physics" });
+    const quizCard = screen.getByRole("region", { name: "Household physics" });
     expect(within(quizCard).getByText("Not attempted yet")).toBeTruthy();
-    expect(screen.getAllByText("Not yet earned")).toHaveLength(2);
+    expect(within(screen.getByRole("region", { name: "Badges" })).getByText("0 of 2 badges earned")).toBeTruthy();
 
     await user.click(within(quizCard).getByRole("button", { name: "Start quiz" }));
     await screen.findByRole("heading", { level: 1, name: "Household physics" });
@@ -401,7 +441,12 @@ describe("🚶️ learner journey", () => {
       within(desertRow)
         .getAllByRole("cell")
         .map((cell) => cell.textContent),
-    ).toEqual(["Hot and dry", "Hot and dry", "✓ Correct (100%)", "Little rain, much sun."]);
+    ).toEqual(["Hot and dry", "Hot and dry", "✓ Correct (100%)", "All runs on Desert: Hot and dry 2×👥Hot and dry 2×", "Little rain, much sun."]);
+    expect(
+      within(climates)
+        .getAllByRole("columnheader")
+        .map((head) => head.textContent),
+    ).toContain("Everyone");
     const masses = screen.getByRole("region", { name: /Masses/u });
     expect(
       within(masses)
@@ -413,10 +458,10 @@ describe("🚶️ learner journey", () => {
     expect(within(lamps).getByRole("heading", { name: "Power: 100%" })).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Open the leaderboard" }));
-    await screen.findByRole("heading", { level: 1, name: "Leaderboard" });
     const table = await screen.findByRole("table", { name: "Leaderboard" });
+    expect(window.location.hash).toBe("#board");
     const description = screen.getByText(/^All learners with a submitted quiz/u);
-    expect(description.closest(".quiz-table-scroll")).toBeNull();
+    expect(table.parentElement?.contains(description)).toBe(false);
     expect(table.getAttribute("aria-describedby")).toBe(description.id);
     const rows = () => within(table).getAllByRole("row").slice(1);
     await waitFor(() => expect(rows()).toHaveLength(2));
@@ -437,15 +482,19 @@ describe("🚶️ learner journey", () => {
         .getAttribute("aria-sort"),
     ).toBe("descending");
     expect(within(rows()[0]!).getByRole("rowheader").textContent).toBe(`Anonymous #${learnerTag(rival)}`);
+    await user.click(screen.getByRole("button", { name: "Overview" }));
+    await screen.findByRole("region", { name: "Household physics" });
+    expect(window.location.hash).toBe("");
 
     cleanup();
     render(app(proctor, origin.tab()));
-    await screen.findByText("Welcome, Ada Lovelace");
+    await screen.findByRole("region", { name: "Ada Lovelace" });
     expect(screen.getByRole("heading", { level: 1, name: "Quizzes" })).toBeTruthy();
-    const card = screen.getByRole("article", { name: "Household physics" });
+    const card = screen.getByRole("region", { name: "Household physics" });
     await within(card).findByText("Best score: 100%");
     expect(within(card).getByRole("button", { name: "Start again" })).toBeTruthy();
-    expect(screen.getAllByText(/^Earned on /u)).toHaveLength(2);
+    expect(within(card).getByText(/^Earned here: /u).textContent).toContain("All done");
+    expect(within(screen.getByRole("region", { name: "Badges" })).getByText("2 of 2 badges earned")).toBeTruthy();
   });
 
   it("asks a device to identify again once the proctor does not know its learner beyond the projection grace", async () => {
@@ -586,7 +635,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
       },
     };
     const user = userEvent.setup();
-    render(<QuizApp proctor="" tenant={CATALOG.id} transport={() => transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={{ minMs: 60_000, maxMs: 60_000 }} />);
+    render(<QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={{ minMs: 60_000, maxMs: 60_000 }} />);
     await screen.findByText("The quiz server cannot be reached right now – trying again.");
     expect(screen.getByRole("heading", { level: 1, name: "Loading…" })).toBeTruthy();
     expect(screen.getByText("Connection lost – retrying")).toBeTruthy();
@@ -609,7 +658,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
         return proctor.transport.send(request);
       },
     };
-    render(<QuizApp proctor="" tenant={CATALOG.id} transport={() => transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={TIMING} />);
+    render(<QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={TIMING} />);
     expect(await screen.findAllByText("Connecting to the quiz server…")).toHaveLength(2);
     expect(screen.queryByText("All answers saved")).toBeNull();
     open();
@@ -621,8 +670,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
   it("lets long texts wrap at phone widths instead of clipping them", () => {
     expect(stylesheet).toMatch(/\.quiz-app \{[^}]*overflow-wrap: break-word;[^}]*\}/u);
     expect(stylesheet).toMatch(/\.quiz-app :where\(p, h1, h2, h3, h4, li, label, legend, summary, figcaption, dd, dt\) \{\s*overflow-wrap: anywhere;/u);
-    expect(stylesheet).not.toMatch(/\.quiz-table caption/u);
-    expect(stylesheet).toMatch(/\.quiz-table-scroll \{[^}]*overflow-x: auto;/u);
+    expect(stylesheet).toMatch(/\.quiz-home-grid \{[^}]*grid-template-columns: minmax\(0, 1fr\);/u);
   });
 
   it("closes a cached run another device submitted as soon as the learner view says so, dropping its stale answers", { timeout: 30_000 }, async () => {
@@ -665,8 +713,8 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
     expect(cached.record("outbox", stale.id)).toBeUndefined();
     expect((cached.record("runs", run) as { readonly status: string }).status).toBe("submitted");
     proctor.outage = false;
-    render(<QuizApp proctor="" tenant={CATALOG.id} transport={() => proctor.transport} storage={deviceA.tab()} languages={["en"]} timing={TIMING} />);
-    const card = await screen.findByRole("article", { name: "Household physics" });
+    render(<QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={deviceA.tab()} languages={["en"]} timing={TIMING} />);
+    const card = await screen.findByRole("region", { name: "Household physics" });
     expect(within(card).queryByRole("button", { name: "Resume quiz" })).toBeNull();
     expect(within(card).queryByText("In progress")).toBeNull();
     expect(within(card).getByRole("button", { name: "Start again" })).toBeTruthy();
@@ -680,5 +728,142 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
     expect(learnerName({ kind: "anonymous" }, tag, quizText("en"))).toBe(`Anonymous #${tag}`);
     expect(learnerName({ kind: "anonymous" }, tag, quizText("de"))).toBe(`Anonym #${tag}`);
     expect(learnerName({ kind: "pseudonym", handle: "Ada" }, tag, quizText("de"))).toBe("Ada");
+  });
+});
+
+describe("👥️ presence through the whole app", () => {
+  it("joins the roster and the page's room once identified, shows the others and follows the learner into a quiz", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const sockets: { readonly url: string; readonly sent: unknown[]; closed: boolean; readonly socket: PresenceSocket }[] = [];
+    const presence: PresenceConnect = (url) => {
+      const record = { url, sent: [] as unknown[], closed: false, socket: undefined as unknown as PresenceSocket };
+      const socket: PresenceSocket = {
+        readyState: 1,
+        onmessage: null,
+        onclose: null,
+        onerror: null,
+        send: (data) => record.sent.push(JSON.parse(data)),
+        close: () => {
+          record.closed = true;
+        },
+      };
+      sockets.push(Object.assign(record, { socket }));
+      return socket;
+    };
+    const open = (scope: string) => {
+      const found = sockets.filter((entry) => !entry.closed && entry.url.split("?")[0] === `ws://localhost:3000/scopes/${encodeURIComponent(scope)}/presence/ws`);
+      expect(found, sockets.map((entry) => `${entry.url} ${entry.closed ? "closed" : "open"}`).join("\n")).toHaveLength(1);
+      return found[0]!;
+    };
+    const deliver = (entry: { readonly socket: PresenceSocket }, frame: unknown) => act(() => entry.socket.onmessage?.(new MessageEvent("message", { data: JSON.stringify(frame) })));
+    const user = userEvent.setup();
+    render(<QuizApp proctor="" tenant={CATALOG.id} presence={presence} transport={() => proctor.transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={TIMING} />);
+    await screen.findByRole("heading", { level: 1, name: "Welcome to the test catalog" });
+    expect(sockets).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("radio", { name: "Pseudonym" }));
+    await user.type(screen.getByRole("textbox", { name: "Your pseudonym" }), "Ada");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByRole("region", { name: "Ada" });
+
+    const roster = open(CATALOG.id);
+    const home = open(`${CATALOG.id}/home`);
+    expect(roster.url.endsWith("?surface=quiz")).toBe(true);
+    const mira = "d".repeat(32);
+    await deliver(roster, {
+      type: "welcome",
+      session: "s-me",
+      colour: 0,
+      roster: [{ session: "s-mira", colour: 4, surface: "quiz", state: { active: true, identity: { handle: "Mira", kind: "pseudonym" }, place: { quiz: QUIZ.id, screen: "run" }, tag: learnerTag(mira) } }],
+    });
+    await waitFor(() => expect(roster.sent.at(-1)).toMatchObject({ type: "state", state: { identity: { kind: "pseudonym", handle: "Ada" }, place: { screen: "home" }, active: true } }));
+    expect(within(navbar()).getByText("Online: 1")).toBeTruthy();
+    await deliver(roster, { type: "batch", entries: [{ session: "s-me", colour: 0, surface: "quiz", state: (roster.sent.at(-1) as { readonly state: unknown }).state }], left: [] });
+    expect(within(navbar()).getByText("Online: 2")).toBeTruthy();
+    expect(within(screen.getByRole("region", { name: "Household physics" })).getByText("Learning now: 1")).toBeTruthy();
+
+    await deliver(home, { type: "welcome", session: "r-me", colour: 0, roster: [] });
+    const watched = ["introduction", "leaderboard", "badges", `quiz/${QUIZ.id}`, `quiz/${QUIZ.id}/thinking`].map((room) => `${CATALOG.id}/${room}`);
+    await waitFor(() =>
+      expect(home.sent).toEqual([
+        { type: "state", state: { tag: (roster.sent.at(-1) as { readonly state: { readonly tag: string } }).state.tag } },
+        { type: "watch", scopes: watched, intervalMs: 250 },
+      ]),
+    );
+    await deliver(home, {
+      type: "watched",
+      scope: `${CATALOG.id}/leaderboard`,
+      entries: [{ session: "w-mira", colour: 4, surface: "leaderboard", state: { cursor: { anchor: "leaderboard", x: 0.5, y: 0.5 }, tag: learnerTag(mira) } }],
+      left: [],
+      snapshot: true,
+    });
+    const inBoard = await waitFor(() => {
+      const mark = document.querySelector<HTMLElement>(`[data-layered-pane="board"] [data-pane-peers="${CATALOG.id}/leaderboard"] [data-peer="cursor"]`);
+      expect(mark).not.toBeNull();
+      return mark!;
+    });
+    expect(inBoard.textContent).toBe("Mira");
+    expect(inBoard.closest("[aria-hidden]")).not.toBeNull();
+    await deliver(home, { type: "watched", scope: `${CATALOG.id}/quiz/${QUIZ.id}/thinking`, entries: [{ session: "t-mira", colour: 4, surface: "thinking", state: { answers: {}, tag: learnerTag(mira) } }], left: [] });
+    await waitFor(() => expect(document.querySelector(`[data-layered-pane="${QUIZ.id}"] [data-crowd-source="live"]`)?.textContent).toBe("👥What others think now· Thinking along: 1"));
+    await deliver(home, { type: "watched", scope: `${CATALOG.id}/leaderboard`, entries: [], left: ["w-mira"] });
+    expect(document.querySelector("[data-pane-peers]")).toBeNull();
+    await deliver(home, { type: "batch", entries: [{ session: "r-mira", colour: 4, surface: "home", state: { cursor: { anchor: "home:learner", x: 0.5, y: 0.5 }, tag: learnerTag(mira) } }], left: [] });
+    const peer = await waitFor(() => {
+      const mark = document.querySelector<HTMLElement>('[data-presence-layer] [data-peer="cursor"]');
+      expect(mark).not.toBeNull();
+      return mark!;
+    });
+    expect(peer.textContent).toBe("Mira");
+    expect(peer.closest("[aria-hidden]")).not.toBeNull();
+    await deliver(home, { type: "batch", entries: [], left: ["r-mira"] });
+    expect(document.querySelector("[data-presence-layer]")).toBeNull();
+
+    await user.click(within(screen.getByRole("region", { name: "Household physics" })).getByRole("link", { name: "Household physics" }));
+    await waitFor(() => expect(home.closed).toBe(true));
+    const page = open(`${CATALOG.id}/quiz/${QUIZ.id}`);
+    expect(page.url.endsWith("?surface=quiz")).toBe(true);
+    await waitFor(() => expect((roster.sent.at(-1) as { readonly state: { readonly place: unknown } }).state.place).toEqual({ screen: "quiz", quiz: QUIZ.id }));
+    fireEvent.keyDown(document, { key: "Escape" });
+    await screen.findByRole("region", { name: "Settings" });
+    await waitFor(() => expect(page.closed).toBe(true));
+    const back = open(`${CATALOG.id}/home`);
+
+    await user.click(within(screen.getByRole("region", { name: "Settings" })).getByRole("button", { name: "Open" }));
+    await waitFor(() => expect(back.closed).toBe(true));
+    await waitFor(() => expect((roster.sent.at(-1) as { readonly state: { readonly place: unknown } }).state.place).toEqual({ screen: "preferences" }));
+    expect(sockets.filter((entry) => !entry.closed).map((entry) => entry.url.split("?")[0])).toEqual([`ws://localhost:3000/scopes/${CATALOG.id}/presence/ws`]);
+    await user.click(screen.getByRole("checkbox", { name: "Show others' cursors" }));
+    fireEvent.keyDown(document, { key: "Escape" });
+    await screen.findByRole("region", { name: "Household physics" });
+    const again = open(`${CATALOG.id}/home`);
+    await deliver(again, { type: "welcome", session: "r-me-2", colour: 0, roster: [{ session: "r-mira", colour: 4, surface: "home", state: { cursor: { anchor: "home:learner", x: 0.5, y: 0.5 }, tag: learnerTag(mira) } }] });
+    expect(document.querySelector("[data-presence-layer]")).toBeNull();
+
+    await user.click(within(screen.getByRole("region", { name: "Household physics" })).getByRole("button", { name: "Start quiz" }));
+    await screen.findByRole("heading", { level: 1, name: "Household physics" });
+    await waitFor(() => expect(again.closed).toBe(true));
+    const room = open(`${CATALOG.id}/quiz/${QUIZ.id}`);
+    expect(room.url.endsWith("?surface=run")).toBe(true);
+    const task = screen.getByRole("heading", { level: 2, name: /Climates|Masses|Lamps/u }).closest("section")!;
+    expect(task.getAttribute("data-presence-anchor")).toMatch(/^task:(climates|masses|lamps)$/u);
+    await waitFor(() => expect((roster.sent.at(-1) as { readonly state: { readonly place: unknown } }).state.place).toEqual({ screen: "run", quiz: QUIZ.id, task: task.getAttribute("data-presence-anchor")!.slice("task:".length) }));
+
+    const thinking = open(`${CATALOG.id}/quiz/${QUIZ.id}/thinking`);
+    expect(thinking.url.endsWith("?surface=thinking")).toBe(true);
+    const miraThinks = {
+      answers: {
+        climates: { kind: "classification", assignments: { desert: "hot-dry", fjord: "hot-dry" } },
+        lamps: { kind: "matching", values: { power: { floodlight: 2000, led: 8 } } },
+        masses: { kind: "sorting", order: ["mouse", "cat", "horse"] },
+      },
+      tag: learnerTag(mira),
+    };
+    await deliver(thinking, { type: "welcome", session: "t-me", colour: 0, roster: [{ session: "t-mira", colour: 4, surface: "thinking", state: miraThinks }] });
+    await waitFor(() => expect(thinking.sent.at(-1)).toEqual({ type: "state", state: { answers: {}, tag: (roster.sent.at(-1) as { readonly state: { readonly tag: string } }).state.tag } }));
+    await waitFor(() => expect(within(task).getByText("What others think now").closest("[data-crowd-source]")?.getAttribute("data-crowd-source")).toBe("live"));
+    const sentences = [...task.querySelectorAll("[data-crowd-item] .sr-only")].map((sentence) => sentence.textContent);
+    expect(sentences.length).toBeGreaterThan(0);
+    for (const sentence of sentences) expect(sentence).toMatch(/^(The others on (Desert|Fjord): Hot and dry 1×|On average the others put (Mouse|Cat|Horse) at place [123] of 3|The others on (LED bulb|Floodlight): (8\sW|2\skW) 1×)$/u);
   });
 });

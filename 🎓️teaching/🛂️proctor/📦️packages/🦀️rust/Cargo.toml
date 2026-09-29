@@ -3,7 +3,7 @@ name = "teaching-proctor"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Teaching proctor: the quiz lifecycle (identity without passwords, randomized runs, whole-run scoring, badges, leaderboard) as a CQRS/event-sourced instance of the framework server product over one SQLite file, serving the built quiz site."
+description = "Teaching proctor: the quiz lifecycle (identity without passwords, randomized runs, whole-run scoring, badges, leaderboard) as a CQRS/event-sourced, API-only instance of the framework server product over one SQLite file, called cross-origin by the CDN-hosted quiz site."
 
 # 🛂️ A deployable instance of the server product, like the hub it mirrors.
 [package.metadata.semio]
@@ -40,9 +40,11 @@ rusqlite = { version = "0.38.0", features = ["bundled"] }
 # 🔬️ Compiles the server product's backend-generic storage laws for this crate's tests only.
 semio-framework-server = { workspace = true, features = ["conformance"] }
 # 🔮️ Third-party oracles: `sha2` for the quiz revision digest, `ureq` as an independent HTTP client
-# driving the real gateway in the end-to-end test.
+# driving the real gateway in the end-to-end test, `tungstenite` as an independent websocket client
+# joining its presence rooms.
 sha2 = "0.10.9"
 ureq = { version = "2", default-features = false }
+tungstenite = { version = "0.26", default-features = false, features = ["handshake"] }
 
 # 🔬️ The four storage roles over SQLite held to the framework's conformance laws.
 [[test]]

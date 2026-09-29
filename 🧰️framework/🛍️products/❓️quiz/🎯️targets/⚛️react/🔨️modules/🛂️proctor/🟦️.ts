@@ -26,7 +26,7 @@ import {
   type QueryResult,
   type Rejection as ServerRejection,
 } from "@semio-tech/framework-server";
-import { REJECTIONS, type CatalogView, type Command, type Event, type Id, type Leaderboard, type LearnerView, type Query, type Rejection, type RunView } from "@semio-tech/quiz";
+import { REJECTIONS, type CatalogView, type Command, type CrowdView, type Event, type Id, type Leaderboard, type LearnerView, type Query, type Rejection, type RunView, type Slug } from "@semio-tech/quiz";
 
 export type { HttpRequest, HttpResponse, HttpTransport };
 
@@ -94,10 +94,14 @@ export function isTransient(error: unknown): boolean {
   return false;
 }
 
-/** ✋️ `promise`, or the abort reason of `signal` as soon as it aborts. */
+/** ✋️ `promise`, or the abort reason of `signal` as soon as it aborts; a `promise` that loses the race is still observed, so
+ * its own rejection (usually the same abort) never surfaces as an unhandled one. */
 export function abortable<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
   if (signal === undefined) return promise;
-  if (signal.aborted) return Promise.reject(signal.reason);
+  if (signal.aborted) {
+    promise.catch(() => undefined);
+    return Promise.reject(signal.reason);
+  }
   return new Promise<T>((resolve, reject) => {
     const abort = (): void => reject(signal.reason);
     signal.addEventListener("abort", abort, { once: true });
@@ -290,6 +294,11 @@ export class ProctorClient {
   /** 🏃️ One run with its sheet, answers and result. */
   run(run: Id, learner: Id, signal?: AbortSignal): Promise<RunView> {
     return this.query<RunView>({ type: "run", run }, learner, signal);
+  }
+
+  /** 👥️ What the learners answered in the submitted runs of `quiz`, per task and item. */
+  crowd(quiz: Slug, learner: Id | undefined, signal?: AbortSignal): Promise<CrowdView> {
+    return this.query<CrowdView>({ type: "crowd", quiz }, learner, signal);
   }
 
   /** 🏆️ Every learner with a submitted run. */

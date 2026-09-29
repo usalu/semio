@@ -20,6 +20,7 @@ the renderer is one target among possible others. Two cores implement the model 
 | `🔨️modules/🏅️badges/` | Badge rules evaluated after every submission. |
 | `🔨️modules/🧾️lifecycle/` | Handles, the roster and learner deciders: pure `decide`/`evolve`. |
 | `🔨️modules/👁️views/` | Catalog view, learner view, run view and leaderboard. |
+| `🔨️modules/👥️presence/` | Presence rooms, the admission problems of presence and cursor states, and the client roster. |
 | `📦️packages/🟦️typescript/` | `@semio-tech/quiz`: package glue only, a barrel over `🧬️schema` and `🔨️modules`. Zero runtime imports. |
 | `📦️packages/🦀️rust/` | Crate `semio-framework-quiz` (lib `quiz`), nx `@semio-tech/quiz-rs`: `#[path]` glue over the Rust twins. |
 | `🎯️targets/⚛️react/` | `@semio-tech/quiz-react`: the web renderer and proctor client. |
@@ -52,8 +53,9 @@ and every quiz it names; the revision of a quiz is the lowercase hex SHA-256 of 
 
 ### Quiz
 
-A quiz is an ordered set of tasks with an id, a title and a description. A run presents the tasks randomized
-and is scored only as a whole. Every learner-visible text carries English and German; there is no default
+A quiz is an ordered set of tasks with an id, an emoji, a title and a description. The emoji — one emoji
+grapheme of 1…16 code points, required — identifies the quiz on cards and headers and is carried into the
+catalog view. A run presents the tasks randomized and is scored only as a whole. Every learner-visible text carries English and German; there is no default
 language.
 
 ### Task kinds
@@ -188,13 +190,75 @@ standing between an anonymous learner and anyone acting as them. A row carries t
 `learnerTag(learner)`, FNV-1a of the id as 8 lowercase hex digits — and a client highlights its own row by
 computing the tag from its own id. The id still breaks ties internally.
 
+### Presence and cursors
+
+Every learner sees who else is online and where, and — in the room of the same place — their pointer and keyboard
+focus. Presence is ephemeral shared state relayed by the framework server's presence sockets (latest state per
+session, coalesced per tick); the quiz core owns the rooms, the admission rules and the roster.
+
+- **Place** — the screen (`introduction`, `identity`, `home`, `quiz` — the read-only page of one quiz, `run`,
+  `results`, `leaderboard`, `learner` — the own profile, `badges`, `preferences`), for the quiz page, a run or its
+  results the quiz, for a run the task on screen. Learners at the same shared place meet in one room.
+- **Rooms** — `rosterScope(catalog)` = `<catalog>` carries every learner's `PresenceState` (tag, identity, place,
+  active). `roomScope(catalog, place)` names the room carrying `CursorState`s: `<catalog>/introduction`,
+  `<catalog>/home`, `<catalog>/leaderboard`, `<catalog>/badges`, and `<catalog>/quiz/<quiz>` for the page, the runs
+  and the results of one quiz. It is `undefined` for the identity screen (no tag exists before identification), for
+  the personal `learner` and `preferences` pages, and for a quiz page, run or results without a quiz.
+- **Anchors and cursors** — a cursor is `{ anchor, x, y }` with `x, y ∈ [0, 1]` relative to the box of an anchor every
+  learner at that place renders (`home`, `leaderboard`, `card:quiz:<quiz>`, `task:<task>`, `item:<id>`,
+  `category:<id>`, …), so positions survive different viewports and randomized item orders; `focus` is the anchor a
+  keyboard user is on and `drag { item }` the item being dragged. Sharing what the others think is intended (see
+  below); learner ids are never shared.
+- **Admission** — `presenceProblem(state)` / `cursorProblem(state)` return the first issue (smallest path, then code)
+  or `undefined`; the proctor refuses a state with a problem. The rules: the schema (`presenceIssues` /
+  `cursorIssues` list them all) with `tag-invalid` (not 8 lowercase hex digits — a learner id is refused),
+  `anchor-invalid`, `out-of-range` (a coordinate that is not finite in 0…1), `length-invalid` (handle outside 1…64
+  code points), plus the place rules the schema cannot state: the quiz page, a run and its results name their quiz
+  (`required` at `/place/quiz`), only they name a quiz (`quiz-outside-run`), only a run names a task
+  (`task-without-run`).
+- **Roster** — `presenceRoster(entries, display)` folds the socket's entries (`{ session, state }`) into the client's
+  roster: one learner per tag (represented by an active session, then the smallest session id; all sessions
+  listed), `online` and `active` learner counts, learners per quiz now (distinct learners on the page, a run or the
+  results of the quiz) and the learners sorted by their display label (lowercase, then exact, then tag; code point order). The
+  label comes from the client (`display(state)`), so the core stays language-neutral.
+
+### What the others think
+
+The quizzes are for fun: learners see what the others think, live and after submission. Sheets differ per learner, so
+everything is aggregated semantically by item id, never by position.
+
+- **Drafts (ephemeral shared)** — the thinking room `thinkingScope(catalog, quiz)` = `<catalog>/quiz/<quiz>/thinking`
+  carries every open run's `ThinkingState { tag, answers }`: the learner's current, possibly partial draft answers per
+  task as `ThinkingAnswer`s — classification and sorting answers as they are (already semantic: item and category
+  ids), matching drafts as `{ kind: "matching", values: dimension → item → value }`, because card indices point into
+  the publisher's own shuffled cards and mean nothing to peers. `thinkingAnswer(sheetTask, answer)` turns the
+  publisher's own answer into its draft (card index → card value; `undefined` for an answer that does not fit the
+  sheet task). `thinkingProblem(state)` (all issues: `thinkingIssues`) admits a state whose drafts are structurally
+  valid per the schema, with finite values (`type-invalid` otherwise), and bounded by `THINKING_LIMIT` = 64: at most 64
+  tasks and 64 entries per assignment map, order, values map or dimension (`too-many`), no repeated item in an order
+  (`duplicate-id`).
+- **Live crowd** — `thinkingCrowd(states, sheetTask)` folds the peers' drafts (one per tag, the last given winning) for
+  the viewer's sheet task, items in the viewer's sheet order, unanswered items left out: classification votes per
+  category, matching votes per value key (`valueKey`) per dimension — keys and tags in code point order — and sorting
+  positions `index / (len − 1)` in each learner's own order (0 for a single item).
+- **Cursors on items** — the quiz room's `CursorState` may anchor to items (`item:<id>`) and categories
+  (`category:<id>`) and carries `drag { item }` (a slug), so peers see what someone drags and where they point.
+- **Crowd view (persisted shared)** — `crowdView(quiz, results)` aggregates the submitted results of one quiz (results
+  of other quizzes ignored, `runs` counts the rest; per result the first task result with the task's id and kind):
+  classification counts per assigned category, sorting the mean of the normalized position `position / (n − 1)` (0
+  when `n < 2`) summed in result order, matching one crowd task per dimension with counts per assigned value. A value's
+  key is `valueKey(value)`: ECMAScript `Number::toString`, the shortest round-trip JSON number (`0.12`, `250`,
+  `1e+21`, `1e-7`, `-0` → `0`). Tasks, dimensions and items follow the definition order, unanswered items are left
+  out, and counts are ordered by key in code point order — category ids and value keys alike, so `120` precedes `15`.
+  The proctor keeps it as a projection and answers the query `{ type: "crowd", quiz }`.
+
 ### State classes
 
 | Class | Held where | Examples |
 |---|---|---|
-| Persisted shared | the proctor's event store and projections | learner, run, answer, submission and badge events |
+| Persisted shared | the proctor's event store and projections | learner, run, answer, submission and badge events; the crowd view |
 | Persisted local-only | the browser | learner id, locale, theme, outbox, cached catalog and run views |
-| Ephemeral shared | polled from the proctor | the leaderboard |
+| Ephemeral shared | polled from the proctor / relayed by presence sockets | the leaderboard; presence, cursors and drafts (thinking) |
 | Ephemeral local-only | the renderer | drag state, focus, the current step |
 
 Answers apply locally at once and travel through an outbox coalesced per run and task, retried with jittered
@@ -202,8 +266,9 @@ backoff and applied once by command id, so short connection shortages never free
 
 ## Validation issues
 
-`quizIssues(quiz)` and `catalogIssues(catalog, quizzes)` return `{ path, code }[]`: a JSON pointer into the
-document and a kebab-case code, deduplicated and sorted by path, then code, in code point order.
+`quizIssues(quiz)`, `catalogIssues(catalog, quizzes)`, `presenceIssues(state)` and `cursorIssues(state)` return
+`{ path, code }[]`: a JSON pointer into the document and a kebab-case code, deduplicated and sorted by path, then
+code, in code point order.
 
 | Code | Meaning |
 |---|---|
@@ -212,11 +277,11 @@ document and a kebab-case code, deduplicated and sorted by path, then code, in c
 | `property-unknown` | a member the schema does not declare |
 | `value-invalid` | a `const` or enum mismatch (schema version, task kind, scale, badge rule kind) |
 | `slug-invalid` | an id or key that is not a slug of 1…64 characters |
-| `length-invalid` | a string outside its length bounds (code points) |
+| `length-invalid` | a string outside its length bounds in code points (texts ≥ 1, units 1…32, quiz and badge emojis 1…16) |
 | `integer-invalid` / `below-minimum` | `draw` not an integer ≥ 2 |
 | `items-too-few` / `properties-too-few` | an array or map below its minimum size |
 | `duplicate-path` | a quiz path listed twice in a catalog |
-| `duplicate-id` | a repeated quiz, task, item, category, axis, dimension or badge id |
+| `duplicate-id` | a repeated quiz, task, item, category, axis, dimension or badge id, or a repeated item in a draft sorting order |
 | `category-unknown` | an item names a category its task does not declare |
 | `axes-missing` | a profile on a task without axes |
 | `profile-incomplete` / `axis-unknown` | a profile misses an axis / names an unknown one |
@@ -228,3 +293,9 @@ document and a kebab-case code, deduplicated and sorted by path, then code, in c
 | `quiz-count-mismatch` | the loaded quizzes do not match the catalog paths one to one |
 | `quiz-unknown` | a badge rule names a quiz the catalog does not load |
 | `badge-unreachable` | a `perfect-tasks` selector matches no task, so the badge is never awarded |
+| `tag-invalid` | a public learner tag that is not 8 lowercase hex digits |
+| `anchor-invalid` | an anchor outside `^[a-z0-9]+(?:[:-][a-z0-9]+)*$` or longer than 64 characters |
+| `out-of-range` | a cursor coordinate that is not a finite number in 0…1 |
+| `quiz-outside-run` | a place names a quiz on a screen other than the quiz page, a run or its results |
+| `task-without-run` | a place names a task on a screen other than a run |
+| `too-many` | a draft with more than `THINKING_LIMIT` (64) tasks, or an assignment map, order, values map or dimension with more than 64 entries |

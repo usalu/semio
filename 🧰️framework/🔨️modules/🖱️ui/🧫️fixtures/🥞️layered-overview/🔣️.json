@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "grids": [
+    { "name": "one pane is one cell", "count": 1, "grid": { "columns": 1, "rows": 1 } },
+    { "name": "five panes leave one cell of a 3×2", "count": 5, "grid": { "columns": 3, "rows": 2 } },
+    { "name": "six panes fill a 3×2", "count": 6, "grid": { "columns": 3, "rows": 2 } },
+    { "name": "eight panes are the demonstrator's gapless 4×2", "count": 8, "grid": { "columns": 4, "rows": 2 } },
+    { "name": "nine panes are the quiz home's 3×3", "count": 9, "grid": { "columns": 3, "rows": 3 } },
+    { "name": "56 panes fill an 8×7", "count": 56, "grid": { "columns": 8, "rows": 7 } },
+    { "name": "58 panes prefer the fewest empty cells", "count": 58, "grid": { "columns": 9, "rows": 7 } },
+    { "name": "61 panes prefer the fewest empty cells", "count": 61, "grid": { "columns": 9, "rows": 7 } },
+    { "name": "63 panes fill a 9×7", "count": 63, "grid": { "columns": 9, "rows": 7 } },
+    { "name": "64 panes fill an 8×8", "count": 64, "grid": { "columns": 8, "rows": 8 } },
+    { "name": "play's 148 panes are 13×12", "count": 148, "grid": { "columns": 13, "rows": 12 } }
+  ],
+  "invalidGridCounts": [0, -1, 1.5],
+  "rowSpans": [
+    { "name": "a full first row", "count": 58, "row": 0, "span": { "first": 0, "last": 8 } },
+    { "name": "a full inner row", "count": 58, "row": 5, "span": { "first": 0, "last": 8 } },
+    { "name": "a short last row is centred", "count": 58, "row": 6, "span": { "first": 2, "last": 5 } },
+    { "name": "a full last row stays edge to edge", "count": 63, "row": 6, "span": { "first": 0, "last": 8 } },
+    { "name": "play's last five panes sit in columns 4 to 8", "count": 148, "row": 11, "span": { "first": 4, "last": 8 } }
+  ],
+  "cells": [
+    { "name": "first pane", "count": 58, "index": 0, "cell": { "column": 0, "row": 0 } },
+    { "name": "end of the first row", "count": 58, "index": 8, "cell": { "column": 8, "row": 0 } },
+    { "name": "start of the second row", "count": 58, "index": 9, "cell": { "column": 0, "row": 1 } },
+    { "name": "end of the last full row", "count": 58, "index": 53, "cell": { "column": 8, "row": 5 } },
+    { "name": "first pane of a centred last row", "count": 58, "index": 54, "cell": { "column": 2, "row": 6 } },
+    { "name": "last pane of a centred last row", "count": 58, "index": 57, "cell": { "column": 5, "row": 6 } },
+    { "name": "a full last row is untouched", "count": 64, "index": 63, "cell": { "column": 7, "row": 7 } },
+    { "name": "play's last full row ends at column 12", "count": 148, "index": 142, "cell": { "column": 12, "row": 10 } },
+    { "name": "play's first centred pane", "count": 148, "index": 143, "cell": { "column": 4, "row": 11 } },
+    { "name": "play's last pane", "count": 148, "index": 147, "cell": { "column": 8, "row": 11 } },
+    { "name": "the quiz home's centre", "count": 9, "index": 4, "cell": { "column": 1, "row": 1 } }
+  ],
+  "occupied": [
+    { "name": "a pan resting on the short last row", "count": 58, "y": 6, "span": { "first": 2, "last": 5 } },
+    { "name": "a full first row", "count": 58, "y": 0, "span": { "first": 0, "last": 8 } },
+    { "name": "a full row still fills most of the view", "count": 58, "y": 5.4, "span": { "first": 0, "last": 8 } },
+    { "name": "the short row fills most of the view", "count": 58, "y": 5.6, "span": { "first": 2, "last": 5 } },
+    { "name": "the short row nearly fills the view", "count": 58, "y": 5.98, "span": { "first": 2, "last": 5 } },
+    { "name": "above the strip reads the first row", "count": 58, "y": -3, "span": { "first": 0, "last": 8 } },
+    { "name": "below the strip reads the last row", "count": 58, "y": 99, "span": { "first": 2, "last": 5 } }
+  ],
+  "clamps": [
+    { "name": "the empty left flank of a short row", "count": 58, "offset": { "x": 0, "y": 6 }, "clamped": { "x": 2, "y": 6 } },
+    { "name": "the empty right flank while the short row fills most of the view", "count": 58, "offset": { "x": 8, "y": 5.9 }, "clamped": { "x": 5, "y": 5.9 } },
+    { "name": "above and left of the strip", "count": 58, "offset": { "x": -1, "y": -1 }, "clamped": { "x": 0, "y": 0 } },
+    { "name": "below and right of a full grid", "count": 9, "offset": { "x": 3, "y": 3 }, "clamped": { "x": 2, "y": 2 } },
+    { "name": "play's bottom-right corner is its last pane", "count": 148, "offset": { "x": 12, "y": 11 }, "clamped": { "x": 8, "y": 11 } }
+  ],
+  "pointers": [
+    { "name": "top-left shows the first cell", "grid": { "columns": 13, "rows": 12 }, "fx": 0, "fy": 0, "offset": { "x": 0, "y": 0 } },
+    { "name": "bottom-right shows the last cell", "grid": { "columns": 13, "rows": 12 }, "fx": 1, "fy": 1, "offset": { "x": 12, "y": 11 } },
+    { "name": "the middle of a 3×3 shows its centre", "grid": { "columns": 3, "rows": 3 }, "fx": 0.5, "fy": 0.5, "offset": { "x": 1, "y": 1 } },
+    { "name": "outside the view is clamped", "grid": { "columns": 4, "rows": 2 }, "fx": 1.5, "fy": -0.5, "offset": { "x": 3, "y": 0 } },
+    { "name": "a single cell never pans", "grid": { "columns": 1, "rows": 1 }, "fx": 0.7, "fy": 0.3, "offset": { "x": 0, "y": 0 } }
+  ],
+  "easing": [
+    { "t": 0, "eased": 0 },
+    { "t": 0.1, "eased": 0.004 },
+    { "t": 0.25, "eased": 0.0625 },
+    { "t": 0.5, "eased": 0.5 },
+    { "t": 0.75, "eased": 0.9375 },
+    { "t": 0.9, "eased": 0.996 },
+    { "t": 1, "eased": 1 }
+  ],
+  "glides": [
+    {
+      "name": "a reveal glide sampled every 125 ms",
+      "from": { "x": 0, "y": 0 },
+      "to": { "x": 2, "y": 1 },
+      "durationMs": 500,
+      "samples": [
+        { "elapsedMs": -10, "offset": { "x": 0, "y": 0 }, "done": false },
+        { "elapsedMs": 0, "offset": { "x": 0, "y": 0 }, "done": false },
+        { "elapsedMs": 125, "offset": { "x": 0.125, "y": 0.0625 }, "done": false },
+        { "elapsedMs": 250, "offset": { "x": 1, "y": 0.5 }, "done": false },
+        { "elapsedMs": 375, "offset": { "x": 1.875, "y": 0.9375 }, "done": false },
+        { "elapsedMs": 500, "offset": { "x": 2, "y": 1 }, "done": true },
+        { "elapsedMs": 600, "offset": { "x": 2, "y": 1 }, "done": true }
+      ]
+    },
+    {
+      "name": "a glide back towards the first cell",
+      "from": { "x": 3, "y": 1 },
+      "to": { "x": 0, "y": 0 },
+      "durationMs": 500,
+      "samples": [{ "elapsedMs": 250, "offset": { "x": 1.5, "y": 0.5 }, "done": false }]
+    }
+  ],
+  "follows": [
+    { "name": "one frame covers 12 % of the distance", "current": { "x": 0, "y": 0 }, "target": { "x": 1, "y": 0 }, "offset": { "x": 0.12, "y": 0 }, "settled": false },
+    { "name": "both axes move together", "current": { "x": 0, "y": 0 }, "target": { "x": -1, "y": 2 }, "offset": { "x": -0.12, "y": 0.24 }, "settled": false },
+    { "name": "within the epsilon it lands on the target", "current": { "x": 0.99995, "y": 0 }, "target": { "x": 1, "y": 0 }, "offset": { "x": 1, "y": 0 }, "settled": true },
+    { "name": "on the target it is settled", "current": { "x": 2, "y": 1 }, "target": { "x": 2, "y": 1 }, "offset": { "x": 2, "y": 1 }, "settled": true }
+  ],
+  "stripTransforms": [
+    { "name": "the first cell", "offset": { "x": 0, "y": 0 }, "grid": { "columns": 3, "rows": 3 }, "transform": "translate3d(0%, 0%, 0)" },
+    { "name": "the centre of a 3×3", "offset": { "x": 1, "y": 1 }, "grid": { "columns": 3, "rows": 3 }, "transform": "translate3d(-33.3333%, -33.3333%, 0)" },
+    { "name": "the demonstrator's last cell", "offset": { "x": 3, "y": 1 }, "grid": { "columns": 4, "rows": 2 }, "transform": "translate3d(-75%, -50%, 0)" },
+    { "name": "the tablet's leaderboard row", "offset": { "x": 0, "y": 2 }, "grid": { "columns": 2, "rows": 5 }, "transform": "translate3d(0%, -40%, 0)" },
+    { "name": "play's bottom-right corner", "offset": { "x": 12, "y": 11 }, "grid": { "columns": 13, "rows": 12 }, "transform": "translate3d(-92.3077%, -91.6667%, 0)" }
+  ],
+  "veils": [
+    { "name": "nothing revealed keeps the glass whole", "cell": null, "offset": { "x": 0, "y": 0 }, "kind": "whole", "clipPath": "none", "area": 10000 },
+    { "name": "a revealed pane outside the view keeps the glass whole", "cell": { "column": 2, "row": 2 }, "offset": { "x": 0, "y": 0 }, "kind": "whole", "clipPath": "none", "area": 10000 },
+    { "name": "a sliver below the epsilon counts as outside", "cell": { "column": 1, "row": 0 }, "offset": { "x": 1e-7, "y": 0 }, "kind": "whole", "clipPath": "none", "area": 10000 },
+    { "name": "a revealed pane filling the view hides the glass", "cell": { "column": 1, "row": 1 }, "offset": { "x": 1, "y": 1 }, "kind": "clear", "clipPath": "none", "area": 0 },
+    { "name": "an overhang below the epsilon counts as filling", "cell": { "column": 1, "row": 0 }, "offset": { "x": 0.9999999, "y": 0 }, "kind": "clear", "clipPath": "none", "area": 0 },
+    {
+      "name": "a pane half in from the right",
+      "cell": { "column": 1, "row": 0 },
+      "offset": { "x": 0.5, "y": 0 },
+      "kind": "hole",
+      "hole": { "left": 0.5, "top": 0, "right": 1, "bottom": 1 },
+      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [50, 0], [100, 0], [100, 100], [50, 100], [50, 0]],
+      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%, 100% 0%, 100% 100%, 50% 100%, 50% 0%)",
+      "area": 5000
+    },
+    {
+      "name": "a pane half out to the left",
+      "cell": { "column": 0, "row": 0 },
+      "offset": { "x": 0.5, "y": 0 },
+      "kind": "hole",
+      "hole": { "left": 0, "top": 0, "right": 0.5, "bottom": 1 },
+      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [0, 0], [50, 0], [50, 100], [0, 100], [0, 0]],
+      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 0% 0%, 50% 0%, 50% 100%, 0% 100%, 0% 0%)",
+      "area": 5000
+    },
+    {
+      "name": "a pane overlapping the bottom-right corner",
+      "cell": { "column": 1, "row": 1 },
+      "offset": { "x": 0.25, "y": 0.75 },
+      "kind": "hole",
+      "hole": { "left": 0.75, "top": 0.25, "right": 1, "bottom": 1 },
+      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [75, 25], [100, 25], [100, 100], [75, 100], [75, 25]],
+      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 75% 25%, 100% 25%, 100% 100%, 75% 100%, 75% 25%)",
+      "area": 8125
+    },
+    {
+      "name": "mid glide the pane is still a tenth short to the left and a fortieth short at the top",
+      "cell": { "column": 3, "row": 1 },
+      "offset": { "x": 2.9, "y": 0.975 },
+      "kind": "hole",
+      "hole": { "left": 0.1, "top": 0.025, "right": 1, "bottom": 1 },
+      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [10, 2.5], [100, 2.5], [100, 100], [10, 100], [10, 2.5]],
+      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 10% 2.5%, 100% 2.5%, 100% 100%, 10% 100%, 10% 2.5%)",
+      "area": 1225
+    }
+  ],
+  "windows": [
+    { "name": "at rest on the first cell", "offset": { "x": 0, "y": 0 }, "radius": 1, "window": { "firstColumn": -1, "lastColumn": 1, "firstRow": -1, "lastRow": 1 } },
+    { "name": "mid pan", "offset": { "x": 1.5, "y": 0.2 }, "radius": 1, "window": { "firstColumn": 0, "lastColumn": 3, "firstRow": -1, "lastRow": 2 } },
+    { "name": "no radius at rest is one cell", "offset": { "x": 2, "y": 2 }, "radius": 0, "window": { "firstColumn": 2, "lastColumn": 2, "firstRow": 2, "lastRow": 2 } }
+  ],
+  "windowedCells": [
+    { "name": "play at rest on its first pane", "count": 148, "offset": { "x": 0, "y": 0 }, "radius": 1, "windowed": 4 },
+    { "name": "play at rest mid grid", "count": 148, "offset": { "x": 6, "y": 5 }, "radius": 1, "windowed": 9 },
+    { "name": "play mid pan between two rows", "count": 148, "offset": { "x": 6, "y": 5.5 }, "radius": 1, "windowed": 12 },
+    { "name": "play at rest on its centred last row", "count": 148, "offset": { "x": 6, "y": 11 }, "radius": 1, "windowed": 6 },
+    { "name": "play with no radius", "count": 148, "offset": { "x": 0, "y": 0 }, "radius": 0, "windowed": 1 },
+    { "name": "the quiz home's centre sees every cell", "count": 9, "offset": { "x": 1, "y": 1 }, "radius": 1, "windowed": 9 }
+  ],
+  "lifecycles": [
+    { "name": "defaults", "given": {}, "resolved": { "budget": 4, "warmStartMs": 1500, "warmIntervalMs": 35000, "suspendIdleMs": null, "suspendOffscreenMs": null, "suspendHiddenMs": null, "sweepMs": 5000 } },
+    { "name": "play: offscreen and hidden follow idle", "given": { "budget": 4, "warmStartMs": 4000, "warmIntervalMs": 35000, "suspendIdleMs": 120000 }, "resolved": { "budget": 4, "warmStartMs": 4000, "warmIntervalMs": 35000, "suspendIdleMs": 120000, "suspendOffscreenMs": 120000, "suspendHiddenMs": 120000, "sweepMs": 5000 } },
+    { "name": "demonstrator", "given": { "budget": 8, "warmStartMs": 1500, "warmIntervalMs": 35000, "suspendIdleMs": 300000, "suspendOffscreenMs": 30000, "suspendHiddenMs": 60000 }, "resolved": { "budget": 8, "warmStartMs": 1500, "warmIntervalMs": 35000, "suspendIdleMs": 300000, "suspendOffscreenMs": 30000, "suspendHiddenMs": 60000, "sweepMs": 5000 } },
+    { "name": "quiz home: cheap pages are never released", "given": { "budget": 9, "warmStartMs": 600, "warmIntervalMs": 250 }, "resolved": { "budget": 9, "warmStartMs": 600, "warmIntervalMs": 250, "suspendIdleMs": null, "suspendOffscreenMs": null, "suspendHiddenMs": null, "sweepMs": 5000 } }
+  ],
+  "warmBoots": [
+    { "name": "warms the first never-booted pane in cell order", "ids": ["a", "b", "c"], "booted": ["a"], "liveCount": 1, "openedId": null, "budget": 4, "step": { "kind": "boot", "id": "b" } },
+    { "name": "never warms while a pane is opened", "ids": ["a", "b"], "booted": [], "liveCount": 0, "openedId": "a", "budget": 4, "step": { "kind": "hold", "reason": "opened" } },
+    { "name": "holds while the budget is full", "ids": ["a", "b", "c", "d", "e"], "booted": ["a", "b", "c", "d"], "liveCount": 4, "openedId": null, "budget": 4, "step": { "kind": "hold", "reason": "budget" } },
+    { "name": "pre-boots no more than the budget even after a release", "ids": ["a", "b", "c", "d", "e"], "booted": ["a", "b", "c", "d"], "liveCount": 3, "openedId": null, "budget": 4, "step": { "kind": "hold", "reason": "budget" } },
+    { "name": "boots within the budget", "ids": ["a", "b", "c", "d", "e"], "booted": ["a", "b"], "liveCount": 2, "openedId": null, "budget": 4, "step": { "kind": "boot", "id": "c" } },
+    { "name": "holds once every pane was booted", "ids": ["a", "b"], "booted": ["a", "b"], "liveCount": 1, "openedId": null, "budget": 4, "step": { "kind": "hold", "reason": "complete" } },
+    { "name": "the quiz home warms all nine", "ids": ["learner", "physics", "intro", "heating", "board", "cooling", "badges", "demand", "prefs"], "booted": [], "liveCount": 0, "openedId": null, "budget": 9, "step": { "kind": "boot", "id": "learner" } }
+  ],
+  "warmDelays": [
+    { "name": "play's first warm boot waits the start grace", "warmedBefore": false, "lifecycle": { "warmStartMs": 4000, "warmIntervalMs": 35000 }, "delayMs": 4000 },
+    { "name": "play's later warm boots wait a plugin-load interval", "warmedBefore": true, "lifecycle": { "warmStartMs": 4000, "warmIntervalMs": 35000 }, "delayMs": 35000 },
+    { "name": "the quiz home's first page", "warmedBefore": false, "lifecycle": { "warmStartMs": 600, "warmIntervalMs": 250 }, "delayMs": 600 },
+    { "name": "the quiz home's later pages", "warmedBefore": true, "lifecycle": { "warmStartMs": 600, "warmIntervalMs": 250 }, "delayMs": 250 }
+  ],
+  "budgets": [
+    { "name": "releases the least recently touched first", "liveByRecency": ["a", "b", "c", "d"], "keep": [], "budget": 2, "released": ["a", "b"] },
+    { "name": "never releases a kept pane", "liveByRecency": ["a", "b", "c"], "keep": ["a", "b"], "budget": 1, "released": ["c"] },
+    { "name": "skips a kept pane and takes the next", "liveByRecency": ["a", "b", "c", "d", "e"], "keep": ["a"], "budget": 4, "released": ["b"] },
+    { "name": "releases nothing within the budget", "liveByRecency": ["a"], "keep": [], "budget": 4, "released": [] }
+  ],
+  "releases": [
+    { "name": "an opened pane leaves the others the offscreen threshold", "lifecycle": { "suspendIdleMs": 300000, "suspendOffscreenMs": 30000, "suspendHiddenMs": 60000 }, "live": [{ "id": "a", "since": 0 }, { "id": "b", "since": 50000 }], "keep": [], "now": 100000, "opened": true, "hidden": false, "released": ["a", "b"] },
+    { "name": "the overview uses the idle threshold", "lifecycle": { "suspendIdleMs": 300000, "suspendOffscreenMs": 30000, "suspendHiddenMs": 60000 }, "live": [{ "id": "a", "since": 0 }, { "id": "b", "since": 50000 }], "keep": [], "now": 100000, "opened": false, "hidden": false, "released": [] },
+    { "name": "a hidden tab uses the hidden threshold", "lifecycle": { "suspendIdleMs": 300000, "suspendOffscreenMs": 30000, "suspendHiddenMs": 60000 }, "live": [{ "id": "a", "since": 0 }, { "id": "b", "since": 50000 }], "keep": [], "now": 100000, "opened": false, "hidden": true, "released": ["a"] },
+    { "name": "a kept pane is never released", "lifecycle": { "suspendIdleMs": 300000, "suspendOffscreenMs": 30000, "suspendHiddenMs": 60000 }, "live": [{ "id": "a", "since": 0 }, { "id": "b", "since": 50000 }], "keep": ["a"], "now": 100000, "opened": true, "hidden": false, "released": ["b"] },
+    { "name": "play releases a pane untouched for two minutes", "lifecycle": { "suspendIdleMs": 120000 }, "live": [{ "id": "a", "since": 0 }, { "id": "b", "since": 100000 }], "keep": [], "now": 120000, "opened": false, "hidden": false, "released": ["a"] },
+    { "name": "the quiz home never releases", "lifecycle": {}, "live": [{ "id": "a", "since": 0 }], "keep": [], "now": 1000000000, "opened": true, "hidden": true, "released": [] }
+  ],
+  "rests": [
+    { "name": "the centre of a uniform 3 × 3", "grid": { "columns": 3, "rows": 3 }, "tracks": {}, "cell": { "column": 1, "row": 1 }, "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 } },
+    { "name": "the quiz desktop centre with larger middle tracks", "grid": { "columns": 3, "rows": 3 }, "tracks": { "columns": [1, 1.5, 1], "rows": [1, 1.4, 1] }, "cell": { "column": 1, "row": 1 }, "rect": { "x": 0.2857142857142857, "y": 0.29411764705882354, "width": 0.42857142857142855, "height": 0.4117647058823529 } },
+    { "name": "the last cell of a tablet 2 × 5", "grid": { "columns": 2, "rows": 5 }, "tracks": {}, "cell": { "column": 1, "row": 4 }, "rect": { "x": 0.5, "y": 0.8, "width": 0.5, "height": 0.2 } },
+    { "name": "the demonstrator's last cell", "grid": { "columns": 4, "rows": 2 }, "tracks": {}, "cell": { "column": 3, "row": 1 }, "rect": { "x": 0.75, "y": 0.5, "width": 0.25, "height": 0.5 } },
+    { "name": "a missing track weight weighs one", "grid": { "columns": 3, "rows": 1 }, "tracks": { "columns": [2] }, "cell": { "column": 2, "row": 0 }, "rect": { "x": 0.75, "y": 0, "width": 0.25, "height": 1 } }
+  ],
+  "invalidTracks": [
+    { "name": "a zero track", "grid": { "columns": 3, "rows": 1 }, "tracks": { "columns": [1, 0, 1] } },
+    { "name": "a negative track", "grid": { "columns": 1, "rows": 2 }, "tracks": { "rows": [-1, 1] } }
+  ],
+  "trackTemplates": [
+    { "name": "the quiz desktop columns", "weights": [1, 1.5, 1], "count": 3, "template": "minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr)" },
+    { "name": "equal tracks by default", "weights": null, "count": 2, "template": "minmax(0, 1fr) minmax(0, 1fr)" },
+    { "name": "missing weights are one", "weights": [2], "count": 3, "template": "minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr)" }
+  ],
+  "views": [
+    { "name": "at rest a page shows at its rest", "rest": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0, "y": 0, "width": 1, "height": 1 }, "view": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 } },
+    { "name": "the zoomed page fills the view", "rest": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "view": { "x": 0, "y": 0, "width": 1, "height": 1 } },
+    { "name": "a neighbour of the zoomed page lies just outside", "rest": { "x": 0, "y": 0, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "view": { "x": -1, "y": -1, "width": 1, "height": 1 } },
+    { "name": "a tablet neighbour lies right of the zoomed page", "rest": { "x": 0.5, "y": 0.4, "width": 0.5, "height": 0.2 }, "camera": { "x": 0, "y": 0.4, "width": 0.5, "height": 0.2 }, "view": { "x": 1, "y": 0, "width": 1, "height": 1 } },
+    { "name": "half way into the zoom", "rest": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0.16666666666666666, "y": 0.16666666666666666, "width": 0.6666666666666667, "height": 0.6666666666666667 }, "view": { "x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5 } }
+  ],
+  "zooms": [
+    {
+      "name": "a reveal zooms from the whole grid to the centre page",
+      "from": { "x": 0, "y": 0, "width": 1, "height": 1 },
+      "to": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 },
+      "durationMs": 500,
+      "samples": [
+        { "elapsedMs": 0, "rect": { "x": 0, "y": 0, "width": 1, "height": 1 }, "done": false },
+        { "elapsedMs": 125, "rect": { "x": 0.020833333333333332, "y": 0.020833333333333332, "width": 0.9583333333333334, "height": 0.9583333333333334 }, "done": false },
+        { "elapsedMs": 250, "rect": { "x": 0.16666666666666666, "y": 0.16666666666666666, "width": 0.6666666666666667, "height": 0.6666666666666667 }, "done": false },
+        { "elapsedMs": 500, "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "done": true },
+        { "elapsedMs": 700, "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "done": true }
+      ]
+    },
+    {
+      "name": "leaving zooms back out",
+      "from": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 },
+      "to": { "x": 0, "y": 0, "width": 1, "height": 1 },
+      "durationMs": 500,
+      "samples": [{ "elapsedMs": 250, "rect": { "x": 0.16666666666666666, "y": 0.16666666666666666, "width": 0.6666666666666667, "height": 0.6666666666666667 }, "done": false }]
+    }
+  ],
+  "placements": [
+    { "name": "a page resting in a third of the view", "view": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "transform": "translate3d(33.3333%, 33.3333%, 0) scale(0.333333)", "clipPath": "inset(0% 0% 0% 0%)" },
+    { "name": "a page filling the view is untouched", "view": { "x": 0, "y": 0, "width": 1, "height": 1 }, "transform": "translate3d(0%, 0%, 0) scale(1)", "clipPath": "inset(0% 0% 0% 0%)" },
+    { "name": "a neighbour just outside the view", "view": { "x": -1, "y": -1, "width": 1, "height": 1 }, "transform": "translate3d(-100%, -100%, 0) scale(1)", "clipPath": "inset(0% 0% 0% 0%)" },
+    { "name": "half way into the zoom", "view": { "x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5 }, "transform": "translate3d(25%, 25%, 0) scale(0.5)", "clipPath": "inset(0% 0% 0% 0%)" },
+    { "name": "a wide cell covers by width and cuts the bottom", "view": { "x": 0, "y": 0.2, "width": 0.5, "height": 0.2 }, "transform": "translate3d(0%, 20%, 0) scale(0.5)", "clipPath": "inset(0% 0% 60% 0%)" },
+    { "name": "a tall cell covers by height and cuts both sides", "view": { "x": 0.1, "y": 0, "width": 0.2, "height": 0.5 }, "transform": "translate3d(-5%, 0%, 0) scale(0.5)", "clipPath": "inset(0% 30% 0% 30%)" },
+    { "name": "the quiz desktop centre", "view": { "x": 0.2857142857142857, "y": 0.29411764705882354, "width": 0.42857142857142855, "height": 0.4117647058823529 }, "transform": "translate3d(28.5714%, 29.4118%, 0) scale(0.428571)", "clipPath": "inset(0% 0% 3.9216% 0%)" }
+  ],
+  "rectVeils": [
+    { "name": "nothing revealed keeps the glass whole", "rect": null, "kind": "whole", "clipPath": "none", "area": 10000 },
+    { "name": "a zoomed page hides the glass", "rect": { "x": 0, "y": 0, "width": 1, "height": 1 }, "kind": "clear", "clipPath": "none", "area": 0 },
+    { "name": "a page outside the view keeps the glass whole", "rect": { "x": -1, "y": -1, "width": 1, "height": 1 }, "kind": "whole", "clipPath": "none", "area": 10000 },
+    {
+      "name": "a page revealed at rest shows through its cell",
+      "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 },
+      "kind": "hole",
+      "hole": { "left": 0.3333333333333333, "top": 0.3333333333333333, "right": 0.6666666666666666, "bottom": 0.6666666666666666 },
+      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [33.3333, 33.3333], [66.6667, 33.3333], [66.6667, 66.6667], [33.3333, 66.6667], [33.3333, 33.3333]],
+      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 33.3333% 33.3333%, 66.6667% 33.3333%, 66.6667% 66.6667%, 33.3333% 66.6667%, 33.3333% 33.3333%)",
+      "area": 8888.88444444
+    },
+    {
+      "name": "half way into the zoom",
+      "rect": { "x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5 },
+      "kind": "hole",
+      "hole": { "left": 0.25, "top": 0.25, "right": 0.75, "bottom": 0.75 },
+      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [25, 25], [75, 25], [75, 75], [25, 75], [25, 25]],
+      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 25% 25%, 75% 25%, 75% 75%, 25% 75%, 25% 25%)",
+      "area": 7500
+    },
+    {
+      "name": "a page sliding in from the right is cut at the view's edge",
+      "rect": { "x": 0.75, "y": 0, "width": 0.5, "height": 0.5 },
+      "kind": "hole",
+      "hole": { "left": 0.75, "top": 0, "right": 1, "bottom": 0.5 },
+      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [75, 0], [100, 0], [100, 50], [75, 50], [75, 0]],
+      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 75% 0%, 100% 0%, 100% 50%, 75% 50%, 75% 0%)",
+      "area": 8750
+    }
+  ]
+}

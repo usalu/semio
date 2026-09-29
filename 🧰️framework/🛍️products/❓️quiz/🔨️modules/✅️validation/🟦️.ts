@@ -1,4 +1,4 @@
-/** ✅️ Structural and semantic validation of quizzes, catalogs and answers without any schema library.
+/** ✅️ Structural and semantic validation of quizzes, catalogs, answers, handles and presence states without any schema library.
  *
  * Issues carry a JSON pointer into the validated document and a stable kebab-case code; they are returned
  * deduplicated and sorted by path, then code, in Unicode code point order.
@@ -7,7 +7,7 @@
  * @see ../../README.md — the issue code table
  * @see ./🦀️.rs — the Rust twin
  */
-import { SCALES, TASK_KINDS, type Answer, type Quiz, type Rejection, type SheetTask } from "../../🧬️schema/🟦️.ts";
+import { SCALES, SCREENS, TASK_KINDS, type Answer, type Quiz, type Rejection, type SheetTask } from "../../🧬️schema/🟦️.ts";
 
 /** 🩺️ One finding: where (JSON pointer) and what (kebab-case code). */
 export type ValidationIssue = { readonly path: string; readonly code: string };
@@ -15,7 +15,15 @@ export type ValidationIssue = { readonly path: string; readonly code: string };
 type Json = Readonly<Record<string, unknown>>;
 type Report = (path: string, code: string) => void;
 
+/** 🪪️ A normalised handle: what learners see and the key the roster indexes. */
+export type NormalizedHandle = { readonly display: string; readonly key: string };
+
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+const TAG = /^[0-9a-f]{8}$/u;
+const ANCHOR = /^[a-z0-9]+(?:[:-][a-z0-9]+)*$/u;
+const WHITESPACE = /\p{White_Space}+/gu;
+const HANDLE_MAX = 64;
+const IDENTITY_KINDS = ["anonymous", "pseudonym", "name"] as const;
 const QUIZ_SCHEMA = "semio.quiz/v1";
 const CATALOG_SCHEMA = "semio.quiz.catalog/v1";
 const BADGE_RULE_KINDS = ["perfect-quiz", "perfect-tasks", "completed-quizzes"] as const;
@@ -102,7 +110,7 @@ function text(value: unknown, path: string, report: Report): void {
   if (json) for (const language of ["en", "de"]) if (Object.hasOwn(json, language)) string(json[language], at(path, language), report, 1);
 }
 
-/** 📚️ An array of at least `minItems` entries, each checked by `each`. */
+/** 🗄️ An array of at least `minItems` entries, each checked by `each`. */
 function array(value: unknown, path: string, report: Report, minItems: number, each: (entry: unknown, path: string) => void): readonly unknown[] | undefined {
   if (!Array.isArray(value)) return void report(path, "type-invalid");
   if (value.length < minItems) report(path, "items-too-few");
@@ -140,7 +148,7 @@ function quantity(value: unknown, path: string, report: Report): string | undefi
   return Object.hasOwn(json, "scale") && literal(json.scale, at(path, "scale"), report, SCALES) ? json.scale : undefined;
 }
 
-/** 🏷️ The shared head of an item: id, label and optional explanation. */
+/** 🪧️ The shared head of an item: id, label and optional explanation. */
 function itemHead(json: Json, path: string, report: Report): void {
   if (Object.hasOwn(json, "id")) slug(json.id, at(path, "id"), report);
   if (Object.hasOwn(json, "label")) text(json.label, at(path, "label"), report);
@@ -278,11 +286,12 @@ function task(value: unknown, path: string, report: Report): void {
 /** 📝️ Every issue of a quiz document: structure per the schema, unique ids, references, positive logarithmic values, complete profiles, matching values for every dimension and draws within the item count. */
 export function quizIssues(quiz: unknown): ValidationIssue[] {
   return collect((report) => {
-    const json = object(quiz, "", report, ["schema", "id", "title", "description", "tasks"], ["$schema"]);
+    const json = object(quiz, "", report, ["schema", "id", "emoji", "title", "description", "tasks"], ["$schema"]);
     if (!json) return;
     if (Object.hasOwn(json, "$schema")) string(json.$schema, "/$schema", report);
     if (Object.hasOwn(json, "schema") && json.schema !== QUIZ_SCHEMA) report("/schema", "value-invalid");
     if (Object.hasOwn(json, "id")) slug(json.id, "/id", report);
+    if (Object.hasOwn(json, "emoji")) string(json.emoji, "/emoji", report, 1, 16);
     if (Object.hasOwn(json, "title")) text(json.title, "/title", report);
     if (Object.hasOwn(json, "description")) text(json.description, "/description", report);
     const tasks = Object.hasOwn(json, "tasks") ? array(json.tasks, "/tasks", report, 1, (entry, path) => task(entry, path, report)) : undefined;
@@ -347,6 +356,144 @@ export function catalogIssues(catalog: unknown, quizzes: readonly Quiz[]): Valid
         })
       : undefined;
     uniqueIds(badges, "/badges", report);
+  });
+}
+
+/** ✂️ The display handle (trimmed, inner Unicode whitespace runs collapsed to one space) and its key (lowercased), or `undefined` outside 1…64 code points. */
+export function normalizeHandle(handle: string): NormalizedHandle | undefined {
+  const display = handle.replace(WHITESPACE, " ").replace(/^ | $/gu, "");
+  const length = [...display].length;
+  return length >= 1 && length <= HANDLE_MAX ? { display, key: display.toLowerCase() } : undefined;
+}
+
+/** 🔰️ Whether `value` is a public learner tag: 8 lowercase hex digits. */
+export function isTag(value: string): boolean {
+  return TAG.test(value);
+}
+
+/** ⛵️ Whether `value` is an anchor: `^[a-z0-9]+(?:[:-][a-z0-9]+)*$` and at most 64 characters. */
+export function isAnchor(value: string): boolean {
+  return value.length <= 64 && ANCHOR.test(value);
+}
+
+/** 🔖️ A public learner tag (`tag-invalid`). */
+function tag(value: unknown, path: string, report: Report): void {
+  if (typeof value !== "string") return report(path, "type-invalid");
+  if (!isTag(value)) report(path, "tag-invalid");
+}
+
+/** ⚓️ An anchor key (`anchor-invalid`). */
+function anchor(value: unknown, path: string, report: Report): void {
+  if (typeof value !== "string") return report(path, "type-invalid");
+  if (!isAnchor(value)) report(path, "anchor-invalid");
+}
+
+/** 📐️ A coordinate: a number (`type-invalid`) that is finite and in [0, 1] (`out-of-range`). */
+function unit(value: unknown, path: string, report: Report): void {
+  if (typeof value !== "number") return report(path, "type-invalid");
+  if (!(Number.isFinite(value) && value >= 0 && value <= 1)) report(path, "out-of-range");
+}
+
+/** 🎭️ An identity: a known kind, and a handle of 1…64 code points for pseudonyms and names (`length-invalid`). */
+function identity(value: unknown, path: string, report: Report): void {
+  if (!isObject(value)) return report(path, "type-invalid");
+  if (!Object.hasOwn(value, "kind")) return report(at(path, "kind"), "required");
+  if (!literal(value.kind, at(path, "kind"), report, IDENTITY_KINDS)) return;
+  const json = value.kind === "anonymous" ? object(value, path, report, ["kind"]) : object(value, path, report, ["kind", "handle"]);
+  if (json && Object.hasOwn(json, "handle")) string(json.handle, at(path, "handle"), report, 1, HANDLE_MAX);
+}
+
+/** 🗺️ A place: a known screen and slugs for quiz and task; on a known screen the quiz page, a run and its results name their quiz (`required`), only they name a quiz (`quiz-outside-run`), only a run names a task (`task-without-run`). */
+function place(value: unknown, path: string, report: Report): void {
+  const json = object(value, path, report, ["screen"], ["quiz", "task"]);
+  if (!json) return;
+  if (Object.hasOwn(json, "quiz")) slug(json.quiz, at(path, "quiz"), report);
+  if (Object.hasOwn(json, "task")) slug(json.task, at(path, "task"), report);
+  if (!Object.hasOwn(json, "screen") || !literal(json.screen, at(path, "screen"), report, SCREENS)) return;
+  const inQuiz = json.screen === "quiz" || json.screen === "run" || json.screen === "results";
+  if (inQuiz && !Object.hasOwn(json, "quiz")) report(at(path, "quiz"), "required");
+  if (!inQuiz && Object.hasOwn(json, "quiz")) report(at(path, "quiz"), "quiz-outside-run");
+  if (json.screen !== "run" && Object.hasOwn(json, "task")) report(at(path, "task"), "task-without-run");
+}
+
+/** 🟢️ Every issue of a presence state: structure per the schema, tag, identity handle, place. */
+export function presenceIssues(state: unknown): ValidationIssue[] {
+  return collect((report) => {
+    const json = object(state, "", report, ["tag", "identity", "place", "active"]);
+    if (!json) return;
+    if (Object.hasOwn(json, "tag")) tag(json.tag, "/tag", report);
+    if (Object.hasOwn(json, "identity")) identity(json.identity, "/identity", report);
+    if (Object.hasOwn(json, "place")) place(json.place, "/place", report);
+    if (Object.hasOwn(json, "active")) boolean(json.active, "/active", report);
+  });
+}
+
+/** 👆️ Every issue of a cursor state: structure per the schema, tag, anchors (cards, `item:<id>`, `category:<id>`), coordinates finite and in [0, 1], the dragged item a slug. */
+export function cursorIssues(state: unknown): ValidationIssue[] {
+  return collect((report) => {
+    const json = object(state, "", report, ["tag"], ["cursor", "focus", "drag"]);
+    if (!json) return;
+    if (Object.hasOwn(json, "tag")) tag(json.tag, "/tag", report);
+    if (Object.hasOwn(json, "focus")) anchor(json.focus, "/focus", report);
+    if (Object.hasOwn(json, "drag")) {
+      const drag = object(json.drag, "/drag", report, ["item"]);
+      if (drag && Object.hasOwn(drag, "item")) slug(drag.item, "/drag/item", report);
+    }
+    if (!Object.hasOwn(json, "cursor")) return;
+    const cursor = object(json.cursor, "/cursor", report, ["anchor", "x", "y"]);
+    if (!cursor) return;
+    if (Object.hasOwn(cursor, "anchor")) anchor(cursor.anchor, "/cursor/anchor", report);
+    if (Object.hasOwn(cursor, "x")) unit(cursor.x, "/cursor/x", report);
+    if (Object.hasOwn(cursor, "y")) unit(cursor.y, "/cursor/y", report);
+  });
+}
+
+/** 🪣️ The most tasks one thinking state names, and the most entries (and the largest card index + 1) one answer or dimension holds. */
+export const THINKING_LIMIT = 64;
+
+/** 🧭️ A map whose keys are slugs, each value checked by `each`, at most {@link THINKING_LIMIT} entries (`too-many`). */
+function slugMap(value: unknown, path: string, report: Report, each: (entry: unknown, path: string) => void): void {
+  if (!isObject(value)) return report(path, "type-invalid");
+  const entries = Object.entries(value);
+  if (entries.length > THINKING_LIMIT) report(path, "too-many");
+  for (const [key, entry] of entries) {
+    slug(key, at(path, key), report);
+    each(entry, at(path, key));
+  }
+}
+
+/** ✍️ A draft answer: structurally valid per the schema (kind, members, slugs; matching values finite numbers, `type-invalid` otherwise), possibly partial, with at most {@link THINKING_LIMIT} entries per map or order (`too-many`) and no repeated item in an order (`duplicate-id`). */
+function answer(value: unknown, path: string, report: Report): void {
+  if (!isObject(value)) return report(path, "type-invalid");
+  if (!Object.hasOwn(value, "kind")) return report(at(path, "kind"), "required");
+  if (!literal(value.kind, at(path, "kind"), report, TASK_KINDS)) return;
+  const member = value.kind === "sorting" ? "order" : value.kind === "matching" ? "values" : "assignments";
+  const json = object(value, path, report, ["kind", member]);
+  if (!json || !Object.hasOwn(json, member)) return;
+  if (value.kind === "sorting") {
+    const seen = new Set<unknown>();
+    const order = array(json.order, at(path, "order"), report, 0, (entry, entryPath) => {
+      slug(entry, entryPath, report);
+      if (seen.has(entry)) report(entryPath, "duplicate-id");
+      seen.add(entry);
+    });
+    if (order && order.length > THINKING_LIMIT) report(at(path, "order"), "too-many");
+  } else if (value.kind === "classification") slugMap(json.assignments, at(path, "assignments"), report, (entry, entryPath) => slug(entry, entryPath, report));
+  else
+    slugMap(json.values, at(path, "values"), report, (entry, entryPath) =>
+      slugMap(entry, entryPath, report, (number, numberPath) => {
+        if (typeof number !== "number" || !Number.isFinite(number)) report(numberPath, "type-invalid");
+      }),
+    );
+}
+
+/** 💭️ Every issue of a thinking state: structure per the schema, tag, and structurally valid (possibly partial) draft answers per task slug within {@link THINKING_LIMIT}. */
+export function thinkingIssues(state: unknown): ValidationIssue[] {
+  return collect((report) => {
+    const json = object(state, "", report, ["tag", "answers"]);
+    if (!json) return;
+    if (Object.hasOwn(json, "tag")) tag(json.tag, "/tag", report);
+    if (Object.hasOwn(json, "answers")) slugMap(json.answers, "/answers", report, (entry, entryPath) => answer(entry, entryPath, report));
   });
 }
 

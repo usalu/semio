@@ -130,10 +130,10 @@ describe("⌨️ classification by keyboard", () => {
     const answers: ClassificationAnswer[] = [];
     render(<Harness View={ClassificationTaskView} task={CLIMATES} answers={answers} />);
     const chip = screen.getByRole("combobox", { name: "Category for Fjord" }).closest("li")!;
-    drag(chip.querySelector(".quiz-grip")!, screen.getByRole("region", { name: "Cold and wet" }).querySelector("h4")!);
+    drag(chip.querySelector("[data-quiz-grip]")!, screen.getByRole("region", { name: "Cold and wet" }).querySelector("h4")!);
     expect(answers.at(-1)).toEqual({ kind: "classification", assignments: { fjord: "cold-wet" } });
     const moved = screen.getByRole("combobox", { name: "Category for Fjord" }).closest("li")!;
-    drag(moved.querySelector(".quiz-grip")!, screen.getByRole("region", { name: "Items to classify" }));
+    drag(moved.querySelector("[data-quiz-grip]")!, screen.getByRole("region", { name: "Items to classify" }));
     expect(answers.at(-1)).toEqual({ kind: "classification", assignments: {} });
   });
 
@@ -178,7 +178,7 @@ describe("⌨️ sorting by keyboard", () => {
     const answers: SortingAnswer[] = [];
     render(<Harness View={SortingTaskView} task={MASSES} answers={answers} />);
     const items = within(screen.getByRole("list", { name: "Order by Mass" })).getAllByRole("listitem");
-    drag(items[2]!.querySelector(".quiz-grip")!, items[0]!);
+    drag(items[2]!.querySelector("[data-quiz-grip]")!, items[0]!);
     expect(answers.at(-1)?.order).toEqual(["cat", "horse", "mouse"]);
   });
 });
@@ -220,7 +220,7 @@ describe("⌨️ matching by keyboard", () => {
     render(<Harness View={MatchingTaskView} task={LAMPS} answers={answers} />);
     const card = within(screen.getByRole("list", { name: "Value cards: Power" })).getAllByRole("listitem")[2]!;
     const row = screen.getByRole("rowheader", { name: "Floodlight" }).closest("tr")!;
-    drag(card.querySelector(".quiz-grip")!, row.querySelector("th")!);
+    drag(card.querySelector("[data-quiz-grip]")!, row.querySelector("th")!);
     expect(answers.at(-1)).toEqual({ kind: "matching", assignments: { power: { floodlight: 2 } } });
   });
 });

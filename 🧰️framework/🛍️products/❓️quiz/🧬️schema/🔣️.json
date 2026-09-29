@@ -203,11 +203,12 @@
       "description": "A quiz: an ordered set of tasks. A run presents them randomized and is scored only as a whole.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "id", "title", "description", "tasks"],
+      "required": ["schema", "id", "emoji", "title", "description", "tasks"],
       "properties": {
         "$schema": { "type": "string" },
         "schema": { "const": "semio.quiz/v1" },
         "id": { "$ref": "#/$defs/Slug" },
+        "emoji": { "description": "One emoji grapheme identifying the quiz on cards and headers.", "type": "string", "minLength": 1, "maxLength": 16 },
         "title": { "$ref": "#/$defs/Text" },
         "description": { "$ref": "#/$defs/Text" },
         "tasks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Task" } }
@@ -695,9 +696,10 @@
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title", "description", "tasks"],
+      "required": ["id", "emoji", "title", "description", "tasks"],
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
+        "emoji": { "type": "string", "minLength": 1, "maxLength": 16 },
         "title": { "$ref": "#/$defs/Text" },
         "description": { "$ref": "#/$defs/Text" },
         "tasks": {
@@ -868,8 +870,168 @@
           "additionalProperties": false,
           "required": ["type"],
           "properties": { "type": { "const": "leaderboard" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "quiz"],
+          "properties": { "type": { "const": "crowd" }, "quiz": { "$ref": "#/$defs/Slug" } }
         }
       ]
+    },
+    "Screen": {
+      "description": "Every page a learner can be on. `quiz` is the read-only page of one quiz (what its card opens), `learner` the learner's own profile, `badges` every badge, `preferences` the settings; `run` and `results` belong to a run of a quiz.",
+      "enum": ["introduction", "identity", "home", "quiz", "run", "results", "leaderboard", "learner", "badges", "preferences"]
+    },
+    "Place": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Where a learner is: the screen, and for a run or its results the quiz, and for a run the task on screen. Learners at the same place share one presence room; the identity screen has none (no tag exists yet).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["screen"],
+      "properties": {
+        "screen": { "$ref": "#/$defs/Screen" },
+        "quiz": { "$ref": "#/$defs/Slug" },
+        "task": { "$ref": "#/$defs/Slug" }
+      }
+    },
+    "Anchor": {
+      "description": "A landmark every learner at the same place renders (a card, the leaderboard, a task card), addressed by a stable key; positions are relative to its box so they survive different viewports and randomized item orders.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:[:-][a-z0-9]+)*$"
+    },
+    "Cursor": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchor", "x", "y"],
+      "properties": {
+        "anchor": { "$ref": "#/$defs/Anchor" },
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "PresenceState": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Ephemeral shared presence in the catalog-wide room: who is online and where. Carries the public learner tag, never the learner id.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "identity", "place", "active"],
+      "properties": {
+        "tag": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+        "identity": { "$ref": "#/$defs/Identity" },
+        "place": { "$ref": "#/$defs/Place" },
+        "active": { "description": "Whether the page is visible and the learner interacted recently.", "type": "boolean" }
+      }
+    },
+    "CursorState": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Ephemeral shared pointer, keyboard focus and the item being dragged in the room of one place. Anchors may be cards, items (`item:<id>`) or categories (`category:<id>`): the quizzes are for fun and learners see what the others do.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag"],
+      "properties": {
+        "tag": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+        "cursor": { "$ref": "#/$defs/Cursor" },
+        "focus": { "$ref": "#/$defs/Anchor" },
+        "drag": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["item"],
+          "properties": { "item": { "$ref": "#/$defs/Slug" } }
+        }
+      }
+    },
+    "ThinkingState": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Ephemeral shared draft answers of one learner's open run, published in the thinking room of its quiz: what the learner currently thinks, per task id. Carries the public tag only.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "answers"],
+      "properties": {
+        "tag": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+        "answers": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "$ref": "#/$defs/ThinkingAnswer" }
+        }
+      }
+    },
+    "ThinkingMatchingAnswer": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A matching draft in semantic form: per dimension id the VALUE assigned to each item id (card indices point into the publisher's own shuffled cards and mean nothing to peers).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "values"],
+      "properties": {
+        "kind": { "const": "matching" },
+        "values": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": {
+            "type": "object",
+            "propertyNames": { "$ref": "#/$defs/Slug" },
+            "additionalProperties": { "type": "number" }
+          }
+        }
+      }
+    },
+    "ThinkingAnswer": {
+      "description": "A draft answer as peers can read it: classification and sorting answers are already semantic (item and category ids); matching drafts carry values.",
+      "oneOf": [
+        { "$ref": "#/$defs/ClassificationAnswer" },
+        { "$ref": "#/$defs/SortingAnswer" },
+        { "$ref": "#/$defs/ThinkingMatchingAnswer" }
+      ]
+    },
+    "CrowdCount": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "count"],
+      "properties": {
+        "key": { "description": "A category id (classification) or a value rendered with JSON number syntax (matching).", "type": "string", "minLength": 1 },
+        "count": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "CrowdItem": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "How often an item was answered and how: counts per category or value in ascending key order, or for sortings the mean of the normalized position (0 smallest … 1 largest) the learners gave it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "answers"],
+      "properties": {
+        "item": { "$ref": "#/$defs/Slug" },
+        "answers": { "type": "integer", "minimum": 1 },
+        "counts": { "type": "array", "items": { "$ref": "#/$defs/CrowdCount" } },
+        "meanPosition": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "CrowdTask": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task", "kind", "items"],
+      "properties": {
+        "task": { "$ref": "#/$defs/Slug" },
+        "kind": { "$ref": "#/$defs/TaskKind" },
+        "dimension": { "description": "Set for matching: one crowd task per dimension.", "$ref": "#/$defs/Slug" },
+        "items": { "description": "In the quiz's definition order; items nobody answered are left out.", "type": "array", "items": { "$ref": "#/$defs/CrowdItem" } }
+      }
+    },
+    "CrowdView": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "What the learners answered in the submitted runs of one quiz, aggregated per task (and dimension) and item: persisted shared, a projection of run-submitted events.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quiz", "runs", "tasks"],
+      "properties": {
+        "quiz": { "$ref": "#/$defs/Slug" },
+        "runs": { "type": "integer", "minimum": 0 },
+        "tasks": { "description": "Tasks in definition order, matching dimensions in definition order.", "type": "array", "items": { "$ref": "#/$defs/CrowdTask" } }
+      }
     }
   }
 }

@@ -1,0 +1,10 @@
+{
+  "site": {
+    "host": "quizzes.architektur-und-technologie.de"
+  },
+  "proctor": {
+    "host": "proctor.quizzes.architektur-und-technologie.de",
+    "image": "ghcr.io/usalu/architecture-quiz-proctor",
+    "port": 8791
+  }
+}

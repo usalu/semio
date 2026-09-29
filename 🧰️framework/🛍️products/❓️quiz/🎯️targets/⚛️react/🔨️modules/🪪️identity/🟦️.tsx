@@ -8,6 +8,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement } from "react";
 import { normalizeHandle, type Identity } from "@semio-tech/quiz";
 import { REJECTION_LABELS, type QuizLabelKey, type QuizText } from "../🌐️i18n/🟦️.ts";
+import { BodyButton, CardAction, CardIcon, QuizCard } from "../🪟️chrome/🟦️.tsx";
 import type { QuizSession, SessionFailure } from "../🧭️session/🟦️.ts";
 
 /** 🏷️ How a learner is named in public: their handle, or the localized "Anonymous" with their tag — never with any
@@ -69,59 +70,79 @@ export function IdentityScreen(props: { readonly session: QuizSession; readonly 
   const errorId = `${scope}-error`;
   const explanationId = `${scope}-explanation`;
   return (
-    <form className="quiz-identity quiz-panel" onSubmit={submit} noValidate aria-busy={working !== undefined}>
-      <h1 tabIndex={-1}>{text("quiz.identity.title")}</h1>
-      <p>{text("quiz.identity.lead")}</p>
-      <fieldset>
-        <legend>{text("quiz.identity.kind")}</legend>
-        {KINDS.map((option) => (
-          <div key={option.kind} className="quiz-choice-row">
-            <input id={`${scope}-${option.kind}`} type="radio" name={`${scope}-kind`} value={option.kind} checked={kind === option.kind} onChange={() => setKind(option.kind)} aria-describedby={`${scope}-${option.kind}-hint`} />
-            <label htmlFor={`${scope}-${option.kind}`}>{text(option.label)}</label>
-            <p id={`${scope}-${option.kind}-hint`} className="quiz-muted">
-              {text(option.hint)}
-            </p>
+    <form onSubmit={submit} noValidate aria-busy={working !== undefined} className="min-w-0">
+      <QuizCard
+        id={`${scope}-title`}
+        card="identity"
+        headingLevel={1}
+        focusableHeading
+        icon={<CardIcon icon="user" />}
+        title={text("quiz.identity.title")}
+        footerRight={
+          <CardAction primary type="submit" disabled={working !== undefined}>
+            {text("quiz.identity.submit")}
+          </CardAction>
+        }
+      >
+        <p className="m-0 text-sm leading-normal">{text("quiz.identity.lead")}</p>
+        <fieldset className="m-0 flex flex-col gap-single border border-normal p-double">
+          <legend className="px-single text-sm font-semibold">{text("quiz.identity.kind")}</legend>
+          {KINDS.map((option) => (
+            <div key={option.kind} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
+              <input
+                id={`${scope}-${option.kind}`}
+                type="radio"
+                name={`${scope}-kind`}
+                value={option.kind}
+                checked={kind === option.kind}
+                onChange={() => setKind(option.kind)}
+                aria-describedby={`${scope}-${option.kind}-hint`}
+                className="quiz-radio"
+              />
+              <label htmlFor={`${scope}-${option.kind}`} className="quiz-target flex cursor-pointer items-center text-sm font-semibold">
+                {text(option.label)}
+              </label>
+              <p id={`${scope}-${option.kind}-hint`} className="col-start-2 m-0 text-xs leading-normal text-muted-foreground">
+                {text(option.hint)}
+              </p>
+            </div>
+          ))}
+        </fieldset>
+        {kind === "anonymous" ? null : (
+          <div className="flex max-w-md flex-col gap-single">
+            <label htmlFor={`${scope}-handle`} className="text-sm font-semibold">
+              {text(kind === "name" ? "quiz.identity.handleName" : "quiz.identity.handlePseudonym")}
+            </label>
+            <input
+              ref={input}
+              id={`${scope}-handle`}
+              type="text"
+              value={handle}
+              maxLength={64}
+              autoComplete={kind === "name" ? "name" : "nickname"}
+              spellCheck={false}
+              aria-invalid={error !== undefined}
+              aria-describedby={error === undefined ? explanationId : `${errorId} ${explanationId}`}
+              onChange={(event) => setHandle(event.target.value)}
+              className="quiz-input"
+            />
           </div>
-        ))}
-      </fieldset>
-      {kind === "anonymous" ? null : (
-        <div className="quiz-field">
-          <label htmlFor={`${scope}-handle`}>{text(kind === "name" ? "quiz.identity.handleName" : "quiz.identity.handlePseudonym")}</label>
-          <input
-            ref={input}
-            id={`${scope}-handle`}
-            type="text"
-            value={handle}
-            maxLength={64}
-            autoComplete={kind === "name" ? "name" : "nickname"}
-            spellCheck={false}
-            aria-invalid={error !== undefined}
-            aria-describedby={error === undefined ? explanationId : `${errorId} ${explanationId}`}
-            onChange={(event) => setHandle(event.target.value)}
-          />
-        </div>
-      )}
-      <p id={explanationId} className="quiz-note">
-        {text("quiz.identity.noPassword")}
-      </p>
-      {error === undefined ? null : (
-        <p id={errorId} className="quiz-error" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="quiz-actions">
-        <button type="submit" className="quiz-button quiz-button-primary" disabled={working !== undefined}>
-          {text("quiz.identity.submit")}
-        </button>
-        {working === undefined ? null : (
-          <span className="quiz-working" role="status">
-            {text("quiz.identity.working")}
-            <button type="button" className="quiz-button" onClick={() => working.abort()}>
-              {text("quiz.run.cancel")}
-            </button>
-          </span>
         )}
-      </div>
+        <p id={explanationId} className="quiz-note m-0 border-l-2 px-double py-single text-xs leading-normal">
+          {text("quiz.identity.noPassword")}
+        </p>
+        {error === undefined ? null : (
+          <p id={errorId} role="alert" className="quiz-alert m-0 border border-normal px-double py-single text-sm font-semibold">
+            {error}
+          </p>
+        )}
+        {working === undefined ? null : (
+          <p role="status" className="m-0 flex flex-wrap items-center gap-double text-sm">
+            {text("quiz.identity.working")}
+            <BodyButton onClick={() => working.abort()}>{text("quiz.run.cancel")}</BodyButton>
+          </p>
+        )}
+      </QuizCard>
     </form>
   );
 }

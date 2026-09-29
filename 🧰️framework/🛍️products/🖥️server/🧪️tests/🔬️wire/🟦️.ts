@@ -7,8 +7,8 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 /** 🔌️ The TypeScript half of the server wire gate: every shared vector round-trips byte-for-byte, the route table mirrors the
  * gateway router, and the typed client speaks the same wire shape. */
-export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "SERVER_ROUTES" | "ServerClient" | "WireError" | "decodeActorKey" | "decodeCommandEnvelope" | "decodeCommandOutcome" | "decodeCommandReceipt" | "decodeDocumentFrame" | "decodeEphemeralFrame" | "decodeEventRecord" | "decodeEventStreamFrame" | "decodeFrontierSummary" | "decodeHybridLogicalClock" | "decodePrincipal" | "decodeQueryConsistency" | "decodeQueryEnvelope" | "decodeQueryResult" | "decodeRejection" | "decodeServerInstanceDefinition" | "decodeTraceContext" | "documentLane" | "encodeActorKey" | "encodeCommandEnvelope" | "encodeCommandOutcome" | "encodeCommandReceipt" | "encodeEphemeralFrame" | "encodeEventRecord" | "encodeFrontierSummary" | "encodeHybridLogicalClock" | "encodePrincipal" | "encodeQueryConsistency" | "encodeQueryEnvelope" | "encodeQueryResult" | "encodeRejection" | "encodeServerInstanceDefinition" | "encodeTraceContext" | "ephemeralLane" | "fetchTransport" | "socketRoot" | "streamLane">, source: TestSource): Promise<void> {
-  const { SERVER_ROUTES, ServerClient, WireError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, socketRoot, streamLane } = dependencies;
+export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "PRESENCE_PROTOCOL" | "SERVER_ROUTES" | "ServerClient" | "WireError" | "decodeActorKey" | "decodeCommandEnvelope" | "decodeCommandOutcome" | "decodeCommandReceipt" | "decodeDocumentFrame" | "decodeEphemeralFrame" | "decodeEventRecord" | "decodeEventStreamFrame" | "decodeFrontierSummary" | "decodeHybridLogicalClock" | "decodePresenceFrame" | "decodePrincipal" | "decodeQueryConsistency" | "decodeQueryEnvelope" | "decodeQueryResult" | "decodeRejection" | "decodeServerInstanceDefinition" | "decodeTraceContext" | "documentLane" | "encodeActorKey" | "encodeCommandEnvelope" | "encodeCommandOutcome" | "encodeCommandReceipt" | "encodeEphemeralFrame" | "encodeEventRecord" | "encodeFrontierSummary" | "encodeHybridLogicalClock" | "encodePresenceFrame" | "encodePrincipal" | "encodeQueryConsistency" | "encodeQueryEnvelope" | "encodeQueryResult" | "encodeRejection" | "encodeServerInstanceDefinition" | "encodeTraceContext" | "ephemeralLane" | "fetchTransport" | "presenceLane" | "presenceSocketUrl" | "socketRoot" | "streamLane">, source: TestSource): Promise<void> {
+  const { PRESENCE_PROTOCOL, SERVER_ROUTES, ServerClient, WireError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePresenceFrame, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePresenceFrame, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, presenceLane, presenceSocketUrl, socketRoot, streamLane } = dependencies;
   const { describe, expect, it } = vitest;
 
   const productRoot = dirname(fileURLToPath(source.url));
@@ -34,6 +34,7 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
     queryEnvelope: (value) => encodeQueryEnvelope(decodeQueryEnvelope(value)),
     queryResult: (value) => encodeQueryResult(decodeQueryResult(value)),
     serverInstanceDefinition: (value) => encodeServerInstanceDefinition(decodeServerInstanceDefinition(value)),
+    presenceFrame: (value) => encodePresenceFrame(decodePresenceFrame(value)),
   };
 
   describe("🔌️wire", () => {
@@ -62,6 +63,19 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
     it("names the field a malformed value was found at", () => {
       expect(() => decodeCommandReceipt({ commandId: "c", actor: { tenant: "t", kind: "k", id: "i" }, revision: "nope", acceptedAt: { millis: 0, counter: 0 } })).toThrow("receipt.revision");
     });
+
+    it("carries a vector for every presence frame and refuses a malformed one", () => {
+      expect([...new Set(fixture.vectors.filter((vector) => vector.type === "presenceFrame").map((vector) => (vector.json as { type: string }).type))].sort()).toEqual(["batch", "refused", "state", "watch", "watched", "welcome"]);
+      expect(encodePresenceFrame({ type: "watch", scopes: ["space-1", "space-1/home"], intervalMs: 250 })).toEqual({ type: "watch", scopes: ["space-1", "space-1/home"], intervalMs: 250 });
+      expect(decodePresenceFrame({ type: "watched", scope: "space-1", entries: [], left: ["s"], snapshot: false })).toEqual({ type: "watched", scope: "space-1", entries: [], left: ["s"] });
+      expect(encodePresenceFrame({ type: "watched", scope: "space-1", entries: [], left: [], snapshot: true })).toEqual({ type: "watched", scope: "space-1", entries: [], left: [], snapshot: true });
+      expect(() => decodePresenceFrame({ type: "watch", scopes: ["a"], intervalMs: 2.5 })).toThrow("presenceFrame.intervalMs");
+      expect(() => decodePresenceFrame({ type: "watched", scope: "a", entries: [], left: [], snapshot: "yes" })).toThrow("presenceFrame.snapshot");
+      expect(() => decodePresenceFrame({ type: "welcome", session: "s", colour: 256, roster: [] })).toThrow("presenceFrame.colour");
+      expect(() => decodePresenceFrame({ type: "state" })).toThrow("presenceFrame.state");
+      expect(() => decodePresenceFrame({ type: "cursor" })).toThrow(WireError);
+      expect(decodePresenceFrame({ type: "state", state: null })).toEqual({ type: "state", state: null });
+    });
   });
 
   describe("🛣️routes", () => {
@@ -86,6 +100,7 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
       expect(streamLane({ tenant: "t1", kind: "counter", id: "c1" })).toBe("stream:t1/counter/c1");
       expect(documentLane("space-1")).toBe("document:space-1");
       expect(ephemeralLane("space-1")).toBe("ephemeral:space-1");
+      expect(presenceLane("space-1")).toBe("presence:space-1");
       expect(socketRoot("http://127.0.0.1:6081/")).toBe("ws://127.0.0.1:6081");
     });
   });
@@ -139,6 +154,9 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
       expect(client.eventStreamUrl("http://127.0.0.1:6081", { tenant: "t1", kind: "counter", id: "c1" }, 9)).toBe("ws://127.0.0.1:6081/actors/t1/counter/c1/events/ws?since=9");
       expect(client.documentSocketUrl("http://127.0.0.1:6081", "space-1", { surface: "editor" })).toBe("ws://127.0.0.1:6081/scopes/space-1/document/ws?surface=editor");
       expect(client.documentSocketUrl("http://127.0.0.1:6081", "space-1")).toBe("ws://127.0.0.1:6081/scopes/space-1/document/ws");
+      expect(client.presenceSocketUrl("https://proctor.example/", "architecture/quiz/physics", "run")).toBe("wss://proctor.example/scopes/architecture%2Fquiz%2Fphysics/presence/ws?surface=run");
+      expect(presenceSocketUrl("http://127.0.0.1:6081", "architecture", "home page")).toBe("ws://127.0.0.1:6081/scopes/architecture/presence/ws?surface=home+page");
+      expect(PRESENCE_PROTOCOL).toBe("semio.presence.v1");
     });
 
     it("classifies both document frame shapes", () => {

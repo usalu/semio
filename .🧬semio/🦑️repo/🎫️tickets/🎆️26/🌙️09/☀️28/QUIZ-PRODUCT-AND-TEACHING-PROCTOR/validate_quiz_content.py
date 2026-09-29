@@ -202,6 +202,7 @@ def main() -> None:
         error("catalog", "duplicate quiz paths")
 
     quizzes = []
+    emojis: dict[str, str] = {}
     for relative in catalog["quizzes"]:
         path = (CATALOG_PATH.parent / relative).resolve()
         if not path.exists():
@@ -218,6 +219,13 @@ def main() -> None:
         if (path.parent / quiz["$schema"].split("#")[0]).resolve() != SCHEMA_PATH.resolve():
             error(quiz["id"], "$schema does not resolve to the contract")
         check_texts(quiz, quiz["id"])
+        topic = path.parent.parent.name
+        folder_emoji = topic[: topic.index("️")] if "️" in topic else topic[0]
+        quiz_emoji = quiz.get("emoji", "")
+        if quiz_emoji.replace("️", "") != folder_emoji:
+            error(quiz["id"], f"emoji {quiz_emoji!r} differs from the topic folder emoji {folder_emoji!r}")
+        emojis[quiz["id"]] = quiz_emoji
+        out(f"  emoji {quiz_emoji} (topic folder {topic})")
         unique([task["id"] for task in quiz["tasks"]], quiz["id"], "task")
         for task in quiz["tasks"]:
             where = f"{quiz['id']}/{task['id']}"
@@ -234,6 +242,8 @@ def main() -> None:
         if rule["kind"] == "perfect-quiz":
             ok = rule["quiz"] in quiz_ids
             selected = sum(len(quiz["tasks"]) for quiz in quizzes if quiz["id"] == rule["quiz"])
+            if ok and badge["emoji"] != emojis[rule["quiz"]]:
+                error(f"badge {badge['id']}", f"emoji {badge['emoji']!r} differs from quiz {rule['quiz']} emoji {emojis[rule['quiz']]!r}")
         elif rule["kind"] == "perfect-tasks":
             ok = "quiz" not in rule or rule["quiz"] in quiz_ids
             selected = sum(1 for quiz in quizzes for task in quiz["tasks"] if rule.get("taskKind", task["kind"]) == task["kind"] and rule.get("quiz", quiz["id"]) == quiz["id"])

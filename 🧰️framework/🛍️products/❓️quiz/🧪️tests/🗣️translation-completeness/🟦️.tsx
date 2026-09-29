@@ -75,9 +75,9 @@ describe("🗣️ translation completeness", () => {
     expect(german.get("quiz.results.yourAnswer")?.label.normal).toBe("Deine Antwort");
   });
 
-  it("reaches the shared port through the lightweight `@semio-tech/ui-react/i18n` subpath only", () => {
+  it("reaches the design system through its slim `@semio-tech/ui-react/i18n` and `/chrome` subpaths only, never the barrel", () => {
     const imports = Object.values(SOURCES).flatMap((source) => [...source.matchAll(/from "(@semio-tech\/ui-react[^"]*)"/gu)].map((match) => match[1]));
-    expect(new Set(imports)).toEqual(new Set(["@semio-tech/ui-react/i18n"]));
+    expect(new Set(imports)).toEqual(new Set(["@semio-tech/ui-react/i18n", "@semio-tech/ui-react/chrome"]));
     expect(resolveUiLabel({ label: { normal: "N", beginner: "B" } }, "normal")).toBe("N");
     expect(resolveUiLabel({ label: { normal: "N", beginner: "B" } }, "beginner")).toBe("B");
     expect(resolveUiLabel({ label: { beginner: "B" } }, "normal")).toBe("B");

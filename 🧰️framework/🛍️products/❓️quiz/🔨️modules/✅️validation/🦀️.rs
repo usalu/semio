@@ -53,6 +53,12 @@ pub enum IssueCode {
     QuizCountMismatch,
     QuizUnknown,
     BadgeUnreachable,
+    TagInvalid,
+    AnchorInvalid,
+    OutOfRange,
+    QuizOutsideRun,
+    TaskWithoutRun,
+    TooMany,
 }
 
 impl IssueCode {
@@ -84,6 +90,12 @@ impl IssueCode {
             Self::QuizCountMismatch => "quiz-count-mismatch",
             Self::QuizUnknown => "quiz-unknown",
             Self::BadgeUnreachable => "badge-unreachable",
+            Self::TagInvalid => "tag-invalid",
+            Self::AnchorInvalid => "anchor-invalid",
+            Self::OutOfRange => "out-of-range",
+            Self::QuizOutsideRun => "quiz-outside-run",
+            Self::TaskWithoutRun => "task-without-run",
+            Self::TooMany => "too-many",
         }
     }
 }
@@ -102,6 +114,7 @@ pub fn quiz_issues(quiz: &Quiz) -> Vec<ValidationIssue> {
         issues.push("/schema".to_string(), IssueCode::ValueInvalid);
     }
     issues.slug("/id".to_string(), &quiz.id);
+    issues.length("/emoji".to_string(), &quiz.emoji, 1, 16);
     issues.text("/title", &quiz.title);
     issues.text("/description", &quiz.description);
     issues.at_least("/tasks".to_string(), quiz.tasks.len(), 1, IssueCode::ItemsTooFew);

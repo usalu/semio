@@ -75,6 +75,15 @@ impl ServerModule for CountingModule {
     async fn routes(&self, router: GatewayRouter<ServerState<TestInstance>>) -> GatewayRouter<ServerState<TestInstance>> {
         router.route("/counting/health", axum::routing::get(|| async { "ok" }))
     }
+
+    /// 🧍️ Shares any presence state except one asking to be refused — the smallest rule that proves
+    /// the gateway asks the module and relays its reason.
+    fn presence_admission(&self, _scope: &Scope, state: &crate::contract::OpaqueJson) -> Result<(), String> {
+        match state.get("refuse").and_then(|reason| reason.as_str()) {
+            Some(reason) => Err(reason.to_string()),
+            None => Ok(()),
+        }
+    }
 }
 //#endregion 🔖️Module
 
@@ -88,7 +97,7 @@ pub const MIRROR: &str = "mirror";
 /// 🧮️ Fold [`CounterDecider`]'s little-endian counter bytes back to a `u64`, defaulting to zero for
 /// an unstarted or malformed state.
 pub fn read_counter(bytes: &[u8]) -> u64 {
-    <[u8; 8]>::try_from(bytes).map(u64::from_le_bytes).unwrap_or(0)
+    <[u8; 8]>::try_from(bytes).map_or(0, u64::from_le_bytes)
 }
 
 /// 🧮️ A little-endian counter over one command kind, exercising all four [`Decision`] branches.
@@ -263,15 +272,14 @@ impl AuthorityStore for MemoryAuthorityStore {
 
     async fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError> {
         let stream = self.streams.entry(actor.clone()).or_default();
-        let mut expected = stream.last().map_or(0, |record| record.seq) + 1;
-        for event in events {
+        let first = stream.last().map_or(0, |record| record.seq) + 1;
+        for (expected, event) in (first..).zip(events) {
             if &event.stream != actor {
                 return Err(StorageError::Conflict(format!("event at seq {} belongs to stream {}/{}", event.seq, event.stream.kind, event.stream.id)));
             }
             if event.seq != expected {
                 return Err(StorageError::SequenceGap { expected, got: event.seq });
             }
-            expected += 1;
         }
         stream.extend_from_slice(events);
         let head = stream.last().map_or(0, |record| record.seq);

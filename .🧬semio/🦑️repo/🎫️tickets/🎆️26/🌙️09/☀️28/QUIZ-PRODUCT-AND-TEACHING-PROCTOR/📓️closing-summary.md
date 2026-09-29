@@ -58,3 +58,64 @@ from scipy/jStat, distances from scipy/mathjs.
 - The repo `.venv` has scipy 1.17.1 while `uv.lock` pins 1.18; the harness installs locked versions on first run.
 - `🎬️clip` leaves of the teaching tree are intended but out of scope.
 - The presentation product has the same react-target layout breach the quiz product avoided (task chip offered).
+
+## Revision 2026-09-29 — card-grid UI, CDN site, zero-touch proctor, shared presence
+
+Design: `📓️design.md` §14 (grid, CDN, Docker) and §15 (presence). References: `📓️ui-reference-play-demonstrator.md`,
+`📓️explore-cdn-docker-deploy.md`.
+
+| Area | Result |
+|---|---|
+| UI | Every screen in the play/demonstrator language (`WindowChrome` cards, `Navbar`, tokens, light/dark). Home = 3 × 3 grid with the leaderboard in the centre (2 columns on tablet, 1 on phone). The play/demonstrator card is extracted once as `🧱️elements/🃏️OverviewCard`, used by the quiz, play and the demonstrator; slim subpath `@semio-tech/ui-react/chrome`. |
+| Site on the CDN | `quizzes.architektur-und-technologie.de`: release build bakes `VITE_PROCTOR_URL` (`https://proctor.quizzes.architektur-und-technologie.de`); `publish` verifies and stages `dist/pages/quizzes` (`CNAME`, `.nojekyll`, `404.html`, `_headers`); manual GitHub Pages workflow `.github/workflows/architecture-quiz.yml`. |
+| Proctor on Docker | API only (site hosting removed, CORS max-age 7200); proctor-only image with production defaults baked in; `🚀️deploy/compose.yaml` = proctor + Caddy (automatic TLS for `proctor.quizzes.…`), named volumes, health-gated start; GHCR publish verb + workflow job. Host contract: DNS + ports 80/443 + `docker compose up -d`. |
+| Shared presence | Framework presence WebSocket `GET /scopes/{scope}/presence/ws` (latest state per session, coalesced 100 ms batches, limits, origin check, `ServerModule::presence_admission` default) with TS client twin; quiz `Place`/`Cursor`/`PresenceState`/`CursorState` in both cores; proctor rooms (roster + per place); client shows who is online and where, "learning now" per quiz, online dots, and others' cursors and keyboard focus anchored to shared cards (never items or drags), with a "Show others' cursors" preference. |
+| Schema | `Quiz.emoji` / `CatalogQuizView.emoji` required; presence `$defs`. |
+
+Verification (coordinator, end of revision): nx `test` for `@semio-tech/quiz`, `@semio-tech/quiz-react`,
+`@semio-tech/quiz-rs`, `@teaching/proctor`, `@teaching/architecture-quiz`, `@semio-tech/framework-server`,
+`@semio-tech/framework-server-rs` — all 7 succeeded; Protocol v2 parity exhaustive 84/84 (11 cases); taxonomy clean for
+`🎓️teaching`, `❓️quiz`, `🖥️server`; `cargo check -p semio-hub --tests` compiles against both framework changes (old
+cargo layout in a private build dir, see below); browser: grid at desktop in German/dark, two devices (localhost vs
+127.0.0.1) — "Online: 2" on both, device B's labelled cursor rendered on device A's leaderboard card, no console errors.
+Site-infra: `docker-image-build` (459 s, 97.1 MB), `docker-image-check` and `docker-stack-check` (TLS through Caddy,
+cross-origin, presence through Caddy) green; production rehearsal walk cross-origin green. Not run (need the owner's
+credentials, outward publishing): GHCR push, GitHub workflow.
+
+Findings for other tickets:
+- Windows cargo builds of large graphs (hub, play wasm prerequisites) fail with rustc `STATUS_NO_MEMORY`: cargo's
+  `build-dir-new-layout` puts every unit's `out` dir into rustc's `PATH` (~85 KB for hub), beyond the 32,767-character
+  environment limit. Workaround used: `CARGO_UNSTABLE_BUILD_DIR_NEW_LAYOUT=false CARGO_UNSTABLE_FINE_GRAIN_LOCKING=false`
+  with a private build dir. Task offered: "Fix cargo PATH overflow on Windows builds".
+- The play nx build could not be run for the same reason; play (72 pass, 3 unrelated fails) and demonstrator component
+  tests pass with the shared `OverviewCard`.
+- Site main JS 614 kB (gzip 167 kB) after adopting the design system; next lever: per-icon modules in `@semio-tech/assets`.
+- Docker Desktop on this host leaves undeletable socket files on stop; site-infra moved them aside
+  (`%LOCALAPPDATA%\*-stale-20260929*`, safe to delete).
+
+## Revision 2026-09-29 (evening) — layered home like semio-tech play
+
+Design `📓️design.md` §16; reference `📓️ui-reference-layered-landing.md`; reports `📓️layered-overview-report.md`,
+`📓️react-report.md` (layered section).
+
+- **Shared element** `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview` + `🔨️modules/🥞️layered-overview-geometry`
+  (exported via `@semio-tech/ui-react/chrome`): strip of real pages behind ONE glass veil with a `clip-path` hole,
+  compact card overlay, reveal on hover and keyboard focus (page clear), conceal on leave/blur, 500 ms eased glide,
+  pointer pan, reduced motion, hash open/Escape/Overview with focus management, lazy boot with budget, list mode on
+  phones. Tests on a language-agnostic fixture with `polygon-clipping` and `d3-ease` oracles (127 pass, 19/19 mutations
+  killed).
+- **Play and demonstrator** now use it (849 → 206 and 892 → 207 lines); nine of the ten landing defects fixed (the
+  brand bar is visible again, keyboard reveal/conceal, focus management, one veil layer, no per-frame React render).
+- **Quiz home**: nine real pages behind the glass (learner profile, read-only quiz pages, introduction, full
+  leaderboard, badges, preferences); hovering a card shows its page clear and never starts a run; opening a card
+  routes to `#page`. Presence knows the new pages (`Screen` + rooms in both cores, conformance, proctor admission now
+  derived from the core's screen list).
+
+Verification (coordinator): nx `test` green for the quiz, proctor and server projects (7); ui-react 962 pass with the
+22 known pre-existing failures unchanged; play 44 pass / 3 pre-existing; demonstrator 19 pass (branding test needs the
+flow-core wasm); parity 84/84; taxonomy clean for `❓️quiz` and `🎓️teaching`, and no error in any directory this
+ticket created under `🖱️ui` (that scope, play and the demonstrator carry older debt — task offered). Built-in browser
+at 1440 × 900: at rest the learner page is blurred behind the veil and nine compact cards sit in the 3 × 3 grid;
+hovering the leaderboard glides the strip to the centre cell, hides the veil and shows the full leaderboard crisp;
+hovering "Heizen" shows the heating quiz page (description, both tasks) crisp; leaving restores the veil; fresh tab
+without console errors.

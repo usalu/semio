@@ -2,6 +2,7 @@
   "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "demand",
+  "emoji": "📊",
   "title": { "en": "Energy Demand", "de": "Energiebedarf" },
   "description": {
     "en": "Recognise energy standards by their profiles and estimate how much final energy buildings with different supply systems have to buy.",

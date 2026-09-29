@@ -177,15 +177,15 @@ impl AuthorityDirectory {
 
     /// 🔥️ Place `key` under `holder`, minting a fenced activation epoch on first placement and
     /// returning the already-live activation otherwise.
-    pub fn activate(&mut self, key: ActorKey, holder: &str) -> Result<&mut Activation, AuthorityError> {
-        if !self.activations.contains_key(&key) {
+    pub fn activate(&mut self, key: &ActorKey, holder: &str) -> Result<&mut Activation, AuthorityError> {
+        if !self.activations.contains_key(key) {
             let epoch = self.next_epoch;
             self.next_epoch += 1;
             let lease = Lease { epoch, holder: holder.to_string() };
             let activation = Activation { lease, state: ActorState::default(), mailbox_seq: 0, snapshot_version: 0 };
             self.activations.insert(key.clone(), activation);
         }
-        self.activations.get_mut(&key).ok_or(AuthorityError::LeaseLost)
+        self.activations.get_mut(key).ok_or(AuthorityError::LeaseLost)
     }
 
     /// 💤️ Drop the activation, releasing its lease. The next [`activate`](Self::activate) mints a
@@ -309,7 +309,7 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
 
         //#region 🔖️Place
         let placed = self.directory.is_active(&envelope.target);
-        let activation = match self.directory.activate(envelope.target.clone(), &self.holder) {
+        let activation = match self.directory.activate(&envelope.target, &self.holder) {
             Ok(activation) => activation,
             Err(error) => return unavailable(&envelope, Revision(0), now, &error.to_string()),
         };

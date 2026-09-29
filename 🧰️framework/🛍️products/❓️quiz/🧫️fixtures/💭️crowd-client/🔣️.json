@@ -1,0 +1,372 @@
+{
+  "schema": "semio.quiz.crowd-client/v1",
+  "description": "What the others think, as the web client shows it (design §17). A crowd is live while anyone else thinks along in the quiz (one learner per tag, counted by distinct tags), else the submitted runs once there is one, else none. Live item crowds come from the others' drafts aggregated for the viewer's sheet task, submitted ones from the crowd view; both are keyed by item id in the viewer's sheet order (the submitted view's order for submitted crowds). Choices by category or value are ordered by count descending, then by value numerically when both keys are numbers, else by code point — a crowd view's keys arrive in code point order (`120` before `8`) and are re-sorted for display. Positions of a sorting are normalized (0 smallest … 1 largest), live one per learner by tag, submitted their mean; the place shown is `1 + position × (total − 1)` to one decimal. A draft is the learner's own answer in the form peers read: classification and sorting unchanged, matching card indices replaced by the card values; an answer that does not fit its sheet task is no draft.",
+  "quiz": {
+    "schema": "semio.quiz/v1",
+    "id": "household",
+    "emoji": "🏠",
+    "title": { "en": "Household physics", "de": "Haushaltsphysik" },
+    "description": { "en": "Three small tasks.", "de": "Drei kleine Aufgaben." },
+    "tasks": [
+      {
+        "kind": "classification",
+        "id": "heat",
+        "title": { "en": "Heat", "de": "Wärme" },
+        "prompt": { "en": "Is it about power or energy?", "de": "Geht es um Leistung oder Energie?" },
+        "axes": [{ "id": "time", "label": { "en": "Time", "de": "Zeit" }, "unit": "h", "min": 0, "max": 10 }],
+        "categories": [
+          { "id": "power", "label": { "en": "Power", "de": "Leistung" }, "profile": { "time": 1 } },
+          { "id": "energy", "label": { "en": "Energy", "de": "Energie" }, "profile": { "time": 9 } }
+        ],
+        "items": [
+          { "id": "kettle", "label": { "en": "Kettle", "de": "Wasserkocher" }, "category": "power" },
+          { "id": "fridge", "label": { "en": "Fridge", "de": "Kühlschrank" }, "category": "energy" },
+          { "id": "candle", "label": { "en": "Tea light", "de": "Teelicht" }, "category": "power" }
+        ]
+      },
+      {
+        "kind": "sorting",
+        "id": "masses",
+        "title": { "en": "Masses", "de": "Massen" },
+        "prompt": { "en": "Sort by mass.", "de": "Nach Masse sortieren." },
+        "quantity": { "label": { "en": "Mass", "de": "Masse" }, "unit": "g", "scale": "logarithmic", "prefixed": true },
+        "items": [
+          { "id": "mouse", "label": { "en": "Mouse", "de": "Maus" }, "value": 20 },
+          { "id": "cat", "label": { "en": "Cat", "de": "Katze" }, "value": 4000 },
+          { "id": "horse", "label": { "en": "Horse", "de": "Pferd" }, "value": 500000 }
+        ]
+      },
+      {
+        "kind": "matching",
+        "id": "lamps",
+        "title": { "en": "Lamps", "de": "Lampen" },
+        "prompt": { "en": "Match each lamp its power.", "de": "Ordne jeder Lampe ihre Leistung zu." },
+        "dimensions": [{ "id": "power", "quantity": { "label": { "en": "Power", "de": "Leistung" }, "unit": "W", "scale": "logarithmic", "prefixed": true } }],
+        "items": [
+          { "id": "led", "label": { "en": "LED bulb", "de": "LED-Lampe" }, "values": { "power": 8 } },
+          { "id": "halogen", "label": { "en": "Halogen spot", "de": "Halogenstrahler" }, "values": { "power": 120 } },
+          { "id": "floodlight", "label": { "en": "Floodlight", "de": "Flutlicht" }, "values": { "power": 2000 } }
+        ]
+      }
+    ]
+  },
+  "sheet": {
+    "quiz": "household",
+    "seed": 7,
+    "title": { "en": "Household physics", "de": "Haushaltsphysik" },
+    "description": { "en": "Three small tasks.", "de": "Drei kleine Aufgaben." },
+    "tasks": [
+      {
+        "kind": "classification",
+        "id": "heat",
+        "title": { "en": "Heat", "de": "Wärme" },
+        "prompt": { "en": "Is it about power or energy?", "de": "Geht es um Leistung oder Energie?" },
+        "categories": [
+          { "id": "power", "label": { "en": "Power", "de": "Leistung" } },
+          { "id": "energy", "label": { "en": "Energy", "de": "Energie" } }
+        ],
+        "items": [
+          { "id": "kettle", "label": { "en": "Kettle", "de": "Wasserkocher" } },
+          { "id": "fridge", "label": { "en": "Fridge", "de": "Kühlschrank" } },
+          { "id": "candle", "label": { "en": "Tea light", "de": "Teelicht" } }
+        ]
+      },
+      {
+        "kind": "sorting",
+        "id": "masses",
+        "title": { "en": "Masses", "de": "Massen" },
+        "prompt": { "en": "Sort by mass.", "de": "Nach Masse sortieren." },
+        "quantity": { "label": { "en": "Mass", "de": "Masse" }, "unit": "g", "scale": "logarithmic", "prefixed": true },
+        "items": [
+          { "id": "horse", "label": { "en": "Horse", "de": "Pferd" } },
+          { "id": "mouse", "label": { "en": "Mouse", "de": "Maus" } },
+          { "id": "cat", "label": { "en": "Cat", "de": "Katze" } }
+        ]
+      },
+      {
+        "kind": "matching",
+        "id": "lamps",
+        "title": { "en": "Lamps", "de": "Lampen" },
+        "prompt": { "en": "Match each lamp its power.", "de": "Ordne jeder Lampe ihre Leistung zu." },
+        "dimensions": [{ "id": "power", "quantity": { "label": { "en": "Power", "de": "Leistung" }, "unit": "W", "scale": "logarithmic", "prefixed": true }, "cards": [120, 8, 2000] }],
+        "items": [
+          { "id": "led", "label": { "en": "LED bulb", "de": "LED-Lampe" } },
+          { "id": "halogen", "label": { "en": "Halogen spot", "de": "Halogenstrahler" } },
+          { "id": "floodlight", "label": { "en": "Floodlight", "de": "Flutlicht" } }
+        ]
+      }
+    ]
+  },
+  "others": [
+    {
+      "tag": "0000000a",
+      "answers": {
+        "heat": { "kind": "classification", "assignments": { "kettle": "power", "fridge": "energy", "candle": "power" } },
+        "masses": { "kind": "sorting", "order": ["mouse", "cat", "horse"] },
+        "lamps": { "kind": "matching", "values": { "power": { "led": 8, "halogen": 120, "floodlight": 2000 } } }
+      }
+    },
+    {
+      "tag": "0000000b",
+      "answers": {
+        "heat": { "kind": "classification", "assignments": { "kettle": "power", "fridge": "power" } },
+        "masses": { "kind": "sorting", "order": ["cat", "mouse", "horse"] },
+        "lamps": { "kind": "matching", "values": { "power": { "led": 120, "halogen": 120 } } }
+      }
+    },
+    {
+      "tag": "0000000c",
+      "answers": {
+        "heat": { "kind": "classification", "assignments": { "kettle": "energy" } },
+        "lamps": { "kind": "matching", "values": { "power": { "led": 2000 } } }
+      }
+    }
+  ],
+  "live": [
+    {
+      "id": "classification-by-category",
+      "task": "heat",
+      "dimension": null,
+      "expected": [
+        {
+          "item": "kettle",
+          "answers": 3,
+          "tags": ["0000000a", "0000000b", "0000000c"],
+          "choices": [
+            { "key": "power", "count": 2, "tags": ["0000000a", "0000000b"] },
+            { "key": "energy", "count": 1, "tags": ["0000000c"] }
+          ],
+          "positions": []
+        },
+        {
+          "item": "fridge",
+          "answers": 2,
+          "tags": ["0000000a", "0000000b"],
+          "choices": [
+            { "key": "energy", "count": 1, "tags": ["0000000a"] },
+            { "key": "power", "count": 1, "tags": ["0000000b"] }
+          ],
+          "positions": []
+        },
+        { "item": "candle", "answers": 1, "tags": ["0000000a"], "choices": [{ "key": "power", "count": 1, "tags": ["0000000a"] }], "positions": [] }
+      ]
+    },
+    {
+      "id": "sorting-positions-per-learner",
+      "task": "masses",
+      "dimension": null,
+      "expected": [
+        {
+          "item": "horse",
+          "answers": 2,
+          "tags": ["0000000a", "0000000b"],
+          "choices": [],
+          "positions": [
+            { "position": 1, "tag": "0000000a" },
+            { "position": 1, "tag": "0000000b" }
+          ]
+        },
+        {
+          "item": "mouse",
+          "answers": 2,
+          "tags": ["0000000a", "0000000b"],
+          "choices": [],
+          "positions": [
+            { "position": 0, "tag": "0000000a" },
+            { "position": 0.5, "tag": "0000000b" }
+          ]
+        },
+        {
+          "item": "cat",
+          "answers": 2,
+          "tags": ["0000000a", "0000000b"],
+          "choices": [],
+          "positions": [
+            { "position": 0.5, "tag": "0000000a" },
+            { "position": 0, "tag": "0000000b" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "matching-values-numerically",
+      "task": "lamps",
+      "dimension": "power",
+      "expected": [
+        {
+          "item": "led",
+          "answers": 3,
+          "tags": ["0000000a", "0000000b", "0000000c"],
+          "choices": [
+            { "key": "8", "count": 1, "tags": ["0000000a"] },
+            { "key": "120", "count": 1, "tags": ["0000000b"] },
+            { "key": "2000", "count": 1, "tags": ["0000000c"] }
+          ],
+          "positions": []
+        },
+        { "item": "halogen", "answers": 2, "tags": ["0000000a", "0000000b"], "choices": [{ "key": "120", "count": 2, "tags": ["0000000a", "0000000b"] }], "positions": [] },
+        { "item": "floodlight", "answers": 1, "tags": ["0000000a"], "choices": [{ "key": "2000", "count": 1, "tags": ["0000000a"] }], "positions": [] }
+      ]
+    },
+    {
+      "id": "matching-unknown-dimension",
+      "task": "lamps",
+      "dimension": "brightness",
+      "expected": []
+    }
+  ],
+  "view": {
+    "quiz": "household",
+    "runs": 3,
+    "tasks": [
+      {
+        "task": "heat",
+        "kind": "classification",
+        "items": [
+          {
+            "item": "kettle",
+            "answers": 3,
+            "counts": [
+              { "key": "energy", "count": 1 },
+              { "key": "power", "count": 2 }
+            ]
+          },
+          { "item": "candle", "answers": 1, "counts": [{ "key": "power", "count": 1 }] }
+        ]
+      },
+      {
+        "task": "masses",
+        "kind": "sorting",
+        "items": [
+          { "item": "mouse", "answers": 2, "meanPosition": 0.25 },
+          { "item": "cat", "answers": 2, "meanPosition": 0.25 },
+          { "item": "horse", "answers": 2, "meanPosition": 1 }
+        ]
+      },
+      {
+        "task": "lamps",
+        "kind": "matching",
+        "dimension": "power",
+        "items": [
+          {
+            "item": "led",
+            "answers": 4,
+            "counts": [
+              { "key": "120", "count": 1 },
+              { "key": "2000", "count": 1 },
+              { "key": "8", "count": 2 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "submitted": [
+    {
+      "id": "classification-counts-by-count",
+      "task": "heat",
+      "dimension": null,
+      "expected": [
+        {
+          "item": "kettle",
+          "answers": 3,
+          "tags": [],
+          "choices": [
+            { "key": "power", "count": 2, "tags": [] },
+            { "key": "energy", "count": 1, "tags": [] }
+          ],
+          "positions": []
+        },
+        { "item": "candle", "answers": 1, "tags": [], "choices": [{ "key": "power", "count": 1, "tags": [] }], "positions": [] }
+      ]
+    },
+    {
+      "id": "sorting-mean-positions",
+      "task": "masses",
+      "dimension": null,
+      "expected": [
+        { "item": "mouse", "answers": 2, "tags": [], "choices": [], "positions": [{ "position": 0.25 }] },
+        { "item": "cat", "answers": 2, "tags": [], "choices": [], "positions": [{ "position": 0.25 }] },
+        { "item": "horse", "answers": 2, "tags": [], "choices": [], "positions": [{ "position": 1 }] }
+      ]
+    },
+    {
+      "id": "matching-code-point-keys-resorted",
+      "task": "lamps",
+      "dimension": "power",
+      "expected": [
+        {
+          "item": "led",
+          "answers": 4,
+          "tags": [],
+          "choices": [
+            { "key": "8", "count": 2, "tags": [] },
+            { "key": "120", "count": 1, "tags": [] },
+            { "key": "2000", "count": 1, "tags": [] }
+          ],
+          "positions": []
+        }
+      ]
+    },
+    {
+      "id": "unknown-task",
+      "task": "volumes",
+      "dimension": null,
+      "expected": []
+    }
+  ],
+  "choices": [
+    { "id": "live-while-anyone-thinks-along", "others": [0, 1], "runs": 3, "expected": { "source": "live", "count": 2 } },
+    { "id": "one-learner-per-tag", "others": [0, 0, 2], "runs": 0, "expected": { "source": "live", "count": 2 } },
+    { "id": "submitted-when-nobody-thinks-along", "others": [], "runs": 3, "expected": { "source": "submitted", "count": 3 } },
+    { "id": "none-before-a-submission", "others": [], "runs": 0, "expected": null },
+    { "id": "none-without-a-view", "others": [], "runs": null, "expected": null }
+  ],
+  "places": [
+    { "position": 0, "total": 3, "place": 1 },
+    { "position": 0.5, "total": 3, "place": 2 },
+    { "position": 1, "total": 3, "place": 3 },
+    { "position": 0.25, "total": 3, "place": 1.5 },
+    { "position": 0.3333, "total": 4, "place": 2 },
+    { "position": 0.6, "total": 6, "place": 4 },
+    { "position": 0, "total": 1, "place": 1 },
+    { "position": 1, "total": 1, "place": 1 }
+  ],
+  "drafts": [
+    {
+      "id": "every-kind",
+      "status": "open",
+      "answers": {
+        "heat": { "kind": "classification", "assignments": { "kettle": "power" } },
+        "masses": { "kind": "sorting", "order": ["mouse", "cat", "horse"] },
+        "lamps": { "kind": "matching", "assignments": { "power": { "led": 1, "floodlight": 2 } } }
+      },
+      "expected": {
+        "quiz": "household",
+        "answers": {
+          "heat": { "kind": "classification", "assignments": { "kettle": "power" } },
+          "masses": { "kind": "sorting", "order": ["mouse", "cat", "horse"] },
+          "lamps": { "kind": "matching", "values": { "power": { "led": 8, "floodlight": 2000 } } }
+        }
+      }
+    },
+    {
+      "id": "a-misfit-answer-is-no-draft",
+      "status": "open",
+      "answers": {
+        "heat": { "kind": "classification", "assignments": { "kettle": "volume" } },
+        "lamps": { "kind": "matching", "assignments": { "power": { "halogen": 0 } } }
+      },
+      "expected": {
+        "quiz": "household",
+        "answers": { "lamps": { "kind": "matching", "values": { "power": { "halogen": 120 } } } }
+      }
+    },
+    {
+      "id": "no-drafts-once-submitted",
+      "status": "submitted",
+      "answers": { "heat": { "kind": "classification", "assignments": { "kettle": "power" } } },
+      "expected": null
+    }
+  ]
+}

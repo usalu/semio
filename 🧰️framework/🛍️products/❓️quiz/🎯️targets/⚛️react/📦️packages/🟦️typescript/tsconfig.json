@@ -10,6 +10,7 @@
       "@semio-tech/framework": ["../../../../../../📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/framework-server": ["../../../../../🖥️server/📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/ui-react/i18n": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts"],
+      "@semio-tech/ui-react/chrome": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"],
       "@semio-tech/ui-react": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
       "dom-accessibility-api": ["../../../../../../../node_modules/dom-accessibility-api/dist/index.d.ts"]
     }
@@ -25,7 +26,10 @@
     "../../../../🧪️tests/📬️outbox-delivery/🟦️.tsx",
     "../../../../🧪️tests/⌨️task-keyboard/🟦️.tsx",
     "../../../../🧪️tests/🚶️learner-journey/🟦️.tsx",
-    "../../../../🧪️tests/🗣️translation-completeness/🟦️.tsx"
+    "../../../../🧪️tests/🗣️translation-completeness/🟦️.tsx",
+    "../../../../🧪️tests/🏠️home-grid/🟦️.tsx",
+    "../../../../🧪️tests/📡️presence-client/🟦️.tsx",
+    "../../../../🧪️tests/💭️crowd-client/🟦️.tsx"
   ],
   "exclude": ["**/node_modules/**"]
 }

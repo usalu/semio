@@ -102,11 +102,12 @@ export type MatchingTask = {
 /** 🧩️ One task of a quiz. */
 export type Task = ClassificationTask | SortingTask | MatchingTask;
 
-/** 📝️ A quiz: an ordered set of tasks, presented randomized and scored only as a whole. */
+/** 📝️ A quiz: an ordered set of tasks, presented randomized and scored only as a whole; its emoji identifies it on cards and headers. */
 export type Quiz = {
   readonly $schema?: string;
   readonly schema: "semio.quiz/v1";
   readonly id: Slug;
+  readonly emoji: string;
   readonly title: Text;
   readonly description: Text;
   readonly tasks: readonly Task[];
@@ -278,7 +279,7 @@ export type Event = LearnerRegisteredEvent | LearnerRecalledEvent | RunStartedEv
 export type CatalogTaskView = { readonly id: Slug; readonly kind: TaskKind; readonly title: Text };
 
 /** 🗒️ One quiz of the catalog without its solutions. */
-export type CatalogQuizView = { readonly id: Slug; readonly title: Text; readonly description: Text; readonly tasks: readonly CatalogTaskView[] };
+export type CatalogQuizView = { readonly id: Slug; readonly emoji: string; readonly title: Text; readonly description: Text; readonly tasks: readonly CatalogTaskView[] };
 
 /** 🏵️ One badge of the catalog without its rule. */
 export type CatalogBadgeView = { readonly id: Slug; readonly emoji: string; readonly label: Text; readonly description: Text };
@@ -338,5 +339,51 @@ export type LeaderboardRow = {
 export type Leaderboard = { readonly rows: readonly LeaderboardRow[] };
 
 /** 🔍️ A query a proctor answers. */
-export type Query = { readonly type: "catalog" } | { readonly type: "learner"; readonly learner: Id } | { readonly type: "run"; readonly run: Id } | { readonly type: "leaderboard" };
+export type Query = { readonly type: "catalog" } | { readonly type: "learner"; readonly learner: Id } | { readonly type: "run"; readonly run: Id } | { readonly type: "leaderboard" } | { readonly type: "crowd"; readonly quiz: Slug };
 //#endregion 🔖️Views
+
+//#region 🔖️Presence
+/** 🖼️ Every page a learner can be on: `quiz` is the read-only page of one quiz, `learner` the own profile, `badges` every badge, `preferences` the settings; `run` and `results` belong to a run. */
+export const SCREENS = ["introduction", "identity", "home", "quiz", "run", "results", "leaderboard", "learner", "badges", "preferences"] as const;
+
+/** 📺️ One of {@link SCREENS}. */
+export type Screen = (typeof SCREENS)[number];
+
+/** 📌️ Where a learner is: the screen, for the quiz page, a run or its results the quiz, for a run the task on screen; learners at the same place share one presence room. */
+export type Place = { readonly screen: Screen; readonly quiz?: Slug; readonly task?: Slug };
+
+/** ⚓️ A landmark every learner at the same place renders, addressed by a stable key (`^[a-z0-9]+(?:[:-][a-z0-9]+)*$`, 1…64 chars, e.g. `task:power-ladder`). */
+export type Anchor = string;
+
+/** 🖱️ A pointer position relative (0…1) to the box of an anchor. */
+export type Cursor = { readonly anchor: Anchor; readonly x: number; readonly y: number };
+
+/** 🟢️ Ephemeral shared presence in the catalog-wide room: who is online and where, by public tag, never by learner id. */
+export type PresenceState = { readonly tag: string; readonly identity: Identity; readonly place: Place; readonly active: boolean };
+
+/** 👆️ Ephemeral shared pointer, keyboard focus and the item being dragged in the room of one place; anchors may be cards, items (`item:<id>`) or categories (`category:<id>`). */
+export type CursorState = { readonly tag: string; readonly cursor?: Cursor; readonly focus?: Anchor; readonly drag?: { readonly item: Slug } };
+
+/** 🧪️ A matching draft in semantic form: per dimension id the value assigned to each item id (card indices mean nothing to peers). */
+export type ThinkingMatchingAnswer = { readonly kind: "matching"; readonly values: Readonly<Record<Slug, Readonly<Record<Slug, number>>>> };
+
+/** 🗨️ A draft answer as peers can read it: classification and sorting answers are already semantic, matching drafts carry values. */
+export type ThinkingAnswer = ClassificationAnswer | SortingAnswer | ThinkingMatchingAnswer;
+
+/** 💭️ Ephemeral shared draft answers of one learner's open run per task id, published in the thinking room of its quiz; carries the public tag only. */
+export type ThinkingState = { readonly tag: string; readonly answers: Readonly<Record<Slug, ThinkingAnswer>> };
+//#endregion 🔖️Presence
+
+//#region 🔖️Crowd
+/** 🎟️ How often one category (classification) or value (matching, rendered as a JSON number) was given. */
+export type CrowdCount = { readonly key: string; readonly count: number };
+
+/** 🙋‍♀️️ How often an item was answered and how: counts in ascending key order, or for sortings the mean normalized position (0 smallest … 1 largest). */
+export type CrowdItem = { readonly item: Slug; readonly answers: number; readonly counts?: readonly CrowdCount[]; readonly meanPosition?: number };
+
+/** 🧺️ The crowd of one task (one per dimension for matching), items in definition order, unanswered items left out. */
+export type CrowdTask = { readonly task: Slug; readonly kind: TaskKind; readonly dimension?: Slug; readonly items: readonly CrowdItem[] };
+
+/** 👪️ What the learners answered in the submitted runs of one quiz, per task (and dimension) and item: a persisted shared projection of run-submitted events. */
+export type CrowdView = { readonly quiz: Slug; readonly runs: number; readonly tasks: readonly CrowdTask[] };
+//#endregion 🔖️Crowd

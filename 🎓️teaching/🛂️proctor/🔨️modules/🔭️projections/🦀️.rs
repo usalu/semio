@@ -2,9 +2,12 @@
 //!
 //! **What is kept.** Per learner the folded `LearnerState` (`quiz.learner-state`, with the last
 //! folded stream sequence) and its `LearnerView` (`quiz.learner`); per run its `RunView`
-//! (`quiz.run`); one `Leaderboard` (`quiz.leaderboard/all`); the fingerprint of the catalog the
-//! models were built against (`quiz.meta/catalog`). All views come from the quiz core's view
-//! functions — the projector only decides *when* to recompute them.
+//! (`quiz.run`); one `Leaderboard` (`quiz.leaderboard/all`); per quiz its crowd tally
+//! (`quiz.crowd-tally`) and `CrowdView` (`quiz.crowd`, present for every quiz of the catalog from
+//! the first fold on); the stamp of the projector revision and catalog the models were built
+//! against (`quiz.meta/catalog`). The learner, run and leaderboard views come from the quiz core's
+//! view functions — the projector only decides *when* to recompute them; the crowd views are kept
+//! incrementally by [`CrowdTally`] and equal the core's `crowd_view`.
 //!
 //! **How it folds.** The projector walks the database-wide commit order after its checkpoint
 //! (`quiz`) in batches and writes every touched view plus the advanced checkpoint in one
@@ -31,6 +34,7 @@ use tokio::sync::Mutex;
 
 use crate::actors::LEARNER;
 use crate::catalog::LoadedCatalog;
+use crate::crowd::CrowdTally;
 use crate::storage::{ProjectionWrite, SqliteAuthorityStore, SqliteProjectionStore};
 
 /// 🚩️ The checkpoint every quiz read model advances together.
@@ -45,10 +49,17 @@ pub const RUNS: &str = "quiz.run";
 pub const LEADERBOARD: &str = "quiz.leaderboard";
 /// 🔑️ The one key of [`LEADERBOARD`].
 pub const LEADERBOARD_KEY: &str = "all";
+/// 👪️ Crowd views by quiz id.
+pub const CROWDS: &str = "quiz.crowd";
+/// 🧮️ Crowd tallies by quiz id.
+pub const TALLIES: &str = "quiz.crowd-tally";
 /// 🧾️ Build metadata.
 pub const META: &str = "quiz.meta";
-/// 🔑️ The catalog fingerprint key of [`META`].
+/// 🔑️ The key of [`META`] stamping the projector revision and catalog fingerprint.
 pub const FINGERPRINT_KEY: &str = "catalog";
+/// 🧬️ The revision of what the projector folds; raising it rebuilds every store an earlier
+/// projector built, exactly like a changed catalog does.
+pub const PROJECTOR_REVISION: u32 = 2;
 /// 📦️ Events folded per transaction.
 pub const BATCH: usize = 256;
 
@@ -77,7 +88,14 @@ pub enum CatchUp {
 /// 🔭️ Folds committed events into the quiz read models.
 pub struct Projector {
     catalog: Arc<LoadedCatalog>,
-    mirror: Mutex<Option<BTreeMap<String, Folded>>>,
+    mirror: Mutex<Option<Mirror>>,
+}
+
+/// 🪞️ What the projector keeps between batches: every folded learner and every crowd tally.
+#[derive(Default)]
+struct Mirror {
+    learners: BTreeMap<String, Folded>,
+    crowds: BTreeMap<String, CrowdTally>,
 }
 
 impl Projector {
@@ -86,24 +104,35 @@ impl Projector {
         Self { catalog, mirror: Mutex::new(None) }
     }
 
-    /// 🧾️ Reset the read models when they were built against another catalog; `true` when reset.
+    /// 🏷️ The stamp of read models this projector builds for this catalog.
+    pub fn stamp(&self) -> Vec<u8> {
+        format!("{PROJECTOR_REVISION}:{}", self.catalog.fingerprint).into_bytes()
+    }
+
+    /// 🧾️ Set up fresh read models, and reset those another projector revision or catalog built;
+    /// `true` exactly when such read models were dropped.
     pub async fn prepare(&self, projections: &mut SqliteProjectionStore) -> Result<bool, StorageError> {
-        if projections.get(META, FINGERPRINT_KEY).await.as_deref() == Some(self.catalog.fingerprint.as_bytes()) {
+        let stamped = projections.get(META, FINGERPRINT_KEY).await;
+        if stamped.as_deref() == Some(self.stamp().as_slice()) {
             return Ok(false);
         }
         self.reset(projections).await?;
-        Ok(true)
+        Ok(stamped.is_some())
     }
 
-    /// 🧹️ Drop every quiz read model and its checkpoint, stamping the current catalog fingerprint,
-    /// so the next catch-up rebuilds from the first event.
+    /// 🧹️ Drop every quiz read model and its checkpoint, stamp them, and write the empty crowd view
+    /// of every quiz, so the next catch-up rebuilds from the first event.
     pub async fn reset(&self, projections: &mut SqliteProjectionStore) -> Result<(), StorageError> {
         let mut mirror = self.mirror.lock().await;
-        for projection in [META, STATES, LEARNERS, RUNS, LEADERBOARD, CHECKPOINT] {
+        for projection in [META, STATES, LEARNERS, RUNS, LEADERBOARD, CROWDS, TALLIES, CHECKPOINT] {
             projections.clear(projection).await?;
         }
-        projections.put(META, FINGERPRINT_KEY, self.catalog.fingerprint.as_bytes().to_vec()).await?;
-        *mirror = Some(BTreeMap::new());
+        let mut writes = vec![ProjectionWrite { projection: META.to_string(), key: FINGERPRINT_KEY.to_string(), value: self.stamp() }];
+        for (id, loaded) in self.catalog.current() {
+            writes.push(write(CROWDS, id, &CrowdTally::default().view(&loaded.quiz))?);
+        }
+        projections.commit(&writes, (CHECKPOINT, 0))?;
+        *mirror = Some(Mirror::default());
         Ok(())
     }
 
@@ -114,7 +143,7 @@ impl Projector {
         if guard.is_none() {
             *guard = Some(loaded(projections).await);
         }
-        let mirror = guard.get_or_insert_with(BTreeMap::new);
+        let mirror = guard.get_or_insert_with(Mirror::default);
         let head = log.log_head()?;
         let mut at = Progress { position: projections.checkpoint(CHECKPOINT).await, head, folded: 0 };
         while at.position < head {
@@ -124,23 +153,29 @@ impl Projector {
             let batch = log.log_after(at.position, BATCH)?;
             let Some(last) = batch.last().map(|logged| logged.position) else { break };
             let mut staged: BTreeMap<String, Folded> = BTreeMap::new();
+            let mut crowds: BTreeMap<String, CrowdTally> = BTreeMap::new();
             let mut runs: BTreeSet<(String, String)> = BTreeSet::new();
             for logged in batch.iter().filter(|logged| logged.event.stream.kind == LEARNER) {
                 let learner = &logged.event.stream.id;
-                let entry = staged.entry(learner.clone()).or_insert_with(|| mirror.get(learner).cloned().unwrap_or_else(|| Folded { seq: 0, state: quiz::empty_learner_state(learner) }));
+                let entry = staged.entry(learner.clone()).or_insert_with(|| mirror.learners.get(learner).cloned().unwrap_or_else(|| Folded { seq: 0, state: quiz::empty_learner_state(learner) }));
                 if logged.event.seq <= entry.seq {
                     continue;
                 }
                 entry.seq = logged.event.seq;
                 let Ok(fact) = serde_json::from_slice::<Event>(&logged.event.payload) else { continue };
                 quiz::evolve_learner(&mut entry.state, &fact);
+                if let Event::RunSubmitted { result, .. } = &fact {
+                    crowds.entry(result.quiz.clone()).or_insert_with(|| mirror.crowds.get(&result.quiz).cloned().unwrap_or_default()).fold(result);
+                }
                 if let Some(run) = run_of(&fact) {
                     runs.insert((learner.clone(), run.clone()));
                 }
             }
-            let writes = self.views(mirror, &staged, &runs)?;
+            let mut writes = self.views(&mirror.learners, &staged, &runs)?;
+            writes.extend(self.crowd_views(&crowds)?);
             projections.commit(&writes, (CHECKPOINT, last))?;
-            mirror.extend(staged);
+            mirror.learners.extend(staged);
+            mirror.crowds.extend(crowds);
             at = Progress { position: last, head, folded: at.folded + batch.len() as u64 };
             progress(at);
         }
@@ -166,10 +201,25 @@ impl Projector {
         }
         Ok(writes)
     }
+
+    fn crowd_views(&self, crowds: &BTreeMap<String, CrowdTally>) -> Result<Vec<ProjectionWrite>, StorageError> {
+        let mut writes = Vec::new();
+        for (quiz, tally) in crowds {
+            writes.push(write(TALLIES, quiz, tally)?);
+            if let Some(loaded) = self.catalog.current().get(quiz) {
+                writes.push(write(CROWDS, quiz, &tally.view(&loaded.quiz))?);
+            }
+        }
+        Ok(writes)
+    }
 }
 
-async fn loaded(projections: &SqliteProjectionStore) -> BTreeMap<String, Folded> {
-    projections.list(STATES, "").await.into_iter().filter_map(|(learner, bytes)| serde_json::from_slice(&bytes).ok().map(|folded| (learner, folded))).collect()
+async fn loaded(projections: &SqliteProjectionStore) -> Mirror {
+    Mirror { learners: decoded(projections, STATES).await, crowds: decoded(projections, TALLIES).await }
+}
+
+async fn decoded<T: serde::de::DeserializeOwned>(projections: &SqliteProjectionStore, projection: &str) -> BTreeMap<String, T> {
+    projections.list(projection, "").await.into_iter().filter_map(|(key, bytes)| serde_json::from_slice(&bytes).ok().map(|value| (key, value))).collect()
 }
 
 fn write<T: Serialize>(projection: &str, key: &str, value: &T) -> Result<ProjectionWrite, StorageError> {

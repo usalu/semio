@@ -30,6 +30,11 @@ async fn each_read_answers_a_snapshot_of_its_view() {
     assert_eq!(snapshot(handler(QueryKind::Learner).handle(&query("quiz.learner", &Query::Learner { learner: "l1".into() }, TENANT), &projections).await), b"{\"learner\":1}");
     assert_eq!(snapshot(handler(QueryKind::Run).handle(&query("quiz.run", &Query::Run { run: "r1".into() }, TENANT), &projections).await), b"{\"run\":1}");
     assert_eq!(snapshot(handler(QueryKind::Leaderboard).handle(&query("quiz.leaderboard", &Query::Leaderboard, TENANT), &projections).await), b"{\"rows\":[]}");
+    projections.put(CROWDS, "power", b"{\"quiz\":\"power\"}".to_vec()).await.unwrap();
+    assert_eq!(handler(QueryKind::Crowd).kind().await, "quiz.crowd");
+    assert_eq!(snapshot(handler(QueryKind::Crowd).handle(&query("quiz.crowd", &Query::Crowd { quiz: "power".into() }, TENANT), &projections).await), b"{\"quiz\":\"power\"}");
+    assert!(matches!(handler(QueryKind::Crowd).handle(&query("quiz.crowd", &Query::Crowd { quiz: "cooling".into() }, TENANT), &projections).await, Err(ServerError::NotFound(detail)) if detail == "unknown-quiz cooling"));
+    assert!(matches!(handler(QueryKind::Crowd).handle(&query("quiz.crowd", &Query::Leaderboard, TENANT), &projections).await, Err(ServerError::BadRequest(_))));
 }
 
 #[tokio::test]

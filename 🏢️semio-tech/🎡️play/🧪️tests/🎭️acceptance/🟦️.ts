@@ -122,7 +122,7 @@ type PaintWitness = { readonly painted: boolean; readonly detail: string };
  * full of content, so a rule keyed to the largest window alone would red a healthy pane. */
 async function readPaintWitnesses(page: Page, variant: string): Promise<readonly WindowWitness[]> {
   return page.evaluate(({ id, minimumElements, minimumEdge }) => {
-    const pane = document.querySelector(`[data-play-pane="${id}"]`);
+    const pane = document.querySelector(`[data-layered-pane="${id}"]`);
     if (!pane) return [];
     const area = (element: Element): number => { const box = element.getBoundingClientRect(); return box.width * box.height; };
     const size = (text: string | null): number => {
@@ -201,9 +201,9 @@ test.describe("semio-tech play", () => {
     const panes = playPanes();
     await page.goto("./");
     await page.keyboard.press("Escape");
-    await expect(page.locator("[data-play-pane-card]")).toHaveCount(panes.length);
+    await expect(page.locator("[data-layered-card]")).toHaveCount(panes.length);
     await expect(page.locator('[data-slot="play-app-count"]')).toHaveText(`${panes.length} apps`);
-    for (const pane of panes) await expect(page.locator(`[data-play-pane-card][data-pane-id="${pane.variant}"]`)).toHaveAttribute("aria-label", new RegExp(`^Open ${pane.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}: `));
+    for (const pane of panes) await expect(page.locator(`[data-layered-card="${pane.variant}"] [data-overview-card]`)).toHaveAttribute("aria-label", new RegExp(`^Open ${pane.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}: `));
     expect(errors.pageErrors).toEqual([]);
     expect(significantConsoleErrors(errors.consoleErrors)).toEqual([]);
     expect(fallbackAssets, "assets answered by the SPA fallback").toEqual([]);
@@ -220,8 +220,8 @@ test.describe("semio-tech play", () => {
       expect(outcome, `${pane.variant} shell outcome ${detail}`).toBe("ready");
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(BOOT_SETTLE_MS);
-      await expect(page.locator(`[data-play-pane="${pane.variant}"] [data-play-pane-error]`)).toHaveCount(0);
-      await expect(page.locator("[data-play-overview-button]")).toBeVisible();
+      await expect(page.locator(`[data-layered-pane="${pane.variant}"] [data-layered-pane-error]`)).toHaveCount(0);
+      await expect(page.locator("[data-layered-overview-button]")).toBeVisible();
       expect(errors.pageErrors).toEqual([]);
       expect(significantConsoleErrors(errors.consoleErrors)).toEqual([]);
       expect(errors.refusedInputs).toEqual([]);
@@ -232,7 +232,7 @@ test.describe("semio-tech play", () => {
       // kebab-case id to prose, the mistake `📓️default-example.md` retracted. A pane whose app declares no
       // `setActiveExample` has no trigger at all and is covered by the play unit gate instead
       // (`🧪️tests/🧪️playpanedefaults`: "names every pane whose curated example cannot reach its app").
-      const fixture = page.locator(`[data-play-pane="${pane.variant}"] [id="playground.navbar.fixture"]`);
+      const fixture = page.locator(`[data-layered-pane="${pane.variant}"] [id="playground.navbar.fixture"]`);
       if (pane.exampleLabel !== undefined && (await fixture.count()) > 0) {
         await expect(fixture, `${pane.variant} chrome must name its curated example ${pane.example}`).toHaveText(pane.exampleLabel);
       }
@@ -243,8 +243,8 @@ test.describe("semio-tech play", () => {
       expect(witness.painted, `${pane.variant} paints nothing — ${witness.detail}`).toBe(true);
       expect(fallbackAssets, `${pane.variant} assets answered by the SPA fallback`).toEqual([]);
 
-      await page.locator("[data-play-overview-button]").click();
-      await expect(page.locator("[data-play-overview]")).toBeVisible();
+      await page.locator("[data-layered-overview-button]").click();
+      await expect(page.locator("[data-layered-overlay]")).toBeVisible();
     });
   }
 });

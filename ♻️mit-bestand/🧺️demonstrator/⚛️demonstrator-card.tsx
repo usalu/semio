@@ -1,80 +1,56 @@
-/** 🃏️ Window-silhouette overview card for one demonstrator pane — icon title chip, no drag handle. */
+/** 🃏️ Overview card for one demonstrator pane — the shared {@link OverviewCard} as a whole-card button: icon title chip,
+ * bold tagline, description paragraphs and open chip. */
 
-import { cn, Icon, WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui-react";
+import { cn, Icon, OverviewCard, OverviewCardOpenChip, registerUiTranslationBundles, uiDataLabel, useLabel } from "@semio-tech/ui-react";
 import { demonstratorPaneDescriptionParagraphs, type DemonstratorPaneSpec } from "./🪧️brand.ts";
+
+//#region 🌐️DemonstratorCardLabels
+/** 🌐️ The card's own chrome string, for English AND German (no default language) — the German lock picks German. */
+const demonstratorCardUiLabel = registerUiTranslationBundles({
+  en: { translation: { demonstrator: { card: { open: { label: { normal: "Open demonstrator", beginner: "Open this demonstrator" } } } } } },
+  de: { translation: { demonstrator: { card: { open: { label: { normal: "Demonstrator öffnen", beginner: "Diesen Demonstrator öffnen" } } } } } },
+});
+//#endregion 🌐️DemonstratorCardLabels
 
 export function DemonstratorCard({
   pane,
   lifted,
   onClick,
-  onMouseEnter,
-  onMouseLeave,
   className,
 }: {
   readonly pane: DemonstratorPaneSpec;
-  /** 🎈️ Pointer-hover lift only — never maps to window `active` (that paints the primary silhouette stroke). */
+  /** 🎈️ Lifted while its app is revealed — never maps to window `active` (that paints the primary silhouette stroke). */
   readonly lifted?: boolean;
   readonly onClick: () => void;
-  readonly onMouseEnter?: () => void;
-  readonly onMouseLeave?: () => void;
   readonly className?: string;
 }) {
   const bodyParagraphs = demonstratorPaneDescriptionParagraphs(pane.description);
+  const openLabel = useLabel(demonstratorCardUiLabel("demonstrator.card.open"));
 
   return (
-    <button
-      type="button"
-      data-demonstrator-pane-card=""
-      data-pane-id={pane.id}
-      data-hover-scope=""
+    <OverviewCard
+      as="button"
+      slot="demonstrator-pane-card"
+      lifted={lifted}
       onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={cn(
-        "pointer-events-auto group w-full max-w-sm cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
-        "transition-transform duration-200",
-        "hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        lifted && "-translate-y-0.5",
-        className,
-      )}
+      className={cn("max-w-sm", className)}
+      icon={<Icon icon={pane.icon} size="small" className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" title={uiDataLabel(pane.label)} />}
+      title={pane.label}
+      contentClassName="max-w-sm"
+      footerRight={<OverviewCardOpenChip slot="demonstrator-pane-card">{openLabel}</OverviewCardOpenChip>}
     >
-      <WindowChrome
-        level="dialog"
-        active={false}
-        stackSlot="demonstrator-pane-card-stack"
-        stackClassName="w-full min-w-0"
-        titleChips={
-          <div data-slot="demonstrator-pane-card-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single px-single")}>
-            <Icon icon={pane.icon} size="small" className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" title={pane.label} />
-            <span className="truncate text-sm font-medium text-foreground">{pane.label}</span>
-          </div>
-        }
-        body={
-          <div data-slot="demonstrator-pane-card-content" className="w-full min-w-0 max-w-sm">
-            <p data-slot="demonstrator-pane-card-tagline" className="mb-double text-xs font-medium leading-normal text-foreground">
-              {pane.tagline}
-            </p>
-            {bodyParagraphs.length > 0 && (
-              <div data-slot="introduction-body" className="flex flex-col gap-double">
-                {bodyParagraphs.map((paragraph, index) => (
-                  <p key={index} data-slot="introduction-body-paragraph" className="whitespace-pre-line text-xs leading-normal text-muted-foreground">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
-        }
-        footerRightChips={
-          <div data-slot="demonstrator-pane-card-open-chip" className={windowChromeTitleChipClass}>
-            <span className="inline-flex items-center gap-single px-single text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-              Demonstrator öffnen
-              <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5" />
+      <span data-slot="demonstrator-pane-card-tagline" className="mb-double block text-xs font-medium leading-normal text-foreground">
+        {pane.tagline}
+      </span>
+      {bodyParagraphs.length > 0 && (
+        <span data-slot="introduction-body" className="flex flex-col gap-double">
+          {bodyParagraphs.map((paragraph, index) => (
+            <span key={index} data-slot="introduction-body-paragraph" className="block whitespace-pre-line text-xs leading-normal text-muted-foreground">
+              {paragraph}
             </span>
-          </div>
-        }
-        bodyClassName="p-double"
-      />
-    </button>
+          ))}
+        </span>
+      )}
+    </OverviewCard>
   );
 }

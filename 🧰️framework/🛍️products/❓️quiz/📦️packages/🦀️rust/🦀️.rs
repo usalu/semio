@@ -24,6 +24,9 @@ pub mod lifecycle;
 #[path = "../../🔨️modules/👁️views/🦀️.rs"]
 pub mod views;
 
+#[path = "../../🔨️modules/👥️presence/🦀️.rs"]
+pub mod presence;
+
 #[path = "../../🦀️.rs"]
 mod component;
 pub use component::*;

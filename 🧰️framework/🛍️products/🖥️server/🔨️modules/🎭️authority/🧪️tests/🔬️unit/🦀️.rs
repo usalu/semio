@@ -237,11 +237,11 @@ async fn a_fresh_activation_rehydrates_from_the_durable_stream_before_deciding()
 #[semio_framework_async_macros::async_test]
 async fn passivation_fences_the_next_activation_with_a_higher_epoch() {
     let mut directory = AuthorityDirectory::new();
-    directory.activate(key(COUNTER), "authority").unwrap();
+    directory.activate(&key(COUNTER), "authority").unwrap();
     let first = directory.activation_epoch(&key(COUNTER)).unwrap();
     directory.passivate(&key(COUNTER));
     assert!(!directory.is_active(&key(COUNTER)));
-    directory.activate(key(COUNTER), "authority").unwrap();
+    directory.activate(&key(COUNTER), "authority").unwrap();
     assert!(directory.activation_epoch(&key(COUNTER)).unwrap() > first);
 }
 //#endregion 🔖️Directory

@@ -1,11 +1,11 @@
-/** 👁️ The read side: the solution-free catalog, a learner's runs and bests, one run with its sheet, and the leaderboard.
+/** 👁️ The read side: the solution-free catalog, a learner's runs and bests, one run with its sheet, the leaderboard, and the crowd of a quiz.
  *
  * Id-keyed maps are emitted with their keys in code point order, like the Rust twin's `BTreeMap`s.
  *
  * @see ../../README.md — the views and the leaderboard ordering
  * @see ./🦀️.rs — the Rust twin
  */
-import type { Catalog, CatalogView, Leaderboard, LeaderboardRow, LearnerView, Quiz, RunView, Score } from "../../🧬️schema/🟦️.ts";
+import type { Catalog, CatalogView, CrowdCount, CrowdItem, CrowdTask, CrowdView, Leaderboard, LeaderboardRow, LearnerView, Quiz, RunResult, RunView, Score, TaskResult } from "../../🧬️schema/🟦️.ts";
 import { fnv1a32 } from "../🎲️randomness/🟦️.ts";
 import { sheetOf } from "../🃏️sheet/🟦️.ts";
 import type { LearnerState, LoadedQuiz, RunState } from "../🧾️lifecycle/🟦️.ts";
@@ -22,7 +22,7 @@ export function catalogView(catalog: Catalog, quizzes: readonly Quiz[]): Catalog
     id: catalog.id,
     title: catalog.title,
     introduction: catalog.introduction,
-    quizzes: quizzes.map((quiz) => ({ id: quiz.id, title: quiz.title, description: quiz.description, tasks: quiz.tasks.map((task) => ({ id: task.id, kind: task.kind, title: task.title })) })),
+    quizzes: quizzes.map((quiz) => ({ id: quiz.id, emoji: quiz.emoji, title: quiz.title, description: quiz.description, tasks: quiz.tasks.map((task) => ({ id: task.id, kind: task.kind, title: task.title })) })),
     badges: catalog.badges.map((badge) => ({ id: badge.id, emoji: badge.emoji, label: badge.label, description: badge.description })),
   };
 }
@@ -88,4 +88,67 @@ export function leaderboard(states: readonly LearnerState[], catalog: CatalogVie
   });
   rows.sort((left, right) => right.row.total - left.row.total || right.row.badges.length - left.row.badges.length || left.row.reachedAt - right.row.reachedAt || compareCodePoints(left.learner, right.learner));
   return { rows: rows.map(({ row }, index) => ({ rank: index + 1, ...row })) };
+}
+
+/** 🔣️ The key of a value in crowd counts: its ECMAScript `Number::toString` text, the shortest round-trip JSON number (`0.12`, `250`, `1e+21`, `1e-7`; `-0` → `0`) — Rust `value_key`. */
+export function valueKey(value: number): string {
+  return String(value);
+}
+
+/** 🎟️ Counts per distinct key, keys ascending by code point (category ids and value keys alike, so `120` precedes `15`). */
+function counted(keys: readonly string[]): CrowdCount[] {
+  const counts = new Map<string, number>();
+  for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
+  return [...counts.entries()].sort(([left], [right]) => compareCodePoints(left, right)).map(([key, count]) => ({ key, count }));
+}
+
+/** 🔎️ Per result, its first result of the task with the task's kind. */
+function answeredTasks<K extends TaskResult["kind"]>(results: readonly RunResult[], task: string, kind: K): Extract<TaskResult, { kind: K }>[] {
+  return results.flatMap((result) => {
+    const found = result.tasks.find((candidate) => candidate.task === task && candidate.kind === kind);
+    return found ? [found as Extract<TaskResult, { kind: K }>] : [];
+  });
+}
+
+/** 👪️ What the learners answered in the submitted results of one quiz: classification counts per assigned category, sorting mean normalized position (position / (len − 1), 0 for a single item) summed in result order, matching counts per assigned value key per dimension, counts keys ascending by code point; tasks, dimensions and items in definition order, unanswered items left out, results of other quizzes ignored. */
+export function crowdView(quiz: Quiz, results: readonly RunResult[]): CrowdView {
+  const runs = results.filter((result) => result.quiz === quiz.id);
+  const tasks = quiz.tasks.flatMap((task): CrowdTask[] => {
+    switch (task.kind) {
+      case "classification": {
+        const answered = answeredTasks(runs, task.id, "classification");
+        const items = task.items.flatMap((item): CrowdItem[] => {
+          const assigned = answered.flatMap((result) => result.items.find((candidate) => candidate.item === item.id)?.assigned ?? []);
+          return assigned.length === 0 ? [] : [{ item: item.id, answers: assigned.length, counts: counted(assigned) }];
+        });
+        return [{ task: task.id, kind: task.kind, items }];
+      }
+      case "sorting": {
+        const answered = answeredTasks(runs, task.id, "sorting");
+        const items = task.items.flatMap((item): CrowdItem[] => {
+          const positions = answered.flatMap((result) => {
+            const found = result.items.find((candidate) => candidate.item === item.id);
+            return found === undefined ? [] : [result.items.length > 1 ? found.position / (result.items.length - 1) : 0];
+          });
+          return positions.length === 0 ? [] : [{ item: item.id, answers: positions.length, meanPosition: positions.reduce((sum, position) => sum + position, 0) / positions.length }];
+        });
+        return [{ task: task.id, kind: task.kind, items }];
+      }
+      case "matching": {
+        const answered = answeredTasks(runs, task.id, "matching");
+        return task.dimensions.map((dimension): CrowdTask => {
+          const results = answered.flatMap((result) => result.dimensions.find((candidate) => candidate.dimension === dimension.id) ?? []);
+          const items = task.items.flatMap((item): CrowdItem[] => {
+            const assigned = results.flatMap((result) => {
+              const found = result.items.find((candidate) => candidate.item === item.id);
+              return found === undefined ? [] : [valueKey(found.assigned)];
+            });
+            return assigned.length === 0 ? [] : [{ item: item.id, answers: assigned.length, counts: counted(assigned) }];
+          });
+          return { task: task.id, kind: task.kind, dimension: dimension.id, items };
+        });
+      }
+    }
+  });
+  return { quiz: quiz.id, runs: runs.length, tasks };
 }

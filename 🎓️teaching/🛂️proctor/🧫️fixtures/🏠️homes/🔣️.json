@@ -2,6 +2,7 @@
   "$schema": "../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json",
   "schema": "semio.quiz/v1",
   "id": "homes",
+  "emoji": "🏠",
   "title": { "en": "Heating systems", "de": "Heizsysteme" },
   "description": { "en": "Which system heats which home?", "de": "Welches System heizt welches Haus?" },
   "tasks": [

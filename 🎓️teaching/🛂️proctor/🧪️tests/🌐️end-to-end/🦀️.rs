@@ -1,13 +1,14 @@
 //! 🌐️ The proctor end to end: booted on an ephemeral port over a fresh data directory and the
 //! fixture catalog, driven through its real HTTP API with the §9a encoding by an independent HTTP
 //! client (`ureq`), exactly as the browser client talks to it — then stopped, reopened from the same
-//! SQLite file and asked again.
+//! SQLite file and asked again. Its presence rooms are joined by an independent websocket client
+//! (`tungstenite`) speaking `semio.presence.v1`.
 //!
-//! @see ../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/QUIZ-PRODUCT-AND-TEACHING-PROCTOR/📓️design.md — §8, §9, §9a
+//! @see ../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/QUIZ-PRODUCT-AND-TEACHING-PROCTOR/📓️design.md — §8, §9, §9a, §15
 //! @see ../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
 
 use std::io::{Read, Write};
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpStream};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -16,10 +17,13 @@ use std::time::Duration;
 use proctor::catalog::load_catalog;
 use proctor::config::{CrossOriginPolicy, Forwarding, Gate};
 use proctor::instance::Proctor;
-use proctor::site::SiteHost;
 use semio_framework_async::CancelToken;
 use serde_json::{json, Value};
+use server::gateway::{PresenceSettings, PRESENCE_PROTOCOL_V1};
 use server::storage::StorageProfile;
+use tungstenite::client::IntoClientRequest;
+use tungstenite::http::{HeaderName, HeaderValue};
+use tungstenite::{HandshakeError, Message, WebSocket};
 
 const TENANT: &str = "proctor-fixture";
 
@@ -56,18 +60,16 @@ struct Running {
     thread: std::thread::JoinHandle<()>,
 }
 
-fn boot(data: &Path, site: Option<&Path>, gate: Gate) -> Running {
+fn boot(data: &Path, gate: Gate) -> Running {
     let (ready, address) = std::sync::mpsc::channel();
     let stop = CancelToken::root_now();
     let token = stop.clone();
     let data = data.to_string_lossy().into_owned();
-    let site = site.map(Path::to_path_buf);
     let thread = std::thread::spawn(move || {
         let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().expect("runtime");
         runtime.block_on(async move {
             let catalog = Arc::new(load_catalog(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture catalog"));
-            let site = site.map(|site| SiteHost::open(&site).expect("site"));
-            let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, catalog, gate, site).await.expect("assembled");
+            let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, catalog, gate, PresenceSettings::default()).await.expect("assembled");
             proctor.prepare().await.expect("prepared");
             proctor.reconcile().await.expect("reconciled");
             proctor.settle(&CancelToken::root_now(), |_| {}).await.expect("settled");
@@ -126,11 +128,20 @@ fn envelope(command: &Value) -> Value {
 }
 
 fn post(base: &str, path: &str, body: &Value) -> (u16, Value) {
-    match ureq::post(&format!("{base}{path}")).set("content-type", "application/json").send_string(&body.to_string()) {
-        Ok(response) => (response.status(), serde_json::from_str(&response.into_string().expect("body")).expect("json")),
-        Err(ureq::Error::Status(status, response)) => (status, serde_json::from_str(&response.into_string().unwrap_or_default()).unwrap_or(Value::Null)),
+    let (status, _, answer) = post_with(base, path, body, &[]);
+    (status, answer)
+}
+
+/// 📮️ `POST` a JSON body with extra request headers (never credentials); status, headers and JSON answer.
+fn post_with(base: &str, path: &str, body: &Value, headers: &[(&str, &str)]) -> (u16, Vec<(String, String)>, Value) {
+    let request = headers.iter().fold(ureq::post(&format!("{base}{path}")).set("content-type", "application/json"), |request, (name, value)| request.set(name, value));
+    let response = match request.send_string(&body.to_string()) {
+        Ok(response) => response,
+        Err(ureq::Error::Status(_, response)) => response,
         Err(error) => panic!("POST {path}: {error}"),
-    }
+    };
+    let pairs = response.headers_names().iter().filter_map(|name| response.header(name).map(|value| (name.to_ascii_lowercase(), value.to_string()))).collect();
+    (response.status(), pairs, serde_json::from_str(&response.into_string().unwrap_or_default()).unwrap_or(Value::Null))
 }
 
 /// 📨️ Submit one quiz command; the outcome and the quiz events it carries.
@@ -154,10 +165,13 @@ fn rejected(base: &str, sent: &Value) -> String {
     outcome["reason"]["detail"].as_str().expect("detail").to_string()
 }
 
-fn query(base: &str, query: &Value) -> (u16, Value) {
+fn query_envelope(query: &Value) -> Value {
     let kind = query["type"].as_str().expect("type");
-    let envelope = json!({ "queryId": id(0), "kind": format!("quiz.{kind}"), "version": 1, "scope": TENANT, "principal": { "kind": "anonymous" }, "arguments": bytes(&query.to_string()), "consistency": { "kind": "authority" }, "cursor": null });
-    let (status, result) = post(base, "/queries", &envelope);
+    json!({ "queryId": id(0), "kind": format!("quiz.{kind}"), "version": 1, "scope": TENANT, "principal": { "kind": "anonymous" }, "arguments": bytes(&query.to_string()), "consistency": { "kind": "authority" }, "cursor": null })
+}
+
+fn query(base: &str, query: &Value) -> (u16, Value) {
+    let (status, result) = post(base, "/queries", &query_envelope(query));
     if status != 200 {
         return (status, result);
     }
@@ -189,7 +203,7 @@ fn header<'a>(headers: &'a [(String, String)], name: &str) -> Option<&'a str> {
 
 /// 🧵️ One raw HTTP/1.1 request, for paths an URL library would normalize away.
 fn raw(address: SocketAddr, request: &str) -> String {
-    let mut stream = std::net::TcpStream::connect(address).expect("connect");
+    let mut stream = TcpStream::connect(address).expect("connect");
     stream.set_read_timeout(Some(Duration::from_secs(30))).expect("timeout");
     stream.write_all(request.as_bytes()).expect("request");
     let mut answer = String::new();
@@ -197,6 +211,97 @@ fn raw(address: SocketAddr, request: &str) -> String {
     answer
 }
 //#endregion 🔖️Wire
+
+//#region 🔖️Presence
+type Socket = WebSocket<TcpStream>;
+
+/// 🔌️ Open the presence socket of `scope` with extra handshake headers: the socket, or the refusing
+/// status and its `x-semio-refusal`.
+fn presence(address: SocketAddr, scope: &str, surface: &str, headers: &[(&str, &str)]) -> Result<Socket, (u16, Option<String>)> {
+    let scope = scope.replace('/', "%2F");
+    let mut request = format!("ws://{address}/scopes/{scope}/presence/ws?surface={surface}").into_client_request().expect("a websocket request");
+    request.headers_mut().insert("sec-websocket-protocol", HeaderValue::from_static(PRESENCE_PROTOCOL_V1));
+    for (name, value) in headers {
+        request.headers_mut().insert(HeaderName::from_bytes(name.as_bytes()).expect("a header name"), HeaderValue::from_str(value).expect("a header value"));
+    }
+    let stream = TcpStream::connect(address).expect("connect");
+    stream.set_read_timeout(Some(Duration::from_secs(10))).expect("timeout");
+    match tungstenite::client(request, stream) {
+        Ok((socket, response)) => {
+            assert_eq!(response.headers()["sec-websocket-protocol"], PRESENCE_PROTOCOL_V1);
+            Ok(socket)
+        }
+        Err(HandshakeError::Failure(tungstenite::Error::Http(response))) => Err((response.status().as_u16(), response.headers().get("x-semio-refusal").and_then(|value| value.to_str().ok()).map(str::to_string))),
+        Err(error) => panic!("presence handshake: {error}"),
+    }
+}
+
+/// 📥️ The next text frame, skipping the keepalive.
+fn frame(socket: &mut Socket) -> Value {
+    loop {
+        match socket.read().expect("a frame within the read timeout") {
+            Message::Text(text) => return serde_json::from_str(text.as_str()).expect("a json frame"),
+            Message::Ping(_) | Message::Pong(_) => {}
+            other => panic!("unexpected {other:?}"),
+        }
+    }
+}
+
+/// 👋️ The `welcome` a joining socket receives first: its session and the frame.
+fn welcome(socket: &mut Socket) -> (String, Value) {
+    let welcome = frame(socket);
+    assert_eq!(welcome["type"], "welcome", "{welcome}");
+    (welcome["session"].as_str().expect("a session").to_string(), welcome)
+}
+
+fn share(socket: &mut Socket, state: &Value) {
+    socket.send(Message::text(json!({ "type": "state", "state": state }).to_string())).expect("sent");
+}
+
+/// ⏳️ Read frames until one satisfies `found`; every frame read, that one last.
+fn until(socket: &mut Socket, found: impl Fn(&Value) -> bool) -> Vec<Value> {
+    let mut seen = Vec::new();
+    loop {
+        let next = frame(socket);
+        let done = found(&next);
+        seen.push(next);
+        if done {
+            return seen;
+        }
+    }
+}
+
+/// 🚫️ The reason of the next `refused` frame.
+fn refusal(socket: &mut Socket) -> Value {
+    until(socket, |frame| frame["type"] == "refused").pop().expect("a refused frame")["reason"].clone()
+}
+
+/// 📦️ Whether `frame` is a batch carrying `session` with `state`.
+fn carries(frame: &Value, session: &str, state: &Value) -> bool {
+    frame["type"] == "batch" && frame["entries"].as_array().expect("entries").iter().any(|entry| entry["session"] == session && &entry["state"] == state)
+}
+
+/// 🚶️ Whether `frame` is a batch announcing that `session` left.
+fn departs(frame: &Value, session: &str) -> bool {
+    frame["type"] == "batch" && frame["left"].as_array().expect("left").iter().any(|left| left == session)
+}
+
+/// 👀️ Watch `scopes` read-only at `interval_ms`.
+fn watch(socket: &mut Socket, scopes: &[&str], interval_ms: u64) {
+    socket.send(Message::text(json!({ "type": "watch", "scopes": scopes, "intervalMs": interval_ms }).to_string())).expect("sent");
+}
+
+/// 📦️ Whether `frame` is a `watched` frame of `scope` carrying `session` with `state`.
+fn sees(frame: &Value, scope: &str, session: &str, state: &Value) -> bool {
+    frame["type"] == "watched" && frame["scope"] == scope && frame["entries"].as_array().expect("entries").iter().any(|entry| entry["session"] == session && &entry["state"] == state)
+}
+
+/// 🔚️ Close with the handshake and drain until the server has hung up.
+fn close(mut socket: Socket) {
+    socket.close(None).expect("close");
+    while socket.read().is_ok() {}
+}
+//#endregion 🔖️Presence
 
 //#region 🔖️Answers
 fn quiz_document(quiz: &str) -> Value {
@@ -258,7 +363,7 @@ fn play(base: &str, learner: &str, run: &str, quiz: &str, seed: u32) -> Vec<Valu
 #[test]
 fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     let data = scratch("lifecycle");
-    let running = boot(&data.0, None, development());
+    let running = boot(&data.0, development());
     let base = running.base.clone();
 
     let (status, _, instance) = get(&base, "/instance", &[]);
@@ -324,7 +429,7 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     let before = (learner, finished, board);
     running.shut_down();
 
-    let running = boot(&data.0, None, development());
+    let running = boot(&data.0, development());
     let base = running.base.clone();
     let after = (view(&base, &json!({ "type": "learner", "learner": ada })), view(&base, &json!({ "type": "run", "run": run })), view(&base, &json!({ "type": "leaderboard" })));
     assert_eq!(after, before, "the reopened SQLite file answers the same views");
@@ -339,48 +444,211 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
 }
 
 #[test]
-fn the_site_is_served_behind_the_gate_with_spa_fallback_and_cache_headers() {
-    let data = scratch("site-data");
-    let site = scratch("site");
-    std::fs::create_dir_all(site.0.join("assets")).expect("assets");
-    std::fs::write(site.0.join("index.html"), "<!doctype html><title>quizze</title>").expect("index");
-    std::fs::write(site.0.join("assets/app-B3xK9aQz.js"), "console.log(1);").expect("asset");
-    std::fs::write(site.0.join("assets/🌐️-Djvsi-pa.js"), "console.log(2);").expect("dashed asset");
-    std::fs::create_dir_all(site.0.join("🖼️assets")).expect("public assets");
-    std::fs::write(site.0.join("🖼️assets/compressed.woff2"), "wOF2").expect("font");
-    let running = boot(&data.0, Some(&site.0), Gate { origins: CrossOriginPolicy::LoopbackDevelopment, forwarding: Forwarding::TerminatingProxy });
+fn the_api_serves_the_cdn_site_across_origins_behind_the_gate() {
+    const SITE: &str = "https://quizzes.example";
+    const FOREIGN: &str = "https://evil.example";
+    let data = scratch("gate-data");
+    let running = boot(&data.0, Gate { origins: CrossOriginPolicy::Allowlist(vec![SITE.to_string()]), forwarding: Forwarding::TerminatingProxy });
     let base = running.base.clone();
     let https = [("x-forwarded-proto", "https")];
 
-    let (status, headers, _) = get(&base, "/", &[]);
+    let (status, headers, _) = get(&base, "/instance", &[]);
     assert_eq!((status, header(&headers, "x-semio-refusal")), (403, Some("insecure-transport")));
-    let (status, headers, body) = get(&base, "/", &https);
-    assert_eq!((status, header(&headers, "content-type"), header(&headers, "cache-control")), (200, Some("text/html; charset=utf-8"), Some("no-cache")));
-    assert!(body.contains("<title>quizze</title>"));
-    let (status, headers, body) = get(&base, "/quiz/power/run/123", &https);
-    assert_eq!((status, header(&headers, "cache-control")), (200, Some("no-cache")));
-    assert!(body.contains("quizze"));
-    let (status, headers, body) = get(&base, "/assets/app-B3xK9aQz.js", &https);
-    assert_eq!((status, header(&headers, "content-type"), header(&headers, "cache-control"), body.as_str()), (200, Some("text/javascript; charset=utf-8"), Some("public, max-age=31536000, immutable"), "console.log(1);"));
-    assert_eq!(get(&base, "/assets/gone-B3xK9aQz.js", &https).0, 404);
-    let secure = |method: &str, path: &str| raw(running.address, &format!("{method} {path} HTTP/1.1\r\nHost: proctor\r\nX-Forwarded-Proto: https\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")).to_ascii_lowercase();
-    let dashed = secure("GET", "/assets/%F0%9F%8C%90%EF%B8%8F-Djvsi-pa.js");
-    assert!(dashed.starts_with("http/1.1 200") && dashed.contains("cache-control: public, max-age=31536000, immutable") && dashed.ends_with("console.log(2);"), "{dashed}");
-    let font = secure("HEAD", "/%F0%9F%96%BC%EF%B8%8Fassets/compressed.woff2");
-    assert!(font.starts_with("http/1.1 200") && font.contains("cache-control: public, max-age=3600") && font.contains("content-type: font/woff2"), "{font}");
-    for method in ["POST", "PUT", "DELETE"] {
-        let refused = secure(method, "/quiz/power");
-        assert!(refused.starts_with("http/1.1 405") && refused.contains("allow: get, head") && refused.contains("\"kind\":\"methodnotallowed\""), "{method}: {refused}");
-    }
     let (status, headers, _) = get(&base, "/instance", &https);
     assert_eq!((status, header(&headers, "content-type")), (200, Some("application/json")));
-    for traversal in ["/%2e%2e/%2e%2e/Cargo.toml", "/..%2f..%2fCargo.toml", "/assets/..%5c..%5cCargo.toml"] {
-        let answer = raw(running.address, &format!("GET {traversal} HTTP/1.1\r\nHost: proctor\r\nX-Forwarded-Proto: https\r\nConnection: close\r\n\r\n"));
-        assert!(answer.starts_with("HTTP/1.1 400"), "{traversal}: {answer}");
+    for path in ["/", "/index.html", "/quiz/power/run/123", "/assets/app-B3xK9aQz.js"] {
+        let (status, headers, body) = get(&base, path, &https);
+        assert_eq!((status, header(&headers, "content-type")), (404, Some("application/json")), "{path}");
+        assert_eq!(serde_json::from_str::<Value>(&body).expect("json error")["kind"], "notFound", "{path}");
     }
-    let preflight = raw(running.address, "OPTIONS /commands HTTP/1.1\r\nHost: proctor\r\nX-Forwarded-Proto: https\r\nOrigin: http://localhost:6061\r\nAccess-Control-Request-Method: POST\r\nConnection: close\r\n\r\n").to_ascii_lowercase();
-    assert!(preflight.starts_with("http/1.1 204") && preflight.contains("access-control-allow-origin: http://localhost:6061"), "{preflight}");
-    let foreign = raw(running.address, "OPTIONS /commands HTTP/1.1\r\nHost: proctor\r\nX-Forwarded-Proto: https\r\nOrigin: https://evil.example\r\nConnection: close\r\n\r\n").to_ascii_lowercase();
-    assert!(foreign.starts_with("http/1.1 204") && !foreign.contains("access-control-allow-origin"), "{foreign}");
+
+    for path in ["/commands", "/queries"] {
+        let preflight = |origin: &str| raw(running.address, &format!("OPTIONS {path} HTTP/1.1\r\nHost: proctor\r\nX-Forwarded-Proto: https\r\nOrigin: {origin}\r\nAccess-Control-Request-Method: POST\r\nAccess-Control-Request-Headers: content-type\r\nConnection: close\r\n\r\n")).to_ascii_lowercase();
+        let granted = preflight(SITE);
+        assert!(granted.starts_with("http/1.1 204"), "{path}: {granted}");
+        for expected in ["access-control-allow-origin: https://quizzes.example", "access-control-allow-methods: get, post, head, options", "access-control-allow-headers: content-type", "access-control-max-age: 7200", "vary: origin"] {
+            assert!(granted.contains(expected), "{path} lacks {expected}: {granted}");
+        }
+        let refused = preflight(FOREIGN);
+        assert!(refused.starts_with("http/1.1 204") && !refused.contains("access-control-allow-origin") && !refused.contains("access-control-max-age"), "{path}: {refused}");
+    }
+
+    let learner = id(0xc0de);
+    let identify = envelope(&json!({ "type": "identify-learner", "id": id(0xc1), "learner": learner, "identity": { "kind": "anonymous" } }));
+    let (status, headers, outcome) = post_with(&base, "/commands", &identify, &[("origin", SITE), ("x-forwarded-proto", "https")]);
+    assert_eq!((status, outcome["status"].as_str(), header(&headers, "access-control-allow-origin")), (200, Some("accepted"), Some(SITE)), "{outcome}");
+    let (status, headers, result) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "learner", "learner": learner })), &[("origin", SITE), ("x-forwarded-proto", "https")]);
+    assert_eq!((status, result["kind"].as_str(), header(&headers, "access-control-allow-origin")), (200, Some("snapshot"), Some(SITE)), "{result}");
+    assert_eq!(serde_json::from_str::<Value>(&text(&result["value"])).expect("learner view")["identity"], json!({ "kind": "anonymous" }));
+    let (status, headers, _) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "leaderboard" })), &[("origin", FOREIGN), ("x-forwarded-proto", "https")]);
+    assert_eq!((status, header(&headers, "access-control-allow-origin"), header(&headers, "vary")), (200, None, Some("Origin")));
+    running.shut_down();
+}
+
+#[test]
+fn learners_share_presence_and_cursors_through_the_gateway() {
+    let data = scratch("presence");
+    let running = boot(&data.0, development());
+    let local = [("origin", "http://localhost:6061")];
+    let (ada, grace) = (quiz::learner_tag(&id(0xada)), quiz::learner_tag(&id(0x9ace)));
+
+    let mut first = presence(running.address, TENANT, "home", &local).expect("joins the roster");
+    let (first_session, greeting) = welcome(&mut first);
+    assert_eq!(first_session.len(), 32);
+    assert_eq!(greeting["roster"], json!([{ "session": first_session, "colour": greeting["colour"], "surface": "home", "state": null }]));
+    let at_home = json!({ "tag": ada, "identity": { "kind": "pseudonym", "handle": "Ada" }, "place": { "screen": "home" }, "active": true });
+    share(&mut first, &at_home);
+    until(&mut first, |frame| carries(frame, &first_session, &at_home));
+
+    let mut second = presence(running.address, TENANT, "home", &local).expect("joins the roster");
+    let (second_session, greeting) = welcome(&mut second);
+    assert_ne!(second_session, first_session);
+    let roster = greeting["roster"].as_array().expect("roster");
+    assert_eq!(roster.len(), 2, "{greeting}");
+    assert!(roster.iter().any(|entry| entry["session"] == first_session.as_str() && entry["state"] == at_home), "the roster carries the state already shared: {greeting}");
+    assert_ne!(roster[0]["colour"], roster[1]["colour"], "{greeting}");
+    until(&mut first, |frame| carries(frame, &second_session, &Value::Null));
+    let in_run = json!({ "tag": grace, "identity": { "kind": "anonymous" }, "place": { "screen": "run", "quiz": "power", "task": "sources" }, "active": true });
+    share(&mut second, &in_run);
+    until(&mut first, |frame| carries(frame, &second_session, &in_run));
+
+    let mut shouting = in_run.clone();
+    shouting["tag"] = json!("NOT-A-TAG");
+    share(&mut second, &shouting);
+    assert_eq!(refusal(&mut second), "tag-invalid /tag");
+    share(&mut second, &json!({ "tag": grace, "place": { "screen": "home" } }));
+    assert_eq!(refusal(&mut second), "state-invalid");
+    share(&mut second, &json!({ "tag": grace, "identity": { "kind": "anonymous" }, "place": { "screen": "run", "quiz": "cooling" }, "active": true }));
+    assert_eq!(refusal(&mut second), "quiz-unknown /place/quiz");
+
+    let room = format!("{TENANT}/quiz/power");
+    let mut pointer = presence(running.address, &room, "run", &local).expect("joins the quiz room");
+    let (pointer_session, _) = welcome(&mut pointer);
+    let mut watcher = presence(running.address, &room, "run", &local).expect("joins the quiz room");
+    let (_, greeting) = welcome(&mut watcher);
+    assert_eq!(greeting["roster"].as_array().map(Vec::len), Some(2), "{greeting}");
+    let cursor = |x: f64| json!({ "tag": ada, "cursor": { "anchor": "task:sources", "x": x, "y": 0.5 }, "focus": "task:sources" });
+    for step in 0..10 {
+        share(&mut pointer, &cursor(f64::from(step) / 10.0));
+    }
+    let seen = until(&mut watcher, |frame| carries(frame, &pointer_session, &cursor(0.9)));
+    let moves = seen.iter().filter(|frame| frame["type"] == "batch" && frame["entries"].as_array().expect("entries").iter().any(|entry| entry["session"] == pointer_session.as_str() && !entry["state"].is_null())).count();
+    assert!((1..=2).contains(&moves), "ten moves inside one tick coalesce into at most two batches: {seen:?}");
+    share(&mut pointer, &at_home);
+    assert_eq!(refusal(&mut pointer), "state-invalid", "a quiz room carries cursors, not presence");
+
+    assert_eq!(presence(running.address, "other-catalog", "home", &local).err(), Some((403, None)), "another catalog's roster is no room here");
+    assert_eq!(presence(running.address, &format!("{TENANT}/quiz/cooling"), "run", &local).err(), Some((403, None)), "an unknown quiz has no room");
+    assert_eq!(presence(running.address, TENANT, &"s".repeat(65), &local).err(), Some((400, None)), "the surface is bounded");
+
+    close(second);
+    until(&mut first, |frame| departs(frame, &second_session));
+    close(pointer);
+    until(&mut watcher, |frame| departs(frame, &pointer_session));
+    close(first);
+    close(watcher);
+    running.shut_down();
+}
+
+#[test]
+fn a_production_proctor_opens_presence_to_the_site_origin_only() {
+    const SITE: &str = "https://quizzes.example";
+    let data = scratch("presence-gate");
+    let running = boot(&data.0, Gate { origins: CrossOriginPolicy::Allowlist(vec![SITE.to_string()]), forwarding: Forwarding::TerminatingProxy });
+    let https = ("x-forwarded-proto", "https");
+    assert_eq!(presence(running.address, TENANT, "home", &[("origin", SITE)]).err(), Some((403, Some("insecure-transport".to_string()))));
+    assert_eq!(presence(running.address, TENANT, "home", &[("origin", "https://evil.example"), https]).err(), Some((403, None)), "a foreign page may not open a socket");
+    assert_eq!(presence(running.address, TENANT, "home", &[("origin", "http://localhost:6061"), https]).err(), Some((403, None)), "production admits no loopback page");
+    let mut socket = presence(running.address, TENANT, "home", &[("origin", SITE), https]).expect("the site joins");
+    let (session, _) = welcome(&mut socket);
+    let state = json!({ "tag": "0a1b2c3d", "identity": { "kind": "anonymous" }, "place": { "screen": "leaderboard" }, "active": false });
+    share(&mut socket, &state);
+    until(&mut socket, |frame| carries(frame, &session, &state));
+    close(socket);
+    running.shut_down();
+}
+
+#[test]
+fn learners_see_what_the_others_think_live_and_what_they_answered() {
+    let data = scratch("thinking");
+    let running = boot(&data.0, development());
+    let (base, address) = (running.base.clone(), running.address);
+    let local = [("origin", "http://localhost:6061")];
+    let (ada, grace) = (id(0xada), id(0x9ace));
+    for (seed, learner) in [(1, &ada), (2, &grace)] {
+        accepted(&base, &json!({ "type": "identify-learner", "id": id(seed), "learner": learner, "identity": { "kind": "anonymous" } }));
+    }
+    let (ada_tag, grace_tag) = (quiz::learner_tag(&ada), quiz::learner_tag(&grace));
+    let (thinking, quiz_room, leaderboard) = (format!("{TENANT}/quiz/power/thinking"), format!("{TENANT}/quiz/power"), format!("{TENANT}/leaderboard"));
+
+    let mut thinker = presence(address, &thinking, "run", &local).expect("joins the thinking room");
+    let (thinker_session, _) = welcome(&mut thinker);
+    let mut peer = presence(address, &thinking, "run", &local).expect("joins the thinking room");
+    let (_, greeting) = welcome(&mut peer);
+    assert_eq!(greeting["roster"].as_array().map(Vec::len), Some(2), "{greeting}");
+    let mut home = presence(address, &format!("{TENANT}/home"), "home", &local).expect("joins home");
+    welcome(&mut home);
+    watch(&mut home, &[&thinking, &quiz_room, &leaderboard], 250);
+    let snapshots = until(&mut home, |frame| frame["type"] == "watched" && frame["scope"] == thinking.as_str());
+    let scoped: Vec<(&str, bool)> = snapshots.iter().filter(|frame| frame["type"] == "watched").map(|frame| (frame["scope"].as_str().expect("scope"), frame["snapshot"] == true)).collect();
+    assert_eq!(scoped, [(leaderboard.as_str(), true), (quiz_room.as_str(), true), (thinking.as_str(), true)], "one snapshot per watched scope, in scope order");
+    assert_eq!(snapshots.last().expect("thinking")["entries"].as_array().map(Vec::len), Some(2), "the snapshot holds both thinkers");
+
+    let draft = json!({ "tag": ada_tag, "answers": { "appliances": { "kind": "sorting", "order": ["kettle", "laptop"] } } });
+    share(&mut thinker, &draft);
+    until(&mut peer, |frame| carries(frame, &thinker_session, &draft));
+    until(&mut home, |frame| sees(frame, &thinking, &thinker_session, &draft));
+    let revised = json!({ "tag": ada_tag, "answers": { "appliances": { "kind": "sorting", "order": ["phone-charger", "laptop", "kettle"] }, "sources": { "kind": "matching", "values": { "hours": { "rooftop-pv": 950 } } } } });
+    share(&mut thinker, &revised);
+    until(&mut peer, |frame| carries(frame, &thinker_session, &revised));
+    until(&mut home, |frame| sees(frame, &thinking, &thinker_session, &revised));
+    share(&mut thinker, &json!({ "tag": ada_tag, "answers": { "sources": { "kind": "matching", "values": { "hours": { "rooftop-pv": 10000 } } } } }));
+    assert_eq!(refusal(&mut thinker), "value-unknown /answers/sources/values/hours/rooftop-pv");
+
+    let mut dragger = presence(address, &quiz_room, "run", &local).expect("joins the quiz room");
+    let (dragger_session, _) = welcome(&mut dragger);
+    let dragging = json!({ "tag": grace_tag, "cursor": { "anchor": "item:kettle", "x": 0.5, "y": 0.5 }, "drag": { "item": "kettle" } });
+    share(&mut dragger, &dragging);
+    until(&mut home, |frame| sees(frame, &quiz_room, &dragger_session, &dragging));
+    share(&mut dragger, &json!({ "tag": grace_tag, "drag": { "item": "pellets" } }));
+    assert_eq!(refusal(&mut dragger), "id-unknown /drag/item");
+    watch(&mut home, &["other-catalog/home"], 250);
+    assert_eq!(refusal(&mut home), "forbidden other-catalog/home");
+    for socket in [thinker, peer, home, dragger] {
+        close(socket);
+    }
+
+    let crowd = |base: &str| {
+        let (status, result) = post(base, "/queries", &query_envelope(&json!({ "type": "crowd", "quiz": "power" })));
+        assert_eq!(status, 200, "{result}");
+        text(&result["value"])
+    };
+    assert_eq!(serde_json::from_str::<Value>(&crowd(&base)).expect("crowd json")["runs"], 0, "a quiz nobody submitted has an empty crowd");
+    assert_eq!(query(&base, &json!({ "type": "crowd", "quiz": "cooling" })).0, 404);
+    let (ada_run, grace_run) = (id(0x100), id(0x101));
+    play(&base, &ada, &ada_run, "power", 100);
+    accepted(&base, &json!({ "type": "start-run", "id": id(40), "learner": grace, "run": grace_run, "quiz": "power" }));
+    let document = quiz_document("power");
+    for (index, task) in view(&base, &json!({ "type": "run", "run": grace_run }))["sheet"]["tasks"].as_array().expect("tasks").iter().enumerate() {
+        let mut answer = perfect(&document, task);
+        if let Some(order) = answer.get_mut("order").and_then(Value::as_array_mut) {
+            order.reverse();
+        }
+        accepted(&base, &record(&grace, &grace_run, task, &answer, 41 + index as u32));
+    }
+    accepted(&base, &json!({ "type": "submit-run", "id": id(70), "learner": grace, "run": grace_run }));
+    let results: Vec<quiz::RunResult> = [&ada_run, &grace_run].iter().map(|run| serde_json::from_value(view(&base, &json!({ "type": "run", "run": run }))["result"].clone()).expect("a run result")).collect();
+    let catalog = load_catalog(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture catalog");
+    let oracle = serde_json::to_string(&quiz::crowd_view(&catalog.entry("power").expect("power").quiz, &results)).expect("oracle json");
+    let answered = crowd(&base);
+    assert_eq!(answered, oracle, "the proctor's crowd is the core's crowd_view, byte for byte");
+    let answered: Value = serde_json::from_str(&answered).expect("crowd json");
+    assert_eq!(answered["runs"], 2);
+    let means: Vec<f64> = answered["tasks"][0]["items"].as_array().expect("sorting items").iter().map(|item| item["meanPosition"].as_f64().expect("a mean")).collect();
+    assert!(means.iter().all(|mean| (mean - 0.5).abs() < 1e-12), "a perfect and a reversed order meet in the middle: {means:?}");
+    running.shut_down();
+
+    let running = boot(&data.0, development());
+    assert_eq!(crowd(&running.base), oracle, "the crowd survives a restart");
     running.shut_down();
 }

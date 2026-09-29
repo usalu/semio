@@ -10,6 +10,7 @@ import {
   Outbox,
   ProctorClient,
   ProctorUnavailable,
+  abortable,
   commandEnvelope,
   isTransient,
   localStore,
@@ -417,5 +418,24 @@ describe("🛂️ proctor wire (design §9a)", () => {
     const retried = retryTransient(async () => Promise.reject(new ProctorUnavailable("down")), TIMING, controller.signal);
     controller.abort(new Error("stop"));
     await expect(retried).rejects.toThrow("stop");
+  });
+
+  it("never leaves the losing call unhandled when a query starts on an already stopped session", async () => {
+    const unhandled: unknown[] = [];
+    const record = (reason: unknown): void => {
+      unhandled.push(reason);
+    };
+    process.on("unhandledRejection", record);
+    try {
+      const stopped = new AbortController();
+      stopped.abort();
+      const client = new ProctorClient((signal) => ({ send: async () => Promise.reject(signal?.reason ?? new Error("sent")) }), "test");
+      await expect(client.leaderboard(undefined, stopped.signal)).rejects.toBe(stopped.signal.reason);
+      await expect(abortable(Promise.reject(new Error("late")), stopped.signal)).rejects.toBe(stopped.signal.reason);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", record);
+    }
   });
 });

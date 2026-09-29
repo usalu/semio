@@ -26,7 +26,15 @@ import {
   sheetOf,
   shuffle,
   uniformIndex,
+  crowdView,
+  cursorProblem,
+  presenceProblem,
+  roomScope,
+  rosterScope,
+  thinkingProblem,
+  thinkingScope,
   type Answer,
+  type Place,
   type Badge,
   type Catalog,
   type Command,
@@ -135,7 +143,7 @@ describe("📏️sorting-concordance, 🔀️matching-concordance, 🕸️profil
       const fixture = vectors<{ tasks: Task[]; vectors: { id: string; task: string; sheetTask: SheetTask; answer: Answer; expected: unknown }[] }>(name);
       expect(fixture.vectors.length).toBeGreaterThan(0);
       for (const vector of fixture.vectors) expectClose(scoreTask(fixture.tasks.find((task) => task.id === vector.task)!, vector.sheetTask, vector.answer), vector.expected, vector.id);
-      for (const task of fixture.tasks) expect(quizIssues({ schema: "semio.quiz/v1", id: "vectors", title: { en: "V", de: "V" }, description: { en: "V", de: "V" }, tasks: [task] }), task.id).toEqual([]);
+      for (const task of fixture.tasks) expect(quizIssues({ schema: "semio.quiz/v1", id: "vectors", emoji: "🧪", title: { en: "V", de: "V" }, description: { en: "V", de: "V" }, tasks: [task] }), task.id).toEqual([]);
     });
   }
 });
@@ -176,6 +184,42 @@ describe("🧬️schema-conformance", () => {
         `${vector.id}: ${JSON.stringify(issues)}`,
       ).toBe(true);
     }
+  });
+});
+
+describe("📊️crowd-view", () => {
+  const fixture = vectors<{ quizzes: Quiz[]; vectors: { id: string; quiz: string; results: RunResult[]; expected: unknown }[] }>("📊️crowd-view");
+
+  it("aggregates every committed set of results into the committed crowd view within the parity tolerance", () => {
+    expect(fixture.vectors.length).toBeGreaterThan(0);
+    for (const vector of fixture.vectors) expectClose(crowdView(fixture.quizzes.find((quiz) => quiz.id === vector.quiz)!, vector.results), vector.expected, vector.id);
+  });
+});
+
+describe("👥️shared-presence", () => {
+  const fixture = vectors<{
+    scopes: { id: string; catalog: string; place: Place; expected: { roster: string; room: string | null } }[];
+    presence: { id: string; state: unknown; expected: boolean }[];
+    cursors: { id: string; state: unknown; expected: boolean }[];
+    thinkingScopes: { id: string; catalog: string; quiz: string; expected: string }[];
+    thinking: { id: string; state: unknown; expected: boolean }[];
+  }>("👥️shared-presence");
+
+  it("names every committed thinking room and admits and refuses every committed thinking state as committed", () => {
+    expect(fixture.thinkingScopes.length + fixture.thinking.length).toBeGreaterThan(0);
+    for (const vector of fixture.thinkingScopes) expect(thinkingScope(vector.catalog, vector.quiz), vector.id).toBe(vector.expected);
+    for (const vector of fixture.thinking) expect(thinkingProblem(vector.state) === undefined, `${vector.id}: ${JSON.stringify(thinkingProblem(vector.state))}`).toBe(vector.expected);
+  });
+
+  it("maps every committed place to the committed roster and room scope", () => {
+    expect(fixture.scopes.length).toBeGreaterThan(0);
+    for (const vector of fixture.scopes) expect({ roster: rosterScope(vector.catalog), room: roomScope(vector.catalog, vector.place) ?? null }, vector.id).toEqual(vector.expected);
+  });
+
+  it("admits and refuses every committed presence and cursor state as committed", () => {
+    expect(fixture.presence.length + fixture.cursors.length).toBeGreaterThan(0);
+    for (const vector of fixture.presence) expect(presenceProblem(vector.state) === undefined, `${vector.id}: ${JSON.stringify(presenceProblem(vector.state))}`).toBe(vector.expected);
+    for (const vector of fixture.cursors) expect(cursorProblem(vector.state) === undefined, `${vector.id}: ${JSON.stringify(cursorProblem(vector.state))}`).toBe(vector.expected);
   });
 });
 

@@ -8,6 +8,7 @@ const REVISION = "c".repeat(64);
 const PHYSICS: Quiz = {
   schema: "semio.quiz/v1",
   id: "physics",
+  emoji: "🧲",
   title: T("Physics"),
   description: T("Power and energy"),
   tasks: [
@@ -15,7 +16,7 @@ const PHYSICS: Quiz = {
     { kind: "classification", id: "units", title: T("Units"), prompt: T("Classify"), categories: [{ id: "power", label: T("Power"), profile: { a: 1, b: 2, c: 3 } }, { id: "energy", label: T("Energy") }], axes: [{ id: "a", label: T("a"), unit: "u", min: 0, max: 5 }, { id: "b", label: T("b"), unit: "u", min: 0, max: 5 }, { id: "c", label: T("c"), unit: "u", min: 0, max: 5 }], items: [{ id: "watt", label: T("W"), category: "power" }, { id: "kwh", label: T("kWh"), category: "energy" }] },
   ],
 };
-const HEATING: Quiz = { schema: "semio.quiz/v1", id: "heating", title: T("Heating"), description: T("Heat"), tasks: [{ kind: "matching", id: "walls", title: T("Walls"), prompt: T("Match"), dimensions: [{ id: "u", quantity: { label: T("U"), unit: "W/(m²K)", scale: "linear", prefixed: false } }], items: [{ id: "old", label: T("Old"), values: { u: 1.4 } }, { id: "new", label: T("New"), values: { u: 0.2 } }] }] };
+const HEATING: Quiz = { schema: "semio.quiz/v1", id: "heating", emoji: "🔥", title: T("Heating"), description: T("Heat"), tasks: [{ kind: "matching", id: "walls", title: T("Walls"), prompt: T("Match"), dimensions: [{ id: "u", quantity: { label: T("U"), unit: "W/(m²K)", scale: "linear", prefixed: false } }], items: [{ id: "old", label: T("Old"), values: { u: 1.4 } }, { id: "new", label: T("New"), values: { u: 0.2 } }] }] };
 const CATALOG: Catalog = {
   schema: "semio.quiz.catalog/v1",
   id: "architecture",
@@ -57,8 +58,8 @@ describe("catalogView", () => {
       title: CATALOG.title,
       introduction: CATALOG.introduction,
       quizzes: [
-        { id: "physics", title: PHYSICS.title, description: PHYSICS.description, tasks: [{ id: "power", kind: "sorting", title: T("Power") }, { id: "units", kind: "classification", title: T("Units") }] },
-        { id: "heating", title: HEATING.title, description: HEATING.description, tasks: [{ id: "walls", kind: "matching", title: T("Walls") }] },
+        { id: "physics", emoji: "🧲", title: PHYSICS.title, description: PHYSICS.description, tasks: [{ id: "power", kind: "sorting", title: T("Power") }, { id: "units", kind: "classification", title: T("Units") }] },
+        { id: "heating", emoji: "🔥", title: HEATING.title, description: HEATING.description, tasks: [{ id: "walls", kind: "matching", title: T("Walls") }] },
       ],
       badges: [
         { id: "perfect-physics", emoji: "🧲", label: T("Perfect"), description: T("Perfect physics") },

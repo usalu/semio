@@ -200,6 +200,37 @@ export interface EphemeralFrame {
 }
 //#endregion 🔖️Lanes
 
+//#region 🔖️Presence
+/** 🧍️ One session of a presence room as every member sees it: the server-generated session id, its palette slot, the
+ * surface it joined from and its latest shared state — the instance's opaque JSON, `null` until it sent one. */
+export interface PresenceEntry {
+  readonly session: string;
+  readonly colour: number;
+  readonly surface: string;
+  readonly state: unknown;
+}
+
+/** 👥️ One text frame of the presence socket (`semio.presence.v1`). `welcome` (the joining session, its colour and the
+ * whole roster, itself included) and a per-tick `batch` (sessions whose state changed, sessions that left) travel
+ * server → client — a second `welcome` replaces the roster wholesale; `state` (latest wins) travels client → server;
+ * `refused` answers a frame the server dropped while the socket stays open.
+ *
+ * Watching is read-only presence in other rooms: `watch` (client → server) replaces the watched scopes (≤ 16; an empty
+ * list stops watching) and the interval the client wants their changes at (clamped to the server's tick at least);
+ * `watched` (server → client) carries one scope's changes since the last interval, or — flagged `snapshot` — its whole
+ * roster, sent when the scope becomes watched or the watcher fell behind, replacing what the client held for it. */
+export type PresenceFrame =
+  | { readonly type: "welcome"; readonly session: string; readonly colour: number; readonly roster: readonly PresenceEntry[] }
+  | { readonly type: "state"; readonly state: unknown }
+  | { readonly type: "batch"; readonly entries: readonly PresenceEntry[]; readonly left: readonly string[] }
+  | { readonly type: "refused"; readonly reason: string }
+  | { readonly type: "watch"; readonly scopes: readonly Scope[]; readonly intervalMs: number }
+  | { readonly type: "watched"; readonly scope: Scope; readonly entries: readonly PresenceEntry[]; readonly left: readonly string[]; readonly snapshot?: boolean };
+
+/** 🔌️ The websocket subprotocol the presence socket speaks. */
+export const PRESENCE_PROTOCOL = "semio.presence.v1";
+//#endregion 🔖️Presence
+
 //#region 🔖️Policy
 /** 🚦️ Every point authorization is actually decided at. */
 export type PolicyPoint = "commandAdmission" | "commandExecution" | "queryAccess" | "subscription" | "eventDelivery" | "blobRead" | "blobWrite" | "effect" | "administration";
@@ -822,6 +853,77 @@ export function decodeAppInstall(value: unknown, path = "appInstall"): AppInstal
   const row = asObject(value, path);
   return { id: asString(row.id, `${path}.id`), manifest: row.manifest };
 }
+
+function asJson(value: unknown, path: string): unknown {
+  if (value === undefined) fail("expected a JSON value", path);
+  return value;
+}
+
+function asColour(value: unknown, path: string): number {
+  const colour = asNumber(value, path);
+  if (!Number.isInteger(colour) || colour < 0 || colour > 255) fail("expected a palette slot in 0..=255", path);
+  return colour;
+}
+
+function decodePresenceEntry(value: unknown, path: string): PresenceEntry {
+  const row = asObject(value, path);
+  return { session: asString(row.session, `${path}.session`), colour: asColour(row.colour, `${path}.colour`), surface: asString(row.surface, `${path}.surface`), state: asJson(row.state, `${path}.state`) };
+}
+
+function encodePresenceEntry(value: PresenceEntry): unknown {
+  return { session: value.session, colour: value.colour, surface: value.surface, state: value.state };
+}
+
+/** 👥️ Decode one [`PresenceFrame`] (already parsed from the socket's text). */
+export function decodePresenceFrame(value: unknown, path = "presenceFrame"): PresenceFrame {
+  const row = asObject(value, path);
+  const type = tag(row, "type", path);
+  switch (type) {
+    case "welcome":
+      return { type, session: asString(row.session, `${path}.session`), colour: asColour(row.colour, `${path}.colour`), roster: asArray(row.roster, `${path}.roster`).map((entry, index) => decodePresenceEntry(entry, `${path}.roster[${index}]`)) };
+    case "state":
+      return { type, state: asJson(row.state, `${path}.state`) };
+    case "batch":
+      return { type, entries: asArray(row.entries, `${path}.entries`).map((entry, index) => decodePresenceEntry(entry, `${path}.entries[${index}]`)), left: asArray(row.left, `${path}.left`).map((entry, index) => asString(entry, `${path}.left[${index}]`)) };
+    case "refused":
+      return { type, reason: asString(row.reason, `${path}.reason`) };
+    case "watch":
+      return { type, scopes: asArray(row.scopes, `${path}.scopes`).map((scope, index) => asString(scope, `${path}.scopes[${index}]`)), intervalMs: asInterval(row.intervalMs, `${path}.intervalMs`) };
+    case "watched": {
+      const snapshot = row.snapshot === undefined ? false : asBoolean(row.snapshot, `${path}.snapshot`);
+      const scope = asString(row.scope, `${path}.scope`);
+      const entries = asArray(row.entries, `${path}.entries`).map((entry, index) => decodePresenceEntry(entry, `${path}.entries[${index}]`));
+      const left = asArray(row.left, `${path}.left`).map((entry, index) => asString(entry, `${path}.left[${index}]`));
+      return snapshot ? { type, scope, entries, left, snapshot } : { type, scope, entries, left };
+    }
+    default:
+      return fail(`unknown presence frame type ${JSON.stringify(type)}`, path);
+  }
+}
+
+function asInterval(value: unknown, path: string): number {
+  const interval = asNumber(value, path);
+  if (!Number.isSafeInteger(interval) || interval < 0) fail("expected a whole number of milliseconds", path);
+  return interval;
+}
+
+/** 👥️ Encode one [`PresenceFrame`] into its wire JSON (stringify it to send). */
+export function encodePresenceFrame(value: PresenceFrame): unknown {
+  switch (value.type) {
+    case "welcome":
+      return { type: value.type, session: value.session, colour: value.colour, roster: value.roster.map(encodePresenceEntry) };
+    case "state":
+      return { type: value.type, state: value.state };
+    case "batch":
+      return { type: value.type, entries: value.entries.map(encodePresenceEntry), left: [...value.left] };
+    case "refused":
+      return { type: value.type, reason: value.reason };
+    case "watch":
+      return { type: value.type, scopes: [...value.scopes], intervalMs: value.intervalMs };
+    case "watched":
+      return { type: value.type, scope: value.scope, entries: value.entries.map(encodePresenceEntry), left: [...value.left], ...(value.snapshot ? { snapshot: true } : {}) };
+  }
+}
 //#endregion 🔖️Codec
 
 //#region 🔖️Sockets
@@ -866,6 +968,7 @@ export const SERVER_ROUTES: readonly ServerRoute[] = [
   { method: "POST", path: "/commands" },
   { method: "POST", path: "/queries" },
   { method: "POST", path: "/scopes/{scope}/ephemeral" },
+  { method: "GET", path: "/scopes/{scope}/presence/ws" },
   { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events" },
   { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events/ws" },
   { method: "GET", path: "/blobs/{hash}" },
@@ -900,6 +1003,17 @@ export function documentLane(scope: Scope): string {
 /** 💨️ The ephemeral lane key of one scope. */
 export function ephemeralLane(scope: Scope): string {
   return `ephemeral:${scope}`;
+}
+
+/** 🧍️ The presence lane key of one scope: its room and its batch lane. */
+export function presenceLane(scope: Scope): string {
+  return `presence:${scope}`;
+}
+
+/** 👥️ The websocket URL of one scope's presence room, joined from `surface` (≤ 64 characters). Open it with the
+ * [`PRESENCE_PROTOCOL`] subprotocol. */
+export function presenceSocketUrl(baseUrl: string, scope: Scope, surface: string): string {
+  return `${socketRoot(baseUrl)}/scopes/${encodeURIComponent(scope)}/presence/ws?${new URLSearchParams({ surface }).toString()}`;
 }
 //#endregion 🔖️Routes
 
@@ -1005,6 +1119,11 @@ export class ServerClient {
     return `${socketRoot(baseUrl)}/scopes/${encodePathSegment(scope)}/document/ws${suffix}`;
   }
 
+  /** 👥️ The websocket URL of one scope's presence room — see [`presenceSocketUrl`]. */
+  presenceSocketUrl(baseUrl: string, scope: Scope, surface: string): string {
+    return presenceSocketUrl(baseUrl, scope, surface);
+  }
+
   private actorPath(actor: ActorKey, suffix: string): string {
     return `/actors/${encodePathSegment(actor.tenant)}/${encodePathSegment(actor.kind)}/${encodePathSegment(actor.id)}${suffix}`;
   }
@@ -1035,6 +1154,6 @@ export function socketRoot(baseUrl: string): string {
 //#region 🔖️Tests
 if (import.meta.vitest) {
   const { registerServerWireTests } = await import("./🧪️tests/🔬️wire/🟦️.ts");
-  await registerServerWireTests(import.meta.vitest, { SERVER_ROUTES, ServerClient, WireError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, socketRoot, streamLane }, { directory: import.meta.dir, url: import.meta.url });
+  await registerServerWireTests(import.meta.vitest, { PRESENCE_PROTOCOL, SERVER_ROUTES, ServerClient, WireError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePresenceFrame, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePresenceFrame, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, presenceLane, presenceSocketUrl, socketRoot, streamLane }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️Tests

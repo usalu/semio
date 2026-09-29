@@ -2,6 +2,7 @@
   "$schema": "../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json",
   "schema": "semio.quiz/v1",
   "id": "power",
+  "emoji": "⚡",
   "title": { "en": "Power", "de": "Leistung" },
   "description": { "en": "How much power do everyday things and power plants have?", "de": "Wie viel Leistung haben Alltagsgeräte und Kraftwerke?" },
   "tasks": [

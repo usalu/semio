@@ -9,11 +9,20 @@
 //! **The two lanes never merge.** The durable lane carries [`EventRecord`](crate::contract::
 //! EventRecord)s: sequenced, replayable, replayed from [`AuthorityStore::events_since`] on connect
 //! and deduplicated by `seq` at the replay/live seam, so a reconnecting client sees every fact
-//! exactly once. The ephemeral lane carries [`EphemeralFrame`](crate::contract::EphemeralFrame)s and
+//! exactly once. The ephemeral lane carries [`EphemeralFrame`]s and
 //! document frames: lossy, never persisted, never replayed, dropped the moment a socket closes.
 //! They travel on different [`Fanout`] lanes ([`stream_lane`], [`ephemeral_lane`],
-//! [`document_lane`]) precisely so no future refactor can quietly start replaying a cursor position
-//! or dropping a committed event.
+//! [`document_lane`], [`presence_lane`]) precisely so no future refactor can quietly start replaying
+//! a cursor position or dropping a committed event.
+//!
+//! **Presence is latest-state, coalesced per tick.** A presence room ([`PresenceRooms`]) keeps each
+//! session's newest opaque state only; one ticker per room publishes the sessions that changed and
+//! those that left as one `batch` on [`presence_lane`], so a room costs O(changed sessions) per tick
+//! however often its members move. Joining is [`PolicyPoint::Subscription`] `join` on
+//! [`PRESENCE_RESOURCE`], sharing is `publish`, and every module may refuse a state through
+//! [`ServerModule::presence_admission`]. A socket may also *watch* up to
+//! [`PresenceSettings::max_watch_scopes`] other rooms read-only (`watch` per scope): each watched
+//! room is relayed by a forwarder and coalesced per the watcher's own interval ([`Watching`]).
 //!
 //! **Every extension point is a port, and [`ServerInstance`] is the one place they are all named.**
 //! An instance — hub, zentrale, this crate's own test profile — is a type implementing that trait,
@@ -24,13 +33,15 @@
 //! deliberately depends on no document engine: not on the os product, not on `db`, not on any
 //! concrete CRDT — and with the sets closed downstream it does not have to name one to be usable.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+use std::hash::{BuildHasher, Hasher};
 use std::net::SocketAddr;
 use std::path::{Path as FsPath, PathBuf};
 use semio_framework_dispatch_macros::dyn_enum;
 use std::future::Future;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex as StdMutex, RwLock};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::body::Bytes;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -39,15 +50,16 @@ use axum::http::{header, HeaderMap, HeaderValue, Method, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use futures::{Sink, SinkExt, StreamExt};
+use futures::{Sink, SinkExt, Stream, StreamExt};
 use semio_framework_async::ShardedMap;
 use serde::{Deserialize, Serialize};
-use tokio::sync::{broadcast, Mutex, Notify};
+use tokio::sync::{broadcast, mpsc, Mutex, Notify};
+use tokio::time::{Instant, MissedTickBehavior};
 
 use crate::authority::{AuthorityDirectory, AuthorityError, CommandBus, Decider, PolicyHook, Saga, SagaRunner};
 use crate::contract::{
-    ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock, ModuleManifest, PolicyDecision, PolicyPoint, PolicyTemplate, Principal, QueryEnvelope, QueryResult, Scope, ServerInstanceDefinition,
-    TenantId,
+    ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock, ModuleManifest, OpaqueJson, PolicyDecision, PolicyPoint, PolicyTemplate, PresenceEntry, PresenceFrame, Principal, QueryEnvelope, QueryResult,
+    Scope, ServerInstanceDefinition, TenantId,
 };
 use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolver, Resolved, ResolverChain};
 use crate::storage::{content_hash, AuthorityStore, BlobStore, ProjectionStore, SessionStore, StorageError, StorageProfile};
@@ -271,6 +283,15 @@ pub trait ServerModule: Send + Sync {
     async fn templates(&self) -> Vec<PolicyTemplate> {
         Vec::new()
     }
+
+    /// 🧍️ Admit or refuse one state a presence session of `scope` shares. Every module is asked in
+    /// registration order and the first refusal is sent back as a `refused` frame; the default
+    /// admits, so an instance without presence rules shares any state. Synchronous on purpose: it
+    /// runs inside every socket's receive loop and must neither suspend nor reach anything but the
+    /// state it judges.
+    fn presence_admission(&self, _scope: &Scope, _state: &OpaqueJson) -> Result<(), String> {
+        Ok(())
+    }
 }
 
 //#endregion 🔖️Module
@@ -286,7 +307,7 @@ pub trait ServerModule: Send + Sync {
 /// because its socket carries grant admission, presence leases and live revocation).
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: [`ServerState`] reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -404,7 +425,7 @@ impl DocumentAuthority for NoDocumentAuthority {
 /// [`ProjectionStore`] and can reach nothing else.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: [`ServerState`] reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -496,10 +517,31 @@ impl Subscription {
         }
     }
 
+    /// 📬️ The next frame, or the fact that frames were missed, or the end of the lane — for a
+    /// subscriber whose protocol is a delta stream and must resynchronize rather than silently skip.
+    pub async fn next(&mut self) -> Delivery {
+        match self.receiver.recv().await {
+            Ok(bytes) => Delivery::Frame(bytes),
+            Err(broadcast::error::RecvError::Lagged(_)) => Delivery::Lagged,
+            Err(broadcast::error::RecvError::Closed) => Delivery::Closed,
+        }
+    }
+
     /// 🏷️ The lane this subscription listens on.
     pub fn lane(&self) -> &str {
         &self.lane
     }
+}
+
+/// 📬️ What [`Subscription::next`] delivers.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Delivery {
+    /// 📦️ One published frame.
+    Frame(Vec<u8>),
+    /// ⏭️ The subscriber fell behind and frames were dropped for it.
+    Lagged,
+    /// 🔚️ The lane has no sender any more.
+    Closed,
 }
 
 impl Drop for Subscription {
@@ -521,6 +563,11 @@ pub fn ephemeral_lane(scope: &Scope) -> String {
 /// 📄️ The document lane key of one scope, carrying opaque engine frames between sessions.
 pub fn document_lane(scope: &Scope) -> String {
     format!("document:{}", scope.0)
+}
+
+/// 🧍️ The presence lane key of one scope: its room, its colour namespace and its batch lane.
+pub fn presence_lane(scope: &Scope) -> String {
+    format!("presence:{}", scope.0)
 }
 //#endregion 🔖️Fanout
 
@@ -641,6 +688,325 @@ impl Presence {
     }
 }
 //#endregion 🔖️Presence
+
+//#region 🔖️PresenceRoom
+/// 🧍️ The resource presence admission is evaluated on, at [`PolicyPoint::Subscription`] with the
+/// actions [`PRESENCE_JOIN`] and [`PRESENCE_PUBLISH`].
+pub const PRESENCE_RESOURCE: &str = "presence";
+
+/// 🚪️ The action admitting a principal into a presence room.
+pub const PRESENCE_JOIN: &str = "join";
+
+/// 📣️ The action admitting a principal to share a state in a presence room.
+pub const PRESENCE_PUBLISH: &str = "publish";
+
+/// 👀️ The action admitting a principal to watch a presence room it has not joined, read-only.
+pub const PRESENCE_WATCH: &str = "watch";
+
+/// 🔌️ The websocket subprotocol of the presence socket.
+pub const PRESENCE_PROTOCOL_V1: &str = "semio.presence.v1";
+
+/// 🚫️ The `refused` reason of a client frame larger than [`PresenceSettings::max_state_bytes`].
+pub const REFUSED_TOO_LARGE: &str = "state-too-large";
+
+/// 🚫️ The `refused` reason of a frame that is neither a `state` nor a `watch` frame.
+pub const REFUSED_INVALID: &str = "frame-invalid";
+
+/// 🚫️ The `refused` reason of a state from a principal policy does not let publish, and — followed
+/// by the scope — of a watch naming a scope policy does not let it watch.
+pub const REFUSED_FORBIDDEN: &str = "forbidden";
+
+/// 🚫️ The `refused` reason of a watch naming more than [`PresenceSettings::max_watch_scopes`] scopes.
+pub const REFUSED_WATCH_TOO_MANY: &str = "watch-too-many";
+
+/// ⏱️ The knobs of the presence socket. The defaults are the protocol's (design §15).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PresenceSettings {
+    /// 🕰️ How often a room publishes its coalesced `batch`.
+    pub tick: Duration,
+    /// 💤️ How long a socket may stay silent (no frame, no pong) before it is closed.
+    pub idle: Duration,
+    /// 🏓️ How often the server pings every socket.
+    pub keepalive: Duration,
+    /// 📏️ The largest client frame (`state` or `watch`) accepted, in bytes.
+    pub max_state_bytes: usize,
+    /// 🚦️ How many client frames per second a session may send; the excess is dropped.
+    pub max_states_per_second: u32,
+    /// 🏷️ The longest `surface` a session may join with, in characters.
+    pub max_surface_chars: usize,
+    /// 👀️ The most scopes one `watch` may name.
+    pub max_watch_scopes: usize,
+    /// 🐢️ The slowest interval a watcher may ask for; the fastest is [`tick`](Self::tick).
+    pub max_watch_interval: Duration,
+}
+
+impl Default for PresenceSettings {
+    fn default() -> Self {
+        Self {
+            tick: Duration::from_millis(100),
+            idle: Duration::from_secs(60),
+            keepalive: Duration::from_secs(20),
+            max_state_bytes: 2048,
+            max_states_per_second: 30,
+            max_surface_chars: 64,
+            max_watch_scopes: 16,
+            max_watch_interval: Duration::from_secs(60),
+        }
+    }
+}
+
+/// 🌍️ The instance's answer to "may a browser page served from this origin open a socket here".
+/// Checked for every presence socket that presents an `Origin`; an instance that sets none admits
+/// every origin, which is right only where nothing but loopback can reach the process.
+pub type OriginAdmission = Arc<dyn Fn(&str) -> bool + Send + Sync>;
+
+/// 🧍️ One member of a presence room.
+#[derive(Clone, Debug, PartialEq)]
+struct Member {
+    colour: u8,
+    surface: String,
+    state: OpaqueJson,
+}
+
+/// 🏠️ One room: its members, what changed since the last tick and who left.
+#[derive(Debug, Default)]
+struct Room {
+    members: BTreeMap<String, Member>,
+    changed: BTreeSet<String>,
+    left: BTreeSet<String>,
+    ticking: bool,
+}
+
+/// 🕰️ What one tick of a room produced.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Drained {
+    /// 📦️ The coalesced changes since the last tick.
+    Batch(PresenceFrame),
+    /// 🤫️ Nothing changed; the room keeps ticking.
+    Quiet,
+    /// 🔚️ The room is empty and has nothing left to announce; its ticker ends.
+    Finished,
+}
+
+/// 👥️ Every presence room of the instance, keyed by presence lane. Latest-state: a room keeps
+/// each session's newest state only, so however often a session sends, a tick carries it once.
+#[derive(Default)]
+pub struct PresenceRooms {
+    rooms: ShardedMap<String, Room>,
+}
+
+impl PresenceRooms {
+    /// 🌱️ No rooms.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// 🚪️ Add a session to a room and answer the roster (the session included) and whether the
+    /// room needs a ticker started — true exactly when none is running.
+    pub fn join(&self, lane: &str, session: &str, colour: u8, surface: &str) -> (Vec<PresenceEntry>, bool) {
+        self.rooms.mutate_or_default(lane.to_string(), |room| {
+            room.members.insert(session.to_string(), Member { colour, surface: surface.to_string(), state: OpaqueJson::Null });
+            room.changed.insert(session.to_string());
+            room.left.remove(session);
+            let start = !room.ticking;
+            room.ticking = true;
+            (entries(room.members.iter()), start)
+        })
+    }
+
+    /// ✏️ Replace a member's state; it is published with the next tick.
+    pub fn update(&self, lane: &str, session: &str, state: OpaqueJson) {
+        self.rooms.with_mut(lane, |room| {
+            if let Some(room) = room {
+                if let Some(member) = room.members.get_mut(session) {
+                    member.state = state;
+                    room.changed.insert(session.to_string());
+                }
+            }
+        });
+    }
+
+    /// 🚶️ Remove a session; its departure is published with the next tick.
+    pub fn leave(&self, lane: &str, session: &str) {
+        self.rooms.with_mut(lane, |room| {
+            if let Some(room) = room {
+                if room.members.remove(session).is_some() {
+                    room.changed.remove(session);
+                    room.left.insert(session.to_string());
+                }
+            }
+        });
+    }
+
+    /// 📋️ Every member of a room, ordered by session.
+    pub fn roster(&self, lane: &str) -> Vec<PresenceEntry> {
+        self.rooms.with(lane, |room| room.map(|room| entries(room.members.iter())).unwrap_or_default())
+    }
+
+    /// 🕰️ Take what changed since the last tick. An empty room with nothing to announce stops
+    /// ticking and is dropped, atomically with respect to a concurrent join (which then starts a new
+    /// ticker).
+    pub fn drain(&self, lane: &str) -> Drained {
+        let drained = self.rooms.with_mut(lane, |room| {
+            let Some(room) = room else { return Drained::Finished };
+            if room.changed.is_empty() && room.left.is_empty() {
+                if room.members.is_empty() {
+                    room.ticking = false;
+                    return Drained::Finished;
+                }
+                return Drained::Quiet;
+            }
+            let changed = std::mem::take(&mut room.changed);
+            let left = std::mem::take(&mut room.left).into_iter().collect();
+            Drained::Batch(PresenceFrame::Batch { entries: entries(room.members.iter().filter(|(session, _)| changed.contains(*session))), left })
+        });
+        if drained == Drained::Finished {
+            self.rooms.remove_if(lane, |room| !room.ticking && room.members.is_empty());
+        }
+        drained
+    }
+}
+
+fn entries<'a>(members: impl Iterator<Item = (&'a String, &'a Member)>) -> Vec<PresenceEntry> {
+    members.map(|(session, member)| PresenceEntry { session: session.clone(), colour: member.colour, surface: member.surface.clone(), state: member.state.clone() }).collect()
+}
+
+/// 🚦️ A session's state-frame allowance: at most `limit` frames per one-second window.
+#[derive(Clone, Copy, Debug)]
+pub struct StateBudget {
+    window: Instant,
+    spent: u32,
+    limit: u32,
+}
+
+impl StateBudget {
+    /// 🌱️ A fresh allowance of `limit` frames per second.
+    pub fn new(limit: u32) -> Self {
+        Self { window: Instant::now(), spent: 0, limit }
+    }
+
+    /// ✅️ Spend one frame at `now`; `false` when the window's allowance is exhausted.
+    pub fn spend(&mut self, now: Instant) -> bool {
+        if now.duration_since(self.window) >= Duration::from_secs(1) {
+            self.window = now;
+            self.spent = 0;
+        }
+        self.spent += 1;
+        self.spent <= self.limit
+    }
+}
+
+/// 🛃️ Judge one client text frame: `Ok(Some(frame))` — a `state` or a `watch` — to apply,
+/// `Ok(None)` to drop silently (over the rate), `Err(reason)` to answer with a `refused` frame.
+pub fn admit_frame(text: &str, settings: &PresenceSettings, budget: &mut StateBudget, now: Instant) -> Result<Option<PresenceFrame>, String> {
+    if text.len() > settings.max_state_bytes {
+        return Err(REFUSED_TOO_LARGE.to_string());
+    }
+    if !budget.spend(now) {
+        return Ok(None);
+    }
+    match serde_json::from_str::<PresenceFrame>(text) {
+        Ok(frame @ (PresenceFrame::State { .. } | PresenceFrame::Watch { .. })) => Ok(Some(frame)),
+        _ => Err(REFUSED_INVALID.to_string()),
+    }
+}
+
+/// 🐢️ The interval a watcher asked for, clamped between [`PresenceSettings::tick`] (a room never
+/// changes faster) and [`PresenceSettings::max_watch_interval`].
+pub fn watch_interval(interval_ms: u64, settings: &PresenceSettings) -> Duration {
+    Duration::from_millis(interval_ms).min(settings.max_watch_interval).max(settings.tick)
+}
+
+/// 🗒️ What changed in one watched scope since the watcher's last interval.
+#[derive(Debug, Default)]
+struct Pending {
+    entries: BTreeMap<String, PresenceEntry>,
+    left: BTreeSet<String>,
+}
+
+/// 👀️ One socket's watch set: per watched scope, what its room announced since the watcher's last
+/// interval — the latest entry per session and the sessions that left — until the interval flushes
+/// it as one `watched` frame per changed scope. However often a watched room ticks, a watcher
+/// receives each scope at most once per interval.
+#[derive(Debug, Default)]
+pub struct Watching {
+    scopes: BTreeMap<String, Pending>,
+}
+
+impl Watching {
+    /// 🔁️ Replace the watch set with `scopes` and answer the scopes it newly contains, in order. A
+    /// scope that stays watched keeps its pending changes; a dropped scope loses them.
+    pub fn watch(&mut self, scopes: &BTreeSet<String>) -> Vec<String> {
+        self.scopes.retain(|scope, _| scopes.contains(scope));
+        let added: Vec<String> = scopes.iter().filter(|scope| !self.scopes.contains_key(*scope)).cloned().collect();
+        for scope in &added {
+            self.scopes.insert(scope.clone(), Pending::default());
+        }
+        added
+    }
+
+    /// 👁️ Whether `scope` is watched.
+    pub fn watches(&self, scope: &str) -> bool {
+        self.scopes.contains_key(scope)
+    }
+
+    /// 🫙️ Whether no scope is watched.
+    pub fn is_empty(&self) -> bool {
+        self.scopes.is_empty()
+    }
+
+    /// 🧺️ Fold one room batch into a watched scope's pending changes; a scope no longer watched
+    /// ignores it.
+    pub fn absorb(&mut self, scope: &str, entries: Vec<PresenceEntry>, left: Vec<String>) {
+        let Some(pending) = self.scopes.get_mut(scope) else { return };
+        for entry in entries {
+            pending.left.remove(&entry.session);
+            pending.entries.insert(entry.session.clone(), entry);
+        }
+        for session in left {
+            pending.entries.remove(&session);
+            pending.left.insert(session);
+        }
+    }
+
+    /// 📸️ The `snapshot` of a watched scope from its room's roster, discarding the scope's pending
+    /// changes, which the roster already holds; `None` for a scope no longer watched.
+    pub fn snapshot(&mut self, scope: &str, roster: Vec<PresenceEntry>) -> Option<PresenceFrame> {
+        let pending = self.scopes.get_mut(scope)?;
+        *pending = Pending::default();
+        Some(PresenceFrame::Watched { scope: Scope(scope.to_string()), entries: roster, left: Vec::new(), snapshot: true })
+    }
+
+    /// 🕰️ One `watched` frame per scope that changed since the last flush, in scope order.
+    pub fn flush(&mut self) -> Vec<PresenceFrame> {
+        self.scopes
+            .iter_mut()
+            .filter(|(_, pending)| !pending.entries.is_empty() || !pending.left.is_empty())
+            .map(|(scope, pending)| {
+                let Pending { entries, left } = std::mem::take(pending);
+                PresenceFrame::Watched { scope: Scope(scope.clone()), entries: entries.into_values().collect(), left: left.into_iter().collect(), snapshot: false }
+            })
+            .collect()
+    }
+}
+
+/// 🎲️ A fresh presence session id: 128 bits from the process's randomly keyed hasher over a
+/// counter and the clock, as 32 lowercase hex characters. Public, never a credential.
+pub fn presence_session_id() -> String {
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    let keys = std::collections::hash_map::RandomState::new();
+    let nanos = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_nanos());
+    let count = NEXT.fetch_add(1, Ordering::Relaxed);
+    let half = |salt: u64| {
+        let mut hasher = keys.build_hasher();
+        hasher.write_u64(salt);
+        hasher.write_u64(count);
+        hasher.write_u128(nanos);
+        hasher.finish()
+    };
+    format!("{:016x}{:016x}", half(0x7072_6573_656e_6365), half(0x7365_7373_696f_6e73))
+}
+//#endregion 🔖️PresenceRoom
 
 //#region 🔖️Kick
 /// 🦵️ Per-session close signals. The administration plane fires one; the socket loop owning that
@@ -804,6 +1170,15 @@ pub struct ServerState<I: ServerInstance> {
     /// than a path, because [`StorageProfile::Ephemeral`] owns no directory and a handler that
     /// asked for one would have been handed a fabricated empty path.
     pub profile: Arc<StorageProfile>,
+    /// 🧩️ The modules this instance was built from, asked at runtime by the hooks that need them
+    /// (presence admission).
+    pub modules: Arc<Vec<I::Modules>>,
+    /// 👥️ The presence rooms of the presence socket.
+    pub presence_rooms: Arc<PresenceRooms>,
+    /// ⏱️ The presence socket's knobs.
+    pub presence_settings: Arc<PresenceSettings>,
+    /// 🌍️ Which browser origins may open a presence socket; `None` admits every origin.
+    pub origin_admission: Option<OriginAdmission>,
     /// 🕰️ The instance's hybrid logical clock, advanced once per stamped command.
     clock: Arc<StdMutex<HybridLogicalClock>>,
 }
@@ -828,6 +1203,10 @@ impl<I: ServerInstance> Clone for ServerState<I> {
             queries: Arc::clone(&self.queries),
             documents: self.documents.clone(),
             profile: Arc::clone(&self.profile),
+            modules: Arc::clone(&self.modules),
+            presence_rooms: Arc::clone(&self.presence_rooms),
+            presence_settings: Arc::clone(&self.presence_settings),
+            origin_admission: self.origin_admission.clone(),
             clock: Arc::clone(&self.clock),
         }
     }
@@ -853,7 +1232,7 @@ impl<I: ServerInstance> ServerState<I> {
     }
 
     /// 🙋️ Who this caller is, according to the ladder.
-    pub async fn identify(&self, headers: &HeaderMap, peer: Option<SocketAddr>) -> crate::policy::Resolved {
+    pub async fn identify(&self, headers: &HeaderMap, peer: Option<SocketAddr>) -> Resolved {
         self.resolvers.resolve(&credential(headers, peer)).await
     }
 
@@ -985,7 +1364,7 @@ impl StaticAppHost {
     /// 🚧️ Resolve a request path inside the root, or refuse it.
     ///
     /// Refuses any `..` segment and any backslash (a Windows separator smuggled through a URL), and
-    /// strips every leading `/` before joining — [`PathBuf::join`] treats an absolute argument as a
+    /// strips every leading `/` before joining — [`Path::join`](std::path::Path::join) treats an absolute argument as a
     /// full replacement of the base, so `/etc/passwd` would otherwise escape the root entirely. The
     /// joined path is checked against the root a second time as defence in depth.
     pub fn resolve(&self, rest: &str) -> Option<PathBuf> {
@@ -1412,6 +1791,319 @@ async fn handle_document<I: ServerInstance>(socket: WebSocket, scope: Scope, que
 
 //#endregion 🔖️DocumentStream
 
+//#region 🔖️PresenceStream
+/// 🧍️ Where a presence socket joins from — a hint every member sees, never an identity.
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct PresenceStreamQuery {
+    /// 🪟️ The surface the session joins from (≤ [`PresenceSettings::max_surface_chars`] chars).
+    pub surface: Option<String>,
+}
+
+/// 🎫️ What a presence socket was admitted as: the principal every later `watch` is authorized for,
+/// and whether it may publish states in the room it joined.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PresenceGrant {
+    pub principal: Principal,
+    pub may_publish: bool,
+}
+
+/// 🛂️ Admit one presence socket before it is upgraded: the origin (when the instance names an
+/// allowlist and the caller presents an `Origin`), the surface length, and
+/// [`PolicyPoint::Subscription`] `join` on [`PRESENCE_RESOURCE`]. A joiner whose principal may not
+/// also `publish` is refused every state but still sees the room.
+pub async fn admit_presence<I: ServerInstance>(state: &ServerState<I>, headers: &HeaderMap, peer: Option<SocketAddr>, scope: &Scope, surface: &str) -> Result<PresenceGrant, ServerError> {
+    if let (Some(admits), Some(origin)) = (&state.origin_admission, headers.get(header::ORIGIN)) {
+        if !origin.to_str().is_ok_and(|origin| admits(origin)) {
+            return Err(ServerError::Forbidden(format!("origin {origin:?} may not join presence")));
+        }
+    }
+    if surface.chars().count() > state.presence_settings.max_surface_chars {
+        return Err(ServerError::BadRequest(format!("surface exceeds {} characters", state.presence_settings.max_surface_chars)));
+    }
+    let principal = state.identify(headers, peer).await.principal;
+    state.authorize(&presence_request(&principal, scope, PRESENCE_JOIN))?;
+    let may_publish = state.authorize(&presence_request(&principal, scope, PRESENCE_PUBLISH)).is_ok();
+    Ok(PresenceGrant { principal, may_publish })
+}
+
+/// 👀️ Admit one `watch`: at most [`PresenceSettings::max_watch_scopes`] scopes, each one granted
+/// [`PolicyPoint::Subscription`] [`PRESENCE_WATCH`] on [`PRESENCE_RESOURCE`] for the socket's
+/// principal — the scoped policy that admits joins decides watches too. Answers the distinct scopes,
+/// or the `refused` reason naming the first scope refused; a refused watch changes nothing.
+pub fn admit_watch<I: ServerInstance>(state: &ServerState<I>, principal: &Principal, scopes: &[Scope]) -> Result<BTreeSet<String>, String> {
+    if scopes.len() > state.presence_settings.max_watch_scopes {
+        return Err(REFUSED_WATCH_TOO_MANY.to_string());
+    }
+    for scope in scopes {
+        if state.authorize(&presence_request(principal, scope, PRESENCE_WATCH)).is_err() {
+            return Err(format!("{REFUSED_FORBIDDEN} {}", scope.0));
+        }
+    }
+    Ok(scopes.iter().map(|scope| scope.0.clone()).collect())
+}
+
+fn presence_request(principal: &Principal, scope: &Scope, action: &str) -> PolicyRequest {
+    PolicyRequest { point: PolicyPoint::Subscription, principal: principal.clone(), scope: Some(scope.clone()), resource: PRESENCE_RESOURCE.to_string(), action: action.to_string() }
+}
+
+/// 👥️ `GET /scopes/{scope}/presence/ws` — the presence socket (`semio.presence.v1`): a `welcome`,
+/// then one coalesced `batch` per tick while the room changes.
+pub async fn get_presence_ws<I: ServerInstance>(
+    ws: WebSocketUpgrade,
+    Path(scope): Path<String>,
+    Query(query): Query<PresenceStreamQuery>,
+    headers: HeaderMap,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    State(state): State<ServerState<I>>,
+) -> Result<Response, ServerError> {
+    let scope = Scope(scope);
+    let surface = query.surface.unwrap_or_default();
+    let grant = admit_presence(&state, &headers, Some(peer), &scope, &surface).await?;
+    Ok(ws.protocols([PRESENCE_PROTOCOL_V1]).on_upgrade(move |socket| async move {
+        let (mut sender, mut receiver) = socket.split();
+        run_presence(&state, &scope, &surface, &grant, &mut sender, &mut receiver).await;
+    }))
+}
+
+/// 🔁️ One presence session over any message sink and stream — the socket in production, channels
+/// in a test. Subscribes to the room's batches first, joins (leasing a colour from [`Presence`]),
+/// sends the `welcome`, then serves until the peer closes, stays idle past
+/// [`PresenceSettings::idle`], or is kicked; it always leaves the room and stops watching on the way
+/// out.
+pub async fn run_presence<I, S, R, E>(state: &ServerState<I>, scope: &Scope, surface: &str, grant: &PresenceGrant, sink: &mut S, stream: &mut R)
+where
+    I: ServerInstance,
+    S: Sink<Message> + Unpin,
+    R: Stream<Item = Result<Message, E>> + Unpin,
+{
+    let settings = *state.presence_settings;
+    let lane = presence_lane(scope);
+    let session = presence_session_id();
+    let mut live = state.fanout.subscribe(&lane);
+    let colour = state.presence.join(&lane, &session, surface);
+    let (roster, start) = state.presence_rooms.join(&lane, &session, colour, surface);
+    if start {
+        tokio::spawn(presence_ticker(state.clone(), lane.clone()));
+    }
+    let seat = Seat { scope, lane: &lane, session: &session, may_publish: grant.may_publish };
+    let mut watcher = Watcher::new();
+    let mut budget = StateBudget::new(settings.max_states_per_second);
+    let mut last_seen = Instant::now();
+    let mut keepalive = tokio::time::interval_at(Instant::now() + settings.keepalive, settings.keepalive);
+    let mut open = send_presence(sink, &PresenceFrame::Welcome { session: session.clone(), colour, roster }).await;
+    while open {
+        tokio::select! {
+            incoming = stream.next() => {
+                last_seen = Instant::now();
+                open = match incoming {
+                    Some(Ok(Message::Text(text))) => match admit_frame(text.as_str(), &settings, &mut budget, Instant::now()) {
+                        Ok(Some(PresenceFrame::State { state: shared })) => share_state(state, &seat, shared, sink).await,
+                        Ok(Some(PresenceFrame::Watch { scopes, interval_ms })) => match admit_watch(state, &grant.principal, &scopes) {
+                            Ok(scopes) => watcher.watch(state, &scopes, watch_interval(interval_ms, &settings), sink).await,
+                            Err(reason) => send_presence(sink, &PresenceFrame::Refused { reason }).await,
+                        },
+                        Ok(_) => true,
+                        Err(reason) => send_presence(sink, &PresenceFrame::Refused { reason }).await,
+                    },
+                    Some(Ok(Message::Binary(_))) => send_presence(sink, &PresenceFrame::Refused { reason: REFUSED_INVALID.to_string() }).await,
+                    Some(Ok(Message::Ping(payload))) => sink.send(Message::Pong(payload)).await.is_ok(),
+                    Some(Ok(Message::Pong(_))) => true,
+                    Some(Ok(Message::Close(_))) | Some(Err(_)) | None => false,
+                };
+            }
+            delivery = live.next() => {
+                open = match delivery {
+                    Delivery::Frame(bytes) => match String::from_utf8(bytes) {
+                        Ok(text) => sink.send(Message::Text(text.into())).await.is_ok(),
+                        Err(_) => true,
+                    },
+                    Delivery::Lagged => send_presence(sink, &PresenceFrame::Welcome { session: session.clone(), colour, roster: state.presence_rooms.roster(&lane) }).await,
+                    Delivery::Closed => false,
+                };
+            }
+            _ = keepalive.tick() => open = sink.send(Message::Ping(Vec::new().into())).await.is_ok(),
+            _ = tokio::time::sleep_until(last_seen + settings.idle) => {
+                let _ = sink.send(Message::Close(None)).await;
+                open = false;
+            }
+            _ = state.kicks.kicked(&session) => open = false,
+            Some((watched, delivery)) = watcher.deliveries.recv() => open = watcher.deliver(state, &watched, delivery, sink).await,
+            () = next_flush(&mut watcher.ticks) => open = watcher.flush(sink).await,
+        }
+    }
+    drop(watcher);
+    state.presence_rooms.leave(&lane, &session);
+    state.presence.leave(&lane, &session);
+    state.kicks.forget(&session);
+}
+
+/// 💺️ Who one presence session is: its scope, lane and session id, and whether it may publish.
+struct Seat<'a> {
+    scope: &'a Scope,
+    lane: &'a str,
+    session: &'a str,
+    may_publish: bool,
+}
+
+/// 📣️ Share one admitted state in the joined room — when the principal may publish and every
+/// module's [`ServerModule::presence_admission`] accepts it — or answer why not.
+async fn share_state<I: ServerInstance, S: Sink<Message> + Unpin>(state: &ServerState<I>, seat: &Seat<'_>, shared: OpaqueJson, sink: &mut S) -> bool {
+    let verdict = if seat.may_publish { state.modules.iter().try_for_each(|module| module.presence_admission(seat.scope, &shared)) } else { Err(REFUSED_FORBIDDEN.to_string()) };
+    match verdict {
+        Ok(()) => {
+            if let Ok(bytes) = serde_json::to_vec(&shared) {
+                state.presence.publish_peer(seat.lane, seat.session, bytes);
+            }
+            state.presence_rooms.update(seat.lane, seat.session, shared);
+            true
+        }
+        Err(reason) => send_presence(sink, &PresenceFrame::Refused { reason }).await,
+    }
+}
+
+/// 📦️ How many relayed batches a watching socket may have queued before its forwarders wait (and,
+/// waiting, fall behind their rooms and resynchronize with a snapshot).
+const WATCH_BACKLOG: usize = 64;
+
+/// 📨️ What a watched room's forwarder relays: one batch, or the fact that it fell behind.
+enum WatchDelivery {
+    Batch { entries: Vec<PresenceEntry>, left: Vec<String> },
+    Lagged,
+}
+
+/// 🧵️ One forwarder task, aborted when dropped — unwatching a scope or closing the socket stops it.
+struct Forwarder(tokio::task::JoinHandle<()>);
+
+impl Drop for Forwarder {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
+/// 👀️ The watching half of one presence socket: its [`Watching`] set, one forwarder per watched
+/// room relaying that room's batches (parsed on the forwarder, not on the socket's task), and the
+/// interval that flushes the coalesced changes.
+struct Watcher {
+    watching: Watching,
+    forwarders: BTreeMap<String, Forwarder>,
+    sender: mpsc::Sender<(String, WatchDelivery)>,
+    deliveries: mpsc::Receiver<(String, WatchDelivery)>,
+    interval: Duration,
+    ticks: Option<tokio::time::Interval>,
+}
+
+impl Watcher {
+    fn new() -> Self {
+        let (sender, deliveries) = mpsc::channel(WATCH_BACKLOG);
+        Self { watching: Watching::default(), forwarders: BTreeMap::new(), sender, deliveries, interval: Duration::ZERO, ticks: None }
+    }
+
+    /// 🔁️ Replace the watch set: stop forwarding dropped scopes, subscribe to each new scope's room
+    /// before sending its `snapshot`, and (re)start the interval when it changed.
+    async fn watch<I: ServerInstance, S: Sink<Message> + Unpin>(&mut self, state: &ServerState<I>, scopes: &BTreeSet<String>, interval: Duration, sink: &mut S) -> bool {
+        let added = self.watching.watch(scopes);
+        self.forwarders.retain(|scope, _| scopes.contains(scope));
+        if self.watching.is_empty() {
+            self.ticks = None;
+        } else if self.ticks.is_none() || self.interval != interval {
+            let mut ticks = tokio::time::interval_at(Instant::now() + interval, interval);
+            ticks.set_missed_tick_behavior(MissedTickBehavior::Delay);
+            self.ticks = Some(ticks);
+        }
+        self.interval = interval;
+        for scope in added {
+            let lane = presence_lane(&Scope(scope.clone()));
+            let live = state.fanout.subscribe(&lane);
+            self.forwarders.insert(scope.clone(), Forwarder(tokio::spawn(forward_watched(scope.clone(), live, self.sender.clone()))));
+            if let Some(snapshot) = self.watching.snapshot(&scope, state.presence_rooms.roster(&lane)) {
+                if !send_presence(sink, &snapshot).await {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    /// 🧺️ Take one relayed delivery: fold a batch into its scope, or resynchronize a scope whose
+    /// forwarder fell behind with a fresh `snapshot`.
+    async fn deliver<I: ServerInstance, S: Sink<Message> + Unpin>(&mut self, state: &ServerState<I>, scope: &str, delivery: WatchDelivery, sink: &mut S) -> bool {
+        match delivery {
+            WatchDelivery::Batch { entries, left } => {
+                self.watching.absorb(scope, entries, left);
+                true
+            }
+            WatchDelivery::Lagged => match self.watching.snapshot(scope, state.presence_rooms.roster(&presence_lane(&Scope(scope.to_string())))) {
+                Some(snapshot) => send_presence(sink, &snapshot).await,
+                None => true,
+            },
+        }
+    }
+
+    /// 🕰️ Send one `watched` frame per scope that changed since the last interval.
+    async fn flush<S: Sink<Message> + Unpin>(&mut self, sink: &mut S) -> bool {
+        for frame in self.watching.flush() {
+            if !send_presence(sink, &frame).await {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+/// ⏰️ The next flush of a watcher's interval — never, while nothing is watched.
+async fn next_flush(ticks: &mut Option<tokio::time::Interval>) {
+    match ticks {
+        Some(ticks) => {
+            ticks.tick().await;
+        }
+        None => std::future::pending().await,
+    }
+}
+
+/// 📡️ Relay one watched room's batches to the watching socket until it stops watching.
+async fn forward_watched(scope: String, mut live: Subscription, into: mpsc::Sender<(String, WatchDelivery)>) {
+    loop {
+        let delivery = match live.next().await {
+            Delivery::Frame(bytes) => match serde_json::from_slice(&bytes) {
+                Ok(PresenceFrame::Batch { entries, left }) => WatchDelivery::Batch { entries, left },
+                _ => continue,
+            },
+            Delivery::Lagged => WatchDelivery::Lagged,
+            Delivery::Closed => return,
+        };
+        if into.send((scope.clone(), delivery)).await.is_err() {
+            return;
+        }
+    }
+}
+
+async fn send_presence<S: Sink<Message> + Unpin>(sink: &mut S, frame: &PresenceFrame) -> bool {
+    match serde_json::to_string(frame) {
+        Ok(text) => sink.send(Message::Text(text.into())).await.is_ok(),
+        Err(_) => true,
+    }
+}
+
+/// 🕰️ One room's ticker: every [`PresenceSettings::tick`] it publishes the coalesced `batch` on
+/// the room's lane, and it ends once the room is empty and has announced every departure.
+async fn presence_ticker<I: ServerInstance>(state: ServerState<I>, lane: String) {
+    let mut ticks = tokio::time::interval_at(Instant::now() + state.presence_settings.tick, state.presence_settings.tick);
+    ticks.set_missed_tick_behavior(MissedTickBehavior::Delay);
+    loop {
+        ticks.tick().await;
+        match state.presence_rooms.drain(&lane) {
+            Drained::Batch(frame) => {
+                if let Ok(bytes) = serde_json::to_vec(&frame) {
+                    state.fanout.publish(&lane, bytes);
+                }
+            }
+            Drained::Quiet => {}
+            Drained::Finished => return,
+        }
+    }
+}
+//#endregion 🔖️PresenceStream
+
 //#region 🔖️AppRoutes
 /// 📋️ The names of every app this instance hosts.
 pub async fn get_apps<I: ServerInstance>(State(state): State<ServerState<I>>) -> Json<Vec<String>> {
@@ -1452,11 +2144,25 @@ pub struct ServerBuilder<I: ServerInstance> {
     apps: Vec<(String, PathBuf)>,
     documents: Option<Arc<I::Documents>>,
     admin_token: Option<String>,
+    presence: PresenceSettings,
+    origin_admission: Option<OriginAdmission>,
     id: String,
     version: String,
 }
 
 impl<I: ServerInstance> ServerBuilder<I> {
+    /// ⏱️ Tune the presence socket (tick, idle timeout, keepalive, limits).
+    pub fn presence(mut self, settings: PresenceSettings) -> Self {
+        self.presence = settings;
+        self
+    }
+
+    /// 🌍️ Name the browser origins that may open a presence socket.
+    pub fn origin_admission(mut self, admits: OriginAdmission) -> Self {
+        self.origin_admission = Some(admits);
+        self
+    }
+
     /// 🧩️ Register one module. Its deciders, templates, resolvers and routes are collected at
     /// [`build`](Self::build) time, in registration order.
     pub fn module(mut self, module: I::Modules) -> Self {
@@ -1512,8 +2218,9 @@ impl<I: ServerInstance> ServerBuilder<I> {
         let mut workflows: Vec<I::Sagas> = Vec::new();
         for module in &self.modules {
             let manifest = module.manifest().await;
+            let templates: Vec<PolicyTemplate> = manifest.policies.iter().cloned().chain(module.templates().await).collect();
             if let Ok(mut engine) = policy.write() {
-                for template in manifest.policies.iter().cloned().chain(module.templates().await) {
+                for template in templates {
                     if template.auto_apply {
                         engine.set_authenticated_template(template.name.clone());
                     }
@@ -1555,6 +2262,7 @@ impl<I: ServerInstance> ServerBuilder<I> {
             queries.insert(handler.kind().await.to_string(), Arc::new(handler));
         }
 
+        let modules = Arc::new(self.modules);
         let state = ServerState {
             authority: Arc::new(Mutex::new(bus)),
             sagas: Arc::new(Mutex::new(runner)),
@@ -1571,11 +2279,15 @@ impl<I: ServerInstance> ServerBuilder<I> {
             queries: Arc::new(queries),
             documents: self.documents.clone(),
             profile: Arc::new(self.profile.clone()),
+            modules: Arc::clone(&modules),
+            presence_rooms: Arc::new(PresenceRooms::new()),
+            presence_settings: Arc::new(self.presence),
+            origin_admission: self.origin_admission,
             clock: Arc::new(StdMutex::new(HybridLogicalClock::default())),
         };
 
         let mut router = base_router(definition.clone(), self.documents.is_some());
-        for module in &self.modules {
+        for module in modules.iter() {
             router = module.routes(router).await;
         }
         let router = router.layer(axum::middleware::from_fn(cors_middleware)).with_state(state.clone());
@@ -1598,6 +2310,7 @@ fn base_router<I: ServerInstance>(definition: ServerInstanceDefinition, hosts_do
         .route("/commands", post(post_command::<I>))
         .route("/queries", post(post_query::<I>))
         .route("/scopes/{scope}/ephemeral", post(post_ephemeral::<I>))
+        .route("/scopes/{scope}/presence/ws", get(get_presence_ws::<I>))
         .route("/actors/{tenant}/{kind}/{id}/events", get(get_events::<I>))
         .route("/actors/{tenant}/{kind}/{id}/events/ws", get(get_event_stream_ws::<I>))
         .route("/blobs/{hash}", get(get_blob::<I>).head(head_blob::<I>).put(put_blob::<I>))
@@ -1626,7 +2339,19 @@ pub struct Server<I: ServerInstance> {
 impl<I: ServerInstance> Server<I> {
     /// 🏗️ Start assembling a server over one storage profile.
     pub fn builder(profile: StorageProfile) -> ServerBuilder<I> {
-        ServerBuilder { profile, modules: Vec::new(), queries: Vec::new(), sagas: Vec::new(), apps: Vec::new(), documents: None, admin_token: None, id: "server".to_string(), version: env!("CARGO_PKG_VERSION").to_string() }
+        ServerBuilder {
+            profile,
+            modules: Vec::new(),
+            queries: Vec::new(),
+            sagas: Vec::new(),
+            apps: Vec::new(),
+            documents: None,
+            admin_token: None,
+            presence: PresenceSettings::default(),
+            origin_admission: None,
+            id: "server".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        }
     }
 
     /// 🛣️ The fully wired router, ready to be served or mounted.

@@ -11,8 +11,8 @@ function task(id: string, kind: TaskKind): Task {
   return { kind, ...head, categories: [], items: [] };
 }
 
-const PHYSICS: Quiz = { schema: "semio.quiz/v1", id: "physics", title: T("Physics"), description: T("Physics"), tasks: [task("power", "sorting"), task("energy", "sorting"), task("units", "classification")] };
-const HEATING: Quiz = { schema: "semio.quiz/v1", id: "heating", title: T("Heating"), description: T("Heating"), tasks: [task("u-values", "matching"), task("loads", "sorting")] };
+const PHYSICS: Quiz = { schema: "semio.quiz/v1", id: "physics", emoji: "🧲", title: T("Physics"), description: T("Physics"), tasks: [task("power", "sorting"), task("energy", "sorting"), task("units", "classification")] };
+const HEATING: Quiz = { schema: "semio.quiz/v1", id: "heating", emoji: "🔥", title: T("Heating"), description: T("Heating"), tasks: [task("u-values", "matching"), task("loads", "sorting")] };
 const QUIZZES = [PHYSICS, HEATING];
 
 /** 🏅️ A badge with the given rule. */

@@ -32,7 +32,7 @@ function sortingTask(values: readonly number[], scale: Scale = "linear"): Sortin
 
 /** 🪜️ The sheet task of a single-task quiz. */
 function sheetTaskOf(task: SortingTask | MatchingTask | ClassificationTask, seed = 1): SheetTask {
-  return sheetOf({ schema: "semio.quiz/v1", id: "quiz", title: T("Quiz"), description: T("Quiz"), tasks: [task] }, seed).tasks[0]!;
+  return sheetOf({ schema: "semio.quiz/v1", id: "quiz", emoji: "❓", title: T("Quiz"), description: T("Quiz"), tasks: [task] }, seed).tasks[0]!;
 }
 
 /** 🧮️ The sorting score of an order of item ids. */
@@ -336,7 +336,7 @@ describe("scoreRun", () => {
       { id: "q", label: T("q"), category: "y" },
     ],
   };
-  const quiz: Quiz = { schema: "semio.quiz/v1", id: "run", title: T("Run"), description: T("Run"), tasks: [sorting, classification] };
+  const quiz: Quiz = { schema: "semio.quiz/v1", id: "run", emoji: "🏁", title: T("Run"), description: T("Run"), tasks: [sorting, classification] };
 
   it("scores every task in sheet order and averages them", () => {
     const sheet = sheetOf(quiz, 99);
@@ -361,7 +361,7 @@ describe("scoreRun", () => {
 
 describe("robustness — inputs that bypass validation never throw and never yield NaN", () => {
   it("scores an empty run, an empty classification and a dimensionless matching 0", () => {
-    const empty: Quiz = { schema: "semio.quiz/v1", id: "empty", title: T("E"), description: T("E"), tasks: [] };
+    const empty: Quiz = { schema: "semio.quiz/v1", id: "empty", emoji: "🫙", title: T("E"), description: T("E"), tasks: [] };
     expect(scoreRun(empty, sheetOf(empty, 1), {})).toEqual({ quiz: "empty", score: 0, tasks: [] });
     const nothing: ClassificationTask = { kind: "classification", id: "nothing", title: T("N"), prompt: T("N"), categories: [{ id: "x", label: T("x") }], items: [] };
     expect(scoreTask(nothing, sheetTaskOf(nothing), { kind: "classification", assignments: {} })).toEqual({ kind: "classification", task: "nothing", score: 0, items: [] });

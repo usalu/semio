@@ -3,7 +3,7 @@ use crate::actors::tests::{envelope, id, perfect, ADA, BOB, TENANT};
 use crate::actors::{enrollment, LearnerDecider, ProctorDeciders, RosterDecider};
 use crate::catalog::tests::fixture;
 use crate::storage::Database;
-use quiz::{Command, Identity, Leaderboard, LearnerView, RunStatus, RunView};
+use quiz::{Command, CrowdView, Identity, Leaderboard, LearnerView, RunStatus, RunView};
 use server::authority::{AuthorityDirectory, CommandBus};
 use server::contract::{CommandOutcome, HybridLogicalClock, PolicyDecision};
 
@@ -118,11 +118,55 @@ async fn projections_of_another_catalog_are_reset() {
     let database = Database::memory().unwrap();
     let mut projections = SqliteProjectionStore::new(database.clone());
     let projector = Projector::new(Arc::clone(&catalog));
-    assert!(projector.prepare(&mut projections).await.unwrap());
+    assert!(!projector.prepare(&mut projections).await.unwrap(), "fresh read models are stamped, not reset");
+    assert_eq!(projections.get(META, FINGERPRINT_KEY).await, Some(projector.stamp()));
+    assert_eq!(projector.stamp(), format!("{PROJECTOR_REVISION}:{}", catalog.fingerprint).into_bytes());
     assert!(!projector.prepare(&mut projections).await.unwrap());
     projections.put(META, FINGERPRINT_KEY, b"another catalog".to_vec()).await.unwrap();
     projections.put(LEARNERS, ADA, b"stale".to_vec()).await.unwrap();
     assert!(projector.prepare(&mut projections).await.unwrap());
     assert_eq!(projections.get(LEARNERS, ADA).await, None);
-    assert_eq!(projections.get(META, FINGERPRINT_KEY).await, Some(catalog.fingerprint.as_bytes().to_vec()));
+    assert_eq!(projections.get(META, FINGERPRINT_KEY).await, Some(projector.stamp()));
+    projections.put(META, FINGERPRINT_KEY, format!("{}:{}", PROJECTOR_REVISION - 1, catalog.fingerprint).into_bytes()).await.unwrap();
+    assert!(projector.prepare(&mut projections).await.unwrap(), "an earlier projector's read models are rebuilt");
+}
+
+#[tokio::test]
+async fn submitted_runs_fold_into_the_crowd_view_of_their_quiz() {
+    let catalog = Arc::new(fixture());
+    let database = Database::memory().unwrap();
+    let projector = Projector::new(Arc::clone(&catalog));
+    let mut projections = SqliteProjectionStore::new(database.clone());
+    projector.prepare(&mut projections).await.unwrap();
+    let empty: CrowdView = view(projections.get(CROWDS, "homes").await);
+    assert_eq!(empty, quiz::crowd_view::<quiz::RunResult>(&catalog.current()["homes"].quiz, &[]), "every quiz has its crowd view before anybody submitted");
+
+    let mut bus = bus(&database, &catalog).await;
+    submit(&mut bus, &Command::IdentifyLearner { id: id(1), learner: ADA.into(), identity: Identity::Anonymous }, 100).await;
+    submit(&mut bus, &Command::IdentifyLearner { id: id(2), learner: BOB.into(), identity: Identity::Anonymous }, 101).await;
+    play(&mut bus, &catalog, ADA, &id(10), "power", 200).await;
+    catch_up(&projector, &database).await;
+    play(&mut bus, &catalog, BOB, &id(11), "power", 300).await;
+    catch_up(&projector, &database).await;
+
+    let mut results: Vec<quiz::RunResult> = Vec::new();
+    for run in [id(10), id(11)] {
+        results.push(view::<RunView>(projections.get(RUNS, &run).await).result.expect("submitted"));
+    }
+    let crowd: CrowdView = view(projections.get(CROWDS, "power").await);
+    assert_eq!(crowd, quiz::crowd_view(&catalog.current()["power"].quiz, &results));
+    assert_eq!((crowd.runs, crowd.tasks.iter().map(|task| task.items.iter().map(|item| item.answers).max().unwrap_or(0)).collect::<Vec<_>>()), (2, vec![2, 2, 2]));
+    assert_eq!(view::<CrowdView>(projections.get(CROWDS, "homes").await), empty, "another quiz's crowd is untouched");
+
+    let before = projections.get(CROWDS, "power").await;
+    let restarted = Projector::new(Arc::clone(&catalog));
+    let mut cleared = SqliteProjectionStore::new(database.clone());
+    restarted.reset(&mut cleared).await.unwrap();
+    assert_eq!(view::<CrowdView>(cleared.get(CROWDS, "power").await).runs, 0);
+    catch_up(&restarted, &database).await;
+    assert_eq!(projections.get(CROWDS, "power").await, before, "the crowd is rebuilt from the log");
+    let resumed = Projector::new(Arc::clone(&catalog));
+    play(&mut bus, &catalog, ADA, &id(12), "power", 400).await;
+    catch_up(&resumed, &database).await;
+    assert_eq!(view::<CrowdView>(projections.get(CROWDS, "power").await).runs, 3, "a restarted projector resumes from the stored tally");
 }

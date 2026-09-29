@@ -239,3 +239,156 @@ tests and by the Protocol v2 cases.
 - Both cores must degrade identically on inputs that bypass validation (no NaN, no throw): empty means are 0,
   incomplete profiles are excluded from the profiled set, invalid answers score to "none" → `run-incomplete`.
 - The React target lives at `❓️quiz/🎯️targets/⚛️react/` with package glue under its own `📦️packages/🟦️typescript/`.
+
+## 14. Revision 2026-09-29 — card-grid UI, CDN site, zero-touch proctor
+
+Inputs: `📓️ui-reference-play-demonstrator.md` (prototype `🗑️generated/ui-reference/rig/quiz-mock.tsx`),
+`📓️explore-cdn-docker-deploy.md`.
+
+### Domains and split
+- Site: static build on a CDN at `https://quizzes.architektur-und-technologie.de` (GitHub-Pages-shaped artifact:
+  `index.html`, `404.html`, `CNAME`, `.nojekyll`, `_headers`; `base: "/"`).
+- Proctor: API only on Docker at `https://proctor.quizzes.architektur-und-technologie.de`. The proctor no longer hosts
+  the site (`🌐️site` module and `PROCTOR_SITE` removed); CORS allowlist = the site origin; preflights carry
+  `Access-Control-Max-Age`.
+- Client origin: a release build bakes `import.meta.env.VITE_PROCTOR_URL` (default the proctor origin above,
+  overridable by `PROCTOR_URL` at build time); dev and tests keep `""` (same origin via the Vite proxy).
+- Old host `quizze.…` is renamed everywhere ("Quizze" as the German word stays).
+
+### Zero-touch proctor on Docker
+- Proctor-only image (no bun stage), production defaults baked in (`PROCTOR_MODE=production`,
+  `PROCTOR_ALLOWED_ORIGINS=https://quizzes.architektur-und-technologie.de`, `PROCTOR_TRUSTED_FORWARDING=proxy`,
+  catalog/data paths, bind/port), `HEALTHCHECK`, tini, non-root, one volume.
+- `compose.yaml` = proctor (`expose` only) + Caddy service (automatic TLS for `{$PROCTOR_HOST:proctor.quizzes…}`),
+  named volumes for proctor data and Caddy data/config, `restart: unless-stopped`, Caddy `depends_on` healthy proctor.
+  The whole host contract: DNS A/AAAA + ports 80/443(+udp) + `docker compose up -d`.
+- Image published to GHCR (`ghcr.io/usalu/…`) by an explicit publish verb and a manual `workflow_dispatch` workflow;
+  compose keeps a `build:` block so a host can also build from a clone.
+
+### CDN site
+- `publish` verb: build with the production proctor origin, verify the artifact (markers, CNAME = site host, proctor
+  origin baked, no localhost), stage it; a manual `workflow_dispatch` workflow deploys it to GitHub Pages (Fastly CDN);
+  the artifact stays portable to any static CDN.
+
+### UI: card grid like semio-tech play / mit-bestand demonstrator
+- Every card is the design system's `WindowChrome` (`level="dialog"`), chips from `windowChromeTitleChipClass`, header
+  `Navbar` + `ShellBrandLogo`, icons `Icon`, the same CSS token chain as play/demonstrator (sharp corners, glass, 1 px
+  outline, Anta, palette, light/dark via the shared appearance helpers).
+- The play/demonstrator card is extracted once as a shared ui element (overview card) that the quiz, play and the
+  demonstrator all use (no third copy).
+- Home = a grid of nine sections in DOM/reading order: learner, quiz 1, how it works, quiz 2, **leaderboard (centre)**,
+  quiz 3, badges, quiz 4, preferences. Desktop ≥ 1024: 3 × 3 with the larger centre cell; tablet 768–1023: 2 columns
+  with the leaderboard spanning the middle row; phone ≤ 767: one column.
+- Leaderboard card: top rows + own row (`aria-current`) by `tag`; "Full leaderboard" opens the full sortable table.
+- Quiz card: emoji + title, description, task count, best score, run state, earned quiz badge; actions Start / Resume /
+  Play again and Last result as real buttons.
+- Bundle budget: import only slim ui-react subpaths (as `@semio-tech/ui-react/i18n`); main chunk stays near today's
+  414 kB.
+- Schema: `Quiz.emoji` and `CatalogQuizView.emoji` (required).
+
+## 15. Revision 2026-09-29 — shared presence and cursors (ephemeral shared state)
+
+Requirement: the presence of every learner is shared with the other learners, including the cursor.
+
+### Framework (domain-neutral, `🧰️framework/🛍️products/🖥️server`)
+- New gateway route `GET /scopes/{scope}/presence/ws?surface=<≤64 chars>` (WebSocket, subprotocol
+  `semio.presence.v1`, text JSON frames), added to `base_router` and the wire fixture route table; TS client twin in
+  `@semio-tech/framework-server` (`presenceSocketUrl` + frame codec).
+- Latest-state semantics, coalesced per tick: the server keeps each session's latest `state` (opaque JSON) and every
+  tick (default 100 ms) publishes one `batch` of the sessions that changed plus those that left. Traffic per client is
+  O(changed sessions) per tick, independent of how often each client moves.
+- Frames:
+  - server → client on join: `{ "type": "welcome", "session", "colour", "roster": [{ "session", "colour", "surface", "state" }] }`
+  - client → server: `{ "type": "state", "state": <json> }` (≤ 2 KiB serialized, ≤ 30 per second; excess dropped)
+  - server → client per tick with changes: `{ "type": "batch", "entries": [{ "session", "colour", "surface", "state" }], "left": ["session", …] }`
+  - server → client on a refused state: `{ "type": "refused", "reason" }` (the socket stays open)
+- Sessions are server-generated random ids; colours come from the existing `Presence` palette slots; join/leave go
+  through the existing `Presence` registry; ping/pong keepalive, idle timeout 60 s.
+- Admission: `PolicyPoint::Subscription` (resource `presence`, actions `join`/`publish`); every `ServerModule` may
+  validate a state through a new default method `presence_admission(scope, state) -> Result<(), String>` (default
+  accepts), so existing instances (hub) are unaffected. In production the socket's `Origin` must pass the instance's
+  origin allowlist.
+
+### Quiz (schema `Place`, `Anchor`, `Cursor`, `PresenceState`, `CursorState`; both cores validate)
+- Rooms: roster scope `<catalog>` carries `PresenceState` (tag, identity, place, active; changes on navigation and
+  visibility); place scopes carry `CursorState` (tag, cursor, focus): `<catalog>/home`, `<catalog>/leaderboard`,
+  `<catalog>/introduction`, `<catalog>/quiz/<quiz>` (run and results of one quiz). Core helpers: `rosterScope(catalog)`,
+  `roomScope(catalog, place)`, `presenceProblem(state)`, `cursorProblem(state)` (Rust twins), and the proctor's
+  `presence_admission` uses them (scope decides the type).
+- Cursor positions are relative (0…1) to an `Anchor` every learner in the room renders (home cards, leaderboard, task
+  card `task:<id>`), so they survive viewport differences and randomized item orders; items, cards and drag targets are
+  never shared, so presence reveals no answers.
+- Client: two sockets (roster + current room), reconnect with jittered backoff, pointer frames throttled to ≤ 15 Hz and
+  coalesced (latest wins), keyboard focus shared as `focus` anchor (outlined card for keyboard users), others' cursors
+  interpolated unless `prefers-reduced-motion`, decorative (`aria-hidden`) with a text roster ("N online", who is where)
+  for assistive technology, colour from the server slot, label = identity display (anonymous → "Anonymous #tag").
+  Preference "Show others' cursors" (persisted local-only). Presence shows on the learner card/navbar (online count
+  and list), on quiz cards (learners in this quiz now) and as online dots in the leaderboard.
+- Decision 2026-09-29: the identity screen has no room (a learner there has no tag yet); place rules
+  `task-without-run` (task only on run) and `quiz-outside-run` (quiz only on run/results) hold in both cores.
+
+## 16. Revision 2026-09-29 — layered home like semio-tech play
+
+Requirement: the quizzes page is multilayered like semio-tech play — the content of every card is rendered behind a
+glassy layer; hovering (or keyboard-focusing) a card shows its page clear. Normative reference:
+`📓️ui-reference-layered-landing.md` (§10 API and behaviour; prototypes `layered_overview_prototype.tsx`,
+`layered_quiz_home_prototype.tsx` in the ticket folder).
+
+- One shared domain-neutral element `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview` + pure geometry/policy
+  module `🔨️modules/🥞️layered-overview-geometry` (exported via `@semio-tech/ui-react/chrome`): strip of panes (percent
+  geometry, imperative transform), ONE `ui-veil` with a `clip-path` hole, card overlay, chrome, reveal on hover/focus
+  and conceal on leave/blur, 500 ms eased glide, pointer pan, reduced motion, hash open/Escape/Overview with focus
+  management, warm queue + budget + time-based release, posters only via an explicit poster function, list mode for
+  touch phones, per-pane error boundary, windowing. Language-agnostic fixture + third-party oracle (`polygon-clipping`
+  for the veil polygon).
+- Play and the demonstrator migrate onto it (their duplicated ~620/660 lines disappear; the landing defects listed in
+  the reference §10.9 are fixed on the way).
+- Quiz home: nine panes in DOM/reading order (learner, physics, how it works, heating, leaderboard, cooling, badges,
+  demand, preferences), each pane = the real page its card opens: learner profile, the read-only quiz page (new screen
+  `quiz`; never a run — starting a run is a command), introduction, full leaderboard, badges page, preferences page.
+  Compact cards centred in their cells; desktop 3 × 3 cells, tablet 2 × 5, phone list mode; the header stays in flow
+  above the element. Backdrop pages are pure views over session state; polling only while opened or revealed.
+- Schema `Screen` gains `quiz`, `learner`, `badges`, `preferences`. Presence rooms: `quiz` → `<catalog>/quiz/<quiz>`
+  (quiz required; quiz allowed on quiz/run/results), `badges` → `<catalog>/badges`, `learner` and `preferences` → no
+  room (personal pages); existing rules otherwise unchanged.
+
+## 17. Revision 2026-09-29 (night) — sharing within the quizzes and a live grid backdrop
+
+Requirements: presence is shared within the quizzes too — the quizzes are for fun and learners see what the others
+think; the home page shows the real subpages behind the cards as a grid, live (presence of other learners inside
+them, a leaderboard that keeps updating, …). This supersedes the §15 rule "never share answers or drags".
+
+### What the others think
+- **Live (ephemeral shared)**: thinking room `<catalog>/quiz/<quiz>/thinking` with `ThinkingState { tag, answers }` —
+  the learner's current draft answers per task of the open run, published (coalesced, ≤ 2 Hz) whenever an answer
+  changes; peers aggregate by item id (sheets differ per learner, so everything is semantic, never positional):
+  classification → avatars/counts per category, sorting → others' normalized positions as markers, matching → others'
+  assigned values. The quiz room's `CursorState` may anchor to items (`item:<id>`) and categories (`category:<id>`) and
+  carries `drag { item }`, so peers see what someone is dragging and where they point.
+- **Persisted (projection)**: `CrowdView` per quiz from all `run-submitted` results (classification category counts,
+  sorting mean normalized position, matching value counts; tasks/dimensions/items in definition order, keys ascending);
+  query `{ type: "crowd", quiz }` (`quiz.crowd`). Shown on the quiz page ("what others answered"), during the run as the
+  crowd layer when nobody else is online, and on the results page (you vs. the crowd). Core function `crowdView(quiz,
+  results)` in both cores (conformance vectors); the proctor keeps it as a projection.
+- Both cores: `thinkingScope(catalog, quiz)`, `thinkingProblem(state)` (structural answer checks, size bounds), item and
+  category anchors valid in cursor states, `drag.item` a slug.
+
+### Live grid backdrop (home)
+- `LayeredOverview` gains a rest mode `"grid"`: at rest the strip is scaled to fit, so all panes are visible as a grid,
+  each exactly behind its card cell (the contact sheet of live pages), under the glass veil; revealing a card zooms and
+  glides its pane to full size (veil hole as before); leaving zooms back out. `"panorama"` (play/demonstrator) stays.
+- Backdrop pages are live: the leaderboard polls while the home is visible (not only when revealed); pages render other
+  learners' presence inside themselves (their cursors on that page, online marks, learning-now counts, the thinking
+  crowd on quiz pages).
+- Framework presence socket gains **watch**: `{ "type": "watch", "scopes": [...], "intervalMs": n }` (≤ 16 scopes,
+  interval ≥ tick; replaces the watch set) → server sends `{ "type": "watched", "scope", "entries", "left",
+  "snapshot"? }` coalesced per interval, read-only (states are published only to the joined scope). Admission per
+  watched scope through the same instance hook as joins (`PolicyPoint::Subscription`, action `watch`). The home joins
+  its room and watches the page rooms (introduction, leaderboard, badges, every quiz room and thinking room) at ~4 Hz.
+- Decisions 2026-09-29 (night): `ThinkingState.answers` holds `ThinkingAnswer`s — classification and sorting as in
+  `Answer`, matching as `ThinkingMatchingAnswer { values: dimension → item → value }` (semantic; the publisher maps its own
+  card indices to values), so peers can see the values others matched. Crowd count keys sort by code point in every
+  implementation (deterministic contract); clients sort values numerically for display.
+- Thinking-state bounds (both cores, conformance): at most 64 tasks per state and 64 entries per answer or dimension
+  (`too-many`), no repeated item in a sorting draft (`duplicate-id`), matching values finite numbers (`type-invalid`),
+  card indices refused in drafts; the presence socket's 2 KiB state cap applies on top.

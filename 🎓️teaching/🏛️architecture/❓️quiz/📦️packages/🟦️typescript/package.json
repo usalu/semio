@@ -2,7 +2,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@teaching/architecture-quiz",
   "version": "0.1.0",
-  "description": "Quizze · Architektur und Technologie — the quiz website of quizze.architektur-und-technologie.de",
+  "description": "Quizze · Architektur und Technologie — the quiz website of quizzes.architektur-und-technologie.de",
   "type": "module",
   "private": true,
   "scripts": {
@@ -20,7 +20,8 @@
     "ajv": "8.20.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "yaml": "2.9.0"
   },
   "license": "AGPL-3.0-or-later",
   "repository": {

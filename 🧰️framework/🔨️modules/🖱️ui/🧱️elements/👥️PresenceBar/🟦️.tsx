@@ -11,7 +11,8 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import type { UiLabel } from "../🎗️UiLabel/🟦️.tsx";
-import { currentStylingAppearanceName, STYLING_PRESENCE_PALETTES } from "@semio-tech/ui-styling";
+import { currentStylingAppearanceName } from "@semio-tech/ui-styling";
+import { presencePaint } from "../../🔨️modules/👥️presence-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 👥️PresenceBar
@@ -58,50 +59,7 @@ export interface PresenceBarProps {
 }
 
 //#region 🔖️Palette
-/** 🌓️ Selects which of `STYLING_PRESENCE_PALETTES`'s `light`/`dark` base `{s, l}` {@link presenceColor} resolves against. */
-export type PresenceAppearance = "light" | "dark";
-
-/** 🎨️ Resolved HSL triple — `h` in degrees `[0, 360)`, `s`/`l` in `[0, 1]`. */
-export interface PresenceHsl {
-  readonly h: number;
-  readonly s: number;
-  readonly l: number;
-}
-
-/** 🎨️ Deterministic per-session palette color for a hub-assigned index (contract freeze §C7.5):
- * `index % 12` selects one of the 12 base hues (`STYLING_PRESENCE_PALETTES.hues`); `Math.floor(index / 12)`
- * (`k`) desaturates by `0.25` once the roster wraps past two full cycles and alternates lightness by
- * `±0.14` every other cycle (lighter in `"light"`, darker in `"dark"`). Byte-identical to the Rust twin
- * `presence_color` in `🧊️component.rs`. Replaces the deleted FNV-hash `presenceHueForActor`. */
-export function presenceColor(index: number, appearance: PresenceAppearance): PresenceHsl {
-  const base = index % 12;
-  const k = Math.floor(index / 12);
-  const h = STYLING_PRESENCE_PALETTES.hues[base]!;
-  const baseAppearance = STYLING_PRESENCE_PALETTES[appearance];
-  const s = baseAppearance.s - (k >= 2 ? 0.25 : 0);
-  const lShift = k % 2 === 1 ? 0.14 : 0;
-  const l = appearance === "light" ? baseAppearance.l + lShift : baseAppearance.l - lShift;
-  return { h, s, l };
-}
-
-/** 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
- * meaningful when `Math.floor(index / 12) === 0`; callers past the first cycle render {@link presenceColor}'s
- * HSL inline instead (contract freeze §C7.5). */
-export function presenceCssVar(index: number): string {
-  return `var(--presence-${index % 12})`;
-}
-
-/** 🎨️ Resolves a peer's ring/border color: the `--presence-N` CSS var for the base cycle, or an
- * inline `hsl()` literal past it — the {@link presenceColor}/{@link presenceCssVar} split from contract
- * freeze §C7.5. A peer with no `color` renders index 0. */
-function presenceStyleColor(color: number | undefined, appearance: PresenceAppearance): string {
-  const index = color ?? 0;
-  if (Math.floor(index / 12) === 0) {
-    return presenceCssVar(index);
-  }
-  const { h, s, l } = presenceColor(index, appearance);
-  return `hsl(${h}deg ${(s * 100).toFixed(2)}% ${(l * 100).toFixed(2)}%)`;
-}
+export { presenceColor, presenceCssVar, type PresenceAppearance, type PresenceHsl } from "../../🔨️modules/👥️presence-presentation/🟦️.ts";
 //#endregion 🔖️Palette
 
 /**
@@ -147,13 +105,13 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
             aria-label={peerTitle}
             className="relative rounded-full"
           >
-            <TableAvatar name={peer.label} style={{ borderColor: presenceStyleColor(peer.color, appearance), borderWidth: 2 }} />
+            <TableAvatar name={peer.label} style={{ borderColor: presencePaint(peer.color, appearance), borderWidth: 2 }} />
             {peer.isAgent === true ? (
               <span
                 aria-hidden="true"
                 data-row-id={`peer-agent-badge:${peer.actor}`}
                 className={cn(surfaceClass, "pointer-events-none absolute -bottom-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full border text-[8px] leading-none")}
-                style={{ borderColor: presenceStyleColor(peer.color, appearance) }}
+                style={{ borderColor: presencePaint(peer.color, appearance) }}
               >
                 🤖
               </span>

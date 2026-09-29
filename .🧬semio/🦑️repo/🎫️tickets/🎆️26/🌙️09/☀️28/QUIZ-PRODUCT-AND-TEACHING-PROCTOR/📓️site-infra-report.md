@@ -122,3 +122,102 @@ Screenshots and `problems.txt`: `🗑️generated/site-infra-screens-{dev-1280,b
 Scripts: `site_infra_register_taxonomy.ts`, `site_infra_inventory.ts` (fast taxonomy inventory), `site_infra_launch.ts`,
 `site_infra_check_router.ts`, `site_infra_e2e.ts`, `site_infra_bundle.ts`. Outputs (delete with `🗑️generated`):
 `🗑️generated/site-infra-*.log|json`, `tsconfig.site-infra.json`, `site-infra-screens-*/`.
+
+## 2026-09-29 — split deployment: CDN site + zero-touch proctor stack (design §14)
+
+### Changes (all under `🎓️teaching/🏛️architecture/❓️quiz/` unless noted)
+
+| File | Change |
+|---|---|
+| `🚀️deploy/🔣️.json` (new) | the one authored source: `site.host` `quizzes.architektur-und-technologie.de`, `proctor.host` `proctor.quizzes.architektur-und-technologie.de`, `proctor.image` `ghcr.io/usalu/architecture-quiz-proctor`, `proctor.port` 8791; imported (`with { type: "json" }`) by the Vite config, the operator verbs and the tests |
+| `🏗️builder/🌐️vite/🟦️.ts` | `defineConfig(({ command }) => …)`; `build` defines `import.meta.env.VITE_PROCTOR_URL` = `PROCTOR_URL` ?? `https://<proctor host>`, `serve` bakes nothing and keeps the dev proxy; `cnameHost` = site host (the react agent's alias lines kept) |
+| `🟦️.ts` | `bakedProctorOrigin()` (defensive `try`, `""` in dev/tests) passed to `mountQuiz` |
+| `🚀️deploy/Dockerfile` | proctor only: no bun stage, no site; `rustup toolchain install` layer, cargo registry and shared build dir as BuildKit cache mounts; baked `PROCTOR_MODE=production`, `PROCTOR_ALLOWED_ORIGINS=https://quizzes.…`, `PROCTOR_TRUSTED_FORWARDING=proxy`, catalog/data paths, `0.0.0.0:8791`; HEALTHCHECK, tini, user `quiz`, one volume; OCI `source` label for GHCR |
+| `🚀️deploy/compose.yaml` | `proctor` (`image: ghcr.io/usalu/architecture-quiz-proctor:${PROCTOR_TAG:-latest}`, `pull_policy: missing`, `build:` block, `expose` only) + `caddy:2` (80, 443, 443/udp, `depends_on … service_healthy`), volumes `proctor-data`, `caddy-data`, `caddy-config`, `restart: unless-stopped`; overrides `PROCTOR_HOST`, `PROCTOR_TAG`, `PROCTOR_ALLOWED_ORIGINS`, `QUIZ_HTTP_PORT`, `QUIZ_HTTPS_PORT` |
+| `🚀️deploy/Caddyfile` | `{$PROCTOR_HOST:proctor.quizzes.…} { encode; HSTS/nosniff/referrer; reverse_proxy proctor:8791 }`; no CORS headers (the proctor owns them) |
+| `🚀️deploy/🟦️.ts` | hosts from `🔣️.json`; new `publishQuizSite`, `siteArtifactProblems`, `QUIZ_SITE_HEADERS` (`_headers`: `/assets/*` immutable; `/`, `/index.html`, `/404.html` `no-cache`; non-overlapping rules), `publishQuizImage` (tag workspace version + `latest`, push), `checkQuizImage` API-only (zero-configuration run, cleartext refusal, cross-origin preflight + POST, HEALTHCHECK healthy, drain, volume), `checkQuizStack` (config, `caddy validate` via stdin in `caddy:2`, `up --wait` with `PROCTOR_HOST=localhost`, HTTPS through Caddy, HTTP→HTTPS redirect, cross-origin contract, `down --volumes`) |
+| `📦️packages/🟦️typescript/📜️script.ts` | verbs `publish`, `docker-image-publish`, `docker-stack-check` |
+| `📦️packages/🟦️typescript/📋️project.json` | `build` inputs add `{ "env": "PROCTOR_URL" }` (plus deploy JSON, ui, framework and server inputs); targets `publish` (outputs `dist/pages`), `docker-image-publish` (dependsOn `docker-image-build`), `docker-stack-check`. No `workspace:prepare` dependency: the proctor's release graph reads no gitignored generated file (only the `⏳️async` tests read `🤖️generated`) |
+| `📦️packages/🟦️typescript/package.json` | description renamed; devDependency `yaml` 2.9.0 (test oracle) |
+| `🧪️tests/🧪️deploy/🟦️.ts` (new), `🧪️tests/🎚️config/🟦️.ts` | Dockerfile, compose (parsed with `yaml`) and Caddyfile agree with `🔣️.json`; `siteArtifactProblems` and `_headers` cases |
+| `README.md` | Deploy rewritten: two artifacts, CORS contract, DNS (site CNAME → `usalu.github.io`, proctor A/AAAA), CDN publish and one-time Pages settings, zero-touch `docker compose up -d`, image publishing and public package, backup/restore, update |
+| `.github/workflows/architecture-quiz.yml` (new) | manual `workflow_dispatch` (inputs `site`, `proctor`): `site` → `publish` + `upload-pages-artifact@v3`, `pages` → `deploy-pages@v4` (`pages: write`, `id-token: write`), `proctor` → `docker/login-action@v3` + `docker-image-publish` (`packages: write`, `GITHUB_TOKEN`) |
+| `.vscode/🧩️launch.seed.jsonc` → `launch.json` (regenerated, fresh) | `🚚️publish🎓️teaching🏛️architecture❓️quiz` (4_build 11.15), `🚚️publish🎓️teaching🏛️architecture❓️quiz🐳️docker-image` (4_build 11.35), `⚖️gate🎓️teaching🏛️architecture❓️quiz🐳️docker-stack` (4_gate 11.25) |
+| root `package.json` | `publish:teaching:architecture-quiz`, `publish:teaching:architecture-quiz:docker-image`, `check:teaching:architecture-quiz:docker-stack` |
+
+Old host `quizze.…`: no occurrence left outside ticket history (`🎓️teaching`, `.github`, the quiz product, `package.json`,
+the launch seed). `dist/pages` is covered by `.gitignore` `**/📦️packages/*/dist/`.
+
+### Verification (all run on 2026-09-29, Docker 29.4.0, compose v5.1.1)
+
+| Command | Result |
+|---|---|
+| `bun nx run @teaching/architecture-quiz:test --skip-nx-cache` | 17/17 (catalog 11, deploy 6) |
+| `bun nx run @teaching/architecture-quiz:publish` | builds against `https://proctor.quizzes.architektur-und-technologie.de`, verifies, stages 57 files (2.1 MB, main JS 592 kB / 161 kB gzip); `CNAME` = site host, origin baked |
+| `bun nx run @teaching/architecture-quiz:docker-image-build` | cold 471 s (2.55 GB context in 145 s, toolchain 145 s, compile about 2 min), cached rebuild 291 s; image 96.7 MB |
+| `bun nx run @teaching/architecture-quiz:docker-image-check` | no configuration at all: ready 454 ms, cleartext 403 `insecure-transport`, preflights `/commands` and `/queries` 204 + site origin + `max-age 7200`, foreign origin no grant, `POST /queries` 200 snapshot with the grant, HEALTHCHECK healthy after about 6 s, `docker stop` exit 0, `proctor.sqlite` on the volume |
+| `bun nx run @teaching/architecture-quiz:docker-stack-check` | `compose config` ok, `caddy validate` ok, `up --wait` healthy in 6.7 s, `https://localhost:18443/instance` 200 through Caddy (HSTS), HTTP 308 → HTTPS, cross-origin contract through Caddy ok, `down --volumes` left nothing |
+| compose pull-or-build (`--dry-run up -d`, tag absent) | `pull_policy: missing` pulls from GHCR; the pull failed (403, nothing published yet) and compose built from `build:`; with the image present nothing is pulled |
+| production rehearsal, Playwright (system Chrome, `ignoreHTTPSErrors` for Caddy's internal CA) | stack with `PROCTOR_HOST=localhost`, site published with `PROCTOR_URL=https://localhost:18443`, served CDN-like on `127.0.0.1:6062`: intro → pseudonym → perfect physics run → submit (100 %, 2 badges) → leaderboard → second device recalls the same learner; **0** console errors, failed requests or 4xx |
+| production rehearsal, built-in browser | it cannot trust Caddy's internal CA (`ERR_CERT_AUTHORITY_INVALID`; the site shows "Connection lost – retrying"). Through a loopback HTTP→HTTPS bridge (`site_infra_tls_bridge.ts`, rehearsal only) to the same Caddy and proctor: identify → run → submit (100 %) → leaderboard with both learners; no new console error, every `/commands` and `/queries` 200 |
+| `verify taxonomy report --scope 🎓️teaching` | `clean=true errors=0 warnings=0` |
+| `verify interactivity apps` | 111 failures, none about this ticket (launch capacity 512, 64 plugin apps without WGPU variants, 45 new extension-descriptor findings from other work) |
+| `docker-image-publish`, the workflow | **not run**: pushing to GHCR and deploying Pages publish public content and need the owner's `docker login ghcr.io` or a GitHub run |
+
+Docker Desktop was stopped afterwards (`docker desktop stop`); every container, volume and network of the checks was removed.
+
+### Findings
+
+1. **Docker Desktop on this host** crashed at start on stale AF_UNIX socket files it cannot remove ("The file cannot be
+   accessed by the system"): `%LOCALAPPDATA%\Docker\run\dockerInference` and
+   `%LOCALAPPDATA%\docker-secrets-engine\engine.sock`. Fixed by renaming both directories aside (`run-stale-20260929`,
+   `run-stale-20260929b`, `docker-secrets-engine-stale-20260929`, still there, safe to delete) so Docker recreates them.
+   It can recur after any unclean Docker exit.
+2. A stale local image `semio/architecture-quiz:latest` (98 MB, built 2026-09-28 18:55 by someone else from the old
+   two-stage Dockerfile) is obsolete under the new name; left in place.
+3. **react — leaderboard table** at 1280 px breaks column headings inside words ("Ran k", "Tota l", "Heatin g") in the new
+   card design (full leaderboard, built-in browser).
+4. The 2.55 GB build context (whole repository minus `.dockerignore`) dominates the image build; a Dockerfile-specific
+   ignore file would need a taxonomy contract first.
+5. A concurrent `build` of the package empties `dist`, including a staged `dist/pages/quizzes`; `publish` restages from
+   scratch, so run it last (the workflow does).
+
+Ticket-folder additions: `site_infra_static.ts` (CDN-like static server), `site_infra_tls_bridge.ts` (rehearsal bridge);
+`site_infra_e2e.ts` now accepts the local stack's certificate.
+
+## 2026-09-29 (evening) — shared presence through the stack (design §15), final taxonomy pass
+
+### Changes
+
+- `🚀️deploy/🟦️.ts`: `checkPresence` drives two presence sockets through the framework's TS twin (`presenceSocketUrl`,
+  `PRESENCE_PROTOCOL`, `decodePresenceFrame`, `encodePresenceFrame`) on the roster room `architecture` with
+  `Origin: https://quizzes.architektur-und-technologie.de`: both get `welcome` over subprotocol `semio.presence.v1`,
+  the second's roster names the first, the first shares a valid `PresenceState`
+  (`{ tag, identity: anonymous, place: home, active }`), the second receives it in a `batch`, then the first's
+  departure in `left`; a socket with a foreign `Origin` never opens. It runs in `docker-image-check` (direct port with
+  the proxy's `X-Forwarded-Proto`) and in `docker-stack-check` (`wss://localhost:<https port>` through Caddy).
+- `🚀️deploy/Caddyfile`: comment only. WebSocket upgrades need no directive: `reverse_proxy` passes them through,
+  `Origin` included, and `encode` does not touch upgraded connections (proven by the stack check).
+- Vite dev proxy: unchanged. It already maps `/instance`, `/commands`, `/queries`, `/actors` and `/scopes` with
+  `ws: true`.
+- Taxonomy (`site_infra_register_taxonomy.ts`, scopes now include `🧰️framework/🛍️products/🖥️server`): `members-of-tests`
+  `🫂️presence-roster`, `👥️presence-client`, `🔒️closed-ports`, `🔬️wire`, `🧩️instance`; `members-of-fixtures`
+  `🔌️wire`, `👥️presence-client`. `🔨️modules/👥️presence` of the proctor already resolved.
+- Launch: no new nx target in the ticket's projects (presence runs inside the existing `test` and docker targets);
+  `.vscode/launch.json` regenerated from the seed is byte-identical.
+
+### Verification (all run)
+
+| Command | Result |
+|---|---|
+| presence through the Vite dev proxy (private release proctor on 8795 in development mode, `bun ./📜️script.ts dev` on 6065 with `PROCTOR_PORT=8795`) | `ws://127.0.0.1:6065/scopes/architecture/presence/ws`: subprotocol `semio.presence.v1`, `welcome`, the second learner received the shared state in a batch. The shared dev pair (6061 → 8791, started by another agent) answered `404` while its proctor predated presence; after that proctor's restart (18:47) the same upgrade through 6061 answers `101 Switching Protocols` |
+| `bun nx run @teaching/architecture-quiz:test` | 17/17 |
+| `bun nx run @teaching/architecture-quiz:docker-image-build` | 459 s, image 97.1 MB (proctor with presence) |
+| `bun nx run @teaching/architecture-quiz:docker-image-check` | as before plus: presence on `ws://127.0.0.1:18791/…` two learners (colours 0, 1), state and departure in batches, foreign origin refused (upgrade `403` → close 1002); HEALTHCHECK healthy after 6.1 s; drain exit 0 |
+| `bun nx run @teaching/architecture-quiz:docker-stack-check` | as before plus: presence on `wss://localhost:18443/scopes/architecture/presence/ws` through Caddy, same results; `down --volumes` left nothing |
+| `verify taxonomy report --scope 🎓️teaching` / `🧰️framework/🛍️products/❓️quiz` / `🧰️framework/🛍️products/🖥️server` | `clean=true errors=0 warnings=0` each |
+
+Docker Desktop: `docker desktop stop` left the same unremovable AF_UNIX sockets again, so the next start needed the
+same workaround (`run-stale-20260929c`, `docker-secrets-engine-stale-20260929c`). This happens on every stop on this
+host. Docker Desktop is stopped again, and every container, volume, private proctor and dev server of these checks is
+gone.

@@ -8,6 +8,7 @@
 
 pub use crate::badges::*;
 pub use crate::lifecycle::*;
+pub use crate::presence::*;
 pub use crate::randomness::*;
 pub use crate::schema::*;
 pub use crate::scoring::*;

@@ -48,6 +48,7 @@ fn quiz_structure_issues_are_reported_by_pointer() {
     let mut quiz = quiz();
     quiz.schema = "semio.quiz/v2".to_string();
     quiz.id = "Energy".to_string();
+    quiz.emoji = String::new();
     quiz.title.de = String::new();
     let Task::Classification(classification) = &mut quiz.tasks[0] else { unreachable!() };
     classification.draw = Some(9);
@@ -64,6 +65,7 @@ fn quiz_structure_issues_are_reported_by_pointer() {
     assert_eq!(
         quiz_issues(&quiz),
         [
+            issue("/emoji", IssueCode::LengthInvalid),
             issue("/id", IssueCode::SlugInvalid),
             issue("/schema", IssueCode::ValueInvalid),
             issue("/tasks/0/axes", IssueCode::ItemsTooFew),
@@ -131,6 +133,22 @@ fn profiles_without_axes_report_missing_axes_only() {
     let Task::Classification(classification) = &mut quiz.tasks[0] else { unreachable!() };
     classification.axes = None;
     assert_eq!(quiz_issues(&quiz), (0..3).map(|index| issue(&format!("/tasks/0/categories/{index}/profile"), IssueCode::AxesMissing)).collect::<Vec<_>>());
+}
+
+#[test]
+fn quiz_emoji_is_required_and_holds_one_to_sixteen_code_points() {
+    let with = |emoji: &str| quiz_issues(&Quiz { emoji: emoji.to_string(), ..quiz() });
+    for valid in ["⚡", "❄️", "👨‍👩‍👧‍👦", &"x".repeat(16)] {
+        assert_eq!(with(valid), [], "{valid}");
+    }
+    for invalid in ["", &"🔥".repeat(17)] {
+        assert_eq!(with(invalid), [issue("/emoji", IssueCode::LengthInvalid)], "{invalid}");
+    }
+    let mut document = serde_json::to_value(quiz()).unwrap_or_default();
+    if let Some(object) = document.as_object_mut() {
+        object.remove("emoji");
+    }
+    assert!(serde_json::from_value::<Quiz>(document).is_err());
 }
 
 #[test]

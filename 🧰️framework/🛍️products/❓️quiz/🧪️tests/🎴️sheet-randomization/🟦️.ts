@@ -64,7 +64,7 @@ const MATCHING: MatchingTask = {
   ],
 };
 
-const QUIZ: Quiz = { schema: "semio.quiz/v1", id: "physics", title: text("Physics", "Physik"), description: text("Understanding", "Verständnis"), tasks: [CLASSIFICATION, SORTING, MATCHING] };
+const QUIZ: Quiz = { schema: "semio.quiz/v1", id: "physics", emoji: "🧲", title: text("Physics", "Physik"), description: text("Understanding", "Verständnis"), tasks: [CLASSIFICATION, SORTING, MATCHING] };
 
 /** 🔎️ The presented task with the given id. */
 function presented(tasks: readonly SheetTask[], id: string): SheetTask {

@@ -862,27 +862,6 @@ export const ENTWERFEN_MIT_BESTAND_STATIK_BRAND: ShellBrand = {
 //#endregion 🏷️EntwerfenMitBestandStatikBrand
 
 //#region 🎪️DemonstratorPanes
-/** ⏱️ Browser timing surface used by the demonstrator's paced pane-boot queue. */
-export type DemonstratorIdleScheduler = {
-  readonly setTimeout: (callback: () => void, delayMs: number) => number;
-  readonly clearTimeout: (handle: number) => void;
-  readonly requestIdleCallback?: (callback: () => void, options?: { readonly timeout: number }) => number;
-  readonly cancelIdleCallback?: (handle: number) => void;
-};
-
-/** 🐢️ Enforces a minimum delay before yielding the next warm boot to the browser's idle queue. */
-export function scheduleDemonstratorIdle(callback: () => void, delayMs: number, scheduler: DemonstratorIdleScheduler): () => void {
-  let idleHandle: number | null = null;
-  const timeoutHandle = scheduler.setTimeout(() => {
-    if (scheduler.requestIdleCallback) idleHandle = scheduler.requestIdleCallback(callback, { timeout: 1_000 });
-    else callback();
-  }, delayMs);
-  return () => {
-    scheduler.clearTimeout(timeoutHandle);
-    if (idleHandle != null) scheduler.cancelIdleCallback?.(idleHandle);
-  };
-}
-
 /** 🎪️ One live pane in the demonstrator's 4×2 grid — order here IS grid order (row-major: index
  * 0-3 top row, 4-7 bottom row). */
 export type DemonstratorPaneSpec = {
@@ -993,6 +972,6 @@ export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
 //#endregion 🎪️DemonstratorPanes
 
 if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️scheduledemonstratoridle/🟦️.ts");
-  await registerTests1(import.meta.vitest, { demonstratorPaneBootVariants, scheduleDemonstratorIdle }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTests1 } = await import("./🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts");
+  await registerTests1(import.meta.vitest, { demonstratorPaneBootVariants });
 }

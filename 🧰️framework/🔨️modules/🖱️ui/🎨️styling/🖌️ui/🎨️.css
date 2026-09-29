@@ -7218,6 +7218,7 @@
 }
 
 [data-slot="window-chrome-stack"],
+[data-overview-card-stack],
 [data-slot="introduction-info-box"],
 [data-slot="context-menu-content"] {
   background: transparent !important;

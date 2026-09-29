@@ -16,6 +16,16 @@ export interface TaskViewProps<T extends SheetTask, A extends Answer> {
   readonly locale: QuizLocale;
 }
 
+/** 🧱️ The frame of a drop zone (the pool, a category bin): a dashed hairline that the drag highlight fills. */
+export const DROP_ZONE_CLASS = "flex min-w-0 flex-col gap-single border border-dashed border-normal p-double";
+
+/** 🔽️ A select of a task: at least 24 px tall, framed by the hairline, on the page colour. */
+export const SELECT_CLASS = "quiz-target border border-normal bg-background px-single text-sm text-foreground";
+
+/** 🔘️ A small square action of a task row (move, unassign). */
+export const ICON_BUTTON_CLASS =
+  "quiz-target inline-flex min-w-[1.75em] cursor-pointer items-center justify-center border border-normal bg-transparent px-single text-foreground hover:bg-hover-interactive-fill aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
+
 /** 📢️ A message for the polite live region of a task, and the function that replaces it. */
 export function useAnnouncement(): { readonly announcement: string; readonly announce: (message: string) => void } {
   const [announcement, setAnnouncement] = useState("");
@@ -25,7 +35,7 @@ export function useAnnouncement(): { readonly announcement: string; readonly ann
 /** 📢️ The visually hidden polite live region announcing what a keyboard or pointer action changed. */
 export function LiveRegion(props: { readonly message: string }): ReactElement {
   return (
-    <p className="quiz-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+    <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {props.message}
     </p>
   );
@@ -54,7 +64,13 @@ export function elementId(scope: string, ...parts: readonly string[]): string {
 export function DragGrip(props: { readonly title: string; readonly onDrop: (zone: string) => void }): ReactElement {
   const { title, onDrop } = props;
   return (
-    <span className="quiz-grip" aria-hidden="true" title={title} onPointerDown={(event: PointerEvent<HTMLSpanElement>) => startPointerDrag(event, onDrop)}>
+    <span
+      data-quiz-grip=""
+      className="quiz-target inline-grid min-w-[1.75em] cursor-grab touch-none select-none place-items-center text-muted-foreground"
+      aria-hidden="true"
+      title={title}
+      onPointerDown={(event: PointerEvent<HTMLSpanElement>) => startPointerDrag(event, onDrop)}
+    >
       ⠿
     </span>
   );

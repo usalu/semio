@@ -282,7 +282,7 @@ impl Saga for OneCommandPerEvent {
 pub async fn a_saga_reacts_to_a_committed_event_exactly_once_across_a_restart<S: AuthorityStore, R: core::future::Future<Output = S>>(before: &mut S, reopen: impl FnOnce() -> R) {
     let actor = actor_key("doc-1");
     let event = event_record(&actor, 1);
-    before.append_events(&actor, &[event.clone()], &[OutboxEntry::pending(actor.clone(), event)]).await.unwrap();
+    before.append_events(&actor, std::slice::from_ref(&event), &[OutboxEntry::pending(actor.clone(), event.clone())]).await.unwrap();
 
     let mut runner: SagaRunner<OneCommandPerEvent> = SagaRunner::new();
     runner.register(OneCommandPerEvent);

@@ -345,3 +345,112 @@ invisible literal no-break spaces.
    - Launch rows (site-infra): quiz-react `test` and `typecheck`.
 5. **Browser pass:** the site agent should still drive identify → run → submit → leaderboard with the proctor, across
    two tabs, and at 768 and 1280 px, including a screen reader smoke test of the live regions and the dialog.
+
+## 2026-09-29 — card grid in the play/demonstrator language (appended by the coordinator; the agent could not write .md)
+
+- **Shared card** `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx`: `WindowChrome` at `level="dialog"`
+  (never active), full-width title cap chip, action chips as real buttons ≥ 24 px (`OverviewCardAction`),
+  `<section aria-labelledby>` or whole-card button; story + component test (3 cases); registered in the ui-react barrel
+  and test config. `🏢️semio-tech/🎡️play/⚛️play-card.tsx` and `♻️mit-bestand/🧺️demonstrator/⚛️demonstrator-card.tsx` are
+  thin wrappers (slots and data attributes unchanged, duplicate CSS removed).
+- **Slim subpath** `@semio-tech/ui-react/chrome` (`🎯️targets/⚛️react/🪟️chrome/🟦️.ts`): `WindowChrome`, appearance,
+  dom-event binding, `uiSpacingLen`, form-control defaults moved out of the barrel and re-exported unchanged; ports
+  `setThemedIconCatalog` and `setNavbarTrailingChrome` decouple the barrel; `Navbar` gained `label`.
+- **Quiz look and feel**: every screen built from `QuizCard`s under `Navbar` + `ShellBrandLogo`, appearance via
+  `useElementsSurfaceChrome`, text size → root font size, site CSS = ui styles chain + `@source` of the quiz target.
+- **Home grid**: learner, quiz 1, how it works, quiz 2, leaderboard, quiz 3, badges, quiz 4, preferences; 3 × 3 from
+  1024 px (larger centre), 2 columns from 768 px (leaderboard spans), 1 column below; quiz cards with emoji (text
+  presentation), task count, best, run state, Start/Resume/Start again + Last result; leaderboard card top 5 + gap +
+  own row (`aria-current`). Header cells and numbers `quiz-nowrap`; tables scroll inside cards.
+- **Checks**: quiz tests 133/133 before presence; `🏠️home-grid` case (order/excerpt vectors, nine sections with the
+  leaderboard fifth, actions per state, `aria-current`, nowrap, breakpoints, column counts 320–1440 px via lightningcss
+  oracle `quiz-react-lightningcss`); OverviewCard 3/3; mutation checks 10/10 killed; ui-react 835 pass / 22 fail
+  (pre-existing: tab tokens, Tree gutter, Window engagement, assets `shortcodeEmoji`, ShellScope, Panel, Layout);
+  play tests 72 pass / 3 fail (unrelated); demonstrator 20 pass (branding test needs `@semio-tech/flow-core` wasm);
+  play nx build blocked by rustc `STATUS_NO_MEMORY` while compiling wasm prerequisites. Browser walk at
+  1440/1280/1024/768/375 light and 1440/768/375 dark: home columns 3/3/3/2/1, 0 overflow, 0 console errors.
+- **Bundle** (`@teaching/architecture-quiz:build`): before 421.12 kB JS / 21.02 kB CSS; card grid 592.25 kB / 246.33 kB;
+  card grid + presence 613.75 kB (gzip 166,639 B) / 247.26 kB (gzip 36,572 B). Largest parts: icon table ~86 kB,
+  tokens 28 kB, WindowChrome 24 kB, appearance 13.6 kB, silhouette 11.6 kB, `cn` 10.8 kB. Remaining lever: per-icon
+  modules in `@semio-tech/assets`.
+
+## 2026-09-29 — shared presence and cursors (appended by the coordinator)
+
+- **`🔨️modules/👥️presence/🟦️.tsx`**: `PresenceRoom` (one `semio.presence.v1` socket; admits member states through the
+  core's `presenceProblem`/`cursorProblem`; keeps refusals without closing; sends the latest state at most every 67 ms,
+  never repeating the last sent; after loss waits `random × minMs`, rejoins with `retryWithJitteredBackoff`, resends
+  the latest state); `QuizPresence` (roster room `<catalog>` + room of the current place; `presencePlace` maps
+  run/results to `<catalog>/quiz/<quiz>` with the run's task; identity and badges have no room, badges counts as home);
+  React glue `usePresencePointer` (relative to the nearest `data-presence-anchor`, 10⁻⁴ precision, nothing while a
+  button is pressed, focus only when moved by keyboard), `PresenceOverlay` (`aria-hidden`, 120 ms glide unless reduced
+  motion), one colour per learner via `presencePaint`.
+- **Anchors are cards only**: `home:*`, `leaderboard`, `introduction`, `run`, `task:<id>`, `results`, `result:<task>`;
+  items, cards and drags are never shared.
+- **Text for everyone**: navbar "Online: N", learner card "Who is where" disclosure, quiz cards "Learning now: N",
+  leaderboard online marks; preference "Show others' cursors" (default on, local only); en/de (du).
+- **Checks**: quiz tests 165/165; `👥️presence-client` 32 cases (throttle vectors vs lodash `throttle`, oracle
+  `quiz-react-lodash-throttle`); journey case (no socket before identification, roster + home room after, online
+  1 → 2, learning now, peer cursor, preference, leave, quiz room with task); `👥️presence-presentation` 5 cases (palette
+  vs d3-color); mutation checks 12/12 killed. Two-device run (localhost 1440 light vs 127.0.0.1 768 dark, Playwright
+  Chrome against the dev proctor): A's pointer at 0.3/0.6 of the Heating card appears at 0.300/0.600 of B's card in A's
+  colour; B's keyboard focus framed on A; "Learning now: 1" and "working on Energy Demand"; A leaves → B "Online: 1";
+  no console errors (evidence `🗑️generated/ui-final/presence-*.png`, `presence-report.json`).
+- **Handoffs**: the core `SCREENS` has no badges screen (badges counts as home); production needs the site origin in
+  `PROCTOR_ALLOWED_ORIGINS` (baked into the image) and `connect-src` for the proctor if a CSP is added.
+
+## 2026-09-29 — layered home like semio-tech play (appended by the coordinator)
+
+- **Overview**: home is the shared `LayeredOverview` (`@semio-tech/ui-react/chrome`) with nine panes in reading order
+  `learner, physics, intro, heating, board, cooling, badges, demand, prefs`; cells from `homeCells` (3 × 3 desktop with
+  the board centre, 2 × 5 tablet, list mode below 768 px); hash routing by the element, the opened page controlled
+  from the session step `{ screen: "home", page }`; `Navbar` in flow above.
+- **Cards**: compact, centred in their cells (`.quiz-home-grid` `align-items: center`), heading link to `#page`, pointer
+  click opens (not on controls), `revealed` lifts the card.
+- **Pages** (pure views over session state, `PageFrame`): learner profile (`📇️profile`: totals, rank, run history with
+  View result/Resume, badges), quiz page (`📖️quiz-page`: description, facts, tasks with kinds, Start/Resume/Start again,
+  Last result), introduction, leaderboard (`LeaderboardPage`, polling only while opened or revealed), badges
+  (`BadgesPage`), preferences (`PreferencesPage`). Hover never starts a run. The old leaderboard/badges screens and
+  `HomeCard` were removed.
+- **Presence**: places intro → introduction, board → leaderboard, badges → badges, quiz page → quiz (rooms), learner and
+  prefs without room; anchors `quiz:<id>`, `quiz:<id>:tasks`, `badges`; peer cursors only on anchors outside inert panes.
+- **Checks**: quiz-react 182/182; site test 17/17; mutation checks 11/11 killed; `🏠️home-grid` cases (order and cell
+  vectors, nine sections, board fifth, heading links, inert/aria-hidden panes, `#heating` deep link runs nothing, Escape
+  returns focus to the card link, hover/focus reveal never starts a run, polling gating with fake timers, column counts
+  via lightningcss); browser walk (Playwright Chrome, synthetic learners, every command refused) at 1440/768/375 light
+  and dark: rest veil visible, hover each card → veil hidden + strip glides to the card's cell, open `#heating` → page
+  region focused + Overview button, Escape → focus on the card link, list mode at 375, 0 overflow, 0 console errors;
+  two-device presence re-run green. Screenshots `🗑️generated/layered-final/quiz-*.png`, `presence-*.png`.
+- **Bundle**: main JS 642,365 B (gzip 175,347), CSS 248,730 B (gzip 36,848).
+- **Handoffs**: pages are short, so mostly their top part shows behind the cards; the tablet card layer scrolls and
+  takes the pointer, so there is no pointer pan on tablets.
+
+## 2026-09-29 (night) — live grid home and what the others think (appended by the coordinator)
+
+- **Live grid home**: `rest="grid"` with `HOME_GRID_TRACKS` (1 : 1.5 : 1 × 1 : 1.4 : 1); the card layer uses
+  `var(--layered-columns)`/`var(--layered-rows)` from 768 px without gap or outer padding (spacing inside
+  `.quiz-home-cell`); budget = number of pages, suspend times infinite; all nine panes mounted and inert at rest, no
+  placeholders; measured tracks 411/617/411 × 256/359/256 px at 1440 × 900, each page top-centred on its card's cell.
+  Home polls the leaderboard every 10 s and the crowd of every quiz; in the walk a peer's total rose 170 → 200 in the card
+  and in the backdrop page after one poll.
+- **Presence inside pages**: one room socket per room kind; home's room watches introduction, leaderboard, badges, every
+  quiz page and every thinking room (≤ 16) at 4 Hz and re-sends the watch after a rejoin; each page draws the others on
+  its own anchors scaled with the page (peer pointer measured inside the leaderboard pane at (0.35, 0.4)); decorative
+  (`aria-hidden`).
+- **In the run**: pointer and focus on `item:<id>`/`category:<id>`, drag shown as "Ben ▸ …"; drafts published ≤ 2 Hz
+  (matching converted with `thinkingAnswer`); live crowd per item (classification counts per category, sorting markers
+  and mean place, matching values by count then numerically); submitted crowd when nobody else is online; preference
+  "Show what others think" / "Zeigen, was die anderen denken".
+- **Results and quiz page**: an "Everyone" column per result item; the quiz page lists what everyone answered item by
+  item. Wording: submitted figures include the viewer's own runs ("What everyone answered"), live figures never do
+  ("What others think now").
+- **Shared fix**: `measureWindowSilhouetteMetrics` in `🧱️elements/🗂️WindowChrome` measured with
+  `getBoundingClientRect`, so silhouettes inside scaled pages were drawn at the scaled size and opened quiz pages showed
+  cut-off cards; it now measures in the element's own pixels (assertion added to the silhouette test).
+- **Renames/registrations**: test and fixture `👥️presence-client` → `📡️presence-client` (sibling emoji collision);
+  `🔨️modules/🗳️crowd` and `💭️crowd-client` registered.
+- **Checks**: quiz-react 229/229; `💭️crowd-client` suite with lodash as oracle; 43/43 mutations killed; typecheck without
+  quiz errors; oracle registry valid (ajv); two-device walk against the dev proctor (screenshots
+  `🗑️generated/crowd-final/`): live grid, peer cursors inside backdrop pages, drafts reflected as "what others think",
+  crowd on results and quiz pages. Bundle JS 666.2 kB (gzip 182.1 kB), CSS 248.9 kB (gzip 36.9 kB).
+- **Handoffs**: the crowd includes the viewer's own submitted runs (excluding them would need the learner in the query);
+  a revealed page fills the view while the other cards stay on top (element behaviour).

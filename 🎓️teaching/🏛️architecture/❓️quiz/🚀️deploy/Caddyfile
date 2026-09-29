@@ -1,14 +1,16 @@
-# 🔒️ quizze.architektur-und-technologie.de — Caddy on the host terminates TLS (certificates are obtained and renewed
-# automatically once the DNS records point at this host and ports 80 and 443 are reachable) and forwards to the proctor
-# published on loopback by compose.yaml. Caddy sets X-Forwarded-Proto itself and replaces any value a client sent, which is
-# the statement PROCTOR_TRUSTED_FORWARDING=proxy relies on; the event-stream WebSockets are proxied without extra settings.
+# 🔒️ The proctor host of the architecture quiz (`🔣️.json`), served by the Caddy service of compose.yaml: Caddy obtains and
+# renews the certificate itself once DNS points at the host and ports 80/443 reach it, redirects HTTP to HTTPS and forwards
+# to the proctor on the compose network. It sets X-Forwarded-Proto itself and replaces any value a client sent, which is
+# the statement PROCTOR_TRUSTED_FORWARDING=proxy relies on. CORS belongs to the proctor alone (a second source would
+# duplicate Vary and Access-Control-Allow-Origin); WebSocket upgrades (the presence route) pass through reverse_proxy as
+# they are, Origin included. PROCTOR_HOST=localhost switches to Caddy's internal CA for a local check.
 
-quizze.architektur-und-technologie.de {
+{$PROCTOR_HOST:proctor.quizzes.architektur-und-technologie.de} {
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "no-referrer"
 	}
-	reverse_proxy 127.0.0.1:8791
+	reverse_proxy proctor:8791
 }

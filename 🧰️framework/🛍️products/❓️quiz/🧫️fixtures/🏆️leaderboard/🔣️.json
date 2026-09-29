@@ -61,6 +61,7 @@
     {
       "schema": "semio.quiz/v1",
       "id": "warm-up",
+      "emoji": "🔥",
       "title": {
         "en": "Warm-up",
         "de": "Aufwärmen"
@@ -153,6 +154,7 @@
     {
       "schema": "semio.quiz/v1",
       "id": "cool-down",
+      "emoji": "🧊",
       "title": {
         "en": "Cool-down",
         "de": "Abkühlen"
@@ -314,6 +316,7 @@
         {
           "schema": "semio.quiz/v1",
           "id": "warm-up",
+          "emoji": "🔥",
           "title": {
             "en": "Warm-up",
             "de": "Aufwärmen"
@@ -406,6 +409,7 @@
         {
           "schema": "semio.quiz/v1",
           "id": "cool-down",
+          "emoji": "🧊",
           "title": {
             "en": "Cool-down",
             "de": "Abkühlen"
@@ -524,6 +528,7 @@
         "quizzes": [
           {
             "id": "warm-up",
+            "emoji": "🔥",
             "title": {
               "en": "Warm-up",
               "de": "Aufwärmen"
@@ -553,6 +558,7 @@
           },
           {
             "id": "cool-down",
+            "emoji": "🧊",
             "title": {
               "en": "Cool-down",
               "de": "Abkühlen"
@@ -736,6 +742,7 @@
         {
           "schema": "semio.quiz/v1",
           "id": "energy-basics",
+          "emoji": "⚡",
           "title": {
             "en": "Energy basics",
             "de": "Energie-Grundlagen"
@@ -1183,6 +1190,7 @@
         {
           "schema": "semio.quiz/v1",
           "id": "cooling-basics",
+          "emoji": "❄️",
           "title": {
             "en": "Cooling basics",
             "de": "Kühlen-Grundlagen"
@@ -1330,6 +1338,7 @@
         "quizzes": [
           {
             "id": "energy-basics",
+            "emoji": "⚡",
             "title": {
               "en": "Energy basics",
               "de": "Energie-Grundlagen"
@@ -1375,6 +1384,7 @@
           },
           {
             "id": "cooling-basics",
+            "emoji": "❄️",
             "title": {
               "en": "Cooling basics",
               "de": "Kühlen-Grundlagen"

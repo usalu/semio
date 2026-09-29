@@ -4,6 +4,7 @@
     "tiny/❓️quiz/🔣️.json": {
       "schema": "semio.quiz/v1",
       "id": "tiny",
+      "emoji": "🐜",
       "title": {
         "en": "Tiny",
         "de": "Winzig"
@@ -70,6 +71,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -166,6 +168,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny"
         },
@@ -231,6 +234,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -297,6 +301,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -363,6 +368,207 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "Tiny Quiz",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-emoji",
+      "definition": "Quiz",
+      "violates": "required",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-emoji",
+      "definition": "Quiz",
+      "violates": "minLength",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "overlong-emoji",
+      "definition": "Quiz",
+      "violates": "maxLength",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -429,6 +635,7 @@
       "document": {
         "schema": "semio.quiz/v2",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -495,6 +702,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -513,6 +721,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -580,6 +789,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -646,6 +856,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -696,6 +907,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -763,6 +975,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -829,6 +1042,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"
@@ -1053,6 +1267,7 @@
       "document": {
         "schema": "semio.quiz/v1",
         "id": "tiny",
+        "emoji": "🐜",
         "title": {
           "en": "Tiny",
           "de": "Winzig"

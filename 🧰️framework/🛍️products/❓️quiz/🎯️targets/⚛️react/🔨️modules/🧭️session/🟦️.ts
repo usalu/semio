@@ -18,6 +18,7 @@ import type {
   Answer,
   BadgeAwardedEvent,
   CatalogView,
+  CrowdView,
   Event,
   Id,
   Identity,
@@ -38,9 +39,13 @@ import { Outbox, type OutboxActivity } from "../📮️outbox/🟦️.ts";
 import { ProctorUnavailable, RETRY_TIMING, isNotFound, newId, retryTransient, type CommandVerdict, type ProctorClient, type ProctorReachability, type RetryTiming } from "../🛂️proctor/🟦️.ts";
 
 //#region 🧭️State
-/** 🪧️ The screen the learner is on (ephemeral local-only). */
-export type QuizStep =
-  { readonly screen: "introduction" } | { readonly screen: "identity" } | { readonly screen: "home" } | { readonly screen: "run"; readonly run: Id } | { readonly screen: "results"; readonly run: Id } | { readonly screen: "leaderboard" };
+/** 📄️ The pages of home besides the quizzes' own pages (a quiz's page is its id): each is a card of the overview and
+ * the page behind it, addressed by hash (`#board`). */
+export const HOME_PAGES = { learner: "learner", introduction: "intro", leaderboard: "board", badges: "badges", preferences: "prefs" } as const;
+
+/** 🪧️ The screen the learner is on (ephemeral local-only); on home, `page` is the page opened over the overview — one
+ * of {@link HOME_PAGES} or a quiz id. */
+export type QuizStep = { readonly screen: "introduction" } | { readonly screen: "identity" } | { readonly screen: "home"; readonly page?: string } | { readonly screen: "run"; readonly run: Id } | { readonly screen: "results"; readonly run: Id };
 
 /** 🧑‍🎓️ The learner this device acts as; the identity is known once registered here or loaded from the proctor. */
 export interface QuizLearner {
@@ -61,6 +66,7 @@ export interface QuizState {
   readonly runs: Readonly<Record<Id, RunView>>;
   readonly awards: Readonly<Record<Id, readonly Slug[]>>;
   readonly leaderboard?: { readonly board: Leaderboard; readonly at: number };
+  readonly crowds: Readonly<Record<Slug, CrowdView>>;
   readonly notice?: QuizNotice;
 }
 
@@ -77,13 +83,14 @@ export type QuizClientEvent =
   | { readonly type: "run-submitted"; readonly run: Id; readonly result: RunResult; readonly badges: readonly Slug[]; readonly at: number }
   | { readonly type: "run-voided"; readonly run: Id }
   | { readonly type: "leaderboard-loaded"; readonly leaderboard: Leaderboard; readonly at: number }
+  | { readonly type: "crowd-loaded"; readonly crowd: CrowdView }
   | { readonly type: "notice-raised"; readonly notice: QuizNotice }
   | { readonly type: "notice-dismissed" };
 
 /** 🌱️ The state a device starts with, from its persisted local-only slices. */
 export function initialQuizState(persisted: Pick<QuizState, "introduced" | "learner" | "catalog" | "learnerView" | "runs">): QuizState {
   const step: QuizStep = !persisted.introduced ? { screen: "introduction" } : persisted.learner === undefined ? { screen: "identity" } : { screen: "home" };
-  return { ...persisted, step, awards: {} };
+  return { ...persisted, step, awards: {}, crowds: {} };
 }
 
 /** 🔒️ A cached open run the learner view lists as closed (e.g. submitted on another device): closed here too; its
@@ -141,6 +148,8 @@ export function evolveQuizState(state: QuizState, event: QuizClientEvent): QuizS
     }
     case "leaderboard-loaded":
       return { ...state, leaderboard: { board: event.leaderboard, at: event.at } };
+    case "crowd-loaded":
+      return { ...state, crowds: { ...state.crowds, [event.crowd.quiz]: event.crowd } };
     case "notice-raised":
       return { ...state, notice: event.notice };
     case "notice-dismissed":
@@ -319,6 +328,15 @@ export class QuizSession {
     }
   });
 
+  /** 👥️ Asks for the submitted crowd of `quiz` once; a failure keeps the last known crowd. */
+  async refreshCrowd(quiz: Slug): Promise<void> {
+    try {
+      this.dispatch({ type: "crowd-loaded", crowd: await this.proctor.crowd(quiz, this.state.learner?.id, this.lifetime.signal) });
+    } catch {
+      return;
+    }
+  }
+
   /** 🏆️ Asks for the leaderboard once; polling repeats it, so a failure only keeps the last known standings. */
   readonly refreshLeaderboard = latestWins(async (): Promise<void> => {
     try {
@@ -408,9 +426,12 @@ export class QuizSession {
   /** 🪧️ Opens a screen and refreshes what it shows from the proctor; a cached run shows at once, also offline. */
   open(step: QuizStep): void {
     this.dispatch({ type: "step-opened", step });
-    if (step.screen === "home") void this.refreshLearner();
-    if (step.screen === "leaderboard") void this.refreshLeaderboard();
-    if (step.screen === "run" || step.screen === "results") void this.loadRun(step.run);
+    if (step.screen === "home" && (step.page === undefined || step.page === HOME_PAGES.learner || step.page === HOME_PAGES.badges)) void this.refreshLearner();
+    if (step.screen === "home" && step.page === HOME_PAGES.leaderboard) void this.refreshLeaderboard();
+    if (step.screen === "run" || step.screen === "results")
+      void this.loadRun(step.run).then((view) => {
+        if (view !== undefined) void this.refreshCrowd(view.quiz);
+      });
   }
 
   /** 🙈️ Dismisses the current notice. */
@@ -517,6 +538,8 @@ export class QuizSession {
       this.dispatch({ type: "step-opened", step: { screen: "results", run } });
     }
     void this.refreshLearner();
+    const quiz = this.state.runs[run]?.quiz;
+    if (quiz !== undefined) void this.refreshCrowd(quiz);
     return undefined;
   }
 

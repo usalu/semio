@@ -2570,6 +2570,17 @@
       }
     },
     {
+      "name": "🚚️publish🎓️teaching🏛️architecture❓️quiz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:publish",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.15
+      }
+    },
+    {
       "name": "📦️build🎓️teaching🛂️proctor",
       "type": "node-terminal",
       "request": "launch",
@@ -2589,6 +2600,17 @@
       "presentation": {
         "group": "4_build",
         "order": 11.3
+      }
+    },
+    {
+      "name": "🚚️publish🎓️teaching🏛️architecture❓️quiz🐳️docker-image",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:docker-image-publish",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 11.35
       }
     },
     {
@@ -2622,6 +2644,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 11.2
+      }
+    },
+    {
+      "name": "⚖️gate🎓️teaching🏛️architecture❓️quiz🐳️docker-stack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @teaching/architecture-quiz:docker-stack-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.25
       }
     },
     {

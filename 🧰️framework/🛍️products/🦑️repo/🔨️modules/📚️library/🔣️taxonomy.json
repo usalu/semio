@@ -10392,6 +10392,9 @@
         "🪜️Stepper",
         "🪟️Window",
         "🔲️WindowSilhouette",
+        "🗂️WindowChrome",
+        "🃏️OverviewCard",
+        "🥞️LayeredOverview",
         "🪵️Log",
         "🌳️Tree",
         "📊️ObservabilityPage",
@@ -10618,6 +10621,7 @@
       ],
       "memberNames": [
         "🏢️nakagin-ground-floor",
+        "🥞️layered-overview",
         "🔄️replace-points",
         "➕️insert-point",
         "➖️remove-point",
@@ -10895,7 +10899,13 @@
         "🏠️homes",
         "📚️catalog",
         "📐️quantity-formatting",
-        "🕷️radar-geometry"
+        "🕷️radar-geometry",
+        "🏠️home-grid",
+        "👥️shared-presence",
+        "🔌️wire",
+        "📡️presence-client",
+        "💭️crowd-client",
+        "📊️crowd-view"
       ],
       "source": "registry"
     },
@@ -12067,6 +12077,10 @@
         "🏪️store",
         "🏷️class-name-composition",
         "🧬️style-variants",
+        "👂️dom-event-binding",
+        "👥️presence-presentation",
+        "👪️crowd",
+        "🥞️layered-overview-geometry",
         "💡️inference",
         "💡️inference-measures",
         "💭️mindmap",
@@ -12156,6 +12170,10 @@
         "🕸️radar",
         "🗂️classification",
         "🤏️drag",
+        "🪟️chrome",
+        "📖️quiz-page",
+        "🗳️crowd",
+        "📇️profile",
         "🧩️task",
         "🧭️session",
         "🛂️proctor",
@@ -12348,6 +12366,7 @@
       ],
       "memberNames": [
         "🌉️create-edge",
+        "🥞️layered-overview",
         "👉️edit-rhs",
         "👈️edit-lhs",
         "🔄️replace-points",
@@ -15535,7 +15554,17 @@
         "🕷️radar-geometry",
         "🗃️shared-vectors",
         "🗣️translation-completeness",
-        "🚶️learner-journey"
+        "🚶️learner-journey",
+        "🏠️home-grid",
+        "👥️shared-presence",
+        "🫂️presence-roster",
+        "🔒️closed-ports",
+        "🔬️wire",
+        "🧩️instance",
+        "📡️presence-client",
+        "💭️crowd-client",
+        "📊️crowd-view",
+        "🗳️crowd-answers"
       ],
       "source": "registry"
     },
@@ -15760,7 +15789,8 @@
       "memberNames": [
         "🎠️runtime",
         "🖌️render",
-        "🛠️build-tooling"
+        "🛠️build-tooling",
+        "🌓️appearance"
       ],
       "source": "registry"
     },

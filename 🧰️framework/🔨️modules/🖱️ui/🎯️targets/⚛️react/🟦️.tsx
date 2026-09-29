@@ -804,8 +804,8 @@ export {
   interactiveActiveFillClass,
   interactiveActiveBorderClass,
 };
-import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
-export { formControlFocusBorderClass, uiFormControlBrowserDefaultProps };
+import { applyUiFormControlBrowserDefaults, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
+export { applyUiFormControlBrowserDefaults, formControlFocusBorderClass, uiFormControlBrowserDefaultProps };
 import { borderNormalBottomClass, borderNormalClass, borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 export { borderNormalBottomClass, borderNormalClass, borderElementClass };
 import { veilClass, glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
@@ -1208,6 +1208,7 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
 
 // #region 🔖️Icon
 import {
+  setThemedIconCatalog,
   resolveIconSizePx,
   decodeIcon,
   encodeIcon,
@@ -1336,8 +1337,12 @@ import {
   type IconSource,
   type ControlIcon,
   type IconProps,
+  type ThemedIconCatalog,
 } from "../../🧱️elements/🔣️Icons/🟦️.tsx";
+setThemedIconCatalog({ has: isMetabolismIconName, svg: resolveMetabolismIconSvgFromTheme });
 export {
+  setThemedIconCatalog,
+  type ThemedIconCatalog,
   resolveIconSizePx,
   decodeIcon,
   encodeIcon,
@@ -1664,8 +1669,8 @@ export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SH
 // #endregion ⌨️UiKeybindings
 
 // #region 🌈️SurfaceChrome
-/** @emoji 🌈️ Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and driver — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
-export type ElementsSurfaceAppearance = "system" | "light" | "dark";
+import { UI_CHROME_APPEARANCE_STORAGE_KEY, UI_CHROME_LAYOUT_STORAGE_KEY, applyChromeRevealAtPoint, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, installElementsSurfaceBrowserDefaultSuppression, isElementsSurfaceChromeDarkApplied, readStoredUiChromeAppearance, readStoredUiChromeLayout, resetElementsSurfaceChromeForTests, resolveElementsSurfaceChromeDark, resolveElementsSurfaceChromeRoot, useCanvasAppearanceSync, useElementsSurfaceChrome, useMediaQuery, writeStoredUiChromeAppearance, writeStoredUiChromeLayout, type ElementsSurfaceAppearance, type ElementsSurfaceBrowserDefaults, type ElementsSurfaceChromeInput, type UiChromeLayout } from "./🌓️appearance/🟦️.ts";
+export { UI_CHROME_APPEARANCE_STORAGE_KEY, UI_CHROME_LAYOUT_STORAGE_KEY, applyChromeRevealAtPoint, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, installElementsSurfaceBrowserDefaultSuppression, isElementsSurfaceChromeDarkApplied, readStoredUiChromeAppearance, readStoredUiChromeLayout, resetElementsSurfaceChromeForTests, resolveElementsSurfaceChromeDark, resolveElementsSurfaceChromeRoot, useCanvasAppearanceSync, useElementsSurfaceChrome, useMediaQuery, writeStoredUiChromeAppearance, writeStoredUiChromeLayout, type ElementsSurfaceAppearance, type ElementsSurfaceBrowserDefaults, type ElementsSurfaceChromeInput, type UiChromeLayout };
 
 // 📱️ The device vocabulary and the breakpoint policy are NOT declared here: `📱️device/🟦️.ts` owns them
 // once for both renderer targets (the wgpu dock compares the same thresholds against its own `screen_w`),
@@ -1684,409 +1689,9 @@ export {
 } from "../../📱️device/🟦️.ts";
 export type { ElementsSurfaceDevice } from "../../📱️device/🟦️.ts";
 
-export interface ElementsSurfaceChromeInput {
-  appearance: ElementsSurfaceAppearance;
-  device: ElementsSurfaceDevice;
-  driver: UiDriver;
-}
-
-/** @emoji 🐚️ Resolves an explicit surface-chrome root (a shell's own root — e.g. its `ShellScope.rootRef`)
- * or falls back to `document.documentElement` for the page-owning case; every entry point below takes
- * this same optional-root shape so a single-shell page's existing call sites (which pass none) keep
- * their exact current behavior unchanged. `undefined` in a non-browser environment (SSR/vitest without
- * a document) rather than throwing. */
-function resolveElementsSurfaceChromeRoot(root?: HTMLElement): HTMLElement | undefined {
-  return root ?? (typeof document !== "undefined" ? document.documentElement : undefined);
-}
-
-/** @emoji 🐚️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
- * just `documentElement`, so an embedded shell's own `.semio-scope` div is visually correct even before
- * any descendant renders. When the root IS `documentElement` (the page-owning case), also mirrors onto
- * `document.body` exactly as before this was made root-scoped — unchanged behavior for that case. */
-function applyElementsSurfaceChromeBaseColors(root: HTMLElement, scheme: "light" | "dark"): void {
-  root.style.backgroundColor = "var(--base)";
-  root.style.color = "var(--foreground)";
-  root.style.colorScheme = scheme;
-  if (typeof document !== "undefined" && root === document.documentElement && document.body) {
-    document.body.style.backgroundColor = "var(--base)";
-    document.body.style.color = "var(--foreground)";
-    document.body.style.colorScheme = scheme;
-  }
-}
-
-function clearElementsSurfaceChromeBaseColors(root: HTMLElement): void {
-  root.style.backgroundColor = "";
-  root.style.color = "";
-  root.style.colorScheme = "";
-  if (typeof document !== "undefined" && root === document.documentElement && document.body) {
-    document.body.style.backgroundColor = "";
-    document.body.style.color = "";
-    document.body.style.colorScheme = "";
-  }
-}
-
-/** @emoji 🌓️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
-export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppearance): boolean {
-  if (appearance === "dark") return true;
-  if (appearance === "light") return false;
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
-/** @emoji 🌓️ True when a surface-chrome root (`document.documentElement` by default) currently carries
- * the dark surface chrome class. */
-export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): boolean {
-  const root = resolveElementsSurfaceChromeRoot(rootOverride);
-  return root?.classList.contains("dark") ?? false;
-}
-
-type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
-
-const elementsSurfaceChromeLeaseSeq = ephemeralBox("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeaseSeq", 0);
-/** @emoji 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
- * meant a second mounted shell's appearance/driver/device lease silently won (last-wins) over the
- * first's for the WHOLE page instead of just its own subtree. */
-const elementsSurfaceChromeLeasesByRoot = ephemeralMap<HTMLElement, ElementsSurfaceChromeLease[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeasesByRoot");
-const elementsSurfaceChromeDeferredClearFrames = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeDeferredClearFrames");
-const elementsSurfaceChromeDomBindings = ephemeralBox<ReturnType<typeof createDOMEventBinding> | null>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeDomBindings", null);
-const elementsSurfaceChromeSystemListenersInstalled = ephemeralBox("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeSystemListenersInstalled", false);
-
-function activeElementsSurfaceChromeInput(root: HTMLElement): ElementsSurfaceChromeInput | undefined {
-  const leases = elementsSurfaceChromeLeasesByRoot.get(root);
-  return leases?.[leases.length - 1]?.input;
-}
-
-function syncElementsSurfaceChromeProviders(input: ElementsSurfaceChromeInput | undefined): void {
-  if (input) {
-    setUiDriverProvider(() => input.driver);
-    return;
-  }
-  setUiDriverProvider(() => readStoredUiDriver(createBrowserStoragePort()));
-}
-
-function applyElementsSurfaceChromeDriverDom(root: HTMLElement, driver: UiDriver): void {
-  root.dataset.uiDriver = driver.id;
-  root.dataset.uiLabels = driver.labels;
-  root.dataset.uiDrag = driver.drag;
-  root.dataset.uiChromeReveal = driver.chrome;
-  root.dataset.uiGumballReveal = driver.gumball;
-  root.dataset.uiTooltips = driver.tooltips;
-  syncUiChromeRevealController(root, driver.chrome);
-}
-
-function clearElementsSurfaceChromeDriverDom(root: HTMLElement): void {
-  delete root.dataset.uiDriver;
-  delete root.dataset.uiLabels;
-  delete root.dataset.uiDrag;
-  delete root.dataset.uiChromeReveal;
-  delete root.dataset.uiGumballReveal;
-  delete root.dataset.uiTooltips;
-  teardownUiChromeRevealController(root);
-}
-
-// #region 🫥️ChromeReveal
-/** @emoji 🫥️ Extra radius (px) around a reveal region's own rect that still counts as "inside" — makes the invisible-until-hovered bar reachable. */
-const CHROME_REVEAL_ACTIVATION_BAND_PX = 24;
-/** @emoji 🫥️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
-const CHROME_REVEAL_EDGE_BAND_PX = 8;
-
-/** @emoji 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
- * controller, which meant hovering ANY mounted shell revealed hover-reveal chrome for EVERY shell that
- * had opted into it (and a pointer-move over shell B's DOM would drive shell A's reveal state). */
-const chromeRevealBindingsByRoot = ephemeralMap<HTMLElement, ReturnType<typeof createDOMEventBinding>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealBindingsByRoot");
-const chromeRevealFrameByRoot = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealFrameByRoot");
-const chromeRevealLastPointByRoot = ephemeralMap<HTMLElement, { x: number; y: number }>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealLastPointByRoot");
-
-function chromeRevealStackAncestor(region: HTMLElement): HTMLElement | null {
-  return region.closest<HTMLElement>('[data-slot="window-chrome-stack"], [data-slot="mode-dock-stack"]');
-}
-
-function chromeRevealRegionRevealed(region: HTMLElement, x: number, y: number): boolean {
-  const rect = region.getBoundingClientRect();
-  if (x >= rect.left - CHROME_REVEAL_ACTIVATION_BAND_PX && x <= rect.right + CHROME_REVEAL_ACTIVATION_BAND_PX && y >= rect.top - CHROME_REVEAL_ACTIVATION_BAND_PX && y <= rect.bottom + CHROME_REVEAL_ACTIVATION_BAND_PX) {
-    return true;
-  }
-  const regionName = region.dataset.uiRevealRegion;
-  if (regionName === "navbar" && y <= CHROME_REVEAL_EDGE_BAND_PX) return true;
-  if (regionName === "footer" && typeof window !== "undefined" && y >= availableViewportHeightPx({ innerHeight: window.innerHeight, visualHeight: window.visualViewport?.height }) - CHROME_REVEAL_EDGE_BAND_PX) return true;
-  if (regionName === "window-cap") {
-    const stack = chromeRevealStackAncestor(region);
-    if (stack) {
-      const stackRect = stack.getBoundingClientRect();
-      if (x >= stackRect.left && x <= stackRect.right && y >= stackRect.top && y <= stackRect.top + CHROME_REVEAL_EDGE_BAND_PX) return true;
-    }
-  }
-  return false;
-}
-
-export function applyChromeRevealAtPoint(root: HTMLElement, x: number, y: number): void {
-  root.querySelectorAll<HTMLElement>("[data-ui-reveal-region]").forEach((region) => {
-    if (chromeRevealRegionRevealed(region, x, y)) region.dataset.uiRevealed = "true";
-    else delete region.dataset.uiRevealed;
-  });
-}
-
-function scheduleChromeRevealUpdate(root: HTMLElement): void {
-  if (chromeRevealFrameByRoot.has(root) || typeof requestAnimationFrame === "undefined") return;
-  const frame = requestAnimationFrame(() => {
-    chromeRevealFrameByRoot.delete(root);
-    const point = chromeRevealLastPointByRoot.get(root);
-    if (point) applyChromeRevealAtPoint(root, point.x, point.y);
-  });
-  chromeRevealFrameByRoot.set(root, frame);
-}
-
-function ensureUiChromeRevealController(root: HTMLElement): void {
-  if (chromeRevealBindingsByRoot.has(root) || typeof window === "undefined") return;
-  const bindings = createDOMEventBinding();
-  bindings.listen(window, "pointermove", (event: PointerEvent) => {
-    // 🐚️ `pointermove` only ever bubbles to `window` (never scoped to a subtree), so this root only
-    // reacts to points actually over its own DOM — otherwise hovering shell B would reveal shell A's chrome.
-    if (!(event.target instanceof globalThis.Node) || !root.contains(event.target)) return;
-    chromeRevealLastPointByRoot.set(root, { x: event.clientX, y: event.clientY });
-    scheduleChromeRevealUpdate(root);
-  });
-  bindings.listen(root, "focusin", (event: FocusEvent) => {
-    const region = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-ui-reveal-region]");
-    if (region) region.dataset.uiRevealed = "true";
-  });
-  bindings.listen(root, "focusout", (event: FocusEvent) => {
-    const region = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-ui-reveal-region]");
-    const related = event.relatedTarget as globalThis.Node | null;
-    if (region && (!related || !region.contains(related))) delete region.dataset.uiRevealed;
-  });
-  chromeRevealBindingsByRoot.set(root, bindings);
-}
-
-function teardownUiChromeRevealController(root: HTMLElement): void {
-  chromeRevealBindingsByRoot.get(root)?.dispose();
-  chromeRevealBindingsByRoot.delete(root);
-  const frame = chromeRevealFrameByRoot.get(root);
-  if (frame !== undefined && typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(frame);
-  chromeRevealFrameByRoot.delete(root);
-  chromeRevealLastPointByRoot.delete(root);
-  root.querySelectorAll<HTMLElement>("[data-ui-reveal-region][data-ui-revealed]").forEach((region) => delete region.dataset.uiRevealed);
-}
-
-/** @emoji 🫥️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
-function syncUiChromeRevealController(root: HTMLElement, chrome: UiDriverReveal): void {
-  if (chrome === "hover") ensureUiChromeRevealController(root);
-  else teardownUiChromeRevealController(root);
-}
-// #endregion 🫥️ChromeReveal
-
-function clearElementsSurfaceChromeDom(root: HTMLElement): void {
-  clearStylingAppearanceRoot(root);
-  root.classList.remove("dark");
-  root.classList.remove("touch");
-  delete root.dataset.uiDevice;
-  clearElementsSurfaceChromeDriverDom(root);
-  delete root.dataset.uiAppearance;
-  clearElementsSurfaceChromeBaseColors(root);
-}
-
-function applyElementsSurfaceChromeAppearanceDom(root: HTMLElement, appearance: ElementsSurfaceAppearance): void {
-  const dark = resolveElementsSurfaceChromeDark(appearance);
-  root.classList.toggle("dark", dark);
-  root.dataset.uiAppearance = dark ? "dark" : "light";
-  applyElementsSurfaceChromeBaseColors(root, dark ? "dark" : "light");
-  setStylingAppearanceRoot(root);
-}
-
-/** @emoji 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
- * React/CSS load (play/static entries); does not register a surface-chrome lease. */
-export function bootstrapElementsSurfaceChromeDocument(appearance: ElementsSurfaceAppearance = "system", rootOverride?: HTMLElement): void {
-  const root = resolveElementsSurfaceChromeRoot(rootOverride);
-  if (!root) return;
-  cancelElementsSurfaceChromeDeferredClear(root);
-  applyElementsSurfaceChromeAppearanceDom(root, appearance);
-}
-
-function cancelElementsSurfaceChromeDeferredClear(root: HTMLElement): void {
-  const frame = elementsSurfaceChromeDeferredClearFrames.get(root);
-  if (frame === undefined || typeof cancelAnimationFrame === "undefined") {
-    elementsSurfaceChromeDeferredClearFrames.delete(root);
-    return;
-  }
-  cancelAnimationFrame(frame);
-  elementsSurfaceChromeDeferredClearFrames.delete(root);
-}
-
-function scheduleElementsSurfaceChromeDeferredClear(root: HTMLElement): void {
-  if (typeof requestAnimationFrame === "undefined") {
-    if (!elementsSurfaceChromeLeasesByRoot.has(root)) clearElementsSurfaceChromeDom(root);
-    return;
-  }
-  cancelElementsSurfaceChromeDeferredClear(root);
-  const frame = requestAnimationFrame(() => {
-    elementsSurfaceChromeDeferredClearFrames.delete(root);
-    if (!elementsSurfaceChromeLeasesByRoot.has(root)) clearElementsSurfaceChromeDom(root);
-  });
-  elementsSurfaceChromeDeferredClearFrames.set(root, frame);
-}
-
-function applyElementsSurfaceChromeDom(root: HTMLElement, input: ElementsSurfaceChromeInput): void {
-  cancelElementsSurfaceChromeDeferredClear(root);
-  applyElementsSurfaceChromeAppearanceDom(root, input.appearance);
-  root.dataset.uiDevice = input.device;
-  root.classList.toggle("touch", input.device !== "desktop");
-  applyElementsSurfaceChromeDriverDom(root, input.driver);
-}
-
-function syncElementsSurfaceChromeDomFromLeaseStack(root: HTMLElement): void {
-  const input = activeElementsSurfaceChromeInput(root);
-  if (!input) {
-    clearElementsSurfaceChromeDom(root);
-    return;
-  }
-  applyElementsSurfaceChromeDom(root, input);
-}
-
-/** @emoji 🐚️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
- * lease when the OS preference flips — the media query itself is genuinely page-global (there is only
- * one system preference), but each root's lease stack (and therefore whether it even has a "system"
- * lease) stays independent. */
-function ensureElementsSurfaceChromeSystemListeners(): void {
-  if (elementsSurfaceChromeSystemListenersInstalled.current || typeof window === "undefined" || typeof document === "undefined") {
-    return;
-  }
-  elementsSurfaceChromeSystemListenersInstalled.current = true;
-  const bindings = createDOMEventBinding();
-  if (typeof window.matchMedia !== "function") {
-    installElementsSurfaceBrowserDefaultSuppression(bindings);
-    elementsSurfaceChromeDomBindings.current = bindings;
-    return;
-  }
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  const onSystemAppearanceChange = (): void => {
-    for (const [root, leases] of elementsSurfaceChromeLeasesByRoot) {
-      const input = leases[leases.length - 1]?.input;
-      if (!input || input.appearance !== "system") continue;
-      applyElementsSurfaceChromeDom(root, input);
-    }
-  };
-  bindings.listen(mq, "change", onSystemAppearanceChange);
-  installElementsSurfaceBrowserDefaultSuppression(bindings);
-  elementsSurfaceChromeDomBindings.current = bindings;
-}
-
-/**
- * @emoji 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
- * DOM state, browser default input, and the active driver. `rootOverride` scopes this lease to one
- * shell's own root (e.g. its `ShellScope.rootRef`) — omitted, it falls back to `document.documentElement`
- * (the single-shell-per-page case, unchanged from before this was made root-scoped).
- */
-export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput, rootOverride?: HTMLElement): () => void {
-  const root = resolveElementsSurfaceChromeRoot(rootOverride);
-  if (!root) return () => {};
-  const lease: ElementsSurfaceChromeLease = { id: ++elementsSurfaceChromeLeaseSeq.current, input };
-  const leases = elementsSurfaceChromeLeasesByRoot.get(root) ?? [];
-  leases.push(lease);
-  elementsSurfaceChromeLeasesByRoot.set(root, leases);
-  ensureElementsSurfaceChromeSystemListeners();
-  syncElementsSurfaceChromeProviders(input);
-  syncElementsSurfaceChromeDomFromLeaseStack(root);
-  return () => {
-    const current = elementsSurfaceChromeLeasesByRoot.get(root);
-    const index = current?.findIndex((entry) => entry.id === lease.id) ?? -1;
-    if (current && index >= 0) current.splice(index, 1);
-    if (!current || current.length === 0) {
-      elementsSurfaceChromeLeasesByRoot.delete(root);
-      syncElementsSurfaceChromeProviders(undefined);
-      scheduleElementsSurfaceChromeDeferredClear(root);
-      return;
-    }
-    syncElementsSurfaceChromeProviders(activeElementsSurfaceChromeInput(root));
-    syncElementsSurfaceChromeDomFromLeaseStack(root);
-  };
-}
-
-/**
- * @emoji 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
- * attrs), base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
- * `root` scopes this to one shell — omitted, targets `document.documentElement` as before. Callers reading
- * this from a ref (e.g. `ShellScope.rootRef.current`) must re-render once that ref attaches (`FrameworkOsShell`
- * bumps state in its callback ref for exactly this) — a ref OBJECT in this hook's own deps would never
- * re-trigger the effect once populated, since the object's identity never changes.
- */
-export function useElementsSurfaceChrome({ appearance, device, driver }: ElementsSurfaceChromeInput, root?: HTMLElement): { mobile: boolean } {
-  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ appearance, device, driver }, root), [appearance, device, driver, root]);
-
-  return { mobile: device === "mobile" };
-}
-
-/**
- * @emoji 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
- * they change. Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect
- * every render (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render →
- * Maximum update depth). `root` scopes the observed element — omitted, observes `document.documentElement`;
- * see {@link useElementsSurfaceChrome}'s doc for why this takes a resolved element, not a ref.
- */
-export function useCanvasAppearanceSync(sync: () => void, enabled = true, root?: HTMLElement): void {
-  const syncRef = reactHostPort.useRef(sync);
-  syncRef.current = sync;
-  const [appearanceRoot, setAppearanceRoot] = reactHostPort.useState<HTMLElement | null>(() => root ?? stylingAppearanceRootElement());
-  reactHostPort.useEffect(() => {
-    const read = () => setAppearanceRoot(root ?? stylingAppearanceRootElement());
-    read();
-    return subscribeStylingAppearanceRoot(read);
-  }, [root]);
-  reactHostPort.useEffect(() => {
-    const observedRoot = appearanceRoot ?? resolveElementsSurfaceChromeRoot(root);
-    if (!enabled || !observedRoot || typeof MutationObserver === "undefined") return;
-    const run = () => syncRef.current();
-    run();
-    const observer = new MutationObserver(run);
-    observer.observe(observedRoot, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance", "data-ui-theme"] });
-    return () => observer.disconnect();
-  }, [appearanceRoot, enabled, root]);
-}
-
-/** @emoji 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
- * ever exercise the default `document.documentElement` root, but this clears all of them defensively). */
-export function resetElementsSurfaceChromeForTests(): void {
-  for (const root of elementsSurfaceChromeDeferredClearFrames.keys()) cancelElementsSurfaceChromeDeferredClear(root);
-  for (const root of elementsSurfaceChromeLeasesByRoot.keys()) clearElementsSurfaceChromeDom(root);
-  elementsSurfaceChromeLeasesByRoot.clear();
-  syncElementsSurfaceChromeProviders(undefined);
-  const root = resolveElementsSurfaceChromeRoot();
-  if (root) clearElementsSurfaceChromeDom(root);
-}
 
 // #region 🎛️UiChromePrefs
 
-/** @emoji 🌓️ Storage key for surface appearance (system/light/dark). */
-export const UI_CHROME_APPEARANCE_STORAGE_KEY = "ui.chrome.appearance";
-
-/** @emoji 🌓️ Reads persisted surface appearance from the given shell's storage — a required param
- * (not a `localStorage` default) since two shells on one page must never read/write each other's
- * appearance through a shared key. */
-export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurfaceAppearance {
-  const raw = storage.get(UI_CHROME_APPEARANCE_STORAGE_KEY);
-  if (raw === "light" || raw === "dark" || raw === "system") return raw;
-  return "system";
-}
-
-/** @emoji 🌓️ Persists surface appearance to the given shell's storage. */
-export function writeStoredUiChromeAppearance(storage: StoragePort, appearance: ElementsSurfaceAppearance): void {
-  storage.set(UI_CHROME_APPEARANCE_STORAGE_KEY, appearance);
-}
-
-/** @emoji 📐️ User-selectable layout device; mobile is automatic and excluded here. */
-export type UiChromeLayout = "desktop" | "tablet";
-
-/** @emoji 📐️ Storage key for the user-selected desktop/tablet layout. */
-export const UI_CHROME_LAYOUT_STORAGE_KEY = "ui.chrome.layout";
-
-/** @emoji 📐️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
-export function readStoredUiChromeLayout(storage: StoragePort): UiChromeLayout {
-  return storage.get(UI_CHROME_LAYOUT_STORAGE_KEY) === "tablet" ? "tablet" : "desktop";
-}
-
-/** @emoji 📐️ Persists the layout preference to the given shell's storage. */
-export function writeStoredUiChromeLayout(storage: StoragePort, layout: UiChromeLayout): void {
-  storage.set(UI_CHROME_LAYOUT_STORAGE_KEY, layout);
-}
 
 /** @emoji 🗣️ Id of the always-available default terminology (no term substitutions). */
 export const UI_TERMINOLOGY_NATIVE = "native";
@@ -2463,38 +2068,6 @@ export function usePanelChromeHotkeys(options: { readonly onToggle?: (anchor: An
   useHotkeys(PANEL_TOGGLE_HOTKEYS["left-middle"], () => onToggle?.("left-middle"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
 }
 
-/**
- * Hook returning whether a CSS media query currently matches.
- **/
-export function useMediaQuery(query: string, defaultValue = false): boolean {
-  const getMatches = reactHostPort.useCallback(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return defaultValue;
-    }
-
-    return window.matchMedia(query).matches;
-  }, [defaultValue, query]);
-
-  const [matches, setMatches] = reactHostPort.useState<boolean>(getMatches);
-
-  reactHostPort.useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return undefined;
-    }
-
-    const mediaQueryList = window.matchMedia(query);
-    const bindings = createDOMEventBinding();
-    const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches);
-    setMatches(mediaQueryList.matches);
-    bindings.listen(mediaQueryList, "change", handleChange);
-
-    return () => {
-      bindings.dispose();
-    };
-  }, [query]);
-
-  return matches;
-}
 
 // #region 📱️UiMobile Context
 const UiMobileContext = reactHostPort.createContext<boolean | undefined>(undefined);
@@ -5600,201 +5173,6 @@ export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active:
   }
 }
 
-/** @emoji 🪟️ All border effects the silhouette SVG can paint. */
-export const WINDOW_SILHOUETTE_BORDER_KINDS = ["celebrated", "introduced", "loading", "waiting", "active", "normal"] as const;
-
-/** @emoji 🪟️ Which border effect the dock-stack silhouette overlay should paint. */
-export type WindowSilhouetteBorderKind = (typeof WINDOW_SILHOUETTE_BORDER_KINDS)[number];
-
-/** @emoji 🪟️ Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
- * `[data-slot="window"]`), not a nested utility/action/tree row inside the pane. Window silhouette pulse
- * and the stack SVG border must follow only these stamps — introducing `transform` must pulse the utility
- * toggle, not the enclosing Top/Perspective silhouette. */
-export function isWindowChromeIntroducedTarget(el: Element): boolean {
-  if (el.getAttribute("data-slot") === "window") return true;
-  const ids = [el.getAttribute("id") ?? "", ...(el.getAttribute("data-element-alias") ?? "").split(/\s+/)].filter(Boolean);
-  for (const id of ids) {
-    if (!id.startsWith("framework.window.")) continue;
-    const rest = id.slice("framework.window.".length);
-    if (!rest.includes(".")) return true;
-  }
-  return false;
-}
-
-/** @emoji 🪟️ Resolves silhouette border kind from the active window + stack active flag.
- * Introduction stamps `data-introduced` on the window kind id target — often the inner scroll surface
- * (`framework.window.{kind}`), not `[data-slot="window"]` itself — so window-chrome descendants count.
- * Nested introduce targets (utilities, actions) must not promote the window silhouette. `celebrated`
- * (from `celebrateElements()`) is checked FIRST: it follows an introduced stamp being cleared on the
- * same target, and completion feedback must win during any overlap. */
-export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stackActive = false): WindowSilhouetteBorderKind {
-  if (windowEl?.getAttribute("data-celebrated") === "true") return "celebrated";
-  if (windowEl) {
-    for (const el of windowEl.querySelectorAll('[data-celebrated="true"]')) {
-      if (isWindowChromeIntroducedTarget(el)) return "celebrated";
-    }
-  }
-  if (windowEl?.getAttribute("data-introduced") === "true") return "introduced";
-  if (windowEl) {
-    for (const el of windowEl.querySelectorAll('[data-introduced="true"]')) {
-      if (isWindowChromeIntroducedTarget(el)) return "introduced";
-    }
-  }
-  const className = windowEl && typeof windowEl.className === "string" ? windowEl.className : "";
-  if (/(?:^|\s)border-loading(?:-active|-element)?(?:\s|$)/.test(className)) return "loading";
-  if (/(?:^|\s)border-waiting(?:-active|-element)?(?:\s|$)/.test(className)) return "waiting";
-  return stackActive ? "active" : "normal";
-}
-
-/** @emoji 🪟️ Maps a silhouette border kind to stroke classes and color tokens. */
-export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): { readonly className: string; readonly stroke: string } {
-  switch (kind) {
-    case "celebrated":
-      return { className: "window-silhouette-border window-silhouette-border-celebrated-mask", stroke: "white" };
-    case "introduced":
-      return { className: "window-silhouette-border window-silhouette-border-introduced", stroke: "var(--introduced-border-color, var(--color-secondary))" };
-    case "loading":
-      return { className: "window-silhouette-border window-silhouette-border-loading", stroke: "var(--loading-border-color, var(--border-normal-color))" };
-    case "waiting":
-      return { className: "window-silhouette-border window-silhouette-border-waiting", stroke: "var(--waiting-border-color, var(--border-normal-color))" };
-    case "active":
-      return { className: "window-silhouette-border window-silhouette-border-active", stroke: "var(--active-base)" };
-    case "normal":
-      return { className: "window-silhouette-border window-silhouette-border-normal", stroke: "var(--border-normal-color)" };
-  }
-}
-
-const WINDOW_CHROME_GAP_SELECTOR = '[data-slot="window-chrome-gap"], [data-slot="mode-dock-tab-gap"]';
-const WINDOW_CHROME_CAP_SELECTOR = '[data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"]';
-
-/** @emoji 🪟️ Whether a stack-local rect sits on the given silhouette dock edge. */
-function windowSilhouetteRectOnDock(stackRect: DOMRect, rect: DOMRect, dock: "top" | "bottom"): boolean {
-  return dock === "top" ? rect.top - stackRect.top <= WINDOW_SILHOUETTE_CHIP_EPSILON : stackRect.bottom - rect.bottom <= WINDOW_SILHOUETTE_CHIP_EPSILON;
-}
-
-/** @emoji 🪟️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
-function windowSilhouetteOwnsElement(stack: HTMLElement, element: Element): boolean {
-  const owner = element.closest("[data-window-silhouette]");
-  return owner === null || owner === stack;
-}
-
-/** @emoji 🖱️ Reads fused submenu wing rects for a context menu stack. */
-function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: WindowSilhouetteMetrics): WindowSilhouetteMetrics {
-  const fusionBody = stack.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
-  if (!fusionBody) return base;
-  const primary = fusionBody.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
-  if (!primary) return base;
-  const wings = [...fusionBody.querySelectorAll<HTMLElement>('[data-slot="context-menu-submenu"]')];
-  if (wings.length === 0) return base;
-  const toLocal = (rect: DOMRect) => ({
-    left: rect.left - stackRect.left,
-    top: rect.top - stackRect.top,
-    right: rect.right - stackRect.left,
-    bottom: rect.bottom - stackRect.top,
-  });
-  const fusion = { primary: toLocal(primary.getBoundingClientRect()), wings: wings.map((wing) => toLocal(wing.getBoundingClientRect())) };
-  let width = base.width;
-  let height = base.height;
-  for (const wing of fusion.wings) {
-    width = Math.max(width, wing.right);
-    height = Math.max(height, wing.bottom);
-  }
-  return { ...base, width, height, contextMenuFusion: fusion };
-}
-
-/** @emoji 🪟️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
-export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
-  const stackRect = stack.getBoundingClientRect();
-  const width = stackRect.width;
-  const height = stackRect.height;
-  if (width <= 0 || height <= 0) return null;
-  const measureEdge = (dock: "top" | "bottom"): WindowSilhouetteEdge => {
-    const chips: WindowSilhouetteChip[] = [];
-    let depth = 0;
-    for (const chip of stack.querySelectorAll<HTMLElement>(`[data-window-silhouette-chip][data-dock="${dock}"]`)) {
-      if (!windowSilhouetteOwnsElement(stack, chip)) continue;
-      const rect = chip.getBoundingClientRect();
-      if (rect.width <= WINDOW_SILHOUETTE_CHIP_EPSILON || rect.height <= WINDOW_SILHOUETTE_CHIP_EPSILON) continue;
-      chips.push({ left: rect.left - stackRect.left, right: rect.right - stackRect.left });
-      depth = Math.max(depth, rect.height);
-    }
-    for (const gap of stack.querySelectorAll<HTMLElement>(WINDOW_CHROME_GAP_SELECTOR)) {
-      if (!windowSilhouetteOwnsElement(stack, gap)) continue;
-      const gapRect = gap.getBoundingClientRect();
-      if (gapRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, gapRect, dock)) depth = Math.max(depth, gapRect.height);
-    }
-    for (const cap of stack.querySelectorAll<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR)) {
-      if (!windowSilhouetteOwnsElement(stack, cap)) continue;
-      const capRect = cap.getBoundingClientRect();
-      if (capRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, capRect, dock)) depth = Math.max(depth, capRect.height);
-    }
-    return { depth, chips: normalizeWindowSilhouetteChips(chips, 0, width) };
-  };
-  const base = { width, height, top: measureEdge("top"), bottom: measureEdge("bottom") };
-  return measureContextMenuFusion(stack, stackRect, base);
-}
-
-/** @emoji 📐️ Coalesced owned-chip measurement shared by silhouette content, glass, border, and hit clipping. */
-export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled = true): WindowSilhouetteGeometry {
-  const [geometry, setGeometry] = reactHostPort.useState<WindowSilhouetteGeometry>(() => createWindowSilhouetteGeometry(null));
-  reactHostPort.useLayoutEffect(() => {
-    if (!stack || !enabled) return;
-    let frame = 0;
-    const commit = () => {
-      frame = 0;
-      const next = createWindowSilhouetteGeometry(measureWindowSilhouetteMetrics(stack));
-      setGeometry((previous) =>
-        previous.state === next.state && previous.contentClipPath === next.contentClipPath && previous.borderPath === next.borderPath && previous.metrics.width === next.metrics.width && previous.metrics.height === next.metrics.height
-          ? previous
-          : next,
-      );
-    };
-    const schedule = () => {
-      if (frame) return;
-      if (typeof requestAnimationFrame === "function") frame = requestAnimationFrame(commit);
-      else commit();
-    };
-    const targetSelector = '[data-window-silhouette-chip], [data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"], [data-slot="context-menu-fusion-body"], [data-slot="context-menu-submenu"]';
-    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
-    const refreshResizeTargets = () => {
-      resizeObserver?.disconnect();
-      resizeObserver?.observe(stack);
-      for (const element of stack.querySelectorAll<HTMLElement>(targetSelector)) {
-        if (windowSilhouetteOwnsElement(stack, element)) resizeObserver?.observe(element);
-      }
-    };
-    const containsGeometryTarget = (node: globalThis.Node): boolean => node instanceof Element && (node.matches(targetSelector) || node.querySelector(targetSelector) !== null);
-    const mutationObserver =
-      typeof MutationObserver === "undefined"
-        ? null
-        : new MutationObserver((records) => {
-            const changed = records.some((record) =>
-              record.type === "attributes"
-                ? (record.target === stack && record.attributeName === "data-silhouette-remeasure") || (record.target instanceof Element && (record.target.matches(targetSelector) || record.target.closest(targetSelector) !== null))
-                : [...record.addedNodes, ...record.removedNodes].some(containsGeometryTarget),
-            );
-            if (!changed) return;
-            refreshResizeTargets();
-            schedule();
-          });
-    commit();
-    refreshResizeTargets();
-    mutationObserver?.observe(stack, { attributes: true, attributeFilter: ["data-dock", "data-silhouette-remeasure", "data-slot", "data-window-silhouette-chip"], childList: true, subtree: true });
-    return () => {
-      if (frame && typeof cancelAnimationFrame === "function") cancelAnimationFrame(frame);
-      resizeObserver?.disconnect();
-      mutationObserver?.disconnect();
-    };
-  }, [enabled, stack]);
-  return geometry;
-}
-
-/** @emoji 📏️ Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
-export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
-
-/** @emoji 🪟️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
-export const windowGapFrameClass = "border-0 bg-transparent";
-
 /** @emoji 📏️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
 export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 
@@ -5857,396 +5235,14 @@ export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 /** @emoji 📏️ Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
 export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
-/** @emoji 📏️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
-export const windowControlsCapClass = "pointer-events-auto relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
-
-/** @emoji 🪜️ `WindowChrome`'s own internal stacking, as inline z-indexes.
- *
- * The chrome's chip rows carried Tailwind ARBITRARY z utilities (`z-[2]`/`z-[1]`), and this design
- * system's stylesheet does not emit those — measured on a served boot, cap row, body plane and footer all
- * computed `z-index: auto`, so DOM order decided instead. The body plane negative-margins UP over the cap
- * row by design (`window-silhouette-content-plane`, so the silhouette outline can wrap the chips), which
- * made it the topmost element across the whole cap row: every cap-row control became unreachable by any
- * hit-tested press. The tour's own `ui.introduction.skip` was one of them, while its veil held
- * `pointer-events: auto` over the entire application (26/09/02/PUZZLE-3D-END-TO-END wave B49 §1).
- * Stated inline, the order cannot silently vanish with a utility that was never generated. */
-export const WINDOW_CHROME_CHIP_ROW_STYLE: React.CSSProperties = { zIndex: 2 };
-/** @emoji 🪜️ The body plane, one level below every chip row — see {@link WINDOW_CHROME_CHIP_ROW_STYLE}. */
-export const WINDOW_CHROME_BODY_PLANE_STYLE: React.CSSProperties = { zIndex: 1 };
 
 /** @emoji 📏️ Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
 export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
 //#region 🪟️WindowChrome
+import { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_SILHOUETTE_BORDER_KINDS, WindowChrome, WindowChromeSilhouetteBorder, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, resolveWindowSilhouetteBorderKind, useWindowSilhouetteGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowGapFrameClass, windowSilhouetteBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowSilhouetteBorderKind } from "../../🧱️elements/🗂️WindowChrome/🟦️.tsx";
+export { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_SILHOUETTE_BORDER_KINDS, WindowChrome, WindowChromeSilhouetteBorder, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, resolveWindowSilhouetteBorderKind, useWindowSilhouetteGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowGapFrameClass, windowSilhouetteBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowSilhouetteBorderKind };
 
-/** @emoji 🪟️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
-export interface WindowChromeControlAction {
-  readonly id: string;
-  readonly slot: string;
-  readonly icon: React.ReactNode;
-  readonly label: string;
-  readonly onClick: () => void;
-}
-
-/** @emoji 🪟️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
- * borderless so the painted chip-cap cell shows through and the silhouette remains the sole outline. */
-export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent");
-
-export interface WindowChromeProps {
-  readonly active?: boolean;
-  readonly chipOnly?: boolean;
-  readonly className?: string;
-  readonly stackClassName?: string;
-  readonly bodyClassName?: string;
-  readonly bodySurfaceClassName?: string;
-  readonly bodySurfaceLevel?: Level;
-  /** 🎈️ Stamps `data-level={level}` on the chrome stack and wraps its content in a {@link LevelProvider}; cap/controls/body all render {@link glassClass} so one level is one appearance. */
-  readonly level?: Level;
-  readonly style?: React.CSSProperties;
-  readonly stackRef?: React.Ref<HTMLDivElement>;
-  readonly capRef?: React.Ref<HTMLDivElement>;
-  readonly bodyRef?: React.Ref<HTMLDivElement>;
-  readonly stackSlot?: string;
-  readonly bodySlot?: string;
-  readonly bodyStyle?: React.CSSProperties;
-  readonly titleChips?: React.ReactNode;
-  /** @emoji 🧭️ Optional top-right chip content rendered ahead of enlarge/close in the controls cell. */
-  readonly capRightChips?: React.ReactNode;
-  readonly body?: React.ReactNode;
-  readonly enlarge?: WindowChromeControlAction;
-  readonly close?: WindowChromeControlAction;
-  readonly gapProps?: React.HTMLAttributes<HTMLDivElement>;
-  readonly footerLeftChips?: React.ReactNode;
-  readonly footerCenterChips?: React.ReactNode;
-  readonly footerRightChips?: React.ReactNode;
-  readonly footerGapProps?: React.HTMLAttributes<HTMLDivElement>;
-  readonly footerRef?: React.Ref<HTMLDivElement>;
-  readonly introduceTarget?: Element | null;
-  /** 🎓️ Force silhouette border kind (e.g. introduction steps pulse like `data-introduced` until activated). */
-  readonly borderKind?: WindowSilhouetteBorderKind;
-  readonly stackBindProps?: SurfaceActiveBindProps;
-  readonly stackDataAttrs?: Record<string, string | undefined>;
-  /** @emoji 📐️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
-  readonly capFitContent?: boolean;
-  /** @emoji 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
-  readonly capDock?: "top" | "bottom";
-  /** @emoji ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
-  readonly capRowStyle?: React.CSSProperties;
-  readonly capSlot?: string;
-  readonly chipSlot?: string;
-  readonly controlsSlot?: string;
-  readonly silhouetteSlot?: string;
-}
-
-/** @emoji 🪟️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
-export const WindowChromeSilhouetteBorder: React.FC<{
-  readonly stack: HTMLElement | null;
-  readonly geometry?: WindowSilhouetteGeometry;
-  readonly active?: boolean;
-  readonly introduceTarget?: Element | null;
-  readonly borderKind?: WindowSilhouetteBorderKind;
-  readonly silhouetteSlot?: string;
-}> = ({ stack, geometry, active = false, introduceTarget, borderKind, silhouetteSlot = "window-chrome-silhouette-border" }) => {
-  const [epoch, setEpoch] = reactHostPort.useState(0);
-  const celebrateMaskId = `window-silhouette-celebrate-${reactHostPort.useId().replace(/:/g, "")}`;
-  const observedGeometry = useWindowSilhouetteGeometry(stack, geometry === undefined);
-  const resolvedGeometry = geometry ?? observedGeometry;
-
-  reactHostPort.useLayoutEffect(() => {
-    if (!stack) return;
-    const bump = () => setEpoch((value) => value + 1);
-    bump();
-    const mutationObserver = new MutationObserver(bump);
-    mutationObserver.observe(stack, { attributes: true, attributeFilter: ["class", "data-celebrated", "data-introduced"], subtree: true });
-    return () => {
-      mutationObserver.disconnect();
-    };
-  }, [stack]);
-
-  const windowEl = stack?.querySelector('[data-slot="window"]') ?? introduceTarget ?? stack;
-  const kind = resolveWindowSilhouetteBorderKind(windowEl, active);
-  const resolvedKind =
-    stack && [...stack.querySelectorAll('[data-celebrated="true"]')].some(isWindowChromeIntroducedTarget)
-      ? "celebrated"
-      : borderKind
-        ? borderKind
-        : stack && [...stack.querySelectorAll('[data-introduced="true"]')].some(isWindowChromeIntroducedTarget)
-          ? "introduced"
-          : kind;
-  const metrics = resolvedGeometry.metrics;
-  void epoch;
-
-  if (resolvedGeometry.state === "pending") {
-    return <div data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-pending="" data-dim="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
-  }
-  const path = resolvedGeometry.borderPath;
-  const paint = windowSilhouetteBorderPaint(resolvedKind);
-  if (resolvedKind === "celebrated") {
-    return (
-      <svg
-        data-slot={silhouetteSlot}
-        data-window-silhouette-border
-        data-kind={resolvedKind}
-        data-dim=""
-        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
-        width={metrics.width}
-        height={metrics.height}
-        viewBox={`0 0 ${metrics.width} ${metrics.height}`}
-        aria-hidden
-      >
-        <defs>
-          <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
-            <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
-            <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
-          </mask>
-        </defs>
-        <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
-          <div className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
-        </foreignObject>
-      </svg>
-    );
-  }
-  return (
-    <svg
-      data-slot={silhouetteSlot}
-      data-window-silhouette-border
-      data-kind={resolvedKind}
-      data-dim=""
-      className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
-      width={metrics.width}
-      height={metrics.height}
-      viewBox={`0 0 ${metrics.width} ${metrics.height}`}
-      aria-hidden
-    >
-      <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
-    </svg>
-  );
-};
-
-/** @emoji 🪟️ Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border.
- * Cap glass lives only on the chip (+ controls) cells — never the full cap row — so the U-gap stays transparent
- * and shows whatever sits behind the stack (veil, canvas, page). Do not paint an absolute inset fill. */
-export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChromeProps>(
-  (
-    {
-      active = false,
-      chipOnly = false,
-      className,
-      stackClassName,
-      bodyClassName,
-      bodySurfaceClassName,
-      bodySurfaceLevel,
-      level,
-      style,
-      stackRef,
-      capRef,
-      bodyRef,
-      stackSlot = "window-chrome-stack",
-      bodySlot = "window-chrome-body",
-      bodyStyle,
-      titleChips,
-      capRightChips,
-      body,
-      enlarge,
-      close,
-      gapProps,
-      footerLeftChips,
-      footerCenterChips,
-      footerRightChips,
-      footerGapProps,
-      footerRef,
-      introduceTarget,
-      borderKind,
-      stackBindProps,
-      stackDataAttrs,
-      capFitContent = false,
-      capDock = "top",
-      capRowStyle,
-      capSlot = "window-chrome-cap",
-      chipSlot = "window-chrome-chip-cap",
-      controlsSlot = "window-chrome-controls",
-      silhouetteSlot = "window-chrome-silhouette-border",
-    },
-    ref,
-  ) => {
-    const [stackEl, setStackEl] = reactHostPort.useState<HTMLDivElement | null>(null);
-    const setStackRef = reactHostPort.useCallback(
-      (element: HTMLDivElement | null) => {
-        setStackEl(element);
-        if (typeof ref === "function") ref(element);
-        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = element;
-        if (typeof stackRef === "function") stackRef(element);
-        else if (stackRef) (stackRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
-      },
-      [ref, stackRef],
-    );
-
-    const chipSurfaceClass = cn(windowCapFrameClass, glassClass);
-    const bodySurfaceClass = cn("pointer-events-none absolute inset-x-0 z-0 border-0", bodySurfaceClassName ?? glassClass);
-    const bodyContentClass = "window-silhouette-content-plane relative border-0";
-    const controlsSurfaceClass = cn(windowControlsCapClass, glassClass);
-    const geometry = useWindowSilhouetteGeometry(stackEl);
-    const silhouetteVars = {
-      "--window-silhouette-top-clearance": `${geometry.safeClearances.top}px`,
-      "--window-silhouette-bottom-clearance": `${geometry.safeClearances.bottom}px`,
-    } as React.CSSProperties;
-    const contentStyle = {
-      ...bodyStyle,
-      clipPath: geometry.contentClipPath,
-      WebkitClipPath: geometry.contentClipPath,
-    } as React.CSSProperties;
-    // 🪟️ The stack element itself stamps `data-level` (below), so this only needs to open the
-    // SurfaceScope (fill="glass" — every cell above already renders it) for descendants to see via useSurface().
-    const wrapLevel = (node: React.ReactNode): React.ReactNode =>
-      level ? (
-        <SurfaceScope level={level} fill="glass">
-          {node}
-        </SurfaceScope>
-      ) : (
-        node
-      );
-
-    if (chipOnly) {
-      return wrapLevel(
-        <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style} {...stackDataAttrs}>
-          <WindowChromeSilhouetteBorder stack={stackEl} geometry={geometry} active={active} borderKind={borderKind} silhouetteSlot={silhouetteSlot} />
-          {titleChips ? (
-            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
-              {titleChips}
-            </div>
-          ) : null}
-        </div>,
-      );
-    }
-
-    const { className: gapClassName, ...gapRest } = gapProps ?? {};
-    const { className: footerGapClassName, ...footerGapRest } = footerGapProps ?? {};
-    const hasFooter = Boolean(footerLeftChips || footerCenterChips || footerRightChips);
-    const hasFooterGap = Boolean(footerLeftChips && footerRightChips && !footerCenterChips);
-    const footerGapClass = cn("pointer-events-none relative min-h-0 min-w-0 bg-transparent", windowGapFrameClass, footerGapClassName);
-    const footerChipClass = cn("relative flex min-h-medium min-w-0 shrink-0 items-stretch", chipSurfaceClass);
-    return wrapLevel(
-      <div
-        ref={setStackRef}
-        data-slot={stackSlot}
-        data-window-silhouette
-        data-level={level}
-        data-active={active ? "true" : undefined}
-        className={cn("relative flex min-h-0 min-w-0 flex-col overflow-visible bg-transparent text-foreground", capDock === "bottom" && "flex-col-reverse", stackClassName, className)}
-        style={{ ...style, ...silhouetteVars }}
-        {...stackBindProps}
-        {...stackDataAttrs}
-      >
-        <WindowChromeSilhouetteBorder stack={stackEl} geometry={geometry} active={active} introduceTarget={introduceTarget} borderKind={borderKind} silhouetteSlot={silhouetteSlot} />
-        <div ref={capRef} data-slot={capSlot} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-w-0 shrink-0 items-stretch bg-transparent", capFitContent ? "w-fit max-w-full" : "w-full")} style={{ ...capRowStyle, ...WINDOW_CHROME_CHIP_ROW_STYLE }}>
-          {titleChips ? (
-            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
-              {titleChips}
-            </div>
-          ) : null}
-          <div data-slot="window-chrome-gap" data-window-silhouette-gap aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
-          {capRightChips || enlarge || close ? (
-            <div data-slot={controlsSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
-              {capRightChips}
-              {enlarge ? (
-                <button
-                  type="button"
-                  id={enlarge.id}
-                  data-slot={enlarge.slot}
-                  className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
-                  onClick={enlarge.onClick}
-                >
-                  {enlarge.icon}
-                  <span className="text-tiny whitespace-nowrap">{enlarge.label}</span>
-                </button>
-              ) : null}
-              {close ? (
-                <button
-                  type="button"
-                  id={close.id}
-                  data-slot={close.slot}
-                  className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
-                  onClick={close.onClick}
-                >
-                  {close.icon}
-                  <span className="text-tiny whitespace-nowrap">{close.label}</span>
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-        {geometry.bodyRegion ? (
-          <div
-            data-slot="window-chrome-body-surface"
-            data-level={bodySurfaceLevel ?? level}
-            data-dim
-            aria-hidden
-            className={bodySurfaceClass}
-            style={{ top: geometry.bodyRegion.y, bottom: geometry.metrics.height - geometry.bodyRegion.y - geometry.bodyRegion.height }}
-          />
-        ) : null}
-        <div
-          ref={bodyRef}
-          data-slot={bodySlot}
-          data-level={bodySurfaceLevel ?? level}
-          data-window-silhouette-content
-          data-silhouette-state={geometry.state}
-          data-dim
-          className={cn("min-h-0 flex-1", bodyContentClass, bodyClassName)}
-          style={{ ...contentStyle, ...WINDOW_CHROME_BODY_PLANE_STYLE }}
-        >
-          {body}
-        </div>
-        {hasFooter ? (
-          footerCenterChips ? (
-            <div ref={footerRef} data-slot="window-chrome-footer" data-dim className="relative grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end bg-transparent" style={WINDOW_CHROME_CHIP_ROW_STYLE}>
-              <div data-slot="window-chrome-footer-gap-left" data-window-silhouette-gap {...footerGapRest} aria-hidden={footerLeftChips ? undefined : true} className={cn(footerGapClass, "justify-self-start")}>
-                {footerLeftChips ? (
-                  <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
-                    {footerLeftChips}
-                  </div>
-                ) : null}
-              </div>
-              <div data-slot="window-chrome-footer-center" className={cn(footerGapClass, "flex justify-center justify-self-center")}>
-                <div data-slot="window-chrome-footer-center-chip" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
-                  {footerCenterChips}
-                </div>
-              </div>
-              <div data-slot="window-chrome-footer-gap-right" data-window-silhouette-gap aria-hidden={footerRightChips ? undefined : true} className={cn(footerGapClass, "justify-self-end")}>
-                {footerRightChips ? (
-                  <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
-                    {footerRightChips}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          ) : (
-            <div
-              ref={footerRef}
-              data-slot="window-chrome-footer"
-              data-dim
-              className={cn("relative flex w-full min-w-0 shrink-0 items-stretch bg-transparent", footerLeftChips && !footerRightChips && "justify-start", footerRightChips && !footerLeftChips && "justify-end")}
-              style={WINDOW_CHROME_CHIP_ROW_STYLE}
-            >
-              {footerLeftChips ? (
-                <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
-                  {footerLeftChips}
-                </div>
-              ) : null}
-              {hasFooterGap ? <div data-slot="window-chrome-footer-gap" data-window-silhouette-gap aria-hidden {...footerGapRest} className={cn(footerGapClass, "flex-1")} /> : null}
-              {footerRightChips ? (
-                <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
-                  {footerRightChips}
-                </div>
-              ) : null}
-            </div>
-          )
-        ) : null}
-      </div>,
-    );
-  },
-);
-WindowChrome.displayName = "WindowChrome";
 
 /** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
 export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }>(
@@ -6275,6 +5271,69 @@ export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { read
 ContextMenuChrome.displayName = "ContextMenuChrome";
 
 //#endregion 🪟️WindowChrome
+
+// #region 🃏️OverviewCard
+import { OverviewCard, OverviewCardAction, OverviewCardOpenChip, overviewCardChipClass, type OverviewCardActionProps, type OverviewCardBaseProps, type OverviewCardButtonProps, type OverviewCardProps, type OverviewCardSectionProps } from "../../🧱️elements/🃏️OverviewCard/🟦️.tsx";
+export { OverviewCard, OverviewCardAction, OverviewCardOpenChip, overviewCardChipClass, type OverviewCardActionProps, type OverviewCardBaseProps, type OverviewCardButtonProps, type OverviewCardProps, type OverviewCardSectionProps };
+// #endregion 🃏️OverviewCard
+
+// #region 🥞️LayeredOverview
+export { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type LayeredChromeState, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState, type LayeredRest } from "../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
+export {
+  LAYERED_DEFAULT_LIFECYCLE,
+  LAYERED_VIEW,
+  LAYERED_FOLLOW_EPSILON,
+  LAYERED_FOLLOW_LERP,
+  LAYERED_GLIDE_MS,
+  cellOffset,
+  centeredLastRowCells,
+  centeredRowSpan,
+  clampOffset,
+  easeInOutCubic,
+  followStep,
+  glideOffset,
+  inWindow,
+  coverPlacement,
+  glideRect,
+  lerpRect,
+  restRect,
+  spanAxisBounds,
+  trackSpans,
+  trackTemplate,
+  veilForRect,
+  viewRect,
+  lerpOffset,
+  nearSquareGrid,
+  nextWarmBoot,
+  occupiedColumns,
+  paneAxisBounds,
+  panesOverBudget,
+  panesToRelease,
+  pointerOffset,
+  resolveLifecycle,
+  scheduleIdle,
+  stripGrid,
+  stripTransform,
+  veilClip,
+  veilClipPath,
+  veilPolygon,
+  warmDelay,
+  windowAround,
+  type LayeredCell,
+  type LayeredGrid,
+  type LayeredIdleScheduler,
+  type LayeredLifecycle,
+  type LayeredLivePane,
+  type LayeredOffset,
+  type LayeredSpan,
+  type LayeredVeil,
+  type LayeredWarmStep,
+  type LayeredWindow,
+  type PaneAxisBounds,
+  type LayeredRect,
+  type LayeredTracks,
+} from "../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+// #endregion 🥞️LayeredOverview
 
 /** @emoji 🪟️ Window chrome icon button — element gray by default, emphasize on hover. */
 export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
@@ -6540,8 +5599,8 @@ export {
 
 // #region 🌥️Base Components
 // #region 🏷️Label
-import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation } from "../../🧱️elements/🏷️Label/🟦️.tsx";
-export { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation };
+import { Label, useLabel, useLabelFormatter, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation } from "../../🧱️elements/🏷️Label/🟦️.tsx";
+export { Label, useLabel, useLabelFormatter, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation };
 export type { ControlTooltipTextOptions } from "../../🧱️elements/🏷️Label/🟦️.tsx";
 // #endregion 🏷️Label
 
@@ -6614,6 +5673,7 @@ export { TableAvatar, type TableAvatarProps };
 // #region 👥️PresenceBar
 import { PresenceBar, presenceColor, presenceCssVar, PRESENCE_BAR_DEFAULT_MAX, type PresenceAppearance, type PresenceBarProps, type PresenceHsl, type PresencePeer, type PresenceRole } from "../../🧱️elements/👥️PresenceBar/🟦️.tsx";
 export { PresenceBar, presenceColor, presenceCssVar, PRESENCE_BAR_DEFAULT_MAX, type PresenceAppearance, type PresenceBarProps, type PresenceHsl, type PresencePeer, type PresenceRole };
+export { presencePaint } from "../../🔨️modules/👥️presence-presentation/🟦️.ts";
 // #endregion 👥️PresenceBar
 
 // #region 🎹️Spinner
@@ -7575,8 +6635,9 @@ export function NavbarTrailingChromeSlot({
 // #endregion 🖥️Fullscreen
 
 // #region 🩺️Navbar
-import { Navbar, type NavbarItem, type NavbarProps, type NavbarSpanV1, SemioLogo, ShellBrandLogo, navbarCenteredLeftV1, navbarFillItem, navbarFlowChildOccupiesV1, navbarFreeBandV1 } from "../../🧱️elements/🔝️Navbar/🟦️.tsx";
-export { Navbar, type NavbarItem, type NavbarProps, type NavbarSpanV1, SemioLogo, ShellBrandLogo, navbarCenteredLeftV1, navbarFillItem, navbarFlowChildOccupiesV1, navbarFreeBandV1 };
+import { Navbar, type NavbarItem, type NavbarProps, type NavbarSpanV1, type NavbarTrailingChrome, SemioLogo, ShellBrandLogo, navbarCenteredLeftV1, navbarFillItem, navbarFlowChildOccupiesV1, navbarFreeBandV1, setNavbarTrailingChrome } from "../../🧱️elements/🔝️Navbar/🟦️.tsx";
+setNavbarTrailingChrome(NavbarTrailingChromeSlot);
+export { Navbar, type NavbarItem, type NavbarProps, type NavbarSpanV1, type NavbarTrailingChrome, SemioLogo, ShellBrandLogo, navbarCenteredLeftV1, navbarFillItem, navbarFlowChildOccupiesV1, navbarFreeBandV1, setNavbarTrailingChrome };
 // #endregion 🩺️Navbar
 
 // #region 🧪️NavbarExampleSelect
@@ -8538,19 +7599,6 @@ export function searchHighlightedLabel(label: string, query: string, detail?: st
 
 /** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
 
-/** @emoji 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
-export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
-  if (element.dataset.uiBrowserDefaults === "true") return;
-  const kind = element instanceof HTMLInputElement ? (element.type || "text").toLowerCase() : "textarea";
-  if (kind === "file" || kind === "checkbox" || kind === "radio" || kind === "hidden" || kind === "range" || kind === "color") return;
-  element.autocomplete = "off";
-  element.spellcheck = false;
-  element.autocapitalize = "off";
-  element.setAttribute("autocorrect", "off");
-  element.setAttribute("data-1p-ignore", "");
-  element.setAttribute("data-lpignore", "true");
-  element.dataset.uiBrowserDefaults = "true";
-}
 
 /** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
 export function isUiTypingTarget(t: EventTarget | null): boolean {
@@ -8568,27 +7616,6 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   return Boolean(t.closest('[data-slot="search"] input, [data-slot="search"] textarea'));
 }
 
-/** @emoji 🚫️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
- *
- * ⌨️ Tab focus traversal stays the browser's. It used to be suppressed everywhere outside a typing target, which left
- * every chrome control of the shell — navbar, Home, footer, panels, window chips — unreachable without a mouse
- * (measured inside `s`: 30 Tab presses from Home never left `mode-dock-panel-root`; WCAG 2.2 SC 2.1.1, ticket
- * 26/09/23 S15). A program that binds `tab` as a chord still owns it: the shell's keybinding loop calls
- * `preventDefault` on every chord it resolves. */
-export function installElementsSurfaceBrowserDefaultSuppression(bindings: ReturnType<typeof createDOMEventBinding>): void {
-  if (typeof document === "undefined") return;
-  const onContextMenu = (event: Event): void => {
-    event.preventDefault();
-  };
-  const onFocusIn = (event: FocusEvent): void => {
-    const target = event.target;
-    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-      applyUiFormControlBrowserDefaults(target);
-    }
-  };
-  bindings.listen(document, "contextmenu", onContextMenu as EventListener, true);
-  bindings.listen(document, "focusin", onFocusIn as EventListener, true);
-}
 
 /** @emoji ⌨️ True when the event target is already the active window search action field. */
 export function isWindowSearchTypingTarget(t: EventTarget | null): boolean {

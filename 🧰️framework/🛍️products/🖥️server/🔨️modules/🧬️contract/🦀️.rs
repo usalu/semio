@@ -2,7 +2,7 @@
 //!
 //! Three layers stay strictly separate and are never collapsed into one "message" abstraction:
 //! the **CQRS dual bus** ([`CommandEnvelope`]/[`QueryEnvelope`]) carries application intent and
-//! projection reads; the **actor turn protocol** ([`ActorKey`], [`Decision`]) is the consistency
+//! projection reads; the **actor turn protocol** ([`ActorKey`], [`Decision`](crate::authority::Decision)) is the consistency
 //! boundary a command is serialized through; the **replication protocol** (`protocol` crate) moves
 //! causal state between replicas. A UI action is none of the three and never reaches this crate.
 //!
@@ -241,6 +241,62 @@ pub struct EphemeralFrame {
     pub payload: Vec<u8>,
 }
 //#endregion 🔖️Lanes
+
+//#region 🔖️Presence
+/// @emoji 🧩️ An opaque JSON value an instance defines and the gateway never interprets — the state
+/// one presence session shares. Reexported so an instance names it without naming the JSON library.
+pub use serde_json::Value as OpaqueJson;
+
+/// @emoji 🧍️ One session of a presence room as every member sees it: the server-generated session
+/// id, the palette slot it leases, the surface it joined from and its latest shared state (`null`
+/// until it sent one).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresenceEntry {
+    pub session: String,
+    pub colour: u8,
+    pub surface: String,
+    pub state: OpaqueJson,
+}
+
+/// @emoji 👥️ One text frame of the presence socket (`semio.presence.v1`). `welcome` (the joining
+/// session, its colour and the whole roster, itself included) and a per-tick `batch` (the sessions
+/// whose state changed since the last tick, and those that left) travel server → client; `state`
+/// (the sender's latest state, latest wins) travels client → server; `refused` answers a frame the
+/// server dropped while the socket stays open. A second `welcome` on the same socket replaces the
+/// roster wholesale — the resynchronization a lagging subscriber receives.
+///
+/// Watching is read-only presence in other rooms: `watch` (client → server) replaces the set of
+/// scopes the socket watches and the interval it wants their changes at (an empty set stops
+/// watching); `watched` (server → client) carries one watched scope's changes since the last
+/// interval, or — flagged `snapshot` — its whole roster, sent when the scope becomes watched and
+/// whenever the watcher fell behind, replacing what the client held for that scope.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum PresenceFrame {
+    Welcome { session: String, colour: u8, roster: Vec<PresenceEntry> },
+    State { state: OpaqueJson },
+    Batch { entries: Vec<PresenceEntry>, left: Vec<String> },
+    Refused { reason: String },
+    Watch {
+        scopes: Vec<Scope>,
+        #[serde(rename = "intervalMs")]
+        interval_ms: u64,
+    },
+    Watched {
+        scope: Scope,
+        entries: Vec<PresenceEntry>,
+        left: Vec<String>,
+        #[serde(default, skip_serializing_if = "is_false")]
+        snapshot: bool,
+    },
+}
+
+/// 🏳️ Whether an optional flag is unset, so the wire leaves it out.
+fn is_false(flag: &bool) -> bool {
+    !*flag
+}
+//#endregion 🔖️Presence
 
 //#region 🔖️Policy
 /// 🚦️ Every point authorization is evaluated at. Hiding a route is user experience; these

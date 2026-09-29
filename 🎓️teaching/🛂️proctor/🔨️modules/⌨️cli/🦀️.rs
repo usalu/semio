@@ -20,7 +20,6 @@ use crate::catalog::{load_catalog, CatalogError, LoadedCatalog};
 use crate::config::ProctorConfig;
 use crate::instance::Proctor;
 use crate::projections::{CatchUp, Progress};
-use crate::site::SiteHost;
 
 /// 📖️ The one-line usage.
 pub const USAGE: &str = "usage: proctor serve | proctor check <catalog 🔣️.json> | proctor rebuild";
@@ -80,21 +79,20 @@ fn report(error: &CatalogError) {
 async fn serve(environment: &impl Fn(&str) -> Option<String>) -> Result<ExitCode, Box<dyn std::error::Error>> {
     let config = ProctorConfig::from_environment(environment)?;
     eprintln!(
-        "[INFO] proctor {} mode {}, data {}, catalog {}, site {}, cross-origin {}, trusted forwarding {}",
+        "[INFO] proctor {} mode {}, data {}, catalog {}, cross-origin {}, trusted forwarding {}, presence tick {} ms",
         env!("CARGO_PKG_VERSION"),
         config.mode.label(),
         config.data.display(),
         config.catalog.display(),
-        config.site.as_ref().map_or_else(|| "none".to_string(), |site| site.display().to_string()),
-        config.origins.label(),
-        config.forwarding.label()
+        config.origins.describe(),
+        config.forwarding.label(),
+        config.presence_tick.as_millis()
     );
     let Some(catalog) = loaded(&config) else { return Ok(ExitCode::FAILURE) };
-    let site = config.site.as_deref().map(SiteHost::open).transpose()?;
     let interrupt = interrupt();
-    let proctor = Proctor::assemble(profile(&config), Arc::new(catalog), config.gate(), site).await?;
+    let proctor = Proctor::assemble(profile(&config), Arc::new(catalog), config.gate(), config.presence()).await?;
     if proctor.prepare().await? {
-        eprintln!("[INFO] projections were built against another catalog; rebuilding them");
+        eprintln!("[INFO] projections were built for another catalog or projector revision; rebuilding them");
     }
     if let Some(code) = settled(&proctor, &interrupt, "catch-up").await? {
         return Ok(code);
@@ -110,7 +108,7 @@ async fn rebuild(environment: &impl Fn(&str) -> Option<String>) -> Result<ExitCo
     let config = ProctorConfig::from_environment(environment)?;
     let Some(catalog) = loaded(&config) else { return Ok(ExitCode::FAILURE) };
     let interrupt = interrupt();
-    let proctor = Proctor::assemble(profile(&config), Arc::new(catalog), config.gate(), None).await?;
+    let proctor = Proctor::assemble(profile(&config), Arc::new(catalog), config.gate(), config.presence()).await?;
     proctor.reset_projections().await?;
     eprintln!("[INFO] projections dropped; refolding every committed event");
     Ok(settled(&proctor, &interrupt, "rebuild").await?.unwrap_or(ExitCode::SUCCESS))

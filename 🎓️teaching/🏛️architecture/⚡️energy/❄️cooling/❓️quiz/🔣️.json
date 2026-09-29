@@ -2,6 +2,7 @@
   "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "cooling",
+  "emoji": "❄️",
   "title": { "en": "Cooling", "de": "Kühlen" },
   "description": {
     "en": "Air change rates from the warehouse to the cleanroom, and cooling loads and cooling demands from the passive house to the data centre.",

@@ -7,17 +7,17 @@ the proctor, and one site per subject; each site offers a catalog of quizzes who
 
 | Path | What lives there |
 |---|---|
-| `🛂️proctor/` | The proctor: a Rust `ServerInstance` of the framework server product (crate `teaching-proctor`, binary `proctor`, nx `@teaching/proctor`). Identity without passwords, randomized runs, whole-run scoring, badges and the leaderboard as CQRS with event sourcing over one SQLite file; it also serves the built site. |
-| `🏛️architecture/` | The site `quizze.architektur-und-technologie.de` (see [its README](🏛️architecture/README.md)). |
-| `🏛️architecture/❓️quiz/` | The site's catalog `🔣️.json`, its web package `@teaching/architecture-quiz` and its deployment `🚀️deploy/`. |
+| `🛂️proctor/` | The proctor: a Rust `ServerInstance` of the framework server product (crate `teaching-proctor`, binary `proctor`, nx `@teaching/proctor`). Identity without passwords, randomized runs, whole-run scoring, badges and the leaderboard as CQRS with event sourcing over one SQLite file; an API only, deployed on Docker behind Caddy at `https://proctor.quizzes.architektur-und-technologie.de`. |
+| `🏛️architecture/` | The site `https://quizzes.architektur-und-technologie.de` (see [its README](🏛️architecture/README.md)). |
+| `🏛️architecture/❓️quiz/` | The site's catalog `🔣️.json`, its web package `@teaching/architecture-quiz` (a static build published to a CDN) and its deployment files. |
 | `🏛️architecture/<domain>/<topic>/❓️quiz/🔣️.json` | One quiz per topic leaf. |
 
 ## Topic tree
 
 ```
 🎓️teaching/
-  🛂️proctor/                         server for every site
-  🏛️architecture/                    site quizze.architektur-und-technologie.de
+  🛂️proctor/                         API for every site (proctor.quizzes.architektur-und-technologie.de)
+  🏛️architecture/                    site quizzes.architektur-und-technologie.de
     ❓️quiz/🔣️.json                   catalog "architecture": introduction, quiz paths, badges
     ⚡️energy/                         domain
       🧲️physics/   ❓️quiz  🎬️clip    Physical Understanding / Physikalisches Verständnis
@@ -37,7 +37,10 @@ structure, materials) slot in beside `⚡️energy` without touching existing pa
   it twin for twin.
 - The proctor reads a catalog (`PROCTOR_CATALOG`), resolves its quiz paths relative to the catalog file and hashes every
   quiz file into its revision; a run is always scored against the revision it started with.
-- The site mounts the React renderer `@semio-tech/quiz-react` against the proctor on the same origin.
+- The site is a static build on a CDN (`https://quizzes.architektur-und-technologie.de`) that mounts the React renderer
+  `@semio-tech/quiz-react` against the proctor origin baked in at build time
+  (`https://proctor.quizzes.architektur-und-technologie.de`); the proctor admits exactly the site origin (CORS). In
+  development the Vite dev server proxies the gateway routes to the local proctor, so the client talks to one origin.
 
 ## Adding a quiz
 
@@ -45,7 +48,8 @@ structure, materials) slot in beside `⚡️energy` without touching existing pa
    followed by U+FE0F, and every new directory is registered in the repository taxonomy.
 2. Write a `semio.quiz/v1` document whose `$schema` points relatively to
    `🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz`. Ids are English kebab-case slugs; every
-   learner-visible text carries `en` and `de`.
+   learner-visible text carries `en` and `de`; the required `emoji` is the topic folder's emoji (fully qualified, e.g.
+   `🔥`, `❄️`) and matches the quiz's `perfect-quiz` badge.
 3. Choose the task kinds:
    - `classification`: categories, optionally with `axes` and one `profile` per category (spider diagrams; a similar
      profile earns partial credit),

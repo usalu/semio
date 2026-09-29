@@ -462,11 +462,11 @@ test("demonstrator overview: pane cards use window-silhouette chrome without dra
 
   await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));
 
-  const cards = page.locator("[data-demonstrator-pane-card]");
+  const cards = page.locator("[data-layered-card]");
   await expect(cards).toHaveCount(brandPaneIds().length, { timeout: SHELL_READY_TIMEOUT_MS });
 
   for (const paneId of brandPaneIds()) {
-    const card = page.locator(`[data-demonstrator-pane-card][data-pane-id="${paneId}"]`);
+    const card = page.locator(`[data-layered-card="${paneId}"] [data-overview-card]`);
     await expect(card).toBeVisible();
     await expect(card.locator("[data-window-silhouette]")).toHaveCount(1);
     await expect(card.locator('[data-window-silhouette-border][data-kind="normal"]')).toHaveCount(1);

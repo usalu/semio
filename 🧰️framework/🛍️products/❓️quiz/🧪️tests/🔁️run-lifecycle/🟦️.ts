@@ -36,6 +36,7 @@ const REVISED = "b".repeat(64);
 const QUIZ: Quiz = {
   schema: "semio.quiz/v1",
   id: "physics",
+  emoji: "🧲",
   title: T("Physics"),
   description: T("Physics"),
   tasks: [

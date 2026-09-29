@@ -11,17 +11,20 @@ pub mod catalog;
 #[path = "../../🔨️modules/🎚️config/🦀️.rs"]
 pub mod config;
 
+#[path = "../../🔨️modules/👥️presence/🦀️.rs"]
+pub mod presence;
+
 #[path = "../../🔨️modules/🎭️actors/🦀️.rs"]
 pub mod actors;
+
+#[path = "../../🔨️modules/👪️crowd/🦀️.rs"]
+pub mod crowd;
 
 #[path = "../../🔨️modules/🔭️projections/🦀️.rs"]
 pub mod projections;
 
 #[path = "../../🔨️modules/❓️queries/🦀️.rs"]
 pub mod queries;
-
-#[path = "../../🔨️modules/🌐️site/🦀️.rs"]
-pub mod site;
 
 #[path = "../../🔨️modules/🧩️instance/🦀️.rs"]
 pub mod instance;

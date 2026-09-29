@@ -48,14 +48,14 @@
       "version": "4.26.0",
       "source": { "repository": "https://github.com/python-jsonschema/jsonschema", "license": "MIT" },
       "engine": { "family": "jsonschema", "implementation": "python-jsonschema Draft7Validator", "version": "4.26.0" },
-      "capabilities": ["quiz-schema-conformance"],
+      "capabilities": ["quiz-schema-conformance", "quiz-presence"],
       "comparisonProfiles": ["ordered-json-v1"],
       "license": "MIT",
       "testOnly": true,
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://python-jsonschema.readthedocs.io/",
-      "rationale": "The contract 🧬️schema/🔣️.json is JSON Schema draft-07 and normative; the product validates quizzes and catalogs with its own structural and semantic validator (quizIssues, catalogIssues) and deliberately links no schema library at runtime. python-jsonschema's Draft7Validator reads the normative file itself and judges every quiz and catalog the product meets — the committed vectors, the authored teaching content and a set of rejected documents that each break one named rule — so the owned validator is held to the schema rather than to its own reading of it. It also validates every other schema-typed document in the committed vectors (sheets, answers, results, commands, events, views) and fails the oracle phase on any violation. ajv (already in the lockfile) was the alternative; the Python host was chosen so the conformance oracle sits beside the other Python references of this owner."
+      "rationale": "The contract 🧬️schema/🔣️.json is JSON Schema draft-07 and normative; the product validates quizzes and catalogs with its own structural and semantic validator (quizIssues, catalogIssues) and deliberately links no schema library at runtime. python-jsonschema's Draft7Validator reads the normative file itself and judges every quiz and catalog the product meets — the committed vectors, the authored teaching content and a set of rejected documents that each break one named rule — so the owned validator is held to the schema rather than to its own reading of it. It also validates every other schema-typed document in the committed vectors (sheets, answers, results, commands, events, views) and fails the oracle phase on any violation. ajv (already in the lockfile) was the alternative; the Python host was chosen so the conformance oracle sits beside the other Python references of this owner. For shared presence (design §15) it judges every committed PresenceState and CursorState at its boundaries (tag, anchor, coordinates in [0, 1], undeclared members); the place rules the schema cannot state (a run or its results names its quiz, only a run names a task) and the room scopes are written beside it in the case adapter from the design text."
     },
     {
       "id": "quiz-python-reference",
@@ -66,13 +66,13 @@
         { "package": "numpy", "version": "2.5.0", "license": "BSD-3-Clause", "homepage": "https://numpy.org", "role": "The MT19937 stream every sheet is drawn from." }
       ],
       "engine": { "family": "none", "implementation": "in-repository second implementation of design §3–§8, written in Python from the design text", "version": "1" },
-      "capabilities": ["quiz-sheet-assembly", "quiz-answer-validation", "quiz-badge-rules", "quiz-leaderboard", "quiz-learner-lifecycle"],
+      "capabilities": ["quiz-sheet-assembly", "quiz-answer-validation", "quiz-badge-rules", "quiz-leaderboard", "quiz-learner-lifecycle", "quiz-crowd"],
       "comparisonProfiles": ["ordered-json-v1", "quiz-score-v1"],
       "license": "AGPL-3.0-only",
       "testOnly": true,
       "productionReachable": false,
       "networkDuringExecution": false,
-      "rationale": "Sheet assembly, answer validity, badge rules, the leaderboard's tie-break chain and the learner lifecycle are this product's own policy: no third party implements them, and a survey of the Python, JavaScript and Rust ecosystems (quiz engines such as H5P, Moodle's question engine and Open edX's capa problems score per question with their own rubrics and randomise with platform RNGs) found nothing that could state these outcomes. The reference is therefore a second implementation written in Python from the design text only, never from the TypeScript or Rust twins, drawing sheets from numpy's MT19937. It is registered as a cross-semio implementation — a supplement, never third-party evidence — and it is not the only check: both twins are also held to each other by the harness's pairwise subject parity, so every one of these cases compares three independently written readings of the design."
+      "rationale": "Sheet assembly, answer validity, badge rules, the leaderboard's tie-break chain and the learner lifecycle are this product's own policy: no third party implements them, and a survey of the Python, JavaScript and Rust ecosystems (quiz engines such as H5P, Moodle's question engine and Open edX's capa problems score per question with their own rubrics and randomise with platform RNGs) found nothing that could state these outcomes. The reference is therefore a second implementation written in Python from the design text only, never from the TypeScript or Rust twins, drawing sheets from numpy's MT19937. It is registered as a cross-semio implementation — a supplement, never third-party evidence — and it is not the only check: both twins are also held to each other by the harness's pairwise subject parity, so every one of these cases compares three independently written readings of the design. The crowd view (design §17) is aggregation policy too; its reference recounts every count with collections.Counter and recomputes every mean position with numpy.mean before projecting."
     },
     {
       "id": "quiz-jstat-spearman",
@@ -163,6 +163,82 @@
       "homepage": "https://opentype.js.org",
       "hostPath": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
       "rationale": "Judges the owned radar label layout of @semio-tech/quiz-react inside its unit suite `🧪️tests/🕷️radar-geometry` (vitest, devDependency of the react package): opentype.js parses the site's brand font and measures real glyph advances, and every wrapped axis label box the owned renderer lays out must stay inside the chart at phone, tablet and desktop widths. The renderer itself measures with an owned width estimate and links no font library."
+    },
+    {
+      "id": "quiz-react-lightningcss",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "lightningcss",
+      "version": "1.32.0",
+      "source": { "repository": "https://github.com/parcel-bundler/lightningcss", "license": "MPL-2.0" },
+      "engine": { "family": "lightningcss", "implementation": "lightningcss transform() with a StyleSheet visitor over its parsed media queries and grid track lists", "version": "1.32.0" },
+      "capabilities": ["quiz-react-home-grid"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MPL-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://lightningcss.dev",
+      "hostPath": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "rationale": "Judges the home grid of @semio-tech/quiz-react inside its unit suite `🧪️tests/🏠️home-grid` (vitest, devDependency of the react package): lightningcss — the CSS engine Tailwind itself runs the site's styles through — parses the renderer's stylesheet into media queries, grid track lists and variables, and the tracks the card layer takes at 320 to 1440 px (one column below tablets, the overview's `--layered-columns`/`--layered-rows` from there, no gap or padding between tracks, the spacing inside `.quiz-home-cell`) and the breakpoints themselves must equal the shared vectors and the design system's `UI_MOBILE_MAX_WIDTH_PX` / `UI_TABLET_MAX_WIDTH_PX`; it also parses the overview's own track lists into fr weights that must equal the shared weights of each layout (1 : 1.5 : 1 by 1 : 1.4 : 1 on desktops). jsdom lays nothing out and evaluates no media query (the width is emulated through `matchMedia`), so the stylesheet's own parse is the independent reading; the two-device walk in a real browser confirms the same grid."
+    },
+    {
+      "id": "quiz-react-lodash-throttle",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "lodash",
+      "version": "4.18.1",
+      "source": {
+        "repository": "https://github.com/lodash/lodash",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lodash",
+        "implementation": "lodash/throttle with leading and trailing edges",
+        "version": "4.18.1"
+      },
+      "capabilities": [
+        "quiz-react-presence-throttle"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://lodash.com/docs/#throttle",
+      "hostPath": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "rationale": "Judges the presence frame throttle of @semio-tech/quiz-react inside its unit suite `🧪️tests/📡️presence-client` (vitest, devDependency of the react package): for every shared call schedule whose states are pairwise distinct, the frames a presence room sends (time and state, under fake timers) must equal the invocations of lodash's throttle with the same interval — the reference leading-and-trailing-edge throttle. Schedules that repeat a state are judged by the shared vectors alone, since the room never resends the state it sent last. The drafts a thinking room sends (at most every 500 ms) must be the drafts lodash's throttle invokes with the same interval, each sent no later than lodash's (the room times from its last frame, lodash from its timer)."
+    },
+    {
+      "id": "quiz-react-lodash-crowd",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "lodash",
+      "version": "4.18.1",
+      "source": {
+        "repository": "https://github.com/lodash/lodash",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lodash",
+        "implementation": "lodash/groupBy, lodash/orderBy, lodash/sortBy, lodash/mean and lodash/round",
+        "version": "4.18.1"
+      },
+      "capabilities": [
+        "quiz-react-crowd"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://lodash.com/docs/#orderBy",
+      "hostPath": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "rationale": "Judges what the others think as @semio-tech/quiz-react shows it, inside its unit suite `🧪️tests/💭️crowd-client` (vitest, devDependency of the react package): for every shared vector, the choices of a live item recomputed by lodash straight from the others' raw drafts (grouped by category or value, tags sorted, ordered by count descending, then numerically, then by code point) and the choices of a submitted item reordered by lodash from the crowd view's code point ordered counts must equal the client's; the mean of a live item's positions must equal lodash's mean, and every place lodash's rounding to one decimal of `1 + position × (total − 1)`."
     }
   ],
   "noOracleDecisions": [],

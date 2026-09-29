@@ -3,8 +3,8 @@
 
 The views are this product's own policy, so no third party can judge them; this reading of the
 contract is the reference the TypeScript and Rust twins are held to. The catalog view is the catalog
-without quiz paths and badge rules, its quizzes without solutions (task id, kind and title only), in
-catalog order. Every learner stream is folded from its committed events; the leaderboard then lists
+without quiz paths and badge rules, its quizzes without solutions (emoji, title, description, and task
+id, kind and title only), in catalog order. Every learner stream is folded from its committed events; the leaderboard then lists
 every learner with a submitted run, by total descending, badge count descending, ``reachedAt``
 ascending and learner id ascending, ranked from 1 — and publishes the learner only as its ``tag``, the
 FNV-1a 32-bit hash of the learner id as 8 lowercase hex digits, never the id itself. The total is the
@@ -44,12 +44,12 @@ def tag(learner):
 
 
 def catalog_view(catalog, quizzes):
-    """📚️ The solution-free catalog: no quiz paths, no badge rules, quizzes reduced to their task ids, kinds and titles."""
+    """📚️ The solution-free catalog: no quiz paths, no badge rules, quizzes reduced to their emoji, title, description and task ids, kinds and titles."""
     return {
         "id": catalog["id"],
         "title": catalog["title"],
         "introduction": catalog["introduction"],
-        "quizzes": [{"id": quiz["id"], "title": quiz["title"], "description": quiz["description"], "tasks": [{"id": task["id"], "kind": task["kind"], "title": task["title"]} for task in quiz["tasks"]]} for quiz in quizzes],
+        "quizzes": [{"id": quiz["id"], "emoji": quiz["emoji"], "title": quiz["title"], "description": quiz["description"], "tasks": [{"id": task["id"], "kind": task["kind"], "title": task["title"]} for task in quiz["tasks"]]} for quiz in quizzes],
         "badges": [{"id": badge["id"], "emoji": badge["emoji"], "label": badge["label"], "description": badge["description"]} for badge in catalog["badges"]],
     }
 

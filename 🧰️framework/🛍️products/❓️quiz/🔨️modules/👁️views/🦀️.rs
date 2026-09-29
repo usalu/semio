@@ -1,5 +1,5 @@
-//! 👁️ The four read models a proctor answers (`CatalogView`, `LearnerView`, `RunView`,
-//! `Leaderboard`), derived from the catalog and the learner states.
+//! 👁️ The read models a proctor answers (`CatalogView`, `LearnerView`, `RunView`, `Leaderboard`,
+//! `CrowdView`), derived from the catalog, the learner states and the submitted results.
 //!
 //! Best scores are the maximum submitted score per quiz id; totals sum `best × 100` over the catalog
 //! quizzes in catalog order; `reachedAt` is the submission time of the last submission (in
@@ -10,8 +10,11 @@
 
 use crate::lifecycle::{LearnerState, LoadedQuiz, RunState};
 use crate::randomness::fnv1a32;
-use crate::schema::{Catalog, CatalogBadgeView, CatalogQuizView, CatalogTaskView, CatalogView, Leaderboard, LeaderboardRow, LearnerView, Quiz, RunStatus, RunSummary, RunView, Score, Slug, Timestamp};
+use crate::schema::{
+    Catalog, CatalogBadgeView, CatalogQuizView, CatalogTaskView, CatalogView, CrowdCount, CrowdItem, CrowdTask, CrowdView, Leaderboard, LeaderboardRow, LearnerView, Quiz, RunResult, RunStatus, RunSummary, RunView, Score, Slug, Task, TaskKind, TaskResult, Timestamp,
+};
 use crate::sheet::sheet_of;
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
@@ -24,7 +27,7 @@ pub fn catalog_view(catalog: &Catalog, quizzes: &[Quiz]) -> CatalogView {
         introduction: catalog.introduction.clone(),
         quizzes: quizzes
             .iter()
-            .map(|quiz| CatalogQuizView { id: quiz.id.clone(), title: quiz.title.clone(), description: quiz.description.clone(), tasks: quiz.tasks.iter().map(|task| CatalogTaskView { id: task.id().clone(), kind: task.kind(), title: task.title().clone() }).collect() })
+            .map(|quiz| CatalogQuizView { id: quiz.id.clone(), emoji: quiz.emoji.clone(), title: quiz.title.clone(), description: quiz.description.clone(), tasks: quiz.tasks.iter().map(|task| CatalogTaskView { id: task.id().clone(), kind: task.kind(), title: task.title().clone() }).collect() })
             .collect(),
         badges: catalog.badges.iter().map(|badge| CatalogBadgeView { id: badge.id.clone(), emoji: badge.emoji.clone(), label: badge.label.clone(), description: badge.description.clone() }).collect(),
     }
@@ -96,6 +99,97 @@ pub fn leaderboard<'a>(states: impl IntoIterator<Item = &'a LearnerState>, catal
         .collect();
     rows.sort_by(|(left, a), (right, b)| b.total.partial_cmp(&a.total).unwrap_or(Ordering::Equal).then(b.badges.len().cmp(&a.badges.len())).then(a.reached_at.cmp(&b.reached_at)).then_with(|| left.cmp(right)));
     Leaderboard { rows: rows.into_iter().enumerate().map(|(index, (_, row))| LeaderboardRow { rank: index + 1, ..row }).collect() }
+}
+
+/// 👪️ What the learners answered in the submitted runs of `quiz` (results of other quizzes are ignored): every
+/// task in definition order, matching once per dimension in definition order; per task the items in definition
+/// order that at least one result answered. Classification counts the assigned category ids, matching the
+/// assigned values as [`json_number_text`]s, both in ascending key order (code point order, so `"120"` precedes
+/// `"50"`); sorting gives the mean
+/// over the results, in result order, of the normalized position `position / (n − 1)` in the learner's order of
+/// `n` items (`0` when `n < 2`). A task result counts only when its kind matches the quiz task.
+pub fn crowd_view<R: Borrow<RunResult>>(quiz: &Quiz, results: &[R]) -> CrowdView {
+    let results: Vec<&RunResult> = results.iter().map(Borrow::borrow).filter(|result| result.quiz == quiz.id).collect();
+    let scored = |task: &Task| -> Vec<&TaskResult> { results.iter().filter_map(|result| result.tasks.iter().find(|scored| scored.task() == task.id() && kind_of(scored) == task.kind())).collect() };
+    let mut tasks = Vec::new();
+    for task in &quiz.tasks {
+        let scored = scored(task);
+        match task {
+            Task::Classification(definition) => {
+                let items = definition.items.iter().filter_map(|item| counted(&item.id, scored.iter().filter_map(|scored| match scored {
+                    TaskResult::Classification { items, .. } => items.iter().find(|result| result.item == item.id).map(|result| result.assigned.clone()),
+                    _ => None,
+                })));
+                tasks.push(CrowdTask { task: definition.id.clone(), kind: TaskKind::Classification, dimension: None, items: items.collect() });
+            }
+            Task::Sorting(definition) => {
+                let items = definition.items.iter().filter_map(|item| {
+                    let positions: Vec<f64> = scored
+                        .iter()
+                        .filter_map(|scored| match scored {
+                            TaskResult::Sorting { items, .. } => items.iter().find(|result| result.item == item.id).map(|result| if items.len() < 2 { 0.0 } else { result.position as f64 / (items.len() - 1) as f64 }),
+                            _ => None,
+                        })
+                        .collect();
+                    (!positions.is_empty()).then(|| CrowdItem { item: item.id.clone(), answers: positions.len(), counts: None, mean_position: Some(positions.iter().fold(0.0, |sum, position| sum + position) / positions.len() as f64) })
+                });
+                tasks.push(CrowdTask { task: definition.id.clone(), kind: TaskKind::Sorting, dimension: None, items: items.collect() });
+            }
+            Task::Matching(definition) => {
+                for dimension in &definition.dimensions {
+                    let items = definition.items.iter().filter_map(|item| counted(&item.id, scored.iter().filter_map(|scored| match scored {
+                        TaskResult::Matching { dimensions, .. } => dimensions.iter().find(|result| result.dimension == dimension.id)?.items.iter().find(|result| result.item == item.id).map(|result| json_number_text(result.assigned)),
+                        _ => None,
+                    })));
+                    tasks.push(CrowdTask { task: definition.id.clone(), kind: TaskKind::Matching, dimension: Some(dimension.id.clone()), items: items.collect() });
+                }
+            }
+        }
+    }
+    CrowdView { quiz: quiz.id.clone(), runs: results.len(), tasks }
+}
+
+/// 💱️ A value in JSON number syntax as ECMAScript's `Number.prototype.toString` renders it: the shortest
+/// round-trip digits, plain notation for decimal exponents −7 < e < 21, otherwise `d.ddde±x`; `-0` → `"0"`.
+pub fn json_number_text(value: f64) -> String {
+    if value == 0.0 {
+        return "0".to_string();
+    }
+    if !value.is_finite() {
+        return if value.is_nan() { "NaN" } else if value > 0.0 { "Infinity" } else { "-Infinity" }.to_string();
+    }
+    let scientific = format!("{:e}", value.abs());
+    let (mantissa, exponent) = scientific.split_once('e').unwrap_or((&scientific, "0"));
+    let digits = mantissa.replace('.', "");
+    let (count, point) = (digits.len() as i32, exponent.parse::<i32>().unwrap_or(0) + 1);
+    let body = if count <= point && point <= 21 {
+        format!("{digits}{}", "0".repeat((point - count) as usize))
+    } else if 0 < point && point <= 21 {
+        format!("{}.{}", &digits[..point as usize], &digits[point as usize..])
+    } else if -6 < point && point <= 0 {
+        format!("0.{}{digits}", "0".repeat((-point) as usize))
+    } else {
+        let exponent = if point > 0 { format!("+{}", point - 1) } else { (point - 1).to_string() };
+        if count == 1 { format!("{digits}e{exponent}") } else { format!("{}.{}e{exponent}", &digits[..1], &digits[1..]) }
+    };
+    if value < 0.0 { format!("-{body}") } else { body }
+}
+
+fn kind_of(scored: &TaskResult) -> TaskKind {
+    match scored {
+        TaskResult::Classification { .. } => TaskKind::Classification,
+        TaskResult::Sorting { .. } => TaskKind::Sorting,
+        TaskResult::Matching { .. } => TaskKind::Matching,
+    }
+}
+
+fn counted(item: &str, keys: impl Iterator<Item = String>) -> Option<CrowdItem> {
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    for key in keys {
+        *counts.entry(key).or_insert(0) += 1;
+    }
+    let answers = counts.values().sum::<usize>();
+    (answers > 0).then(|| CrowdItem { item: item.to_string(), answers, counts: Some(counts.into_iter().map(|(key, count)| CrowdCount { key, count }).collect()), mean_position: None })
 }
 
 struct Standing {

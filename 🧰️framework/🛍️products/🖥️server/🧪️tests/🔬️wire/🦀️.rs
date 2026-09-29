@@ -15,7 +15,7 @@
 use serde::Serialize;
 use serde_json::Value;
 
-use server::contract::{CommandEnvelope, CommandOutcome, CommandReceipt, EphemeralFrame, EventRecord, HybridLogicalClock, Principal, QueryConsistency, QueryEnvelope, QueryResult, Rejection, ServerInstanceDefinition, TraceContext};
+use server::contract::{CommandEnvelope, CommandOutcome, CommandReceipt, EphemeralFrame, EventRecord, HybridLogicalClock, PresenceFrame, Principal, QueryConsistency, QueryEnvelope, QueryResult, Rejection, ServerInstanceDefinition, TraceContext};
 use protocol::causal::FrontierSummary;
 use server::contract::ActorKey;
 
@@ -66,6 +66,7 @@ fn every_wire_vector_round_trips_through_its_contract_type() {
             "queryEnvelope" => round_trip::<QueryEnvelope>(name, json),
             "queryResult" => round_trip::<QueryResult>(name, json),
             "serverInstanceDefinition" => round_trip::<ServerInstanceDefinition>(name, json),
+            "presenceFrame" => round_trip::<PresenceFrame>(name, json),
             other => panic!("{name}: the fixture names a wire type this crate does not serve: {other}"),
         }
         covered.push(kind.to_string());
@@ -73,7 +74,18 @@ fn every_wire_vector_round_trips_through_its_contract_type() {
 
     covered.sort();
     covered.dedup();
-    assert_eq!(covered.len(), 15, "every contract type carried by a route needs at least one vector");
+    assert_eq!(covered.len(), 16, "every contract type carried by a route needs at least one vector");
+}
+
+#[test]
+fn every_presence_frame_has_a_vector() {
+    let document = fixture();
+    let mut frames: Vec<String> = document["vectors"].as_array().expect("vectors").iter().filter(|vector| vector["type"] == "presenceFrame").map(|vector| vector["json"]["type"].as_str().expect("a frame type").to_string()).collect();
+    frames.sort();
+    frames.dedup();
+    assert_eq!(frames, ["batch", "refused", "state", "watch", "watched", "welcome"]);
+    let snapshots: Vec<bool> = document["vectors"].as_array().expect("vectors").iter().filter(|vector| vector["json"]["type"] == "watched").map(|vector| vector["json"]["snapshot"] == true).collect();
+    assert_eq!(snapshots, [true, false], "a snapshot and a change, the flag left out when unset");
 }
 
 #[test]

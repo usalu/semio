@@ -65,6 +65,13 @@ export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | und
 
   return undefined;
 }
+/** 🏷️ {@link useLabel} for a label interpolated per call — one label, many items (e.g. "{{label}} is waiting to start" for every page of a
+ * list): returns a formatter bound to the current locale and label tier. */
+export function useLabelFormatter(id: UiTranslationKey | UiRegisteredTranslationKey): (options?: Record<string, unknown>) => UiLabel {
+  const { t } = useUiTranslation();
+  const labelTier = activeUiDriver().labelTier;
+  return React.useCallback((options?: Record<string, unknown>) => (resolveUiLabel(t(id as UiTranslationKey, options), labelTier) ?? id) as UiLabel, [t, id, labelTier]);
+}
 /**
  * 🏷️ Resolves a label only when `id` happens to be a registered translation key — the deliberate
  * dynamic port for generic components whose `id` is not a key contract (e.g. resolved from an arbitrary

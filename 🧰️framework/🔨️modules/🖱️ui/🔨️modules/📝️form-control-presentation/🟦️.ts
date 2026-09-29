@@ -23,3 +23,17 @@ export const uiFormControlBrowserDefaultProps = {
   "data-lpignore": "true",
 } as const;
 // #endregion 🧾️FormControlPresentation
+
+/** @emoji 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
+export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
+  if (element.dataset.uiBrowserDefaults === "true") return;
+  const kind = element instanceof HTMLInputElement ? (element.type || "text").toLowerCase() : "textarea";
+  if (kind === "file" || kind === "checkbox" || kind === "radio" || kind === "hidden" || kind === "range" || kind === "color") return;
+  element.autocomplete = "off";
+  element.spellcheck = false;
+  element.autocapitalize = "off";
+  element.setAttribute("autocorrect", "off");
+  element.setAttribute("data-1p-ignore", "");
+  element.setAttribute("data-lpignore", "true");
+  element.dataset.uiBrowserDefaults = "true";
+}

@@ -1,7 +1,7 @@
-//! ❓️ The four quiz reads (design §9a): `quiz.catalog`, `quiz.learner`, `quiz.run` and
-//! `quiz.leaderboard`, version `1`, arguments = the quiz `Query` JSON, answered as a `snapshot`
-//! whose value is the view JSON. The catalog view is derived from the loaded catalog; every other
-//! view is read from the projections, never from an actor.
+//! ❓️ The five quiz reads (design §9a, §17): `quiz.catalog`, `quiz.learner`, `quiz.run`,
+//! `quiz.leaderboard` and `quiz.crowd`, version `1`, arguments = the quiz `Query` JSON, answered as
+//! a `snapshot` whose value is the view JSON. The catalog view is derived from the loaded catalog;
+//! every other view is read from the projections, never from an actor.
 //!
 //! @see ../🔭️projections/🦀️.rs — where the views are kept
 //! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️.rs — `QueryHandler`
@@ -14,20 +14,21 @@ use server::gateway::{QueryHandler, ServerError};
 use server::storage::ProjectionStore;
 
 use crate::actors::WIRE_VERSION;
-use crate::projections::{LEADERBOARD, LEADERBOARD_KEY, LEARNERS, RUNS};
+use crate::projections::{CROWDS, LEADERBOARD, LEADERBOARD_KEY, LEARNERS, RUNS};
 
-/// 🔭️ Which of the four reads a handler answers.
+/// 🔭️ Which of the five reads a handler answers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum QueryKind {
     Catalog,
     Learner,
     Run,
     Leaderboard,
+    Crowd,
 }
 
 impl QueryKind {
-    /// 📋️ All four, in registration order.
-    pub const ALL: [QueryKind; 4] = [Self::Catalog, Self::Learner, Self::Run, Self::Leaderboard];
+    /// 📋️ All five, in registration order.
+    pub const ALL: [QueryKind; 5] = [Self::Catalog, Self::Learner, Self::Run, Self::Leaderboard, Self::Crowd];
 
     /// 🏷️ The framework query kind, `quiz.<type>`.
     pub fn wire(self) -> &'static str {
@@ -36,6 +37,7 @@ impl QueryKind {
             Self::Learner => "quiz.learner",
             Self::Run => "quiz.run",
             Self::Leaderboard => "quiz.leaderboard",
+            Self::Crowd => "quiz.crowd",
         }
     }
 }
@@ -68,6 +70,7 @@ impl QueryHandler for QuizQuery {
                 Some(board) => board,
                 None => serde_json::to_vec(&Leaderboard { rows: Vec::new() }).map_err(|error| ServerError::Internal(error.to_string()))?,
             },
+            (QueryKind::Crowd, Query::Crowd { quiz }) => projections.get(CROWDS, quiz).await.ok_or_else(|| ServerError::NotFound(format!("unknown-quiz {quiz}")))?,
             _ => return Err(ServerError::BadRequest(format!("{} cannot answer a {} query", envelope.kind, query.type_name()))),
         };
         Ok(QueryResult::Snapshot { value, frontier: None })

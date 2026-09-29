@@ -2,6 +2,7 @@
   "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "physics",
+  "emoji": "🧲",
   "title": { "en": "Physical Understanding", "de": "Physikalisches Verständnis" },
   "description": {
     "en": "Tell power from energy and develop a feeling for orders of magnitude — from a tea light to the Sun, from one phone charge to the world's annual energy consumption.",

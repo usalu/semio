@@ -13,7 +13,7 @@ const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️mod
 const text = readFileSync(path, "utf8");
 const taxonomy = JSON.parse(text) as Json;
 const dry = process.argv.includes("--dry");
-const scopes = ["🎓️teaching", "🧰️framework/🛍️products/❓️quiz"];
+const scopes = ["🎓️teaching", "🧰️framework/🛍️products/❓️quiz", "🧰️framework/🛍️products/🖥️server"];
 const AREA = `🎓${VS}teaching`;
 
 const insertAfter = (object: Json, after: string, entries: Json): Json => {

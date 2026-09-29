@@ -1,7 +1,8 @@
 /** 🎬️ Site walk against a running site (default the dev site on 6061 with the dev proctor behind it): introduction → pseudonym →
  * a perfect physics run → submit → results → leaderboard → a second device (empty storage) recalling the same pseudonym with
  * different case and spacing. Saves one screenshot per step and every console error / failed request into
- * `🗑️generated/site-infra-screens-<width>/`, flagging horizontal overflow. `bun site_infra_e2e.ts [origin] [WxH]`. */
+ * `🗑️generated/site-infra-screens-<width>/`, flagging horizontal overflow. Certificate errors are ignored for a local stack
+ * behind Caddy's internal CA. `bun site_infra_e2e.ts [origin] [WxH]`. */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium, type Page } from "playwright";
@@ -29,7 +30,7 @@ const sortBy = async (page: Page, ascending: readonly string[]) => {
   }
 };
 
-const first = await (await browser.newContext({ viewport: { width, height }, locale: "en-GB" })).newPage();
+const first = await (await browser.newContext({ viewport: { width, height }, locale: "en-GB", ignoreHTTPSErrors: true })).newPage();
 watch(first, "device-1");
 await first.goto(origin);
 await first.getByRole("button", { name: "Continue" }).waitFor();
@@ -72,7 +73,7 @@ await first.getByRole("button", { name: "Open the leaderboard" }).click();
 await first.locator("main table").getByText(handle).waitFor();
 await shot(first, "08-leaderboard");
 
-const second = await (await browser.newContext({ viewport: { width, height }, locale: "de-DE" })).newPage();
+const second = await (await browser.newContext({ viewport: { width, height }, locale: "de-DE", ignoreHTTPSErrors: true })).newPage();
 watch(second, "device-2");
 await second.goto(origin);
 await second.getByRole("button", { name: "Weiter" }).waitFor();
